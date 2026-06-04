@@ -26,6 +26,20 @@ cd seu-projeto
 
 A estrutura `docs/` contém todos os templates e skills necessários.
 
+### Modo de Operação da LLM
+
+O pipeline LLC tem dois momentos distintos que se beneficiam de modos de operação diferentes:
+
+| Etapas | Modo Recomendado | Motivo |
+|--------|------------------|--------|
+| **Passos 0 a 10** (especificação e planejamento) | **Thinking / Reasoning** | Documentos exigem análise profunda, raciocínio multi-step e consistência cruzada entre artefatos. O modo thinking reduz alucinações e produz especificações mais coerentes. |
+| **Ajustes pós-validação** | **Thinking / Reasoning** | Correções em documentos após um gate reprovado exigem compreensão do contexto completo e impacto das mudanças em artefatos interdependentes. |
+| **Passo 11 — Execução** (desenvolvimento e testes) | **Regular / Default** | Implementação de PRPs e tarefas se beneficia de respostas mais rápidas. O código gerado é validado por testes automatizados, reduzindo o risco de alucinações. |
+| **Subfluxo F1-F4** (prototipagem) | **Thinking / Reasoning** | Fases de discovery, tokens, wireframes e hi-fi exigem julgamento de design e consistência com o Design System. |
+| **Subfluxo F5-F6** (código e validação) | **Regular / Default** | Geração de componentes e execução de testes seguem especificações já aprovadas. |
+
+**Na prática:** Ative o modo thinking/extended reasoning da sua LLM para os passos 0 a 10 e para qualquer ajuste solicitado após validação. Use o modo normal para execução de código e testes.
+
 ---
 
 ## Passo a Passo

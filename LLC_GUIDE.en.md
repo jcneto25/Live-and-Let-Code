@@ -33,7 +33,7 @@ LLC skills are Markdown files with YAML frontmatter. Each terminal AI client has
 | AI Client | Skills Directory | Setup Command |
 |-----------|-----------------|---------------|
 | **Claude Code** | `.claude/skills/` | `cp docs/skills/llc-*.md .claude/skills/` |
-| **opencode** | `.opencode/skills/` | `cp docs/skills/llc-*.md .opencode/skills/` |
+| **opencode** | `.opencode/skills/<name>/SKILL.md` | `mkdir -p .opencode/skills/llc-step-0-1 && cp docs/skills/llc-step-0-1.md .opencode/skills/llc-step-0-1/SKILL.md` (repeat for each skill) |
 | **Codex** | `.codex/skills/` | `cp docs/skills/llc-*.md .codex/skills/` |
 | **Cursor** | `.cursor/skills/` | `cp docs/skills/llc-*.md .cursor/skills/` |
 | **GitHub Copilot CLI** | `.github/copilot/skills/` | `cp docs/skills/llc-*.md .github/copilot/skills/` |
@@ -46,6 +46,15 @@ Execute the skill docs/skills/llc-step-0-1.md
 ```
 
 **Alias invocation:** If the client supports skill aliases (e.g., `@llc-step-0-1`), the name in the YAML frontmatter is used automatically.
+
+**Quick script for opencode (bash):**
+```bash
+for f in docs/skills/llc-*.md; do
+  name=$(basename "$f" .md)
+  mkdir -p ".opencode/skills/$name"
+  cp "$f" ".opencode/skills/$name/SKILL.md"
+done
+```
 
 ---
 

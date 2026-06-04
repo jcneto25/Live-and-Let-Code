@@ -59,7 +59,7 @@ docs/
 
 ## Documentação
 
-A especificação completa está em [`docs/superpowers/specs/2026-06-04-llc-pipeline-design.md`](docs/llc-pipeline-design.md).
+A especificação completa está em [`llc-pipeline-design.md`](/llc-pipeline-design.md).
 
 ## Licença
 

@@ -41,6 +41,7 @@ cd your-project
 
 ```
 Step 0:     Load docs → docs/business/ingestion/
+Step 0.1:   Docling → convert to Markdown → ingestion/converted/
 Step 0.5:   AI → Vision + Module Specs  👤 Gate 1
 Step 1:     AI → 7 Specs                👤 Gate 2
 Step 2:     AI → PRDs                   👤 Gate 3

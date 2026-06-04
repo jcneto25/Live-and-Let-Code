@@ -35,10 +35,11 @@ project-root/
 ├── docs/
 │   ├── DEPLOYMENT.md                           # Deploy strategy (Step 10)
 │   │
-│   ├── business/                               # Business hub
-│   │   ├── ingestion/                          # [INPUT] Raw user docs
-│   │   ├── specs/                              # [OUTPUT] 8 specs + vision + modules
-│   │   └── Template_Especificacao_Modulo.md    # Module template
+  │   ├── business/                               # Business hub
+  │   │   ├── ingestion/                          # [INPUT] Raw user docs
+  │   │   │   └── converted/                      # [OUTPUT] Markdown files (Step 0.1)
+  │   │   ├── specs/                              # [OUTPUT] 8 specs + vision + modules
+  │   │   └── Template_Especificacao_Modulo.md    # Module template
 │   │
 │   ├── prd/                                    # PRDs (templates + generated)
 │   │   ├── template_prd_executivo_institucional.md
@@ -107,6 +108,8 @@ project-root/
 ```
 Step 0:     User loads raw docs → business/ingestion/
                ↓
+Step 0.1:   Docling → convert to Markdown → business/ingestion/converted/
+               ↓
 Step 0.5:   AI → Strategic Vision + Module Specs → business/specs/
                ↓ 👤 Gate 1
 Step 1:     AI → 7 Specs (Glossary, FR, NFR, Business Rules, BPMN, Profiles, Integrations) → business/specs/
@@ -144,7 +147,8 @@ Step 11:    LLC Execution
 | # | Name | Input | Output | Gate |
 |---|------|-------|--------|------|
 | 0 | Ingestion | User docs | `business/ingestion/` | — |
-| 0.5 | Vision + Modules | `ingestion/` | Vision + MOD-*.md | 👤 1 |
+| 0.1 | Conversion | `ingestion/` | `ingestion/converted/` | — |
+| 0.5 | Vision + Modules | `ingestion/converted/` | Vision + MOD-*.md | 👤 1 |
 | 1 | 7 Specs | Vision + Modules | Glossary, FR, NFR, BR, BPMN, Profiles, Integrations | 👤 2 |
 | 2 | PRDs | 7 specs + Vision | `executive_PRD.md`, `PRD_tecnico_institucional.md` | 👤 3 |
 | 3 | PRPs | PRDs + Specs + Modules | `PRP-*.md` | 👤 4 |

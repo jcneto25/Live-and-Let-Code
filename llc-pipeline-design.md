@@ -30,7 +30,7 @@ Este documento especifica:
 - O catálogo de skills (§4)
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)
-- O plano de migração a partir da proposta original (§7)
+- O inventário completo de templates (§7)
 
 ---
 
@@ -45,10 +45,11 @@ project-root/
 ├── docs/
 │   ├── DEPLOYMENT.md                           # Estratégia de deploy (Step 10)
 │   │
-│   ├── business/                               # Hub de negócio
-│   │   ├── ingestion/                          # [INPUT] Docs brutos do usuário
-│   │   ├── specs/                              # [OUTPUT] 8 specs + visão + módulos
-│   │   └── Template_Especificacao_Modulo.md    # Template de módulo
+  │   ├── business/                               # Hub de negócio
+  │   │   ├── ingestion/                          # [INPUT] Docs brutos do usuário
+  │   │   │   └── converted/                      # [OUTPUT] Markdown convertido (Step 0.1)
+  │   │   ├── specs/                              # [OUTPUT] 8 specs + visão + módulos
+  │   │   └── Template_Especificacao_Modulo.md    # Template de módulo
 │   │
 │   ├── prd/                                    # PRDs (templates + gerados)
 │   │   ├── template_prd_executivo_institucional.md
@@ -158,6 +159,8 @@ project-root/
 ```
 Step 0:     User loads raw docs → business/ingestion/
                ↓
+Step 0.1:   Docling → convert to Markdown → business/ingestion/converted/
+               ↓
 Step 0.5:   AI → Vision + Module Specs → business/specs/
                ↓ 👤 Gate 1
 Step 1:     AI → 7 Specs (Glossário, RF, RNF, RN, BPMN, Perfis, Integrações) → business/specs/
@@ -195,7 +198,8 @@ Step 11:    LLC Execution
 | # | Nome | Entrada | Saída | Template(s) | Gate |
 |---|------|---------|-------|-------------|------|
 | 0 | Ingestão | Documentos do usuário | `business/ingestion/` | — | — |
-| 0.5 | Visão + Módulos | `ingestion/` | Visão + MOD-*.md | `template_visao_estrategica_e_negocio.md`, `Template_Especificacao_Modulo.md`, guia de preenchimento | 👤 1 |
+| 0.1 | Conversão | `ingestion/` | `ingestion/converted/` | — | — |
+| 0.5 | Visão + Módulos | `ingestion/converted/` | Visão + MOD-*.md | `template_visao_estrategica_e_negocio.md`, `Template_Especificacao_Modulo.md`, guia de preenchimento | 👤 1 |
 | 1 | 7 Especificações | Visão + Módulos | Glossário, RF, RNF, RN, BPMN, Perfis, Integrações | 7 templates em `docs/` | 👤 2 |
 | 2 | PRDs | 7 specs + Visão | `executive_PRD.md`, `PRD_tecnico_institucional.md` | `template_prd_executivo_institucional.md`, `template_prd_tecnico_institucional.md` | 👤 3 |
 | 3 | PRPs | PRDs + Specs + Módulos | `PRP-*.md` (N arquivos) | `PRP_TEMPLATE.md` | 👤 4 |
@@ -315,35 +319,9 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 ---
 
-## 7. Plano de Migração
+## 7. Templates — Inventário Completo
 
-### 7.1 Do Pipeline v2.2 para LLC v3.0
-
-| Item | v2.2 (Obsoleto) | v3.0 (LLC) |
-|------|-----------------|------------|
-| Doc principal | `Autonomous_Software_Engineering_Pipeline_Unificado.md` (1908 linhas, monolítico) | `docs/skills/llc-step-*.md` (12 arquivos modulares) |
-| PRD (CONFORMITAS) | Em `docs/prd/` (20 volumes) | Movido para `archive/conformitas/` |
-| Templates | Genéricos com placeholder "NeuroHub" | Templates LLC-branded seguindo convenções do projeto |
-| Agentes | `.agents/` com Claude-specific | Skills tool-agnostic em `docs/skills/` |
-| Vibe Kanban | Integração obrigatória | Referência removida — tool-agnostic |
-| Scripts bash | `scripts/*.sh` (LEGACY) | Não fazem parte do core. Skills substituem. |
-| Design System | Seção inline no doc principal | `docs/design/Design_System_Master.md` expandido (410 linhas, 10 seções) |
-
-### 7.2 Passos da Migração
-
-1. Mover `Autonomous_Software_Engineering_Pipeline_Unificado.md` → `archive/pipeline-v2.2/`
-2. Mover todo conteúdo de `docs/prd/` (CONFORMITAS) → `archive/conformitas/`
-3. Limpar `docs/prd/` — manter apenas os dois templates de PRD
-4. Criar estrutura de diretórios conforme §2.1
-5. Criar os 12 skills em `docs/skills/` (já criados durante o design)
-6. Criar templates complementares (Template_Perfis_Permissoes.md, Template_Catalogo_Integracoes.md, Template_Especificacao_Modulo.md) — já criados
-7. Expandir `Design_System_Master.md` — já concluído
-
----
-
-## 8. Templates — Inventário Completo
-
-### 8.1 Templates do Usuário (preenchidos manualmente ou via IA)
+### 7.1 Templates do Usuário (preenchidos manualmente ou via IA)
 
 | # | Template | Local | Preenchido por | Destino do Preenchido |
 |---|----------|-------|----------------|----------------------|
@@ -357,7 +335,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 8 | Catálogo de Integrações | `docs/Template_Catalogo_Integracoes.md` | IA (Step 1) | `docs/business/specs/` |
 | 9 | Especificação de Módulo | `docs/business/Template_Especificacao_Modulo.md` | IA (Step 0.5) | `docs/business/specs/` |
 
-### 8.2 Templates LLC (preenchidos pela IA durante o pipeline)
+### 7.2 Templates LLC (preenchidos pela IA durante o pipeline)
 
 | # | Template | Local | Preenchido por | Destino |
 |---|----------|-------|----------------|---------|
@@ -376,7 +354,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 ---
 
-## 9. Glossário LLC
+## 8. Glossário LLC
 
 | Termo | Definição |
 |-------|-----------|
@@ -391,7 +369,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 ---
 
-## 10. Controle de Versão
+## 9. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|

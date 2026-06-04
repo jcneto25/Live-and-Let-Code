@@ -48,7 +48,7 @@ O pipeline LLC tem dois momentos distintos que se beneficiam de modos de operaç
 
 **Você faz:** Coloque todos os documentos de negócio na pasta `docs/business/ingestion/`.
 
-Formatos aceitos: `.pdf`, `.docx`, `.md`, `.txt`.
+Formatos aceitos: `.pdf`, `.docx`, `.pptx`, `.html`, `.txt`, imagens com texto (PNG/JPG/TIFF).
 
 Exemplos do que colocar:
 - Transcrições de reuniões com stakeholders
@@ -56,6 +56,26 @@ Exemplos do que colocar:
 - Regulamentos e legislação aplicável
 - Atas de decisões arquiteturais
 - Guias operacionais da unidade demandante
+
+---
+
+### Passo 0.1: Conversão para Markdown (Docling) 🆕
+
+**Você faz:** Execute o skill de conversão:
+
+```
+Execute a skill docs/skills/llc-step-0-1.md
+```
+
+**A IA faz:**
+- Detecta todos os formatos em `docs/business/ingestion/` (PDF, DOCX, PPTX, HTML)
+- Converte cada arquivo para Markdown usando **Docling** (ou Pandoc como fallback)
+- Deposita os arquivos `.md` convertidos em `docs/business/ingestion/converted/`
+- Gera `_CONVERSION_REPORT.md` com estatísticas e status de cada arquivo
+
+**Pré-requisito único:** Python 3.10+ + `pip install docling`
+
+**Por que Markdown?** Menos tokens, menos ruído estrutural, melhor compreensão pela IA. PDFs e DOCsX têm tags pesadas que consomem tokens desnecessários.
 
 ---
 
@@ -68,7 +88,7 @@ Execute a skill docs/skills/llc-step-0-5.md
 ```
 
 **A IA faz:**
-- Lê todos os arquivos em `docs/business/ingestion/`
+- Lê todos os arquivos em `docs/business/ingestion/converted/` (Markdown puro)
 - Gera `docs/business/specs/visao_estrategica_e_negocio.md` (visão do sistema)
 - Gera arquivos `MOD-[SIGLA]-[NNN]_[nome].md` (um por módulo identificado)
 
@@ -342,7 +362,7 @@ O subfluxo tem 6 fases:
                     👤 = Gate humano obrigatório
                     🔴 = Checkpoint visual obrigatório
 
-Step 0 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
+Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
 
@@ -382,7 +402,7 @@ Step 11:
 
 | Quero... | Comando |
 |----------|---------|
-| Iniciar o pipeline | `Execute a skill docs/skills/llc-step-0-5.md` |
+| Iniciar o pipeline | `Execute a skill docs/skills/llc-step-0-1.md` (conversão) |
 | Pular para um passo específico | `Execute a skill docs/skills/llc-step-N.md` certificando-se de que os gates anteriores foram aprovados |
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |

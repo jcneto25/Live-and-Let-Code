@@ -20,7 +20,12 @@ tags: [conversion, ingestion, markdown, llc-pipeline]
 ## 📋 Pré-requisitos
 
 - [ ] Documentos raw carregados em `docs/business/ingestion/` (PDF, DOCX, PPTX, HTML, TXT, imagens com texto)
-- [ ] Docling instalado: `pip install docling` (ou `pipx install docling`)
+- [ ] **Python 3.10+** instalado: `python --version`
+  - Windows: `winget install Python.Python.3.12` ou https://python.org
+  - macOS: `brew install python@3.12`
+  - Linux: `sudo apt install python3`
+- [ ] **pip** disponível: `pip --version` (já vem com Python 3.4+)
+- [ ] **Docling** instalado: `pip install docling`
 - [ ] Alternativa fallback: `pandoc` instalado (`choco install pandoc` / `brew install pandoc`)
 
 ---

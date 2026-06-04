@@ -27,6 +27,29 @@ git clone https://github.com/jcneto25/Live-and-Let-Code.git your-project
 cd your-project
 ```
 
+### Configuring Skills for Your AI Client
+
+LLC skills are Markdown files with YAML frontmatter. Each terminal AI client has its own skills directory. Copy (or symlink) the files from `docs/skills/` to the appropriate directory:
+
+| AI Client | Skills Directory | Setup Command |
+|-----------|-----------------|---------------|
+| **Claude Code** | `.claude/skills/` | `cp docs/skills/llc-*.md .claude/skills/` |
+| **opencode** | `.opencode/skills/` | `cp docs/skills/llc-*.md .opencode/skills/` |
+| **Codex** | `.codex/skills/` | `cp docs/skills/llc-*.md .codex/skills/` |
+| **Cursor** | `.cursor/skills/` | `cp docs/skills/llc-*.md .cursor/skills/` |
+| **GitHub Copilot CLI** | `.github/copilot/skills/` | `cp docs/skills/llc-*.md .github/copilot/skills/` |
+| **Others** | `.skills/` (default) | `cp docs/skills/llc-*.md .skills/` |
+
+**Alternative — no copy needed:** Most clients accept the direct path:
+
+```
+Execute the skill docs/skills/llc-step-0-1.md
+```
+
+**Alias invocation:** If the client supports skill aliases (e.g., `@llc-step-0-1`), the name in the YAML frontmatter is used automatically.
+
+---
+
 ### LLM Operation Mode
 
 | Stages | Recommended Mode | Reason |

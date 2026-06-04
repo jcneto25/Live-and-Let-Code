@@ -26,6 +26,29 @@ cd seu-projeto
 
 A estrutura `docs/` contém todos os templates e skills necessários.
 
+### Configurando as Skills para seu Cliente de IA
+
+Os skills LLC são arquivos Markdown com YAML frontmatter. Cada cliente de IA terminal tem seu próprio diretório de skills. Copie (ou crie symlinks) dos arquivos de `docs/skills/` para o diretório apropriado:
+
+| Cliente de IA | Diretório de Skills | Comando para configurar |
+|---------------|--------------------|-------------------------|
+| **Claude Code** | `.claude/skills/` | `cp docs/skills/llc-*.md .claude/skills/` |
+| **opencode** | `.opencode/skills/` | `cp docs/skills/llc-*.md .opencode/skills/` |
+| **Codex** | `.codex/skills/` | `cp docs/skills/llc-*.md .codex/skills/` |
+| **Cursor** | `.cursor/skills/` | `cp docs/skills/llc-*.md .cursor/skills/` |
+| **GitHub Copilot CLI** | `.github/copilot/skills/` | `cp docs/skills/llc-*.md .github/copilot/skills/` |
+| **Outros** | `.skills/` (padrão) | `cp docs/skills/llc-*.md .skills/` |
+
+**Alternativa — sem copiar:** A maioria dos clientes aceita o caminho direto. Exemplo:
+
+```
+Execute a skill docs/skills/llc-step-0-1.md
+```
+
+**Invocação por alias:** Se o cliente suportar aliases de skill (ex: `@llc-step-0-1`), o nome no YAML frontmatter é usado automaticamente.
+
+---
+
 ### Modo de Operação da LLM
 
 O pipeline LLC tem dois momentos distintos que se beneficiam de modos de operação diferentes:

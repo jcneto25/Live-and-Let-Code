@@ -2,18 +2,13 @@
 
 **Version:** 1.0.0  
 **Audience:** Developers, Product Owners, Tech Leads  
-**Prerequisite:** Read [`llc-pipeline-design.md`](llc-pipeline-design.md) (methodology overview)
-
-> 🚧 **This guide is being translated from Portuguese.**  
-> For the complete guide, see [`LLC_GUIDE.md`](LLC_GUIDE.md) (PT-BR).
->
-> Para o guia completo, veja [`LLC_GUIDE.md`](LLC_GUIDE.md).
+**Prerequisite:** Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) (methodology overview)
 
 ---
 
-## Quick Start
+## Before You Start
 
-### What you need
+### What You Need
 
 - A terminal AI client (Claude Code, opencode, Codex, Cursor CLI, etc.)
 - Git installed and configured
@@ -22,10 +17,14 @@
 
 ### Initial Setup
 
+Clone the LLC repository or copy the directory structure to your project:
+
 ```bash
 git clone https://github.com/jcneto25/Live-and-Let-Code.git your-project
 cd your-project
 ```
+
+The `docs/` directory contains all necessary templates and skills.
 
 ### Configuring Skills for Your AI Client
 
@@ -38,9 +37,9 @@ LLC skills are Markdown files with YAML frontmatter. Each terminal AI client has
 | **Codex** | `.codex/skills/` | `cp docs/skills/llc-*.md .codex/skills/` |
 | **Cursor** | `.cursor/skills/` | `cp docs/skills/llc-*.md .cursor/skills/` |
 | **GitHub Copilot CLI** | `.github/copilot/skills/` | `cp docs/skills/llc-*.md .github/copilot/skills/` |
-| **Others** | `.skills/` (default) | `cp docs/skills/llc-*.md .skills/` |
+| **Other** | `.skills/` (default) | `cp docs/skills/llc-*.md .skills/` |
 
-**Alternative — no copy needed:** Most clients accept the direct path:
+**Alternative — no copy needed:** Most clients accept the direct path. Example:
 
 ```
 Execute the skill docs/skills/llc-step-0-1.md
@@ -52,41 +51,393 @@ Execute the skill docs/skills/llc-step-0-1.md
 
 ### LLM Operation Mode
 
+The LLC pipeline has two distinct moments that benefit from different operation modes:
+
 | Stages | Recommended Mode | Reason |
 |--------|-----------------|--------|
-| **Steps 0–10** (spec & planning) | **Thinking / Reasoning** | Multi-step analysis, cross-artifact consistency |
-| **Post-validation fixes** | **Thinking / Reasoning** | Full context understanding required |
-| **Step 11 — Execution** (dev & tests) | **Regular / Default** | Faster iteration, code validated by automated tests |
-| **Subflow F1–F4** (prototyping) | **Thinking / Reasoning** | Design judgment, Design System consistency |
-| **Subflow F5–F6** (code & validation) | **Regular / Default** | Follows approved specs |
+| **Steps 0–10** (spec and planning) | **Thinking / Reasoning** | Documents require deep analysis, multi-step reasoning, and cross-artifact consistency. Thinking mode reduces hallucinations and produces more coherent specs. |
+| **Post-validation fixes** | **Thinking / Reasoning** | Corrections after a rejected gate require full context understanding and impact analysis across interdependent artifacts. |
+| **Step 11 — Execution** (dev and tests) | **Regular / Default** | PRP and task implementation benefits from faster responses. Generated code is validated by automated tests, reducing hallucination risk. |
+| **Subflow F1-F4** (prototyping) | **Thinking / Reasoning** | Discovery, tokens, wireframes, and hi-fi phases require design judgment and Design System consistency. |
+| **Subflow F5-F6** (code and validation) | **Regular / Default** | Component generation and test execution follow already-approved specs. |
 
-### Pipeline in 1 Minute
+**In practice:** Enable thinking/extended reasoning mode for Steps 0–10 and any post-validation adjustments. Use normal mode for code execution and testing.
+
+---
+
+## Step by Step
+
+### Step 0: Load Domain Documents
+
+**You do:** Place all business documents in the `docs/business/ingestion/` folder.
+
+Accepted formats: `.pdf`, `.docx`, `.pptx`, `.html`, `.txt`, images with text (PNG/JPG/TIFF).
+
+Examples of what to include:
+- Stakeholder meeting transcripts
+- Organizational process manuals
+- Applicable regulations and legislation
+- Architectural decision records
+- Operational guides from the requesting unit
+
+---
+
+### Step 0.1: Convert to Markdown (Docling) 🆕
+
+**You do:** Run the conversion skill:
 
 ```
-Step 0:     Load docs → docs/business/ingestion/
-Step 0.1:   Docling → convert to Markdown → ingestion/converted/
-Step 0.5:   AI → Vision + Module Specs  👤 Gate 1
-Step 1:     AI → 7 Specs                👤 Gate 2
-Step 2:     AI → PRDs                   👤 Gate 3
-Step 3:     AI → PRPs                   👤 Gate 4
-Step 4:     AI → Planning               👤 Gate 5
-Step 5:     AI → Architecture           👤 Gate 6
-Step 6:     AI → Tasks                  👤 Gate 7
-Step 7:     AI → Design System          👤 Gate 8
-Step 8:     AI → Setup + Mock Data      👤 Gate 9
-Step 9:     AI → Testing Docs           👤 Gate 10
-Step 10:    AI → README + DEPLOYMENT    👤 Gate 11
-Step 11:    Execution (with prototyping subflow for UI modules)
+Execute the skill docs/skills/llc-step-0-1.md
 ```
 
-### Running a Step
+**The AI does:**
+- Detects all formats in `docs/business/ingestion/` (PDF, DOCX, PPTX, HTML)
+- Converts each file to Markdown using **Docling** (or Pandoc as fallback)
+- Places the converted `.md` files in `docs/business/ingestion/converted/`
+- Generates `_CONVERSION_REPORT.md` with statistics and status for each file
+
+**Prerequisite:** Python 3.10+ + `pip install docling`
+
+**Why Markdown?** Fewer tokens, less structural noise, better AI comprehension. PDFs and DOCXs have heavy tags that consume unnecessary tokens.
+
+---
+
+### Step 0.5: Strategic Vision + Modules
+
+**You do:** Run the skill in your AI client:
 
 ```
 Execute the skill docs/skills/llc-step-0-5.md
+```
+
+**The AI does:**
+- Reads all files in `docs/business/ingestion/converted/` (pure Markdown)
+- Generates `docs/business/specs/visao_estrategica_e_negocio.md` (system vision)
+- Generates `MOD-[SIGLA]-[NNN]_[name].md` files (one per identified module)
+
+**You validate:** 👤 Gate 1
+- Does the vision cover the full business scope?
+- Are modules correctly identified and named?
+- Any sections left with `[NOT IDENTIFIED]`? If so, supplement them.
+
+**Only advance when approved.**
+
+---
+
+### Step 1: 7 Specifications
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-1.md
+```
+
+**The AI does:** Generates 7 documents in `docs/business/specs/`:
+1. `glossario.md`
+2. `requisitos_funcionais.md`
+3. `requisitos_nao_funcionais.md`
+4. `regras_negocio.md`
+5. `workflows_bpmn.md`
+6. `perfis_permissoes.md`
+7. `catalogo_integracoes.md`
+
+**You validate:** 👤 Gate 2
+- Are glossary terms consistent across documents?
+- Do access profiles cover all actors?
+- Do the listed integrations match reality?
+
+**Only advance when approved.**
+
+---
+
+### Step 2: PRDs (Executive + Technical)
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-2.md
+```
+
+**The AI does:** Generates in `docs/prd/`:
+- `executive_PRD.md` — for stakeholders and managers (institutional language)
+- `PRD_tecnico_institucional.md` — for the development team (technical language)
+
+**You validate:** 👤 Gate 3
+- Does the executive PRD clearly communicate the system's value?
+- Does the technical PRD cover all requirements from the specs?
+- Are both consistent with each other?
+
+**Only advance when approved.**
+
+---
+
+### Step 3: PRPs (Project Requirement Proposals)
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-3.md
+```
+
+**The AI does:** Generates `PRP-001-[name].md`, `PRP-002-[name].md`, etc. in `docs/prps/`. Each PRP is a self-contained implementation contract.
+
+**You validate:** 👤 Gate 4
+- Is PRP granularity appropriate (2–8 days each)?
+- Do dependencies between PRPs make sense?
+- Did any PRD requirement get left without a PRP?
+
+**Only advance when approved.**
+
+---
+
+### Step 4: Planning (Matrix + Plan + Waves)
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-4.md
+```
+
+**The AI does:** Generates in `docs/planning/`:
+- `DEPENDENCY_MATRIX.md` — dependency graph and critical path
+- `PLAN.md` — roadmap, milestones, DoD
+- `EXECUTION_WAVES.md` — execution waves with grouped PRPs
+
+**You validate:** 👤 Gate 5
+- Are waves well-grouped?
+- Is the critical path realistic?
+- Does the total estimated time make sense?
+
+**Only advance when approved.**
+
+---
+
+### Step 5: Architecture
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-5.md
+```
+
+**The AI does:** Generates `docs/architecture/ARCHITECTURE.md` with:
+- Technology stack (frontend, backend, database, infrastructure)
+- C4 diagrams (context, containers, components)
+- ADRs (justified architectural decisions)
+- Security strategy and CI/CD
+
+**You validate:** 👤 Gate 6
+- Is the stack viable in your environment?
+- Are architectural decisions justified?
+- Are performance and security NFRs addressed?
+
+**Only advance when approved.**
+
+---
+
+### Step 6: Tasks
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-6.md
+```
+
+**The AI does:** Generates `docs/planning/TASKS.md` with:
+- Concrete tasks per PRP (scaffolding, backend, frontend, testing)
+- Assigned agents (dev_agent, qa_agent, security_agent)
+- Explicit parallelization (✅ parallel, ⚠️ after setup, ❌ sequential)
+- Estimates in hours/days
+
+**You validate:** 👤 Gate 7
+- Are all tasks actionable and unambiguous?
+- Are agents correctly assigned?
+- Are estimates realistic?
+
+**Only advance when approved.**
+
+---
+
+### Step 7: Design System
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-7.md
+```
+
+**The AI does:** Generates `docs/design/DESIGN_SYSTEM.md` by filling the `Design_System_Master.md` template with:
+- Design tokens (colors, typography, spacing, dark mode)
+- Component library (variants, states, props)
+- Interface patterns (tables, forms, navigation, dashboards)
+- Micro-interactions and state matrix
+
+**You validate:** 👤 Gate 8
+- Does the color palette reflect the project identity?
+- Do all components have defined states (loading, empty, error)?
+- Does the Design System cover the system's flows?
+
+**Only advance when approved.**
+
+---
+
+### Step 8: Setup + Mock Data Layer
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-8.md
+```
+
+**The AI does:**
+- Initializes the project with the defined stack (lint, type-check, dependencies)
+- Creates `mocks/data/` with realistic JSONs (users per profile + entities)
+- Creates `mocks/handlers/` with full CRUD via MSW
+- Updates `TASKS.md` and PRPs with progress
+
+**You validate:** 👤 Gate 9
+- Does the project compile and run locally?
+- Are mock data realistic and covering all profiles?
+- Do handlers simulate errors correctly?
+
+**Only advance when approved.**
+
+---
+
+### Step 9: Testing Documentation
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-9.md
+```
+
+**The AI does:** Generates in `docs/testing/`:
+- `TESTING_GUIDE.md` — philosophy, pyramid, test templates, mock strategy
+- `COVERAGE_BASELINE.md` — coverage baseline (starting point)
+- `COVERAGE_PROGRESS.md` — phase goals and weekly progress table
+
+**You validate:** 👤 Gate 10
+- Do test commands match the defined stack?
+- Are coverage thresholds realistic (80% unit, 70% integration)?
+- Are test templates reusable?
+
+**Only advance when approved.**
+
+---
+
+### Step 10: Project Documentation
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-10.md
+```
+
+**The AI does:**
+- `README.md` at root — entry point with badges, stack, how to run, docs
+- `docs/DEPLOYMENT.md` — environments, CI/CD pipeline, variables, rollback, monitoring
+
+**You validate:** 👤 Gate 11
+- Can a new developer run the project in ≤ 10 min following the README?
+- Does DEPLOYMENT cover rollback and monitoring?
+- Are there no exposed secrets or credentials?
+
+**Only advance when approved.**
+
+---
+
+### Step 11: Execution
+
+**Now development begins.** You have two tracks:
+
+#### Track A: Non-UI PRPs (backend, infra)
+
+```
+Execute tasks from TASKS.md directly with development agents.
+Each non-UI PRP is implemented sequentially or in parallel (per matrix).
+```
+
+#### Track B: UI PRPs (frontend) — Prototyping Subflow
+
+For each module or PRP involving screens, run:
+
+```
+Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001
+```
+
+The subflow has 6 phases:
+
+| Phase | What Happens | You Do |
+|-------|-------------|--------|
+| **F1** Discovery | AI generates personas and journey maps | Review |
+| **F2** Tokens | AI generates CSS/JSON tokens from Design System | Review |
+| **F3** Lo-Fi | AI generates low-fidelity wireframes | Review |
+| **F4** Hi-Fi | AI generates high-fidelity prototype | 🔴 **VISUAL CHECKPOINT** — Approve the visual |
+| **F5** Code | AI generates components and pages | Review |
+| **F6** Validation | AI validates usability, a11y, responsiveness | Review |
+
+---
+
+## Approval Flow
+
+```
+                    👤 = Mandatory human gate
+                    🔴 = Mandatory visual checkpoint
+
+Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
+Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
+Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
+
+Step 11:
+  ├── Non-UI PRPs → direct agent
+  └── UI PRPs → F1→F2→F3→F4─🔴─→F5→F6
 ```
 
 **Golden rule:** No step advances without the previous gate approved.
 
 ---
 
-Full step-by-step instructions in [`LLC_GUIDE.md`](LLC_GUIDE.md) (PT-BR). English version coming soon.
+## Practical Tips
+
+### If a skill fails
+- Read the error. The AI will report what went wrong.
+- Fix the input (e.g., missing document, incomplete template).
+- Re-run the skill.
+
+### If a gate is rejected
+- Note what needs to be adjusted.
+- Ask the AI to fix it: "The glossary is inconsistent with the functional requirements. Fix it."
+- Re-validate.
+
+### If you need to restart a step
+- Skills are idempotent. The AI will ask before overwriting existing files.
+- Answer "yes, overwrite" or "no, create a new version with _v2 suffix."
+
+### Working in a team
+- The pipeline supports multiple users. Each gate is a natural synchronization point.
+- Use Git branches to isolate each step's work if desired.
+- Artifacts are Markdown files — use PRs for collaborative review.
+
+---
+
+## Quick Reference
+
+| I want to... | Command |
+|--------------|---------|
+| Start the pipeline | `Execute the skill docs/skills/llc-step-0-1.md` (conversion) |
+| Jump to a specific step | `Execute the skill docs/skills/llc-step-N.md` ensuring previous gates are approved |
+| Prototype a module | `Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
+| See the full design | Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) |
+| See the directory structure | Read [`llc-pipeline-design.en.md` §2](llc-pipeline-design.en.md#2-directory-architecture) |
+| Understand a term | Read [`llc-pipeline-design.en.md` §7](llc-pipeline-design.en.md#7-glossary) |
+
+---
+
+## Next Steps After the Pipeline
+
+1. Mocked MVP is running → validate with stakeholders
+2. MVP CHECKPOINT approved → implement real integrations
+3. Integrations working → deploy to staging
+4. Acceptance tests passing → deploy to production
+5. Monitor and iterate

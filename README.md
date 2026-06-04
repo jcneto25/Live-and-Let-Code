@@ -19,7 +19,7 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **11 discrete steps** with **human validation gates** at every phase. **12 tool-agnostic skills** executable by any terminal AI client.
 
-📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — complete step-by-step  
+📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — full step-by-step guide  
 📄 **[Pipeline Specification](llc-pipeline-design.en.md)** — design document
 
 ---

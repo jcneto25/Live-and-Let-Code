@@ -1,6 +1,6 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Version:** 3.0.0  
+**Version:** 1.0.0  
 **Date:** June 4, 2026  
 **Status:** Design Approved  
 **Project:** Live and Let Code (LLC) — Agentic Autonomous Development Methodology  
@@ -244,4 +244,4 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 3.0.0 | 06/04/2026 | LLC Team | Initial LLC pipeline design |
+| 1.0.0 | 06/04/2026 | LLC Team | Initial LLC pipeline design |

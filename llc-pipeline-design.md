@@ -1,6 +1,6 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versão:** 3.0.0  
+**Versão:** 1.0.0  
 **Data:** 04 de Junho de 2026  
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
@@ -373,4 +373,4 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 3.0.0 | 04/06/2026 | Equipe LLC | Design inicial do pipeline LLC completo |
+| 1.0.0 | 04/06/2026 | Equipe LLC | Versão inicial do pipeline LLC |

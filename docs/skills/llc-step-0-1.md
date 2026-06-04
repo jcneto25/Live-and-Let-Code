@@ -49,30 +49,84 @@ Markdown vence porque:
 3. **Alinhamento com dados de treino:** A maior parte do corpus de treino de LLMs (GitHub, Reddit, documentação) está em Markdown.
 4. **Mecanismo de atenção:** Cabeçotes de atenção reconhecem `#` como hierarquia, `-` como enumeração, `**` como ênfase — sem custo extra de parsing.
 
-### 1. Verifique o Ambiente
+### 1. Verificação Pré-Voo (OBRIGATÓRIO) 🔍
+
+**ANTES de qualquer conversão, verifique se o ambiente está pronto.**
+
+#### 1.1 Verifique o Python
 
 Execute no terminal:
 ```bash
-docling --version
-```
-
-Se não estiver instalado:
-```bash
-pip install docling
+python --version
 # ou
-pipx install docling
+python3 --version
 ```
 
-**Fallback (se Docling não puder ser instalado):**
+**Se Python NÃO estiver instalado (comando não encontrado):**
+
+⛔ **PARE imediatamente.** NÃO continue. Informe ao usuário:
+
+> "❌ Python não encontrado. O Step 0.1 requer Python 3.10+ para executar o Docling.
+>
+> **Instale o Python:**
+> - **Windows:** `winget install Python.Python.3.12` ou acesse https://python.org
+> - **macOS:** `brew install python@3.12`
+> - **Linux:** `sudo apt install python3`
+>
+> Após instalar, re-execute esta skill."
+
+**Se a versão do Python for < 3.10:**
+
+⛔ **PARE.** Informe:
+
+> "❌ Python [VERSÃO] detectado. O Docling requer Python 3.10+. Atualize o Python e re-execute."
+
+#### 1.2 Verifique o Docling
+
+Com Python instalado, execute:
 ```bash
-# Verifique o pandoc
-pandoc --version
-
-# Se não estiver instalado:
-# Windows: choco install pandoc
-# macOS: brew install pandoc
-# Linux: sudo apt install pandoc
+pip show docling
+# ou
+python -m pip show docling
 ```
+
+**Se Docling NÃO estiver instalado:**
+
+⛔ **PARE.** Informe ao usuário:
+
+> "❌ Docling não encontrado. O Step 0.1 requer o pacote `docling` para converter documentos.
+>
+> **Instale o Docling:**
+> ```bash
+> pip install docling
+> ```
+>
+> Após instalar, re-execute esta skill."
+
+**Se `pip` não estiver disponível:**
+
+⛔ **PARE.** Informe:
+
+> "❌ pip não encontrado. O gerenciador de pacotes pip geralmente vem com o Python.
+>
+> **Recupere o pip:**
+> ```bash
+> python -m ensurepip --upgrade
+> ```
+>
+> Ou reinstale o Python de https://python.org (marque a opção 'Add Python to PATH')."
+
+#### 1.3 Checklist de Verificação
+
+| Verificação | Comando | Resultado Esperado |
+|-------------|---------|-------------------|
+| Python instalado | `python --version` | `Python 3.10+` |
+| pip disponível | `pip --version` | `pip 2x.x` |
+| Docling instalado | `pip show docling` | `Version: 2.x` |
+
+✅ **Se todos os 3 passarem:** Prossiga para a conversão.
+
+---
 
 ### 2. Liste os Arquivos de Entrada
 

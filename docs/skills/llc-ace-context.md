@@ -165,6 +165,71 @@ Formato fixo: `field: valor` — um por linha. Campos obrigatórios: `state`, `p
 
 ---
 
+## Automação por Cliente de IA
+
+Os scripts ACE são invocados como tool calls do agente. O padrão é sempre o mesmo: executar o script Python com `--json` e capturar a saída.
+
+### Inicialização (primeira ação de toda sessão)
+
+```
+python .ace/scripts/initialize_session.py --step <N> --task "<descrição>" --project "<nome>" --json
+```
+
+Exemplos por cliente:
+
+| Cliente | Como o agente executa |
+|---------|----------------------|
+| **Claude Code** | Bash tool: `python .ace/scripts/initialize_session.py --step 5 --task "Refatoração JWT" --json` |
+| **opencode** | Bash tool com `workdir` no projeto |
+| **Codex** | `run_shell_command` com o comando acima |
+| **Cursor CLI** | Terminal integrado: mesmo comando |
+
+A saída JSON contém `session_id`, `file`, `context_seed`, `llc_step`. O agente DEVE internalizar o `context_seed` antes de qualquer ação.
+
+### Finalização (última ação de toda sessão)
+
+```
+python .ace/scripts/finalize_session.py --json
+```
+
+Se o agente quiser fornecer o próprio context_seed (recomendado — o agente sabe o que é relevante):
+
+```
+python .ace/scripts/finalize_session.py --context-seed "state: auth refatorado
+pending: refresh token
+blockers: nenhum
+next_action: implementar /auth/refresh" --json
+```
+
+### Promoção de Learning Points (parte da finalização)
+
+`finalize_session.py` já promove automaticamente. Para executar manualmente:
+
+```
+python .ace/scripts/promote-learning-points.py --all --json
+```
+
+### Validação (antes de commit — hook automático)
+
+O pre-commit hook executa automaticamente. Para validar manualmente:
+
+```
+python .ace/scripts/validate-tags.py --strict --json
+```
+
+### Fluxo Completo em uma Sessão
+
+```
+1. Agente lê llc-ace-context skill
+2. Agente executa: python .ace/scripts/initialize_session.py --step N --task "..." --json
+3. Agente internaliza context_seed do JSON de saída
+4. Agente trabalha (append de <action>, <thinking>, <gate_result>)
+5. Agente executa: python .ace/scripts/finalize_session.py --context-seed "..." --json
+6. Sessão concluída — index.json atualizado, learning points promovidos
+```
+
+---
+
 ## ⚠️ Regras de Ouro
 
 ### ✅ O agente FAZ

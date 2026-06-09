@@ -1,19 +1,16 @@
 ---
 session_id: "{{session_id}}"
 llc_step: {{llc_step}}
+llc_step_name: "{{llc_step_name}}"
 project: "{{project}}"
+wave: {{wave}}
+task_context: "{{task_context}}"
 prev_session: "{{prev_session_id}}"
 ---
 
 ## Contexto
 
-{{#if prev_context_seed}}
-<context_seed>
-{{prev_context_seed}}
-</context_seed>
-{{else}}
-Primeira sessão do projeto.
-{{/if}}
+{{context_block}}
 
 ## Ações
 

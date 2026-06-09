@@ -38,6 +38,50 @@ São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step ava
 
 É o protocolo de questionamento obrigatório que a IA executa nos Steps 0.5, 1, 2 e 3 ANTES de gerar qualquer artefato. A IA analisa os documentos de entrada, identifica ambiguidades e apresenta até 8 perguntas ordenadas por criticidade (🔴 bloqueante, 🟡 alta, 🟢 média). O usuário responde seletivamente e a IA então gera os artefatos com base nas respostas. Elimina o principal ponto de falha do "vibe coding": suposições não validadas.
 
+### O que é um PRD? Por que há um PRD Executivo e um PRD Técnico?
+
+PRD (Product Requirements Document) é o documento que formaliza os requisitos de um produto de software, servindo como contrato entre stakeholders e equipe de desenvolvimento. O LLC gera dois PRDs porque cada público precisa de um nível diferente de detalhe:
+
+| PRD | Público | Conteúdo | Extensão típica |
+|-----|---------|----------|-----------------|
+| **Executivo** | Gestores, sponsors, stakeholders não-técnicos | Visão, objetivos de negócio, escopo macro, benefícios esperados, métricas de sucesso | ~100 linhas |
+| **Técnico** | Arquitetos, desenvolvedores, QA | Stack proposto, requisitos detalhados, contratos de API, modelo de dados, integrações, restrições | ~400 linhas |
+
+O PRD Executivo responde "por que estamos construindo isso?" e "qual o valor?". O PRD Técnico responde "como vamos construir?" e "quais são as restrições?". Ambos são gerados a partir dos mesmos 7 specs do Step 1 — é o PRRS em ação: mesma fonte, dois prismas diferentes.
+
+### O que é um PRP?
+
+PRP (Project Requirement Proposal) é o contrato auto-contido de implementação do LLC. Diferente de uma tarefa solta, um PRP contém TUDO que um agente de IA precisa para implementar uma unidade de trabalho sem ambiguidade:
+
+- Contexto e objetivo da unidade
+- Requisitos funcionais em formato Gherkin (Given/When/Then)
+- Contratos de API (endpoints, payloads, autenticação, erros)
+- Especificação de componentes (props, estados: loading, empty, error, success)
+- Mudanças de banco de dados (tabelas, campos, índices, migrações)
+- Estratégia de testes (unitários, integração, E2E)
+- Dependências (quais PRPs bloqueiam este e quais este bloqueia)
+- Riscos e mitigações
+- Definition of Done (checklist de aceitação)
+
+Um PRP típico tem 2 a 8 dias de esforço estimado. É granular o suficiente para um agente executar, mas completo o suficiente para não precisar consultar outros documentos durante a implementação.
+
+### No que um PRP se diferencia de uma história de usuário?
+
+| Dimensão | História de Usuário (Ágil) | PRP (LLC) |
+|----------|---------------------------|-----------|
+| **Formato** | "Como [perfil], quero [ação], para [benefício]" | Documento Markdown com 9 seções obrigatórias |
+| **Contexto** | Depende do Product Owner e da sprint para detalhamento | Auto-contido — o agente lê apenas o PRP |
+| **Requisitos** | Critérios de aceite em linguagem natural | Gherkin executável (Given/When/Then) |
+| **API** | Não especificada — definida durante o desenvolvimento | Contratos de API documentados (método, endpoint, payload, erros) |
+| **Componentes** | Não especificados | Props, estados e referência ao Design System |
+| **Banco de dados** | Não especificado | Tabelas, campos, índices e migrações |
+| **Testes** | Não especificados | Estratégia completa (unitários, integração, E2E) |
+| **Dependências** | Implícitas no backlog | Explícitas: "bloqueado por PRP-002, bloqueia PRP-005" |
+| **Estimativa** | Story points (relativos, subjetivos) | Dias (absolutos, calibrados com dados históricos) |
+| **Validação** | Revisão humana na sprint review | DoD checklist + `<gate_result>` no ACE + testes automatizados |
+
+A história de usuário é uma **promessa de conversa** — cabe ao time preencher as lacunas durante a sprint. O PRP é um **contrato executável** — o agente recebe, implementa e testa sem precisar perguntar nada. Um PRP equivale a uma história de usuário + especificação técnica + plano de testes + análise de riscos, tudo em um documento.
+
 ---
 
 ## Pipeline — Visão Geral

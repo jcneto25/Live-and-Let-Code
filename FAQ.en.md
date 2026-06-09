@@ -38,6 +38,50 @@ Mandatory human validation points in the LLC pipeline. No step advances without 
 
 The mandatory questioning protocol the AI runs in Steps 0.5, 1, 2, and 3 BEFORE generating any artifact. The AI analyzes input documents, identifies ambiguities, and presents up to 8 questions ranked by criticality (🔴 blocking, 🟡 high, 🟢 medium). The user answers selectively and the AI then generates artifacts based on those answers. Eliminates the main vibe coding failure point: unvalidated assumptions.
 
+### What is a PRD? Why is there an Executive PRD and a Technical PRD?
+
+A PRD (Product Requirements Document) formalizes a software product's requirements, serving as a contract between stakeholders and the development team. LLC generates two PRDs because each audience needs a different level of detail:
+
+| PRD | Audience | Content | Typical length |
+|-----|----------|---------|----------------|
+| **Executive** | Managers, sponsors, non-technical stakeholders | Vision, business objectives, macro scope, expected benefits, success metrics | ~100 lines |
+| **Technical** | Architects, developers, QA | Proposed stack, detailed requirements, API contracts, data model, integrations, constraints | ~400 lines |
+
+The Executive PRD answers "why are we building this?" and "what's the value?". The Technical PRD answers "how will we build it?" and "what are the constraints?". Both are generated from the same 7 specs from Step 1 — PRRS in action: same source, two different prisms.
+
+### What is a PRP?
+
+A PRP (Project Requirement Proposal) is LLC's self-contained implementation contract. Unlike a loose task, a PRP contains EVERYTHING an AI agent needs to implement a work unit without ambiguity:
+
+- Unit context and objective
+- Functional requirements in Gherkin format (Given/When/Then)
+- API contracts (endpoints, payloads, authentication, errors)
+- Component specifications (props, states: loading, empty, error, success)
+- Database changes (tables, fields, indexes, migrations)
+- Test strategy (unit, integration, E2E)
+- Dependencies (which PRPs block this one and which this one blocks)
+- Risks and mitigations
+- Definition of Done (acceptance checklist)
+
+A typical PRP has 2 to 8 days of estimated effort. It's granular enough for an agent to execute, yet complete enough that the agent doesn't need to consult other documents during implementation.
+
+### How does a PRP differ from a user story?
+
+| Dimension | User Story (Agile) | PRP (LLC) |
+|-----------|-------------------|-----------|
+| **Format** | "As a [role], I want [action], so that [benefit]" | Markdown document with 9 mandatory sections |
+| **Context** | Depends on Product Owner and sprint for details | Self-contained — the agent reads only the PRP |
+| **Requirements** | Acceptance criteria in natural language | Executable Gherkin (Given/When/Then) |
+| **API** | Not specified — defined during development | Documented API contracts (method, endpoint, payload, errors) |
+| **Components** | Not specified | Props, states, and Design System reference |
+| **Database** | Not specified | Tables, fields, indexes, and migrations |
+| **Tests** | Not specified | Full strategy (unit, integration, E2E) |
+| **Dependencies** | Implicit in the backlog | Explicit: "blocked by PRP-002, blocks PRP-005" |
+| **Estimation** | Story points (relative, subjective) | Days (absolute, calibrated with historical data) |
+| **Validation** | Human review at sprint review | DoD checklist + `<gate_result>` in ACE + automated tests |
+
+A user story is a **promise to have a conversation** — the team fills in the gaps during the sprint. A PRP is an **executable contract** — the agent receives it, implements it, and tests it without needing to ask anything. One PRP equals one user story + technical specification + test plan + risk analysis, all in one document.
+
 ---
 
 ## Pipeline Overview

@@ -4,6 +4,42 @@
 
 ---
 
+## Fundamental Concepts
+
+### What is an agentic development workflow?
+
+A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 13 skills, 11 human gates, and a context continuity protocol (ACE).
+
+### What is "vibe coding" and why do I need a structured workflow?
+
+Vibe coding is an informal AI coding approach where requirements are ad hoc and context easily gets lost. It works for quick experiments but generates technical debt, inconsistent code, and lack of governance. Structured workflows like LLC replace this with formal Grill Me-generated specifications, specialized per-stage agents, persistent git-versioned artifacts, and quality gates with mandatory human validation.
+
+### What is "context rot"?
+
+The phenomenon where AI quality drops as the context window fills up: 0-30% = peak quality; 50%+ = starts rushing and cutting corners; 70%+ = hallucinations and forgotten requirements. LLC solves this via the **ACE** protocol (`<context_seed>` of ~300 tokens vs full history of ~22,000 tokens) and **self-contained PRPs** — each implementation agent receives only the PRP it needs to execute, not the entire project.
+
+### What is Spec-Driven Development (SDD)?
+
+The practice of front-loading structured, machine-readable specifications (strategic vision, specs, PRDs, PRPs) so AI agents can contribute reliably to the codebase. In LLC, Steps 0-GF through 3 produce specifications in cascade with full traceability — from strategic vision to PRP, each artifact references its origin. Grill Me ensures gaps are exposed before generation, not discovered after.
+
+### What is PRRS (Prismatic Ranked Recursive Summarization)?
+
+The architectural pattern where the same data source is analyzed from **multiple simultaneous angles** (prisms) and then converges into layers of increasing granularity. In LLC: Step 1's 7 specs are 7 prisms over the ingestion docs; Step 2's 2 PRDs are 2 prisms over the specs (executive vs technical); Step 3's N PRPs are N prisms over the technical PRD.
+
+### What is ACE (Agentic Context Engineering)?
+
+LLC's cross-session continuity protocol. Combines Markdown (human readability), XML tags (machine parseability), and YAML front matter (metadata). Each session produces an append-only file in `.ace/sessions/` that is never rewritten. At the end, a 4-field `<context_seed>` compresses session state into ~300 tokens. The next session loads only this seed, not the full history.
+
+### What are Human Gates?
+
+Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 11 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
+
+### What is Grill Me?
+
+The mandatory questioning protocol the AI runs in Steps 0.5, 1, 2, and 3 BEFORE generating any artifact. The AI analyzes input documents, identifies ambiguities, and presents up to 8 questions ranked by criticality (🔴 blocking, 🟡 high, 🟢 medium). The user answers selectively and the AI then generates artifacts based on those answers. Eliminates the main vibe coding failure point: unvalidated assumptions.
+
+---
+
 ## Pipeline Overview
 
 ### How many steps does LLC have?

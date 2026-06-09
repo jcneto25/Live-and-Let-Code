@@ -1,0 +1,293 @@
+---
+name: llc-ace-context
+description: Protocolo ACE de gestão de contexto entre sessões — append-only, delta incremental, anti-amnésia.
+version: 1.0.0
+tags: [ace, context, session, memory, anti-amnesia, llc-pipeline]
+---
+
+# LLC Skill: ACE Context Engineering
+
+Gerencia o histórico de sessões do pipeline LLC com **append-only delta incremental**, garantindo continuidade de contexto sem reescrever arquivos.
+
+## Quando usar
+
+**Sempre.** Esta skill é transversal — ative no início de toda sessão LLC e execute o protocolo de encerramento ao final.
+
+## Estrutura `.ace/`
+
+```
+.ace/
+├── index.json                    # Índice leve (append de 1 linha por sessão)
+├── sessions/                     # Arquivos de sessão (append-only)
+│   └── YYYY-MM-DD-NNN.md
+├── memory/
+│   ├── learning_points.md        # Promovidos de <learning_point priority="high">
+│   └── architecture.md           # ADRs consolidados
+├── scripts/
+│   ├── session-init.py           # Inicialização
+│   ├── session-finalize.py       # Encerramento + context_seed
+│   └── promote-learning.py       # Promoção para memory/
+└── templates/
+    └── session.template.md
+```
+
+## Taxonomia de Tags XML
+
+| Tag | Função | Regra |
+|-----|--------|-------|
+| `<action_log>` | Container de ações | Append-only — nunca editar |
+| `<action type="...">` | Ação atômica | `type`: `git_commit`, `file_create`, `file_modify`, `file_delete`, `test_run`, `tool_call` |
+| `<file_delta>` | Arquivo afetado | Prefixo `@` opcional (`@auth/jwt.ts`) |
+| `<thinking ref="...">` | Chain-of-thought | `ref` opcional referencia ID de action |
+| `<learning_point priority="...">` | Conhecimento validado | `priority`: `high`, `medium`, `low` |
+| `<gate_result>` | Decisão humana no gate LLC | `step`, `decision` (`approved`/`rejected`/`conditional`) |
+| `<blocker resolved="...">` | Impedimento | `resolved`: `true` ou `false` |
+| `<context_seed>` | Estado comprimido para próxima sessão | **Escrito apenas no encerramento** |
+
+---
+
+## Mecanismo de Append (COMO fazer)
+
+**O append é sempre via escrita no final do arquivo. NUNCA via leitura + reescrita.**
+
+| Ferramenta | Comando de append |
+|-----------|-------------------|
+| Bash/PowerShell | `echo '</action>' >> .ace/sessions/2026-06-09-001.md` |
+| Python | `with open(file, "a") as f: f.write("...")` |
+| Node.js | `fs.appendFileSync(file, "...")` |
+| LLM tool call | Ferramenta "append" no final do arquivo (NUNCA "write" ou "edit" que substitua) |
+
+**Se a ferramenta da IA não tiver append nativo**, use:
+- Bash: `cat >> file << 'EOF'` (heredoc com append)
+- Se absolutamente necessário ler+escrever: leia o arquivo, concatene o delta no final, reescreva. Registre no `<thinking>` que usou read+write, não append puro.
+
+---
+
+## Protocolo de 4 Fases
+
+### FASE 1 — Inicialização (obrigatório antes de qualquer ação)
+
+**Passos do agente:**
+
+1. Verifique se `.ace/index.json` existe. Se não, crie:
+   ```json
+   {"project": "{{project_name}}", "sessions": []}
+   ```
+
+2. Leia `index.json`. Localize a última sessão com `status: "completed"`.
+
+3. Se houver sessão anterior, extraia o `<context_seed>` do final do arquivo:
+   ```
+   Busque a última ocorrência de <context_seed>...</context_seed> no arquivo.
+   ```
+
+4. Determine o ID da nova sessão:
+   - Formato: `YYYY-MM-DD-NNN` (ex: `2026-06-09-001`)
+   - NNN = número de sessões já criadas hoje + 1
+
+5. Crie o novo arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` com o template vazio e o `context_seed` da sessão anterior.
+
+6. Adicione ao `index.json`:
+   ```json
+   {"session_id": "2026-06-09-001", "file": "2026-06-09-001.md", "status": "in_progress", "llc_step": 5, "tags": [], "timestamp": "2026-06-09T10:00:00Z"}
+   ```
+   **Modo de append seguro para index.json:**
+   - Leia o JSON, modifique o array `sessions` em memória, reescreva o arquivo inteiro.
+   - `index.json` é o ÚNICO arquivo que pode ser reescrito — é um índice, não um log.
+
+7. Internalize o `context_seed` ANTES de qualquer tool call.
+
+### FASE 2 — Execução (append de deltas conforme age)
+
+**Para cada ação atômica, appenda ao final do arquivo de sessão:**
+
+```
+<action type="file_modify">
+  <file_delta>src/auth/jwt.ts</file_delta>
+  <description>Migração para HttpOnly cookies</description>
+  <lines_changed>+34 -12</lines_changed>
+</action>
+
+<thinking ref="action-1">
+  HttpOnly cookies não são acessíveis via document.cookie.
+  Custo aceitável: requer CSRF token explícito.
+</thinking>
+```
+
+**Regras de append:**
+- ✅ Escrever cada `<action>` e `<thinking>` IMEDIATAMENTE após a ação — não acumular em buffer
+- ✅ `<thinking>` é opcional — use apenas quando houver decisão não-óbvia
+- ✅ `<learning_point>` quando descobrir algo generalizável
+- ❌ **NUNCA editar `<action>` anteriores** — o histórico é imutável
+- ❌ **NUNCA reordenar ações**
+- ❌ **NUNCA deletar ações** — mesmo erradas, registre a correção como nova ação
+
+### FASE 3 — Gate LLC
+
+**Ao completar uma etapa (0-10), antes de prosseguir:**
+
+```
+<gate_result step="5" decision="approved" reviewer="humano">
+  Implementação aprovada. Prosseguir para refresh token.
+</gate_result>
+```
+
+- `decision`: `approved` | `rejected` | `conditional`
+- `rejected` → registre `<blocker resolved="false">` descrevendo o motivo
+- Só prossiga após `<gate_result decision="approved">`
+
+### FASE 4 — Encerramento (obrigatório antes de fechar)
+
+**Passos do agente:**
+
+1. Gere o `<context_seed>` com 4 campos OBRIGATÓRIOS:
+
+```
+<context_seed>
+state: middleware de auth refatorado para HttpOnly cookies. 14/14 testes passando.
+pending: implementar endpoint /auth/refresh com validação de exp
+blockers: nenhum ativo
+next_action: criar src/auth/refresh.ts com lógica de refresh token
+</context_seed>
+```
+
+Formato fixo: `field: valor` — um por linha. Campos obrigatórios: `state`, `pending`, `blockers`, `next_action`.
+
+2. Appenda o `<context_seed>` ao FINAL do arquivo de sessão.
+
+3. Atualize o front matter: mude `status` para `completed` e preencha `duration_min` e `files_touched`.
+
+4. Atualize `index.json`: mude `status` da sessão para `completed`.
+
+5. Promova `learning_points` de prioridade `high` para `.ace/memory/learning_points.md`.
+
+6. Commit: `ace: session YYYY-MM-DD-NNN completed — Step N`
+
+---
+
+## ⚠️ Regras de Ouro
+
+### ✅ O agente FAZ
+
+- Lê `index.json` + `context_seed` ao iniciar
+- Cria novo arquivo de sessão em branco
+- Appenda deltas via escrita no final do arquivo
+- Registra `<gate_result>` a cada etapa
+- Escreve `<context_seed>` com 4 campos no encerramento
+- Atualiza `index.json` (reescrita permitida — é índice, não log)
+
+### ❌ O agente NUNCA FAZ
+
+- **Nunca** reescreve um arquivo de sessão existente
+- **Nunca** edita `<action_log>` retroativamente
+- **Nunca** deleta ações (erro se registra como nova ação de correção)
+- **Nunca** pula o `context_seed` da sessão anterior
+- **Nunca** encerra sem escrever `<context_seed>`
+
+---
+
+## Template de Sessão
+
+Arquivo: `.ace/templates/session.template.md`
+
+```markdown
+---
+session_id: "{{session_id}}"
+llc_step: {{llc_step}}
+project: "{{project}}"
+prev_session: "{{prev_session_id}}"
+---
+
+## Contexto
+
+{{#if prev_context_seed}}
+<context_seed>
+{{prev_context_seed}}
+</context_seed>
+{{else}}
+Primeira sessão do projeto.
+{{/if}}
+
+## Ações
+
+<action_log>
+</action_log>
+
+## Aprendizados
+
+<!-- <learning_point priority="high">...</learning_point> -->
+
+## Gates
+
+<!-- <gate_result step="N" decision="approved" reviewer="...">...</gate_result> -->
+
+## Bloqueadores
+
+<!-- <blocker resolved="false">...</blocker> -->
+
+## Encerramento
+
+<context_seed>
+state: [preencher no encerramento]
+pending: [preencher no encerramento]
+blockers: [preencher no encerramento]
+next_action: [preencher no encerramento]
+</context_seed>
+
+---
+status: completed
+duration_min: {{duration}}
+files_touched: []
+```
+
+**Nota sobre o footer:** Campos mutáveis (`status`, `duration_min`, `files_touched`) vão ao final, após o `<context_seed>`, separados por `---`. O front matter YAML no topo permanece imutável durante a sessão.
+
+---
+
+## `index.json` — Schema
+
+```json
+{
+  "project": "string",
+  "sessions": [
+    {
+      "session_id": "string (YYYY-MM-DD-NNN)",
+      "file": "string (YYYY-MM-DD-NNN.md)",
+      "status": "in_progress | completed | abandoned",
+      "llc_step": "integer (0-10)",
+      "tags": ["string"],
+      "timestamp": "string (ISO 8601)"
+    }
+  ]
+}
+```
+
+---
+
+## Integração com Gates LLC
+
+| Gate | Ação ACE |
+|------|----------|
+| 👤 1–11 | `<gate_result step="N" decision="approved/rejected" reviewer="...">` |
+| 🔴 CHECKPOINT VISUAL | `<gate_result step="subflow-F4" decision="approved" reviewer="...">` |
+| Rejeitado | `<blocker resolved="false">` + não avança |
+| Aprovado | `<gate_result>` + prosseguir |
+
+---
+
+## Métricas de Saúde
+
+| Métrica | Alvo | Verificação |
+|---------|------|-------------|
+| Sessões com `context_seed` | 100% | `grep -L '<context_seed>' .ace/sessions/*.md` |
+| Sessões imutáveis | 0 reescritas | `git log --diff-filter=M -- .ace/sessions/` |
+| `index.json` consistente | 100% | `jq empty .ace/index.json` |
+| Tags balanceadas | 100% | `<action>` = `</action>` count |
+
+---
+
+## Referência
+
+- Spec completa: `docs/superpowers/specs/YYYY-MM-DD-ace-context-design.md`
+- Scripts: `.ace/scripts/`
+- Exemplo de sessão: `.ace/sessions/2026-06-09-001.md`

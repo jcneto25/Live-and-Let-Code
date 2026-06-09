@@ -367,8 +367,8 @@ Execute a skill docs/skills/llc-step-10.md
 
 | Arquivo | Conteúdo | Quem usa |
 |---------|----------|----------|
-| **CLAUDE.md** | O QUE é o projeto — stack, domínio, DB, arquitetura, restrições LLC | Ferramentas que leem `CLAUDE.md` (Claude Code, opencode) |
-| **AGENTS.md** | COMO o desenvolvedor trabalha — zonas, TDD, handoff, Grill Me | Padrão emergente suportado por múltiplos clientes (Cursor, Codex, Copilot CLI) |
+| **CLAUDE.md** | O QUE é o projeto — stack, domínio, DB, arquitetura, restrições LLC | Claude Code (exclusivo) |
+| **AGENTS.md** | COMO o desenvolvedor trabalha — zonas, TDD, handoff, Grill Me | Padrão emergente: Cursor, Codex, Copilot CLI, opencode |
 
 **Se sua ferramenta NÃO suporta `CLAUDE.md`:** Consolide tudo no `AGENTS.md` — adicione as seções de projeto (stack, domínio, restrições) ao template do AGENTS. O `<!-- @include AGENTS.md -->` no CLAUDE.md garante que ferramentas que suportam ambos não dupliquem regras.
 

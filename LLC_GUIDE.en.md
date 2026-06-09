@@ -367,8 +367,8 @@ Execute the skill docs/skills/llc-step-10.md
 
 | File | Content | Used by |
 |------|---------|---------|
-| **CLAUDE.md** | WHAT the project is — stack, domain, DB, architecture, LLC constraints | Tools that read `CLAUDE.md` (Claude Code, opencode) |
-| **AGENTS.md** | HOW the developer works — zones, TDD, handoff, Grill Me | Emerging standard supported by multiple clients (Cursor, Codex, Copilot CLI) |
+| **CLAUDE.md** | WHAT the project is — stack, domain, DB, architecture, LLC constraints | Claude Code (exclusive) |
+| **AGENTS.md** | HOW the developer works — zones, TDD, handoff, Grill Me | Emerging standard: Cursor, Codex, Copilot CLI, opencode |
 
 **If your tool does NOT support `CLAUDE.md`:** Consolidate everything into `AGENTS.md` — add project sections (stack, domain, constraints) to the AGENTS template. The `<!-- @include AGENTS.md -->` in CLAUDE.md ensures tools supporting both won't duplicate rules.
 

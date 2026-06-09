@@ -135,8 +135,8 @@ Se alertas dispararem, agende uma onda de refatoração cross-PRP.
 
 | Arquivo | O que contém | Para quem |
 |---------|-------------|-----------|
-| `CLAUDE.md` | Stack, domínio, DB, arquitetura, restrições LLC | Claude Code, opencode |
-| `AGENTS.md` | Zonas, TDD, handoff, Grill Me, protocolo epistêmico | Cursor, Codex, Copilot CLI |
+| `CLAUDE.md` | Stack, domínio, DB, arquitetura, restrições LLC | Claude Code (exclusivo) |
+| `AGENTS.md` | Zonas, TDD, handoff, Grill Me, protocolo epistêmico | Cursor, Codex, Copilot CLI, opencode |
 
 **Se sua ferramenta não suporta `CLAUDE.md`:** consolide tudo no `AGENTS.md`. O `<!-- @include AGENTS.md -->` no CLAUDE.md garante que ferramentas que suportam ambos não dupliquem regras.
 

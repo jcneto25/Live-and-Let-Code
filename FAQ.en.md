@@ -135,8 +135,8 @@ If alerts fire, schedule a cross-PRP refactoring wave.
 
 | File | Content | For |
 |------|---------|-----|
-| `CLAUDE.md` | Stack, domain, DB, architecture, LLC constraints | Claude Code, opencode |
-| `AGENTS.md` | Zones, TDD, handoff, Grill Me, epistemic protocol | Cursor, Codex, Copilot CLI |
+| `CLAUDE.md` | Stack, domain, DB, architecture, LLC constraints | Claude Code (exclusive) |
+| `AGENTS.md` | Zones, TDD, handoff, Grill Me, epistemic protocol | Cursor, Codex, Copilot CLI, opencode |
 
 **If your tool doesn't support `CLAUDE.md`:** consolidate everything into `AGENTS.md`. The `<!-- @include AGENTS.md -->` in CLAUDE.md ensures tools supporting both won't duplicate rules.
 

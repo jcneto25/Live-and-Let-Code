@@ -317,7 +317,59 @@ O LLC reforça TDD em 3 níveis: `CLAUDE.md`/`AGENTS.md` (regra de ouro do desen
 | **Aprovar releases** | 11 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
 | **Registrar decisões** | `<gate_result>` no ACE fecha o loop de accountability |
 
-Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA.
+
+---
+
+## Ferramentas e Integrações
+
+### Quais ferramentas são necessárias para utilizar o workflow LLC?
+
+**Stack mínimo (obrigatório):**
+
+| Ferramenta | Para que | Instalação |
+|-----------|----------|------------|
+| **Git** | Versionamento de todos os artefatos e código | `git --version` (pré-instalado na maioria dos sistemas) |
+| **Python 3.10+** | Scripts ACE (sessões, impacto, code-health) | `python --version` |
+| **Docling** | Conversão de PDF/DOCX/HTML para Markdown (Step 0.1) | `pip install docling` |
+| **Um cliente de IA terminal** | Execução das skills LLC | Claude Code, opencode, Codex CLI, Cursor CLI — qualquer um |
+
+**Stack recomendado (opcional):**
+
+| Ferramenta | Para que | Quando usar |
+|-----------|----------|-------------|
+| **PyYAML** | `impact-analyzer.py` e scripts ACE | Já incluso na instalação do Docling |
+| **jq** | Validação de `index.json` no pre-commit hook | `choco install jq` / `brew install jq` |
+| **pre-commit** | Framework de hooks git (validação ACE automatizada) | `pip install pre-commit && pre-commit install` |
+| **Excalidraw MCP** | Wireframes lo-fi no subfluxo de prototipagem (F3) | https://github.com/excalidraw/excalidraw-mcp |
+| **Pencil MCP** | Protótipos hi-fi no subfluxo de prototipagem (F4) | https://docs.pencil.dev |
+| **Pandoc** | Fallback de conversão se Docling indisponível | `choco install pandoc` / `brew install pandoc` |
+| **MSW** | Mock Service Worker para camada de dados mockados (Step 8) | `npm install msw --save-dev` |
+
+### Quais LLMs funcionam com workflows agenticos?
+
+Qualquer LLM que suporte **tool calling** (invocação de ferramentas de terminal, leitura/escrita de arquivos) e tenha capacidade de **thinking/reasoning** para os Steps 0-10:
+
+| LLM | Recomendação | Observações |
+|-----|-------------|-------------|
+| **Claude (3.5 Sonnet, 3.5 Haiku, Opus)** | ⭐⭐⭐⭐⭐ Ideal | Thinking mode nativo, excelente em análise de documentos longos, consistente em geração de specs |
+| **GPT-4o, GPT-4.1** | ⭐⭐⭐⭐ Muito bom | Reasoning mode (o1/o3) cobre Steps 0-10; tool calling robusto |
+| **Gemini 2.5 Pro** | ⭐⭐⭐⭐ Muito bom | Janela de contexto de 1M tokens — vantagem para ingestion de documentos extensos |
+| **Qwen (2.5, 3)** | ⭐⭐⭐ Bom | Open-source, performance competitiva em code generation |
+| **DeepSeek (V3, R1)** | ⭐⭐⭐ Bom | Reasoning mode (R1) para Steps 0-10; custo-benefício excelente |
+| **Mistral Large** | ⭐⭐⭐ Bom | Sólido em francês e inglês; tool calling funcional |
+
+**Regra prática:** Para Steps 0-10 (especificação e planejamento), use uma LLM com **thinking/reasoning mode**. Para Step 11 (execução), o modo regular é suficiente. O LLC é tool-agnostic — qualquer combinação de LLM + cliente de IA terminal funciona, desde que suporte leitura/escrita de arquivos e execução de comandos.
+
+**Custo estimado por projeto completo (pipeline LLC):**
+
+| Porte do projeto | Tokens estimados | Custo aproximado (Claude 3.5 Sonnet) |
+|-----------------|-----------------|--------------------------------------|
+| Pequeno (3-5 PRPs) | ~500K tokens | $1.50 - $3.00 |
+| Médio (10-15 PRPs) | ~1.5M tokens | $4.50 - $9.00 |
+| Grande (30+ PRPs) | ~4M tokens | $12.00 - $24.00 |
+
+*Valores de junho/2026. O custo real depende do número de iterações Grill Me e re-execuções de skills após gates reprovados.* Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
 
 ---
 

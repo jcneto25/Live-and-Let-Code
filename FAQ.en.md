@@ -317,7 +317,59 @@ The principle that humans remain in control of all critical development decision
 | **Approve releases** | 11 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
 | **Record decisions** | `<gate_result>` in ACE closes the accountability loop |
 
-Agents improve the return on human attention — they don't replace it. An engineer who used to spend 4 hours writing specs now spends 30 minutes reviewing and approving AI-generated specs. This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
+Agents improve the return on human attention — they don't replace it. An engineer who used to spend 4 hours writing specs now spends 30 minutes reviewing and approving AI-generated specs.
+
+---
+
+## Tools & Integrations
+
+### What tools are needed to use the LLC workflow?
+
+**Minimum stack (required):**
+
+| Tool | Purpose | Installation |
+|------|---------|-------------|
+| **Git** | Versioning all artifacts and code | `git --version` (pre-installed on most systems) |
+| **Python 3.10+** | ACE scripts (sessions, impact, code-health) | `python --version` |
+| **Docling** | PDF/DOCX/HTML to Markdown conversion (Step 0.1) | `pip install docling` |
+| **A terminal AI client** | Executing LLC skills | Claude Code, opencode, Codex CLI, Cursor CLI — any |
+
+**Recommended stack (optional):**
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| **PyYAML** | `impact-analyzer.py` and ACE scripts | Included with Docling install |
+| **jq** | `index.json` validation in pre-commit hook | `choco install jq` / `brew install jq` |
+| **pre-commit** | Git hooks framework (automated ACE validation) | `pip install pre-commit && pre-commit install` |
+| **Excalidraw MCP** | Lo-fi wireframes in prototyping subflow (F3) | https://github.com/excalidraw/excalidraw-mcp |
+| **Pencil MCP** | Hi-fi prototypes in prototyping subflow (F4) | https://docs.pencil.dev |
+| **Pandoc** | Conversion fallback if Docling unavailable | `choco install pandoc` / `brew install pandoc` |
+| **MSW** | Mock Service Worker for mock data layer (Step 8) | `npm install msw --save-dev` |
+
+### Which LLMs work with agentic workflows?
+
+Any LLM supporting **tool calling** (terminal tool invocation, file read/write) and capable of **thinking/reasoning** for Steps 0-10:
+
+| LLM | Recommendation | Notes |
+|-----|---------------|-------|
+| **Claude (3.5 Sonnet, 3.5 Haiku, Opus)** | ⭐⭐⭐⭐⭐ Ideal | Native thinking mode, excellent at long document analysis, consistent spec generation |
+| **GPT-4o, GPT-4.1** | ⭐⭐⭐⭐ Very good | Reasoning mode (o1/o3) covers Steps 0-10; robust tool calling |
+| **Gemini 2.5 Pro** | ⭐⭐⭐⭐ Very good | 1M token context window — advantage for large document ingestion |
+| **Qwen (2.5, 3)** | ⭐⭐⭐ Good | Open-source, competitive code generation performance |
+| **DeepSeek (V3, R1)** | ⭐⭐⭐ Good | Reasoning mode (R1) for Steps 0-10; excellent cost-benefit |
+| **Mistral Large** | ⭐⭐⭐ Good | Solid in French and English; functional tool calling |
+
+**Rule of thumb:** For Steps 0-10 (specification and planning), use an LLM with **thinking/reasoning mode**. For Step 11 (execution), regular mode is sufficient. LLC is tool-agnostic — any LLM + terminal AI client combination works, as long as it supports file read/write and command execution.
+
+**Estimated cost per complete project (LLC pipeline):**
+
+| Project size | Estimated tokens | Approximate cost (Claude 3.5 Sonnet) |
+|-------------|-----------------|--------------------------------------|
+| Small (3-5 PRPs) | ~500K tokens | $1.50 - $3.00 |
+| Medium (10-15 PRPs) | ~1.5M tokens | $4.50 - $9.00 |
+| Large (30+ PRPs) | ~4M tokens | $12.00 - $24.00 |
+
+*June 2026 values. Actual cost depends on Grill Me iteration count and skill re-executions after rejected gates.* This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
 
 ---
 

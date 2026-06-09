@@ -114,6 +114,67 @@ Through **persistent artifact handoffs** (strategic vision, specs, PRDs, PRPs, a
 
 ---
 
+## Workflow and Phases
+
+### What are the typical phases of an agentic workflow?
+
+A complete agentic workflow covers the software lifecycle in 4 macro-phases, each with specialized agents and validation gates:
+
+| Macro-phase | LLC Steps | What happens |
+|-------------|-----------|--------------|
+| **1. Discovery & Specification** | 0-GF to 3 | Requirements gathering (or greenfield interview), spec generation, PRDs and PRPs with Grill Me |
+| **2. Planning & Architecture** | 4 to 7 | Dependency matrix, execution waves, architecture (C4 + ADRs), Design System |
+| **3. Foundation & MVP** | 8 to 10 | Project setup, mock layer (MSW), testing documentation, steering files (CLAUDE.md/AGENTS.md) |
+| **4. Execution & Delivery** | 11 + Subflow | Non-UI PRPs (direct agents), UI PRPs (subflow F1-F6), code health, QA gates, deploy |
+
+### What are "Agentic Planning" and "Context-Engineered Development"?
+
+Two complementary LLC pillars:
+
+| Pillar | What it is | How LLC implements it |
+|--------|-----------|----------------------|
+| **Agentic Planning** | Structured planning to maximize parallelism between agents | Steps 3-4: self-contained PRPs, dependency matrix, execution waves with critical path analysis |
+| **Context-Engineered Development** | Development that preserves context between sessions without saturating the window | ACE (`<context_seed>`), Grill Me (questions before generation), PRPs as isolated contracts (agent doesn't need the entire project) |
+
+Agentic Planning answers "what to do and in what order." Context-Engineered Development answers "how to do it without losing the thread between sessions."
+
+### How does the LLC workflow work step by step?
+
+1. **You load documents** into `docs/business/ingestion/` (or, if you have none, the AI interviews you via greenfield flow)
+2. **The AI converts** everything to Markdown (Docling) and asks questions to fill gaps (Grill Me)
+3. **The AI generates** strategic vision, specs, PRDs, and PRPs — each stage validated by you (human gates)
+4. **The AI plans** execution waves and defines architecture, stack, Design System
+5. **The AI sets up** the project, creates mock data, and testing documentation
+6. **You approve** and the AI implements PRPs in parallel (UI PRPs go through the prototyping subflow with visual checkpoint)
+7. **Code health** monitors structural metrics; QA gates validate before deployment
+
+### What is "aggressive atomicity"?
+
+The principle that each work unit should be small enough to fit within ~50% of a fresh context window, ensuring the agent always operates in the peak quality zone (0-30% fill). In LLC:
+
+- **PRPs are sized for 2-8 days** of effort — small enough for an agent to complete without context degradation
+- **Waves group PRPs** so the wave set doesn't exceed context capacity
+- **Independent PRPs run in parallel** (separate worktrees); dependent PRPs wait for blockers to complete
+- The 4-field `<context_seed>` ensures the agent resumes exactly where it left off, without reloading history
+
+### What is PRP decomposition (equivalent to "epic sharding")?
+
+The process of breaking a comprehensive PRD into focused, self-contained development units. In LLC, the decomposition chain is:
+
+```
+Technical PRD (~400 lines)
+    ↓ Step 0.5: decomposed into modules (MOD-*)
+Modules (~100 lines each)
+    ↓ Step 3: decomposed into PRPs (PRP-*)
+PRPs (~50-80 lines each)
+    ↓ Step 6: decomposed into tasks (TASK-*)
+Tasks (checkboxes in TASKS.md)
+```
+
+Each level preserves the full context needed for its execution, eliminating the need to consult the original PRD during implementation. This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
+
+---
+
 ## Pipeline Overview
 
 ### How many steps does LLC have?

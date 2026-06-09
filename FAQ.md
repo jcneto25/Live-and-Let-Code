@@ -114,6 +114,67 @@ Através de **handoffs de artefatos persistentes** (visão estratégica, specs, 
 
 ---
 
+## Fluxo de Trabalho e Fases
+
+### Quais são as fases típicas de um workflow agentico?
+
+Um workflow agentico completo cobre o ciclo de vida do software em 4 macro-fases, cada uma com agentes especializados e gates de validação:
+
+| Macro-fase | Steps LLC | O que acontece |
+|------------|-----------|----------------|
+| **1. Descoberta e Especificação** | 0-GF a 3 | Levantamento de requisitos (ou entrevista greenfield), geração de specs, PRDs e PRPs com Grill Me |
+| **2. Planejamento e Arquitetura** | 4 a 7 | Matriz de dependências, ondas de execução, arquitetura (C4 + ADRs), Design System |
+| **3. Fundação e MVP** | 8 a 10 | Setup do projeto, camada mock (MSW), documentação de testes, steering files (CLAUDE.md/AGENTS.md) |
+| **4. Execução e Entrega** | 11 + Subfluxo | PRPs sem UI (agentes diretos), PRPs com UI (subfluxo F1-F6), code health, QA gates, deploy |
+
+### O que é "Agentic Planning" e "Context-Engineered Development"?
+
+São dois pilares complementares do LLC:
+
+| Pilar | O que é | Como o LLC implementa |
+|-------|---------|----------------------|
+| **Agentic Planning** | Planejamento estruturado para maximizar paralelismo entre agentes | Steps 3-4: PRPs auto-contidos, matriz de dependências, ondas de execução com análise de caminho crítico |
+| **Context-Engineered Development** | Desenvolvimento que preserva contexto entre sessões sem saturar a janela | ACE (`<context_seed>`), Grill Me (perguntas antes de gerar), PRPs como contratos isolados (agente não precisa do projeto inteiro) |
+
+O Agentic Planning responde "o que fazer e em qual ordem". O Context-Engineered Development responde "como fazer sem perder o fio da meada entre sessões".
+
+### Como funciona o workflow LLC passo a passo?
+
+1. **Você carrega documentos** em `docs/business/ingestion/` (ou, se não tem docs, a IA entrevista você no fluxo greenfield)
+2. **A IA converte** tudo para Markdown (Docling) e faz perguntas para preencher lacunas (Grill Me)
+3. **A IA gera** visão estratégica, specs, PRDs e PRPs — cada etapa validada por você (human gates)
+4. **A IA planeja** ondas de execução e define arquitetura, stack, Design System
+5. **A IA configura** o projeto, cria dados mockados e documentação de testes
+6. **Você aprova** e a IA implementa os PRPs em paralelo (PRPs com UI passam pelo subfluxo de prototipagem com checkpoint visual)
+7. **Code health** monitora métricas estruturais; QA gates validam antes do deploy
+
+### O que é "atomicidade agressiva" (aggressive atomicity)?
+
+É o princípio de que cada unidade de trabalho deve ser pequena o suficiente para caber em ~50% de uma janela de contexto fresca, garantindo que o agente opere sempre na zona de qualidade de pico (0-30% de preenchimento). No LLC:
+
+- **PRPs são dimensionados para 2-8 dias** de esforço — pequenos o suficiente para um agente concluir sem degradação de contexto
+- **Ondas (waves) agrupam PRPs** de forma que o conjunto da onda não exceda a capacidade de contexto
+- **PRPs independentes rodam em paralelo** (worktrees separados); PRPs dependentes aguardam a conclusão dos bloqueantes
+- O `<context_seed>` de 4 campos garante que o agente retome exatamente de onde parou, sem recarregar histórico
+
+### O que é decomposição em PRPs (equivalente a "sharding de épicos")?
+
+É o processo de quebrar um PRD abrangente em unidades de desenvolvimento focadas e auto-contidas. No LLC, a cadeia de decomposição é:
+
+```
+PRD Técnico (~400 linhas)
+    ↓ Step 0.5: decomposto em módulos (MOD-*)
+Módulos (~100 linhas cada)
+    ↓ Step 3: decompostos em PRPs (PRP-*)
+PRPs (~50-80 linhas cada)
+    ↓ Step 6: decompostos em tarefas (TASK-*)
+Tarefas (checkboxes no TASKS.md)
+```
+
+Cada nível preserva o contexto completo necessário para sua execução, eliminando a necessidade de consultar o PRD original durante a implementação. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+
+---
+
 ## Pipeline — Visão Geral
 
 ### Quantas etapas tem o LLC?

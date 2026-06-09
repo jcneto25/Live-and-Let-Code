@@ -446,12 +446,49 @@ Exemplo: alterar `perfis_permissoes.md` → o analisador reporta 6 artefatos em 
 | **Consistência garantida** | Nenhum artefato fica desatualizado por esquecimento |
 | **Ordem correta** | O report mostra a ordem exata de revisão (dependências antes de dependentes) |
 | **Sugestão de skills** | O agente sabe exatamente quais skills re-executar |
-| **Custo zero** | O grafo é gerado e mantido pelo próprio pipeline (Step 4) |
+| **Custo zero** | O grafo é gerido e mantido pelo próprio pipeline (Step 4) |
 | **Pré-commit** | Integrado ao hook de git — análise de impacto a cada commit |
 
 ---
 
-## 10. Glossário LLC
+## 10. Saúde Estrutural do Código (Code Health)
+
+### 10.1 O Problema
+
+Agentes de IA independentes, operando em PRPs paralelos, tendem a maximizar produtividade de curto prazo: adicionar novas linhas é mais fácil que refatorar código existente. Isso gera degradação estrutural silenciosa:
+
+- **Queda no Moved Code:** taxa de código reorganizado em módulos cai abaixo de 10%
+- **Inversão Copy/Paste vs Moved:** duplicação de código supera reuso (violação do princípio DRY)
+- **Abandono de código legacy:** menos de 20% das alterações tocam código com mais de 30 dias
+- **Clone em vez de abstração:** agentes duplicam blocos lógicos em vez de criar módulos compartilhados
+
+### 10.2 A Solução
+
+O script `code-health.py` analisa o histórico do git e monitora 4 métricas estruturais:
+
+| Métrica | Threshold de Alerta | Severidade |
+|---------|---------------------|------------|
+| % Moved Code | < 10% do total de alterações | 🔴 Crítico |
+| Copy/Paste vs Moved | Cópias > Movimentações | 🟡 Alto |
+| % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto |
+| Consistência estrutural | Todos os thresholds OK | ✅ Saudável |
+
+### 10.3 Integração
+
+- **Checkpoint QA (Step 11):** se métricas críticas estão violadas, o gate QA bloqueia o avanço
+- **Pre-commit hook:** análise informativa a cada commit
+- **Execução manual:** `python .ace/scripts/code-health.py --json`
+
+### 10.4 Ações Corretivas
+
+Quando um alerta é disparado, o pipeline recomenda:
+1. Agendar onda de refatoração cross-PRP
+2. Identificar blocos duplicados e consolidar em módulo compartilhado
+3. Revisar PRPs recentes que priorizaram `file_create` sobre `file_modify`
+
+---
+
+## 11. Glossário LLC
 
 | Termo | Definição |
 |-------|-----------|
@@ -466,10 +503,11 @@ Exemplo: alterar `perfis_permissoes.md` → o analisador reporta 6 artefatos em 
 
 ---
 
-## 11. Controle de Versão
+## 12. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.2.0 | 10/06/2026 | Equipe LLC | Adicionado Grill Me (Steps 0.5-3), fluxo greenfield, análise de saúde estrutural (Code Health §10) |
 | 1.1.0 | 10/06/2026 | Equipe LLC | Adicionado Mermaid ao fluxo do pipeline (§3.1), seções ACE (§8) e Análise de Impacto (§9), removidos archive/ e superpowers/ |
 | 1.0.0 | 04/06/2026 | Equipe LLC | Versão inicial do pipeline LLC |
 

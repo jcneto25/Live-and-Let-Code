@@ -433,6 +433,21 @@ Step 11:
 - Peça à IA para corrigir: "O glossário está inconsistente com os requisitos funcionais. Corrija."
 - Re-valide.
 
+### Monitorando a Saúde do Código
+
+Com múltiplos agentes atuando em paralelo, é essencial monitorar métricas estruturais:
+
+```
+python .ace/scripts/code-health.py --since "30 days ago"
+```
+
+O script analisa 4 métricas:
+- **% Moved Code:** taxa de código reorganizado em módulos (alerta se < 10%)
+- **Copy/Paste vs Moved:** duplicação superando reuso (alerta se copy > moved)
+- **% Legacy Touch:** código antigo sendo refatorado (alerta se < 20%)
+
+Se alertas críticos forem disparados, agende uma onda de refatoração cross-PRP.
+
 ### Se precisar recomeçar um passo
 - Skills são idempotentes. A IA perguntará antes de sobrescrever arquivos existentes.
 - Responda "sim, sobrescreva" ou "não, crie uma nova versão com sufixo _v2".

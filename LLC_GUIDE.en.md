@@ -433,6 +433,21 @@ Step 11:
 - Ask the AI to fix it: "The glossary is inconsistent with the functional requirements. Fix it."
 - Re-validate.
 
+### Monitoring Code Health
+
+With multiple agents working in parallel, monitoring structural metrics is essential:
+
+```
+python .ace/scripts/code-health.py --since "30 days ago"
+```
+
+The script monitors 4 metrics:
+- **% Moved Code:** rate of code reorganized into modules (alert if < 10%)
+- **Copy/Paste vs Moved:** duplication exceeding reuse (alert if copy > moved)
+- **% Legacy Touch:** old code being refactored (alert if < 20%)
+
+If critical alerts fire, schedule a cross-PRP refactoring wave.
+
 ### If you need to restart a step
 - Skills are idempotent. The AI will ask before overwriting existing files.
 - Answer "yes, overwrite" or "no, create a new version with _v2 suffix."

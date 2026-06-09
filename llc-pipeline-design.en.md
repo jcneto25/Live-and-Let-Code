@@ -343,7 +343,48 @@ Example: changing `profiles_permissions.md` → the analyzer reports 6 cascading
 
 ---
 
-## 10. Glossary
+## 10. Structural Code Health
+
+### 10.1 The Problem
+
+AI agents maximize short-term productivity at the cost of structural code health. When multiple autonomous agents implement PRPs in parallel worktrees, three degradation patterns emerge:
+
+1. **Code reorganization stalls:** Code that is "moved" (refactored into reusable modules) drops below 10% of commits. Agents default to local changes rather than structural improvements.
+2. **Copy/paste exceeds moved:** Duplication via copy/paste surpasses intentional code movement. Boilerplate proliferation outpaces module extraction.
+3. **Legacy code abandonment:** Refactoring of pre-existing code (Legacy Touch) falls below 20%. New code is added on top of unimproved legacy foundations.
+
+### 10.2 The Solution
+
+`code-health.py` (`docs/skills/code-health.py`) monitors 4 structural metrics derived from git history:
+
+| Metric | Threshold | Rationale |
+|--------|-----------|-----------|
+| **% Moved Code** | ≥ 10% of commits | Ensures continuous refactoring into reusable modules |
+| **Copy/Paste vs Moved** | copy ≤ moved | Duplication must not exceed intentional code organization |
+| **% Legacy Touch** | ≥ 20% of commits | Guarantees pre-existing code is consistently improved |
+| **Structural Consistency** | — | Qualitative check: folder conventions, naming, module boundaries |
+
+### 10.3 Integration
+
+`code-health.py` integrates at three levels:
+
+| Level | Trigger | Behavior |
+|-------|---------|----------|
+| **QA Checkpoint (Step 11)** | Every execution cycle | Blocking if 2+ metrics are below threshold |
+| **Pre-commit hook** | Every `git commit` | Warning if 1 metric is below threshold |
+| **Manual execution** | On demand | `python .ace/scripts/code-health.py --since "30 days ago"` |
+
+### 10.4 Corrective Actions
+
+When alerts fire, apply corrective actions in order:
+
+1. **Schedule a refactoring wave:** Group structural improvements into a dedicated PRP wave. Target the metric farthest from threshold.
+2. **Consolidate duplicates:** Run a deduplication analysis across components, handlers, and utilities. Merge equivalent implementations.
+3. **Review recent PRPs:** Check last 3 completed PRPs for code movement opportunities. Did each PRP extract at least one reusable module?
+
+---
+
+## 11. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -358,10 +399,11 @@ Example: changing `profiles_permissions.md` → the analyzer reports 6 cascading
 
 ---
 
-## 11. Version Control
+## 12. Version Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.2.0 | 06/10/2026 | LLC Team | Added Grill Me (Steps 0.5-3), greenfield flow, structural code health analysis (§10) |
 | 1.1.0 | 06/10/2026 | LLC Team | Added Mermaid pipeline flow (§3.1), ACE (§8) and Impact Analysis (§9) sections, removed archive/ and superpowers/ |
 | 1.0.0 | 06/04/2026 | LLC Team | Initial LLC pipeline design |
 

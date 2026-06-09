@@ -30,6 +30,25 @@ tags: [prp, planning, llc-pipeline]
 
 Você está executando a skill `llc-step-3` do pipeline LLC. Seu objetivo é decompor o sistema em contratos auto-contidos de implementação chamados PRPs (Project Requirement Proposals).
 
+## 🔍 Modo Interrogatório (Grill Me) — OBRIGATÓRIO
+
+**ANTES de gerar qualquer PRP, execute esta fase:**
+
+1. **Analise** os PRDs em `docs/prd/`, os specs em `docs/business/specs/` e os módulos (MOD-*.md) e identifique:
+   - Ambiguidades nos requisitos que impedem decomposição precisa
+   - Funcionalidades cujo escopo não está claro
+   - Dependências implícitas entre módulos que não foram documentadas
+
+2. **Apresente** ao usuário uma lista numerada de perguntas (máximo 8), ordenadas por criticidade (🔴 bloqueante, 🟡 alta, 🟢 média). Foque em questões de granularidade, escopo e dependências.
+
+3. **Sugira** 2-3 respostas possíveis por pergunta. Aguarde a resposta do usuário.
+
+4. O usuário pode responder seletivamente ou dizer **"prossiga com o que tem"**. Neste caso, use `[NÃO IDENTIFICADO]` no PRP e marque suposições.
+
+5. Após as respostas, prossiga com a decomposição em PRPs.
+
+**💡 Dica:** Ative o modo thinking/extended reasoning da sua LLM para esta fase.
+
 ### O que é um PRP
 Um PRP é um contrato completo para uma unidade de trabalho implementável. Ele contém: contexto, requisitos (Gherkin), API contracts, componentes, mudanças de banco, estratégia de testes, riscos e Definition of Done. Cada PRP deve ser auto-contido o suficiente para um agente de desenvolvimento executá-lo sem ambiguidade.
 

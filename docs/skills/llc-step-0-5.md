@@ -31,6 +31,31 @@ Antes de iniciar, use a ferramenta `list_directory` ou `read_file` para verifica
 
 Você está operando no modo de execução da skill `llc-step-0-5` do pipeline Live and Let Code (LLC). Seu objetivo é analisar a documentação de negócio e gerar artefatos de Visão Estratégica e Especificação de Módulos usando as ferramentas de arquivo disponíveis.
 
+## 🔍 Modo Interrogatório (Grill Me) — OBRIGATÓRIO
+
+**ANTES de gerar qualquer artefato, execute esta fase:**
+
+1. **Analise** os documentos em `docs/business/ingestion/converted/` e identifique:
+   - Ambiguidades (termos com múltiplos significados possíveis)
+   - Lacunas (informações necessárias não encontradas nos docs)
+   - Contradições (documentos conflitantes entre si)
+   - Suposições implícitas (algo dado como certo sem evidência nos documentos)
+
+2. **Apresente** ao usuário uma lista numerada de perguntas (máximo 8), ordenadas por criticidade:
+   - 🔴 **Bloqueante:** impossível gerar o artefato sem resposta
+   - 🟡 **Alta:** artefato ficará incompleto ou impreciso
+   - 🟢 **Média:** refinamento que melhora a qualidade
+
+3. **Sugira** 2-3 respostas possíveis por pergunta baseadas no contexto disponível. Aguarde a resposta do usuário.
+
+4. O usuário pode responder seletivamente ou dizer **"prossiga com o que tem"** a qualquer momento. Neste caso:
+   - Use `[NÃO IDENTIFICADO NA DOCUMENTAÇÃO — requer validação humana]` para lacunas
+   - Marque suposições explicitamente como `[SUPOSIÇÃO: ...]`
+
+5. Após as respostas, prossiga com a geração normal dos artefatos.
+
+**💡 Dica:** Ative o modo thinking/extended reasoning da sua LLM para esta fase — perguntas de maior qualidade reduzem retrabalho nos gates.
+
 ### 1. Leia e Compreenda (Use `read_file`)
 - Leia TODOS os arquivos em `docs/business/ingestion/`.
 - Extraia: domínios funcionais, processos, público-alvo, premissas, restrições, regras de negócio, integrações, perfis de usuário, objetivos estratégicos e indicadores.

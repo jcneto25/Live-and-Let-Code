@@ -29,6 +29,22 @@ tags: [prd, specification, llc-pipeline]
 
 Você está executando a skill `llc-step-2` do pipeline LLC. Seu objetivo é sintetizar as 8 especificações em dois PRDs com públicos distintos.
 
+## 🔍 Modo Interrogatório (Grill Me) — OBRIGATÓRIO
+
+**ANTES de gerar qualquer artefato, execute esta fase:**
+
+1. **Analise** os 7 specs em `docs/business/specs/` e a Visão Estratégica e identifique ambiguidades, lacunas, contradições e suposições implícitas.
+
+2. **Apresente** ao usuário uma lista numerada de perguntas (máximo 8), ordenadas por criticidade (🔴 bloqueante, 🟡 alta, 🟢 média). Foque especialmente em questões que afetam a comunicação com stakeholders (PRD executivo) e decisões técnicas (PRD técnico).
+
+3. **Sugira** 2-3 respostas possíveis por pergunta. Aguarde a resposta do usuário.
+
+4. O usuário pode responder seletivamente ou dizer **"prossiga com o que tem"**. Neste caso, use `[NÃO IDENTIFICADO]` para lacunas e `[SUPOSIÇÃO: ...]` para suposições.
+
+5. Após as respostas, prossiga com a geração normal dos PRDs.
+
+**💡 Dica:** Ative o modo thinking/extended reasoning da sua LLM para esta fase.
+
 ### Documentos a Gerar
 
 | # | Documento | Template | Público | Tom |

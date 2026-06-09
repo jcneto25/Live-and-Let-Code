@@ -30,6 +30,22 @@ tags: [specification, llc-pipeline]
 
 Você está executando a skill `llc-step-1` do pipeline LLC. Seu objetivo é gerar 8 documentos de especificação detalhada a partir da Visão Estratégica e Módulos validados no passo anterior.
 
+## 🔍 Modo Interrogatório (Grill Me) — OBRIGATÓRIO
+
+**ANTES de gerar qualquer artefato, execute esta fase:**
+
+1. **Analise** a Visão e os Módulos em `docs/business/specs/` e identifique ambiguidades, lacunas, contradições e suposições implícitas.
+
+2. **Apresente** ao usuário uma lista numerada de perguntas (máximo 8), ordenadas por criticidade (🔴 bloqueante, 🟡 alta, 🟢 média).
+
+3. **Sugira** 2-3 respostas possíveis por pergunta. Aguarde a resposta do usuário.
+
+4. O usuário pode responder seletivamente ou dizer **"prossiga com o que tem"**. Neste caso, use `[NÃO IDENTIFICADO]` para lacunas e `[SUPOSIÇÃO: ...]` para suposições.
+
+5. Após as respostas, prossiga com a geração normal dos 7 specs.
+
+**💡 Dica:** Ative o modo thinking/extended reasoning da sua LLM para esta fase.
+
 ### Documentos a Gerar
 
 | # | Documento | Template | Destino |

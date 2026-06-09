@@ -438,6 +438,12 @@ Step 11:
 With multiple agents working in parallel, monitoring structural metrics is essential:
 
 ```
+Execute the skill docs/skills/llc-code-health.md
+```
+
+Or directly via script:
+
+```
 python .ace/scripts/code-health.py --since "30 days ago"
 ```
 

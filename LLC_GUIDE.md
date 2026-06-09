@@ -438,6 +438,12 @@ Step 11:
 Com múltiplos agentes atuando em paralelo, é essencial monitorar métricas estruturais:
 
 ```
+Execute a skill docs/skills/llc-code-health.md
+```
+
+Ou diretamente via script:
+
+```
 python .ace/scripts/code-health.py --since "30 days ago"
 ```
 

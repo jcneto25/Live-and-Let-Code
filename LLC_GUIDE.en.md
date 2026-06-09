@@ -360,6 +360,17 @@ Execute the skill docs/skills/llc-step-10.md
 **The AI does:**
 - `README.md` at root — entry point with badges, stack, how to run, docs
 - `docs/DEPLOYMENT.md` — environments, CI/CD pipeline, variables, rollback, monitoring
+- `CLAUDE.md` — project steering file (stack, domain, architecture, constraints, commands)
+- `AGENTS.md` — developer steering file (epistemic protocol, zones, TDD, handoff)
+
+#### CLAUDE.md vs AGENTS.md: Which to use?
+
+| File | Content | Used by |
+|------|---------|---------|
+| **CLAUDE.md** | WHAT the project is — stack, domain, DB, architecture, LLC constraints | Tools that read `CLAUDE.md` (Claude Code, opencode) |
+| **AGENTS.md** | HOW the developer works — zones, TDD, handoff, Grill Me | Emerging standard supported by multiple clients (Cursor, Codex, Copilot CLI) |
+
+**If your tool does NOT support `CLAUDE.md`:** Consolidate everything into `AGENTS.md` — add project sections (stack, domain, constraints) to the AGENTS template. The `<!-- @include AGENTS.md -->` in CLAUDE.md ensures tools supporting both won't duplicate rules.
 
 **You validate:** 👤 Gate 11
 - Can a new developer run the project in ≤ 10 min following the README?

@@ -41,12 +41,18 @@ This document specifies:
 
 ```
 project-root/
+├── CLAUDE.md                                   # [OUTPUT] Project steering file (Step 10)
+├── AGENTS.md                                   # [OUTPUT] Developer steering file (Step 10)
 ├── README.md                                   # Entry point (Step 10)
 │
 ├── docs/
 │   ├── DEPLOYMENT.md                           # Deploy strategy (Step 10)
 │   │
-  │   ├── business/                               # Business hub
+│   ├── templates/                              # Global templates
+│   │   ├── CLAUDE_TEMPLATE.md
+│   │   └── AGENTS_TEMPLATE.md
+│   │
+│   ├── business/                               # Business hub
   │   │   ├── ingestion/                          # [INPUT] Raw user docs
   │   │   │   └── converted/                      # [OUTPUT] Markdown files (Step 0.1)
   │   │   ├── specs/                              # [OUTPUT] 8 specs + vision + modules
@@ -193,23 +199,25 @@ graph TD
 
 ### 3.2 Steps Table
 
-| # | Name | Input | Output | Gate |
-|---|------|-------|--------|------|
-| 0 | Ingestion | User docs | `business/ingestion/` | — |
-| 0-GF | Greenfield (alternative) | User interview | `ingestion/converted/` (interview .md) | — |
-| 0.1 | Conversion | `ingestion/` | `ingestion/converted/` | — |
-| 0.5 | Vision + Modules | `ingestion/converted/` | Vision + MOD-*.md | 👤 1 |
-| 1 | 7 Specs | Vision + Modules | Glossary, FR, NFR, BR, BPMN, Profiles, Integrations | 👤 2 |
-| 2 | PRDs | 7 specs + Vision | `executive_PRD.md`, `PRD_tecnico_institucional.md` | 👤 3 |
-| 3 | PRPs | PRDs + Specs + Modules | `PRP-*.md` | 👤 4 |
-| 4 | Planning | PRPs | Dependency Matrix + Plan + Waves | 👤 5 |
-| 5 | Architecture | PRDs + NFR + Integrations + Planning | `ARCHITECTURE.md` | 👤 6 |
-| 6 | Tasks | PRPs + Architecture + Planning | `TASKS.md` | 👤 7 |
-| 7 | Design System | Architecture + Vision + Profiles | `DESIGN_SYSTEM.md` | 👤 8 |
-| 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | 👤 9 |
-| 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | 👤 10 |
-| 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` | 👤 11 |
-| 11 | Execution | All previous artifacts | Source code | QA Checkpoints |
+| # | Name | Input | Output | Templates | Gate |
+|---|------|-------|--------|-----------|------|
+| 0 | Ingestion | User docs | `business/ingestion/` | — | — |
+| 0-GF | Greenfield (alternative) | User interview | `ingestion/converted/` (interview .md) | — | — |
+| 0.1 | Conversion | `ingestion/` | `ingestion/converted/` | — | — |
+| 0.5 | Vision + Modules | `ingestion/converted/` | Vision + MOD-*.md | — | 👤 1 |
+| 1 | 7 Specs | Vision + Modules | Glossary, FR, NFR, BR, BPMN, Profiles, Integrations | — | 👤 2 |
+| 2 | PRDs | 7 specs + Vision | `executive_PRD.md`, `PRD_tecnico_institucional.md` | — | 👤 3 |
+| 3 | PRPs | PRDs + Specs + Modules | `PRP-*.md` | — | 👤 4 |
+| 4 | Planning | PRPs | Dependency Matrix + Plan + Waves | — | 👤 5 |
+| 5 | Architecture | PRDs + NFR + Integrations + Planning | `ARCHITECTURE.md` | — | 👤 6 |
+| 6 | Tasks | PRPs + Architecture + Planning | `TASKS.md` | — | 👤 7 |
+| 7 | Design System | Architecture + Vision + Profiles | `DESIGN_SYSTEM.md` | — | 👤 8 |
+| 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | — | 👤 9 |
+| 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | — | 👤 10 |
+| 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` + `CLAUDE.md` + `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
+| 11 | Execution | All previous artifacts | Source code | — | QA Checkpoints |
+
+> **Note:** `CLAUDE.md` describes **what the project is** — stack, domain, architecture. `AGENTS.md` describes **how the developer works** — zones, TDD, handoff conventions. If your AI tool does not support `CLAUDE.md`, consolidate its content into `AGENTS.md`.
 
 ---
 

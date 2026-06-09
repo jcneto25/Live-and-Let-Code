@@ -42,6 +42,8 @@ Este documento especifica:
 
 ```
 project-root/
+├── CLAUDE.md                                   # [OUTPUT] Steering file — regras do projeto (Step 10)
+├── AGENTS.md                                   # [OUTPUT] Steering file — protocolo do desenvolvedor (Step 10)
 ├── README.md                                   # Portal de entrada (Step 10)
 │
 ├── docs/
@@ -94,23 +96,11 @@ project-root/
 │   │   └── SPEC_TEMPLATE.md
 │   │
   │   ├── skills/                                 # Skills LLC (tool-agnostic)
-  │   │   ├── llc-step-0-greenfield.md
-  │   │   ├── llc-step-0-1.md
-  │   │   ├── llc-step-0-5.md
-  │   │   ├── llc-step-1.md
-  │   │   ├── llc-step-2.md
-  │   │   ├── llc-step-3.md
-  │   │   ├── llc-step-4.md
-  │   │   ├── llc-step-5.md
-  │   │   ├── llc-step-6.md
-  │   │   ├── llc-step-7.md
-  │   │   ├── llc-step-8.md
-  │   │   ├── llc-step-9.md
-  │   │   ├── llc-step-10.md
-  │   │   ├── llc-subflow-prototyping.md
-  │   │   ├── llc-ace-context.md
-  │   │   ├── llc-code-health.md
-  │   │   └── llc-impact-analyzer.md
+  │   │   └── ...
+  │   │
+  │   ├── templates/                              # Templates de arquivos de steering
+  │   │   ├── CLAUDE_TEMPLATE.md                  # Template para CLAUDE.md (projeto)
+  │   │   └── AGENTS_TEMPLATE.md                  # Template para AGENTS.md (desenvolvedor)
   │   │
 │   ├── superpowers/                             # Meta-documentação
 │   │   └── specs/                               # Design specs
@@ -237,7 +227,7 @@ graph TD
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
-| 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md` | — | 👤 11 |
+| 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 11 | Execução | Todos os artefatos anteriores | Código fonte | — | Checkpoints QA |
 
 ---

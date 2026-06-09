@@ -265,7 +265,59 @@ All LLC artifacts are persistent Markdown documents versioned in **Git**, treate
 - **Traceability:** `dependency-graph.yaml` maps relationships between artifacts; `impact-analyzer.py` detects which need updating when a source artifact changes
 - **Human review:** each artifact passes through a human gate before being considered approved
 - **Immutable history:** ACE session artifacts (`.ace/sessions/`) are append-only — never rewritten
-- **PRs & code review:** artifacts can be reviewed like code, with readable diffs in git This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
+- **PRs & code review:** artifacts can be reviewed like code, with readable diffs in git
+
+---
+
+## Quality & Gates
+
+### What are "quality gates"?
+
+Phase transition checkpoints that verify each artifact meets defined criteria before the next agent starts. In LLC, gates are formal and recorded:
+
+- **11 human gates:** one after each generation step (0.5 through 10). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
+- **1 visual checkpoint:** in the prototyping subflow (F4 → F5). The hi-fi prototype doesn't become code without explicit visual approval
+- **QA checkpoints:** during execution (Step 11): score ≥ 7.0, coverage ≥ thresholds, security audit passed
+
+Each gate decision is recorded in ACE via `<gate_result step="N" decision="approved|rejected|conditional" reviewer="...">`. A rejected gate returns the flow to the previous step and logs a `<blocker>`.
+
+### How to ensure AI-generated code quality?
+
+LLC implements 6 quality assurance layers:
+
+| Layer | LLC Mechanism |
+|-------|---------------|
+| **1. Specification before code** | Steps 0-GF through 3 generate detailed specs, PRDs, and PRPs with Grill Me — the AI doesn't write a single line of code before requirements are validated |
+| **2. Specialized agents per phase** | Each stage has an agent with restricted context: the architect doesn't implement, the developer doesn't define requirements |
+| **3. Quality gates at every transition** | 11 human gates + 1 visual checkpoint + QA gates — no artifact advances without validation |
+| **4. TDD embedded in PRPs** | Each PRP defines test strategy (unit, integration, E2E). `code-health.py` monitors whether agents follow TDD |
+| **5. Peer review (human and agent)** | Human `<gate_result>` + automated `llc-impact-analyzer` + pre-commit validation hooks |
+| **6. Requirements-to-code traceability** | Full chain: Vision → Module → Spec → PRD → PRP → Task → Commit. `dependency-graph.yaml` + `impact-analyzer.py` ensure changes propagate correctly |
+
+### How does TDD help prevent hallucinations?
+
+TDD provides an **objective target** for the AI to iterate against. Without it, the AI can generate code that "looks right" but doesn't work. With TDD:
+
+1. **Reality anchor:** the failing test is concrete proof the code doesn't work yet — the AI can't hallucinate that it's "already done"
+2. **Self-healing loop:** AI writes test → runs (fails) → implements → runs (passes). If it fails again, the cycle restarts. The AI self-corrects without human intervention
+3. **Overfitting prevention:** tests written before code reduce the bias of "implement just to pass the test"
+4. **Regression mitigation:** every PRP has mandatory tests. If an agent breaks something, the test fails immediately — not weeks later in production
+
+LLC enforces TDD at 3 levels: `CLAUDE.md`/`AGENTS.md` (developer golden rule), `TESTING_GUIDE.md` (coverage thresholds: ≥ 80% unit, ≥ 70% integration), and `code-health.py` (monitors whether agents add code without tests).
+
+### What is "human-in-the-loop"?
+
+The principle that humans remain in control of all critical development decisions. AI agents operate within human-defined guardrails — they never replace humans. In LLC:
+
+| Where the human decides | Mechanism |
+|------------------------|-----------|
+| **Define objectives** | Human describes the system (ingestion) or answers the greenfield interview |
+| **Negotiate scope** | Grill Me: AI asks, human answers. Unvalidated assumptions are blocked |
+| **Oversee design** | VISUAL CHECKPOINT in subflow F4 → F5: prototype doesn't become code without approval |
+| **Approve releases** | 11 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
+| **Record decisions** | `<gate_result>` in ACE closes the accountability loop |
+
+Agents improve the return on human attention — they don't replace it. An engineer who used to spend 4 hours writing specs now spends 30 minutes reviewing and approving AI-generated specs. This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
 
 ---
 

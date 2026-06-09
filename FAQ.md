@@ -265,7 +265,59 @@ Todos os artefatos LLC são documentos Markdown persistentes versionados em **Gi
 - **Rastreabilidade:** o `dependency-graph.yaml` mapeia relações entre artefatos; o `impact-analyzer.py` detecta quais precisam ser atualizados quando um artefato fonte muda
 - **Revisão humana:** cada artefato passa por um human gate antes de ser considerado aprovado
 - **Histórico imutável:** artefatos de sessão ACE (`.ace/sessions/`) são append-only — nunca reescritos
-- **PRs e code review:** artefatos podem ser revisados como código, com diff legível no git Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+- **PRs e code review:** artefatos podem ser revisados como código, com diff legível no git
+
+---
+
+## Qualidade e Gates
+
+### O que são "quality gates" (gates de qualidade)?
+
+São checkpoints de transição de fase que verificam se cada artefato atende aos critérios definidos antes do próximo agente começar. No LLC, os gates são formais e registrados:
+
+- **11 human gates:** um após cada step de geração (0.5 a 10). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
+- **1 checkpoint visual:** no subfluxo de prototipagem (F4 → F5). O protótipo hi-fi não vira código sem aprovação visual explícita
+- **Checkpoints de QA:** durante a execução (Step 11): score ≥ 7.0, cobertura ≥ thresholds, security audit aprovado
+
+Cada decisão de gate é registrada no ACE via `<gate_result step="N" decision="approved|rejected|conditional" reviewer="...">`. Um gate reprovado retorna o fluxo ao passo anterior e registra `<blocker>`.
+
+### Como garantir que o código gerado por IA seja de qualidade?
+
+O LLC implementa 6 camadas de garantia de qualidade:
+
+| Camada | Mecanismo LLC |
+|--------|---------------|
+| **1. Especificação antes do código** | Steps 0-GF a 3 geram specs, PRDs e PRPs detalhados com Grill Me — a IA não escreve uma linha de código antes que os requisitos estejam validados |
+| **2. Agentes especializados por fase** | Cada etapa tem um agente com contexto restrito: o arquiteto não implementa, o dev não define requisitos |
+| **3. Quality gates em cada transição** | 11 human gates + 1 checkpoint visual + QA gates — nenhum artefato avança sem validação |
+| **4. TDD embutido nos PRPs** | Cada PRP define estratégia de testes (unitários, integração, E2E). O `code-health.py` monitora se agentes estão seguindo TDD |
+| **5. Revisão por pares (humanos e agentes)** | `<gate_result>` humano + `llc-impact-analyzer` automatizado + pre-commit hooks de validação |
+| **6. Rastreabilidade de requisitos a código** | Cadeia completa: Visão → Módulo → Spec → PRD → PRP → Tarefa → Commit. O `dependency-graph.yaml` + `impact-analyzer.py` garantem que mudanças propaguem corretamente |
+
+### Como o TDD ajuda a evitar alucinações?
+
+O TDD fornece um **alvo objetivo** contra o qual a IA itera. Sem ele, a IA pode gerar código que "parece certo" mas não funciona. Com TDD:
+
+1. **Âncora de realidade:** o teste que falha é uma prova concreta de que o código ainda não funciona — a IA não pode alucinar que "já está pronto"
+2. **Self-healing loop:** a IA escreve o teste → roda (falha) → implementa → roda (passa). Se falhar de novo, o ciclo recomeça. A IA se auto-corrige sem intervenção humana
+3. **Prevenção de overfitting:** testes escritos antes do código reduzem o viés de "implementar só para passar no teste"
+4. **Mitigação de regressão:** cada PRP tem testes obrigatórios. Se um agente quebrar algo, o teste falha imediatamente — não semanas depois em produção
+
+O LLC reforça TDD em 3 níveis: `CLAUDE.md`/`AGENTS.md` (regra de ouro do desenvolvedor), `TESTING_GUIDE.md` (thresholds de cobertura: ≥ 80% unitários, ≥ 70% integração) e `code-health.py` (monitora se agentes estão adicionando código sem testes).
+
+### O que é "human-in-the-loop"?
+
+É o princípio de que humanos permanecem no controle em todas as decisões críticas do ciclo de desenvolvimento. Agentes de IA executam dentro de guardrails definidos por humanos — nunca os substituem. No LLC:
+
+| Onde o humano decide | Mecanismo |
+|---------------------|-----------|
+| **Definir objetivos** | O humano descreve o sistema (ingestion) ou responde à entrevista greenfield |
+| **Negociar escopo** | Grill Me: a IA pergunta, o humano responde. Suposições não validadas são bloqueadas |
+| **Supervisionar design** | CHECKPOINT VISUAL no subfluxo F4 → F5: protótipo não vira código sem aprovação |
+| **Aprovar releases** | 11 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
+| **Registrar decisões** | `<gate_result>` no ACE fecha o loop de accountability |
+
+Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
 
 ---
 

@@ -29,6 +29,10 @@ prev_session: "{{prev_session_id}}"
 
 <!-- <blocker resolved="false">...</blocker> -->
 
+## Tarefas Concluídas
+
+<!-- <task_completed id="TASK-NNN" prp="PRP-NNN" status="done">...</task_completed> -->
+
 ## Encerramento
 
 <context_seed>

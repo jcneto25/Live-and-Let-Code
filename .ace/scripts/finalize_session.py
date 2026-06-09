@@ -35,6 +35,7 @@ INDEX_FILE = ACE_DIR / "index.json"
 SESSIONS_DIR = ACE_DIR / "sessions"
 MEMORY_DIR = ACE_DIR / "memory"
 LEARNING_POINTS_FILE = MEMORY_DIR / "learning_points.md"
+TASKS_FILE = Path("docs/planning/TASKS.md")
 
 
 def extract_all_tags(content: str, tag: str) -> list[dict]:
@@ -184,6 +185,68 @@ def update_index(session_id: str, status: str = "completed"):
     logger.info(f"✅ index.json atualizado (status: {status})")
 
 
+def extract_task_completions(content: str) -> list[dict]:
+    """Extrai tarefas concluídas das tags <task_completed>."""
+    pattern = r'<task_completed([^>]*)>(.*?)</task_completed>'
+    matches = re.findall(pattern, content, re.DOTALL)
+    results = []
+    for attrs_str, body in matches:
+        attrs = {}
+        for attr_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
+            attrs[attr_match.group(1)] = attr_match.group(2)
+        results.append({
+            "task_id": attrs.get("id", ""),
+            "prp": attrs.get("prp", ""),
+            "status": attrs.get("status", "done"),
+            "description": body.strip()
+        })
+    return results
+
+
+def update_tasks_md(completed_tasks: list[dict], dry_run: bool = False) -> int:
+    """Atualiza TASKS.md marcando checkboxes concluídas."""
+    if not completed_tasks:
+        return 0
+
+    if not TASKS_FILE.exists():
+        logger.warning("⚠️  TASKS.md não encontrado — task_completed ignorados")
+        return 0
+
+    content = TASKS_FILE.read_text(encoding='utf-8')
+    updated_count = 0
+
+    for task in completed_tasks:
+        task_id = task["task_id"]
+        if not task_id:
+            continue
+
+        pattern = re.compile(
+            rf'^(\s*- \[)([ x/])(\] .*?\b{re.escape(task_id)}\b.*)$',
+            re.MULTILINE
+        )
+
+        def replace_cb(match):
+            nonlocal updated_count
+            if match.group(2) != 'x':
+                updated_count += 1
+                return f'{match.group(1)}x{match.group(3)}'
+            return match.group(0)
+
+        new_content = pattern.sub(replace_cb, content)
+        if new_content != content:
+            content = new_content
+
+    if updated_count > 0 and not dry_run:
+        TASKS_FILE.write_text(content, encoding='utf-8')
+        logger.info(f"✅ TASKS.md atualizado — {updated_count} tarefa(s) marcada(s) como [x]")
+    elif updated_count > 0:
+        logger.info(f"🔍 [DRY RUN] {updated_count} tarefa(s) seriam marcadas no TASKS.md")
+    else:
+        logger.info("ℹ️  Nenhuma task_completed nova encontrada ou já marcada")
+
+    return updated_count
+
+
 def git_commit(session_id: str):
     try:
         subprocess.run(["git", "add", ".ace/"], check=True, capture_output=True)
@@ -238,11 +301,15 @@ def main():
     logger.info(f"📊 {len(actions)} ações, {len(learnings)} learning_points, "
                 f"{len(blockers)} blockers, gate={'✓' if gate_present else '✗'}")
 
+    completed_tasks = extract_task_completions(content)
+    logger.info(f"📋 {len(completed_tasks)} task_completed encontradas")
+
     context_seed = build_context_seed(actions, learnings, blockers, gate_present, args.context_seed)
     logger.info(f"📦 Context seed gerado ({len(context_seed)} chars)")
 
     write_context_seed(session_file, context_seed)
     promote_learning_points(session_file)
+    tasks_updated = update_tasks_md(completed_tasks)
     update_index(session_id, status="completed")
 
     if args.commit:
@@ -252,7 +319,7 @@ def main():
         "session_id": session_id, "file": str(session_file),
         "context_seed": context_seed, "actions_count": len(actions),
         "learnings_count": len(learnings), "blockers_count": len(blockers),
-        "gate_present": gate_present
+        "gate_present": gate_present, "tasks_updated": tasks_updated
     }
 
     if args.json:

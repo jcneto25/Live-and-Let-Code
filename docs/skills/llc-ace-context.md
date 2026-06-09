@@ -42,6 +42,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 | `<learning_point priority="...">` | Conhecimento validado | `priority`: `high`, `medium`, `low` |
 | `<gate_result>` | Decisão humana no gate LLC | `step`, `decision` (`approved`/`rejected`/`conditional`) |
 | `<blocker resolved="...">` | Impedimento | `resolved`: `true` ou `false` |
+| `<task_completed id="..." prp="..." status="...">` | Tarefa concluída | `id`: TASK-NNN, `prp`: PRP-NNN, `status`: `done`/`partial` |
 | `<context_seed>` | Estado comprimido para próxima sessão | **Escrito apenas no encerramento** |
 
 ---
@@ -118,6 +119,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 - ✅ Escrever cada `<action>` e `<thinking>` IMEDIATAMENTE após a ação — não acumular em buffer
 - ✅ `<thinking>` é opcional — use apenas quando houver decisão não-óbvia
 - ✅ `<learning_point>` quando descobrir algo generalizável
+- ✅ `<task_completed>` ao concluir uma tarefa do TASKS.md — o `finalize_session.py` atualiza automaticamente os checkboxes
 - ❌ **NUNCA editar `<action>` anteriores** — o histórico é imutável
 - ❌ **NUNCA reordenar ações**
 - ❌ **NUNCA deletar ações** — mesmo erradas, registre a correção como nova ação

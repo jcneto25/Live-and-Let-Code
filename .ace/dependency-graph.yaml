@@ -1,0 +1,280 @@
+# Grafo de Dependências entre Artefatos LLC
+# Cada artefato declara: quais artefatos o originam (depends_on)
+# e quais artefatos ele impacta quando modificado (triggers_update).
+#
+# Padrão: modificar um artefato fonte → revisar todos os triggers_update
+# em cascata até os artefatos terminais (sem triggers_update).
+#
+# Gerado e mantido pelo pipeline LLC. Atualizado a cada execução do Step 4.
+
+version: "1.0.0"
+generated_by: "llc-step-4"
+last_updated: "2026-06-10"
+
+artifacts:
+
+  # ── ENTRADA (Step 0) ──
+  ingestion_raw:
+    path_pattern: "docs/business/ingestion/*"
+    depends_on: []
+    triggers_update:
+      - ingestion_converted
+
+  ingestion_converted:
+    path_pattern: "docs/business/ingestion/converted/*"
+    depends_on:
+      - ingestion_raw
+    triggers_update:
+      - visao_estrategica
+      - module_specs
+
+  # ── STEP 0.5 ──
+  visao_estrategica:
+    path: "docs/business/specs/visao_estrategica_e_negocio.md"
+    depends_on:
+      - ingestion_converted
+    triggers_update:
+      - glossario
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - regras_negocio
+      - perfis_permissoes
+      - catalogo_integracoes
+      - prd_executivo
+      - prd_tecnico
+      - architecture
+      - design_system
+
+  module_specs:
+    path_pattern: "docs/business/specs/MOD-*.md"
+    depends_on:
+      - ingestion_converted
+      - visao_estrategica
+    triggers_update:
+      - requisitos_funcionais
+      - workflows_bpmn
+      - prd_tecnico
+      - prps
+      - tasks
+
+  # ── STEP 1 ──
+  glossario:
+    path: "docs/business/specs/glossario.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+    triggers_update:
+      - requisitos_funcionais
+      - regras_negocio
+      - prd_executivo
+      - prd_tecnico
+
+  requisitos_funcionais:
+    path: "docs/business/specs/requisitos_funcionais.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+      - glossario
+    triggers_update:
+      - prd_tecnico
+      - prps
+      - tasks
+      - test_guide
+
+  requisitos_nao_funcionais:
+    path: "docs/business/specs/requisitos_nao_funcionais.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - architecture
+      - test_guide
+
+  regras_negocio:
+    path: "docs/business/specs/regras_negocio.md"
+    depends_on:
+      - visao_estrategica
+      - glossario
+    triggers_update:
+      - prd_tecnico
+      - prps
+
+  workflows_bpmn:
+    path: "docs/business/specs/workflows_bpmn.md"
+    depends_on:
+      - module_specs
+    triggers_update:
+      - prd_tecnico
+      - prps
+      - design_system
+
+  perfis_permissoes:
+    path: "docs/business/specs/perfis_permissoes.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - design_system
+      - deployment
+
+  catalogo_integracoes:
+    path: "docs/business/specs/catalogo_integracoes.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - architecture
+      - deployment
+
+  # ── STEP 2 ──
+  prd_executivo:
+    path: "docs/prd/executive_PRD.md"
+    depends_on:
+      - visao_estrategica
+      - glossario
+      - requisitos_funcionais
+      - regras_negocio
+    triggers_update:
+      - readme
+
+  prd_tecnico:
+    path: "docs/prd/PRD_tecnico_institucional.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+      - glossario
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - perfis_permissoes
+      - catalogo_integracoes
+    triggers_update:
+      - prps
+      - architecture
+      - design_system
+
+  # ── STEP 3 ──
+  prps:
+    path_pattern: "docs/prps/PRP-*.md"
+    depends_on:
+      - module_specs
+      - requisitos_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - prd_tecnico
+    triggers_update:
+      - dependency_matrix
+      - plan
+      - execution_waves
+      - tasks
+
+  # ── STEP 4 ──
+  dependency_matrix:
+    path: "docs/planning/DEPENDENCY_MATRIX.md"
+    depends_on:
+      - prps
+    triggers_update:
+      - execution_waves
+      - plan
+
+  plan:
+    path: "docs/planning/PLAN.md"
+    depends_on:
+      - prps
+      - dependency_matrix
+    triggers_update:
+      - tasks
+      - readme
+
+  execution_waves:
+    path: "docs/planning/EXECUTION_WAVES.md"
+    depends_on:
+      - prps
+      - dependency_matrix
+    triggers_update:
+      - tasks
+
+  # ── STEP 5 ──
+  architecture:
+    path: "docs/architecture/ARCHITECTURE.md"
+    depends_on:
+      - visao_estrategica
+      - requisitos_nao_funcionais
+      - catalogo_integracoes
+      - prd_tecnico
+    triggers_update:
+      - tasks
+      - test_guide
+      - deployment
+
+  # ── STEP 6 ──
+  tasks:
+    path: "docs/planning/TASKS.md"
+    depends_on:
+      - module_specs
+      - requisitos_funcionais
+      - prps
+      - plan
+      - execution_waves
+      - architecture
+    triggers_update: []
+
+  # ── STEP 7 ──
+  design_system:
+    path: "docs/design/DESIGN_SYSTEM.md"
+    depends_on:
+      - visao_estrategica
+      - workflows_bpmn
+      - perfis_permissoes
+      - prd_tecnico
+    triggers_update: []
+
+  # ── STEP 8 ──
+  mock_data:
+    path_pattern: "mocks/**/*"
+    depends_on:
+      - architecture
+      - design_system
+      - prd_tecnico
+    triggers_update:
+      - test_guide
+
+  # ── STEP 9 ──
+  test_guide:
+    path: "docs/testing/TESTING_GUIDE.md"
+    depends_on:
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - architecture
+      - mock_data
+    triggers_update: []
+
+  coverage_baseline:
+    path: "docs/testing/COVERAGE_BASELINE.md"
+    depends_on:
+      - test_guide
+    triggers_update: []
+
+  coverage_progress:
+    path: "docs/testing/COVERAGE_PROGRESS.md"
+    depends_on:
+      - test_guide
+      - coverage_baseline
+    triggers_update: []
+
+  # ── STEP 10 ──
+  readme:
+    path: "README.md"
+    depends_on:
+      - prd_executivo
+      - plan
+    triggers_update: []
+
+  deployment:
+    path: "docs/DEPLOYMENT.md"
+    depends_on:
+      - architecture
+      - perfis_permissoes
+      - catalogo_integracoes
+    triggers_update: []

@@ -82,6 +82,11 @@ for session_file in "$SESSIONS"/*.md; do
   done
 done
 
+# 6. Análise de impacto nos artefatos LLC (informativo — não bloqueia)
+echo ""
+echo "📊 Analisando impacto nos artefatos LLC..."
+python .ace/scripts/impact-analyzer.py --staged --json 2>/dev/null && echo "✅ Análise de impacto concluída" || echo "⚠️  Impact analyzer não executou (verifique PyYAML)"
+
 # Resultado final
 if [ "$ERRORS" -gt 0 ]; then
   echo ""

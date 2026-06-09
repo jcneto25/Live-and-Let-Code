@@ -254,7 +254,24 @@ git push origin v1.2.0
 
 ---
 
-### 4. Validação Cruzada
+### 4. Gere os Arquivos de Steering (CLAUDE.md + AGENTS.md)
+
+Além do README.md e DEPLOYMENT.md, gere os arquivos de direção (steering files) que ensinam a IA sobre padrões e regras persistentes do projeto.
+
+#### CLAUDE.md
+- Use o template `docs/templates/CLAUDE_TEMPLATE.md`.
+- Preencha com: stack, domínio, comandos, arquitetura, DB schema, restrições, CI/CD, integração ACE.
+- Inclua `<!-- @include AGENTS.md -->` no topo para carregar regras compartilhadas.
+- Salve na **raiz do projeto**: `CLAUDE.md`.
+
+#### AGENTS.md
+- Use o template `docs/templates/AGENTS_TEMPLATE.md`.
+- Preencha com: nome do desenvolvedor, zonas de autonomia, protocolo epistêmico, TDD enforcement, handoff ACE, reviewer guidelines.
+- Salve na **raiz do projeto**: `AGENTS.md`.
+
+**Relação:** CLAUDE.md = projeto (stack, domínio). AGENTS.md = desenvolvedor (como trabalha). Ambos referenciam a infraestrutura ACE.
+
+### 5. Validação Cruzada
 
 Após gerar ambos os documentos, verifique:
 

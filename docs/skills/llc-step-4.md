@@ -76,6 +76,8 @@ Você está executando a skill `llc-step-4` do pipeline LLC. Seu objetivo é tra
 3. **Realismo:** Estimativas devem somar folga de 20% para imprevistos.
 4. **Rastreabilidade:** Cada PRP na matriz deve linkar para seu arquivo em `docs/prps/`.
 5. **Idempotência:** Verifique existência dos arquivos de saída antes de sobrescrever.
+6. **Mermaid obrigatório:** Gere a DEPENDENCY_MATRIX.md com diagrama Mermaid do grafo de dependências entre PRPs. Visualização textual consome menos tokens e é parseable por scripts.
+7. **Grafo de artefatos:** Atualize `.ace/dependency-graph.yaml` mapeando os novos PRPs no grafo de dependências entre artefatos LLC. Consulte `.ace/dependency-graph.mmd` para referência visual.
 
 ---
 

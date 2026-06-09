@@ -149,41 +149,41 @@ project-root/
 
 ### 3.1 Flow
 
-```
-Step 0:     User loads raw docs → business/ingestion/
-               ↓
-Step 0.1:   Docling → convert to Markdown → business/ingestion/converted/
-               ↓
-Step 0.5:   AI → Strategic Vision + Module Specs → business/specs/
-               ↓ 👤 Gate 1
-Step 1:     AI → 7 Specs (Glossary, FR, NFR, Business Rules, BPMN, Profiles, Integrations) → business/specs/
-               ↓ 👤 Gate 2
-Step 2:     AI → PRDs (Executive + Technical) → prd/
-               ↓ 👤 Gate 3
-Step 3:     AI → PRPs (N self-contained contracts) → prps/
-               ↓ 👤 Gate 4
-Step 4:     AI → Planning (Dep. Matrix + Plan + Execution Waves) → planning/
-               ↓ 👤 Gate 5
-Step 5:     AI → Architecture (Stack, C4, ADRs, CI/CD) → architecture/
-               ↓ 👤 Gate 6
-Step 6:     AI → Tasks (Scaffolding + Agent assignment) → planning/
-               ↓ 👤 Gate 7
-Step 7:     AI → Design System (Tokens, Components, Patterns) → design/
-               ↓ 👤 Gate 8
-Step 8:     AI → Setup + Mock Data Layer (MSW handlers + JSON data) → mocks/
-               ↓ 👤 Gate 9
-Step 9:     AI → Testing Docs (Guide + Baseline + Progress) → testing/
-               ↓ 👤 Gate 10
-Step 10:    AI → Project Docs (README.md + DEPLOYMENT.md)
-               ↓ 👤 Gate 11
-Step 11:    LLC Execution
-            ├── Non-UI PRPs → direct agent implementation
-            └── UI PRPs → Prototyping Subflow (F1-F6)
-                          F1: Discovery  F2: Tokens  F3: Lo-Fi
-                          F4: Hi-Fi → 🔴 VISUAL CHECKPOINT
-                          F5: Code  F6: Validation
-                ↓ QA Checkpoints
-            Deploy
+```mermaid
+graph TD
+    S0[Step 0: User loads raw docs] --> S01[Step 0.1: Docling → Markdown]
+    S01 --> S05[Step 0.5: AI → Vision + Module Specs]
+    S05 --> G1{👤 Gate 1}
+    G1 -->|approved| S1[Step 1: AI → 7 Specs]
+    S1 --> G2{👤 Gate 2}
+    G2 -->|approved| S2[Step 2: AI → PRDs]
+    S2 --> G3{👤 Gate 3}
+    G3 -->|approved| S3[Step 3: AI → PRPs]
+    S3 --> G4{👤 Gate 4}
+    G4 -->|approved| S4[Step 4: AI → Planning]
+    S4 --> G5{👤 Gate 5}
+    G5 -->|approved| S5[Step 5: AI → Architecture]
+    S5 --> G6{👤 Gate 6}
+    G6 -->|approved| S6[Step 6: AI → Tasks]
+    S6 --> G7{👤 Gate 7}
+    G7 -->|approved| S7[Step 7: AI → Design System]
+    S7 --> G8{👤 Gate 8}
+    G8 -->|approved| S8[Step 8: AI → Setup + Mock Data]
+    S8 --> G9{👤 Gate 9}
+    G9 -->|approved| S9[Step 9: AI → Testing Docs]
+    S9 --> G10{👤 Gate 10}
+    G10 -->|approved| S10[Step 10: AI → Project Docs]
+    S10 --> G11{👤 Gate 11}
+    G11 -->|approved| S11[Step 11: LLC Execution]
+    S11 --> BACK[Non-UI PRPs → direct agent]
+    S11 --> UI[UI PRPs → Subflow F1-F6]
+    UI --> F4[F4: Hi-Fi]
+    F4 --> CV{🔴 VISUAL CHECKPOINT}
+    CV -->|approved| F5[F5: Code]
+    F5 --> F6[F6: Validation]
+    BACK --> QA[QA Checkpoints]
+    F6 --> QA
+    QA --> DEPLOY[Deploy]
 ```
 
 ### 3.2 Steps Table
@@ -356,4 +356,7 @@ Example: changing `profiles_permissions.md` → the analyzer reports 6 cascading
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1.0 | 06/10/2026 | LLC Team | Added Mermaid pipeline flow (§3.1), ACE (§8) and Impact Analysis (§9) sections, removed archive/ and superpowers/ |
 | 1.0.0 | 06/04/2026 | LLC Team | Initial LLC pipeline design |
+
+**Reviewer:** Jaime Correia

@@ -1,0 +1,80 @@
+graph TD
+    INGESTION_RAW["ingestion/ (raw docs)"] --> INGESTION_CONVERTED["ingestion/converted/"]
+    INGESTION_CONVERTED --> VISAO["visao_estrategica_e_negocio.md"]
+    INGESTION_CONVERTED --> MODULES["MOD-*.md (module specs)"]
+    
+    VISAO --> GLOSSARIO["glossario.md"]
+    VISAO --> RF["requisitos_funcionais.md"]
+    VISAO --> RNF["requisitos_nao_funcionais.md"]
+    VISAO --> RN["regras_negocio.md"]
+    VISAO --> PERFIS["perfis_permissoes.md"]
+    VISAO --> INTEGRACOES["catalogo_integracoes.md"]
+    
+    MODULES --> RF
+    MODULES --> BPMN["workflows_bpmn.md"]
+    
+    GLOSSARIO --> RF
+    GLOSSARIO --> RN
+    
+    VISAO --> PRD_EXEC["executive_PRD.md"]
+    VISAO --> PRD_TEC["PRD_tecnico_institucional.md"]
+    MODULES --> PRD_TEC
+    GLOSSARIO --> PRD_EXEC
+    GLOSSARIO --> PRD_TEC
+    RF --> PRD_TEC
+    RF --> PRD_EXEC
+    RNF --> PRD_TEC
+    RN --> PRD_TEC
+    BPMN --> PRD_TEC
+    PERFIS --> PRD_TEC
+    INTEGRACOES --> PRD_TEC
+    
+    MODULES --> PRPS["PRP-*.md"]
+    RF --> PRPS
+    RN --> PRPS
+    BPMN --> PRPS
+    PRD_TEC --> PRPS
+    
+    PRPS --> MATRIX["DEPENDENCY_MATRIX.md"]
+    PRPS --> PLAN["PLAN.md"]
+    PRPS --> WAVES["EXECUTION_WAVES.md"]
+    
+    MATRIX --> WAVES
+    MATRIX --> PLAN
+    PRPS --> TASKS["TASKS.md"]
+    PLAN --> TASKS
+    WAVES --> TASKS
+    
+    VISAO --> ARCH["ARCHITECTURE.md"]
+    RNF --> ARCH
+    INTEGRACOES --> ARCH
+    PRD_TEC --> ARCH
+    
+    ARCH --> TASKS
+    MODULES --> TASKS
+    RF --> TASKS
+    
+    VISAO --> DS["DESIGN_SYSTEM.md"]
+    BPMN --> DS
+    PERFIS --> DS
+    PRD_TEC --> DS
+    
+    ARCH --> MOCKS["mocks/"]
+    DS --> MOCKS
+    PRD_TEC --> MOCKS
+    
+    RF --> TEST["TESTING_GUIDE.md"]
+    RNF --> TEST
+    ARCH --> TEST
+    MOCKS --> TEST
+    
+    TEST --> COV_BASE["COVERAGE_BASELINE.md"]
+    TEST --> COV_PROG["COVERAGE_PROGRESS.md"]
+    COV_BASE --> COV_PROG
+    
+    PRD_EXEC --> README["README.md"]
+    PLAN --> README
+    
+    ARCH --> DEPLOY["DEPLOYMENT.md"]
+    PERFIS --> DEPLOY
+    INTEGRACOES --> DEPLOY

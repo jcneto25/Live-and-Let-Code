@@ -24,6 +24,17 @@ Live and Let Code (LLC) is an agentic software development methodology that stru
 4. **Full traceability:** Every artifact references its origin. From strategic vision to PRP, from PRP to task, from task to commit.
 5. **Parallelism by design:** PRPs are self-contained contracts enabling parallel execution in independent worktrees.
 
+### 1.3 Document Structure Summary
+
+This document specifies:
+- The LLC directory architecture (§2)
+- The complete pipeline with 11 main steps + 1 subflow (§3)
+- The skills catalog (§4)
+- The agentic prototyping subflow (§5)
+- The human gate system (§6)
+- The ACE cross-session context system (§8)
+- The traceability and impact analyzer (§9)
+
 ---
 
 ## 2. Directory Architecture
@@ -71,10 +82,43 @@ project-root/
 │   │   └── *.md                                # [OUTPUT]
 │   │
 │   ├── skills/                                 # LLC Skills (tool-agnostic)
-│   │   ├── llc-step-0-5.md ... llc-step-10.md
-│   │   └── llc-subflow-prototyping.md
+│   │   ├── llc-step-0-1.md
+│   │   ├── llc-step-0-5.md
+│   │   ├── llc-step-1.md
+│   │   ├── llc-step-2.md
+│   │   ├── llc-step-3.md
+│   │   ├── llc-step-4.md
+│   │   ├── llc-step-5.md
+│   │   ├── llc-step-6.md
+│   │   ├── llc-step-7.md
+│   │   ├── llc-step-8.md
+│   │   ├── llc-step-9.md
+│   │   ├── llc-step-10.md
+│   │   ├── llc-subflow-prototyping.md
+│   │   ├── llc-ace-context.md
+│   │   └── llc-impact-analyzer.md
 │   │
 │   └── [9 spec templates].md                   # Templates (Step 0.5-1)
+│
+├── .ace/                                         # ACE — Session history + Infra
+│   ├── dependency-graph.yaml                     # Dependency graph (traceability)
+│   ├── index.json                                # Session index
+│   ├── sessions/                                 # Append-only sessions
+│   │   └── YYYY-MM-DD-NNN.md
+│   ├── memory/                                   # Cross-session knowledge
+│   │   ├── learning_points.md
+│   │   └── architecture.md
+│   ├── scripts/                                  # ACE Scripts
+│   │   ├── initialize_session.py
+│   │   ├── finalize_session.py
+│   │   ├── promote-learning-points.py
+│   │   ├── validate-tags.py
+│   │   ├── impact-analyzer.py
+│   │   └── pre-commit.sh
+│   └── templates/
+│       └── session.template.md
+│
+├── .pre-commit-config.yaml                       # ACE + impact validation on commit
 │
 ├── mocks/                                       # Mock data layer (Step 8)
 │   ├── data/        (users.json + entities)
@@ -225,7 +269,75 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 
 ---
 
-## 7. Glossary
+## 8. ACE — Agentic Context Engineering
+
+### 8.1 The Problem
+
+AI agents operate in isolated sessions. Without a continuity mechanism, each session starts from scratch — "model amnesia." This is especially critical in the LLC pipeline, where each step depends on the context of previous ones.
+
+### 8.2 The Solution
+
+ACE is an **append-only** cross-session context management protocol. Inspired by incremental delta updates, it combines **Markdown** (human readability) + **XML tags** (machine parsability) + **YAML front matter** (structured metadata).
+
+### 8.3 How It Works
+
+Each LLC session produces a `.ace/sessions/YYYY-MM-DD-NNN.md` file that is **never rewritten** — only deltas are appended at the end. When starting a new session, the agent loads the `<context_seed>` from the previous session (~300 compressed tokens) instead of the full history (~22,000 tokens).
+
+### 8.4 Tag Taxonomy
+
+| Tag | Purpose |
+|-----|-----------|
+| `<action_log>` | Action container — append-only |
+| `<action type="...">` | Atomic action: `git_commit`, `file_create`, `file_modify`, `file_delete`, `test_run`, `tool_call` |
+| `<thinking ref="...">` | Chain-of-thought that led to a decision |
+| `<learning_point priority="...">` | Consolidated knowledge (`high`/`medium`/`low`) |
+| `<gate_result>` | Human decision at LLC gates |
+| `<blocker resolved="...">` | Session blockers |
+| `<context_seed>` | Compressed state for the next session (4-field schema) |
+
+### 8.5 Advantages
+
+| Advantage | Impact |
+|----------|---------|
+| **Token savings** | ~1,500 tokens/session vs ~22,000 full history (93% reduction) |
+| **Immutability** | History never corrupted — sessions are append-only |
+| **Traceability** | Every action, decision, and learning point is recorded with timestamp and origin |
+| **LLC integration** | `<gate_result>` closes the methodology's accountability loop |
+| **Knowledge promotion** | `<learning_point priority="high">` is automatically promoted to `memory/learning_points.md` |
+
+---
+
+## 9. Traceability & Impact Analysis
+
+### 9.1 The Problem
+
+The LLC pipeline produces dozens of interdependent artifacts. When an artifact is changed (e.g., an access profile is updated), it is hard to know which downstream documents need updating to maintain consistency.
+
+### 9.2 The Solution
+
+A **declarative dependency graph** (`.ace/dependency-graph.yaml`) maps each LLC artifact: what originated it (`depends_on`) and what it impacts when changed (`triggers_update`). An analysis script cross-references `git diff` with the graph and propagates the impact in cascade.
+
+### 9.3 How It Works
+
+```
+git diff --name-only → cross-reference with dependency-graph.yaml → recursively propagate triggers_update → report review order + suggested skills
+```
+
+Example: changing `profiles_permissions.md` → the analyzer reports 6 cascading artifacts and suggests re-running `llc-step-2`, `llc-step-3`, `llc-step-5`, `llc-step-7`, `llc-step-10`.
+
+### 9.4 Advantages
+
+| Advantage | Impact |
+|----------|---------|
+| **Guaranteed consistency** | No artifact becomes outdated due to oversight |
+| **Correct order** | The report shows the exact review order (dependencies before dependents) |
+| **Skill suggestion** | The agent knows exactly which skills to re-run |
+| **Zero cost** | The graph is generated and maintained by the pipeline itself (Step 4) |
+| **Pre-commit** | Integrated into git hook — impact analysis on every commit |
+
+---
+
+## 10. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -240,7 +352,7 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 
 ---
 
-## 8. Version Control
+## 11. Version Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|

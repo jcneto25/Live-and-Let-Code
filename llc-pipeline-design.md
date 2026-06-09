@@ -31,6 +31,8 @@ Este documento especifica:
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)
 - O inventário completo de templates (§7)
+- O sistema ACE de contexto entre sessões (§8)
+- O analisador de impacto e rastreabilidade (§9)
 
 ---
 
@@ -91,20 +93,23 @@ project-root/
 │   ├── specs/                                  # Template de especificação
 │   │   └── SPEC_TEMPLATE.md
 │   │
-│   ├── skills/                                 # Skills LLC (tool-agnostic)
-│   │   ├── llc-step-0-5.md
-│   │   ├── llc-step-1.md
-│   │   ├── llc-step-2.md
-│   │   ├── llc-step-3.md
-│   │   ├── llc-step-4.md
-│   │   ├── llc-step-5.md
-│   │   ├── llc-step-6.md
-│   │   ├── llc-step-7.md
-│   │   ├── llc-step-8.md
-│   │   ├── llc-step-9.md
-│   │   ├── llc-step-10.md
-│   │   └── llc-subflow-prototyping.md
-│   │
+  │   ├── skills/                                 # Skills LLC (tool-agnostic)
+  │   │   ├── llc-step-0-1.md
+  │   │   ├── llc-step-0-5.md
+  │   │   ├── llc-step-1.md
+  │   │   ├── llc-step-2.md
+  │   │   ├── llc-step-3.md
+  │   │   ├── llc-step-4.md
+  │   │   ├── llc-step-5.md
+  │   │   ├── llc-step-6.md
+  │   │   ├── llc-step-7.md
+  │   │   ├── llc-step-8.md
+  │   │   ├── llc-step-9.md
+  │   │   ├── llc-step-10.md
+  │   │   ├── llc-subflow-prototyping.md
+  │   │   ├── llc-ace-context.md
+  │   │   └── llc-impact-analyzer.md
+  │   │
 │   ├── superpowers/                             # Meta-documentação
 │   │   └── specs/                               # Design specs
 │   │
@@ -117,6 +122,26 @@ project-root/
 │   ├── Template_WORKFLOWS_E_BPMN.md
 │   ├── Template_Perfis_Permissoes.md
 │   └── Template_Catalogo_Integracoes.md
+│
+├── .ace/                                         # ACE — Histórico de sessões + Infra
+│   ├── dependency-graph.yaml                     # Grafo de dependências (rastreabilidade)
+│   ├── index.json                                # Índice de sessões
+│   ├── sessions/                                 # Sessões append-only
+│   │   └── YYYY-MM-DD-NNN.md
+│   ├── memory/                                   # Conhecimento cross-sessão
+│   │   ├── learning_points.md
+│   │   └── architecture.md
+│   ├── scripts/                                  # Scripts ACE
+│   │   ├── initialize_session.py
+│   │   ├── finalize_session.py
+│   │   ├── promote-learning-points.py
+│   │   ├── validate-tags.py
+│   │   ├── impact-analyzer.py
+│   │   └── pre-commit.sh
+│   └── templates/
+│       └── session.template.md
+│
+├── .pre-commit-config.yaml                       # Validação ACE + impacto no commit
 │
 ├── mocks/                                       # Camada de dados mockados (Step 8)
 │   ├── data/
@@ -133,10 +158,6 @@ project-root/
 │   ├── app/
 │   ├── components/
 │   └── tokens/
-│
-└── archive/                                     # Conteúdo legado
-    ├── conformitas/
-    └── pipeline-v2.2/
 ```
 
 ### 2.2 Convenções de Nomenclatura
@@ -354,7 +375,75 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 ---
 
-## 8. Glossário LLC
+## 8. ACE — Agentic Context Engineering
+
+### 8.1 O Problema
+
+Agentes de IA operam em sessões isoladas. Sem um mecanismo de continuidade, cada sessão começa do zero — a "amnésia do modelo". Isso é especialmente crítico no pipeline LLC, onde cada etapa depende do contexto das anteriores.
+
+### 8.2 A Solução
+
+O ACE é um protocolo **append-only** de gestão de contexto entre sessões. Inspirado em atualizações delta incrementais, combina **Markdown** (legibilidade humana) + **tags XML** (parseabilidade por máquina) + **YAML front matter** (metadados estruturados).
+
+### 8.3 Funcionamento
+
+Cada sessão LLC produz um arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` que é **nunca reescrito** — apenas deltas são appenados ao final. Ao iniciar uma nova sessão, o agente carrega o `<context_seed>` da sessão anterior (~300 tokens comprimidos) em vez do histórico completo (~22.000 tokens).
+
+### 8.4 Taxonomia de Tags
+
+| Tag | Propósito |
+|-----|-----------|
+| `<action_log>` | Container de ações — append-only |
+| `<action type="...">` | Ação atômica: `git_commit`, `file_create`, `file_modify`, `file_delete`, `test_run`, `tool_call` |
+| `<thinking ref="...">` | Chain-of-thought que levou a uma decisão |
+| `<learning_point priority="...">` | Conhecimento consolidado (`high`/`medium`/`low`) |
+| `<gate_result>` | Decisão humana nos gates LLC |
+| `<blocker resolved="...">` | Impedimentos da sessão |
+| `<context_seed>` | Estado comprimido para a próxima sessão (schema de 4 campos) |
+
+### 8.5 Vantagens
+
+| Vantagem | Impacto |
+|----------|---------|
+| **Economia de tokens** | ~1.500 tokens/sessão vs ~22.000 do histórico completo (93% de redução) |
+| **Imutabilidade** | Histórico nunca corrompido — sessões são append-only |
+| **Rastreabilidade** | Cada ação, decisão e aprendizado é registrado com timestamp e origem |
+| **Integração com LLC** | `<gate_result>` fecha o loop de accountability da metodologia |
+| **Promoção de conhecimento** | `<learning_point priority="high">` é automaticamente promovido para `memory/learning_points.md` |
+
+---
+
+## 9. Rastreabilidade e Análise de Impacto
+
+### 9.1 O Problema
+
+O pipeline LLC produz dezenas de artefatos interdependentes. Quando um artefato é alterado (ex: um perfil de acesso muda), é difícil saber quais documentos downstream precisam ser atualizados para manter a consistência.
+
+### 9.2 A Solução
+
+Um **grafo de dependências declarativo** (`.ace/dependency-graph.yaml`) mapeia cada artefato LLC: o que o originou (`depends_on`) e o que ele impacta quando alterado (`triggers_update`). Um script de análise cruza `git diff` com o grafo e propaga o impacto em cascata.
+
+### 9.3 Funcionamento
+
+```
+git diff --name-only → cruza com dependency-graph.yaml → propaga triggers_update recursivamente → reporta ordem de revisão + skills sugeridos
+```
+
+Exemplo: alterar `perfis_permissoes.md` → o analisador reporta 6 artefatos em cascata e sugere re-executar `llc-step-2`, `llc-step-3`, `llc-step-5`, `llc-step-7`, `llc-step-10`.
+
+### 9.4 Vantagens
+
+| Vantagem | Impacto |
+|----------|---------|
+| **Consistência garantida** | Nenhum artefato fica desatualizado por esquecimento |
+| **Ordem correta** | O report mostra a ordem exata de revisão (dependências antes de dependentes) |
+| **Sugestão de skills** | O agente sabe exatamente quais skills re-executar |
+| **Custo zero** | O grafo é gerado e mantido pelo próprio pipeline (Step 4) |
+| **Pré-commit** | Integrado ao hook de git — análise de impacto a cada commit |
+
+---
+
+## 10. Glossário LLC
 
 | Termo | Definição |
 |-------|-----------|
@@ -369,7 +458,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 
 ---
 
-## 9. Controle de Versão
+## 11. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|

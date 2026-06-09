@@ -94,6 +94,7 @@ project-root/
 │   │   └── SPEC_TEMPLATE.md
 │   │
   │   ├── skills/                                 # Skills LLC (tool-agnostic)
+  │   │   ├── llc-step-0-greenfield.md
   │   │   ├── llc-step-0-1.md
   │   │   ├── llc-step-0-5.md
   │   │   ├── llc-step-1.md
@@ -179,7 +180,11 @@ project-root/
 
 ```mermaid
 graph TD
-    S0[Step 0: User loads raw docs] --> S01[Step 0.1: Docling → Markdown]
+    START{Documentação prévia?}
+    START -->|Sim| S0[Step 0: User loads raw docs]
+    START -->|Não| GF[Step 0-Greenfield: Entrevista estruturada]
+    GF --> S01
+    S0 --> S01[Step 0.1: Docling → Markdown]
     S01 --> S05[Step 0.5: AI → Vision + Module Specs]
     S05 --> G1{👤 Gate 1}
     G1 -->|approved| S1[Step 1: AI → 7 Specs]
@@ -219,6 +224,7 @@ graph TD
 | # | Nome | Entrada | Saída | Template(s) | Gate |
 |---|------|---------|-------|-------------|------|
 | 0 | Ingestão | Documentos do usuário | `business/ingestion/` | — | — |
+| 0-GF | Greenfield (alternativo) | Entrevista com usuário | `ingestion/converted/` (.md de entrevista) | — | — |
 | 0.1 | Conversão | `ingestion/` | `ingestion/converted/` | — | — |
 | 0.5 | Visão + Módulos | `ingestion/converted/` | Visão + MOD-*.md | `template_visao_estrategica_e_negocio.md`, `Template_Especificacao_Modulo.md`, guia de preenchimento | 👤 1 |
 | 1 | 7 Especificações | Visão + Módulos | Glossário, RF, RNF, RN, BPMN, Perfis, Integrações | 7 templates em `docs/` | 👤 2 |
@@ -263,6 +269,8 @@ tags: [categoria, llc-pipeline]
 
 | Skill | Passo | Descrição |
 |-------|-------|-----------|
+| `llc-step-0-greenfield` | 0-GF | Fluxo alternativo greenfield: entrevista estruturada para projetos sem documentação prévia |
+| `llc-step-0-1` | 0.1 | Conversão de documentos raw para Markdown via Docling |
 | `llc-step-0-5` | 0.5 | Gera Visão Estratégica + Especificação de Módulos a partir de documentos de ingestão |
 | `llc-step-1` | 1 | Gera 7 documentos de especificação (Glossário, RF, RNF, RN, BPMN, Perfis, Integrações) |
 | `llc-step-2` | 2 | Gera PRD Executivo e PRD Técnico Institucional |

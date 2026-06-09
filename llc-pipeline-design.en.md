@@ -82,6 +82,7 @@ project-root/
 │   │   └── *.md                                # [OUTPUT]
 │   │
 │   ├── skills/                                 # LLC Skills (tool-agnostic)
+│   │   ├── llc-step-0-greenfield.md
 │   │   ├── llc-step-0-1.md
 │   │   ├── llc-step-0-5.md
 │   │   ├── llc-step-1.md
@@ -151,7 +152,10 @@ project-root/
 
 ```mermaid
 graph TD
-    S0[Step 0: User loads raw docs] --> S01[Step 0.1: Docling → Markdown]
+    START{Prior documentation?} -->|Yes| S0[Step 0: User loads raw docs]
+    START -->|No| S0GF[Step 0-Greenfield: Structured Interview]
+    S0GF --> S01
+    S0 --> S01[Step 0.1: Docling → Markdown]
     S01 --> S05[Step 0.5: AI → Vision + Module Specs]
     S05 --> G1{👤 Gate 1}
     G1 -->|approved| S1[Step 1: AI → 7 Specs]
@@ -191,6 +195,7 @@ graph TD
 | # | Name | Input | Output | Gate |
 |---|------|-------|--------|------|
 | 0 | Ingestion | User docs | `business/ingestion/` | — |
+| 0-GF | Greenfield (alternative) | User interview | `ingestion/converted/` (interview .md) | — |
 | 0.1 | Conversion | `ingestion/` | `ingestion/converted/` | — |
 | 0.5 | Vision + Modules | `ingestion/converted/` | Vision + MOD-*.md | 👤 1 |
 | 1 | 7 Specs | Vision + Modules | Glossary, FR, NFR, BR, BPMN, Profiles, Integrations | 👤 2 |
@@ -213,6 +218,7 @@ graph TD
 
 | Skill | Step | Description |
 |-------|------|-------------|
+| `llc-step-0-greenfield` | 0-GF | Alternative greenfield flow: structured interview for projects without prior documentation |
 | `llc-step-0-5` | 0.5 | Strategic Vision + Module Specs from ingestion docs |
 | `llc-step-1` | 1 | 7 specification documents (Glossary, FR, NFR, BR, BPMN, Profiles, Integrations) |
 | `llc-step-2` | 2 | Executive PRD + Technical PRD |

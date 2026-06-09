@@ -171,7 +171,101 @@ PRPs (~50-80 lines each)
 Tasks (checkboxes in TASKS.md)
 ```
 
-Each level preserves the full context needed for its execution, eliminating the need to consult the original PRD during implementation. This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
+Each level preserves the full context needed for its execution, eliminating the need to consult the original PRD during implementation.
+
+---
+
+## Artifacts and Documents
+
+### What artifacts does the LLC workflow produce?
+
+The LLC pipeline generates 25+ versioned artifacts, organized by stage:
+
+| Stage | Artifacts | Description |
+|-------|-----------|-------------|
+| 0.5 | `visao_estrategica_e_negocio.md`, `MOD-*.md` | System vision and module specifications |
+| 1 | 7 specs (`glossario.md`, `requisitos_funcionais.md`, `requisitos_nao_funcionais.md`, `regras_negocio.md`, `workflows_bpmn.md`, `perfis_permissoes.md`, `catalogo_integracoes.md`) | Detailed specifications covering terminology, features, constraints, flows, and integrations |
+| 2 | `executive_PRD.md`, `PRD_tecnico_institucional.md` | Executive PRD (stakeholders) and technical PRD (developers) |
+| 3 | `PRP-*.md` | Self-contained implementation contracts |
+| 4 | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | Planning: dependency matrix, delivery plan, and execution waves |
+| 5 | `ARCHITECTURE.md` | Stack, C4 diagrams, ADRs, security, CI/CD |
+| 6 | `TASKS.md` | Concrete tasks with agents, estimates, and checkboxes |
+| 7 | `DESIGN_SYSTEM.md` | Tokens, components, interface patterns, and accessibility |
+| 8 | `mocks/` (data + handlers) | Mock data (JSON) + MSW handlers for MVP |
+| 9 | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | Test strategy, baseline, and coverage targets |
+| 10 | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | Project docs, deployment, and steering files |
+
+### What is PLAN.md?
+
+`PLAN.md` is the delivery planning document generated in Step 4. It contains:
+
+- **Roadmap & milestones:** project phases with target dates and status
+- **Deploy strategy:** environments (dev, staging, prod) and pipelines
+- **Definition of Done (DoD):** 10+ criteria each delivery must satisfy
+- **Master PRP List:** all PRPs with estimates (planned vs. actual)
+- **Velocity tracker:** team/agent velocity tracking
+- **Planning documentation:** links to design docs and PRPs
+
+It answers "when will it be ready?" and "what has already been delivered?".
+
+### What is TASKS.md?
+
+`TASKS.md` is the development backlog generated in Step 6. It decomposes each PRP into concrete, actionable tasks:
+
+- **Tasks per PRP:** scaffolding, backend, frontend, testing, documentation
+- **Assigned agents:** each task specifies which agent executes it (dev, qa, security)
+- **Explicit parallelization:** ✅ (parallel), ⚠️ (after setup), ❌ (sequential)
+- **Checkboxes:** `[ ]` pending, `[/]` in progress, `[x]` completed
+- **Estimates:** in hours or days per task
+
+ACE's `<task_completed>` automatically updates checkboxes at the end of each session.
+
+### What is DEPENDENCY_MATRIX.md?
+
+`DEPENDENCY_MATRIX.md` is the PRP dependency graph generated in Step 4. It contains:
+
+- **PRP inventory:** master table with ID, phase, estimate, complexity, status
+- **Critical path:** the longest sequence of dependent PRPs determining the minimum timeline
+- **Dependency matrix:** "Can Start After" → "Blocks" table for each PRP
+- **Mermaid diagram:** full dependency graph visualization
+- **Dependency risks:** impact analysis of delays in critical PRPs
+- **Capacity allocation:** PRP distribution per wave and per agent
+
+This is the artifact that `impact-analyzer.py` consults to propagate changes.
+
+### What is ARCHITECTURE.md?
+
+`ARCHITECTURE.md` is the architectural definition document generated in Step 5. It contains:
+
+- **Technology stack:** frontend, backend, database, infrastructure with justifications and discarded alternatives
+- **C4 diagrams:** context (Level 1), containers (Level 2), components (Level 3) — all in Mermaid
+- **ADRs (Architecture Decision Records):** architectural decisions with context, decision, consequences, and alternatives
+- **Security strategy:** authentication, authorization, encryption, compliance
+- **CI/CD:** pipeline, environments, quality gates
+- **Architectural risks:** risk register with probability, impact, and mitigation
+- **Monitoring & observability:** business metrics, SLIs, SLOs, logging
+
+### What is DESIGN_SYSTEM.md?
+
+`DESIGN_SYSTEM.md` is the design system document generated in Step 7 from the expanded `Design_System_Master.md` template. It contains:
+
+- **Design tokens:** colors (light + dark mode), typography, spacing, elevation
+- **Component library:** 8+ components with variants, states, and TypeScript props
+- **Interface patterns:** tables, forms, navigation, feedback, dashboards
+- **Permission-aware UI:** hide, disable, read-only by profile
+- **Micro-interactions:** animation catalog with duration and easing
+- **State matrix:** universal states (default, hover, focus, disabled, loading, error) per component
+- **Accessibility:** WCAG 2.1 AA, contrast, touch targets, aria labels
+
+### How are artifacts versioned?
+
+All LLC artifacts are persistent Markdown documents versioned in **Git**, treated as first-class software deliverables:
+
+- **Semantic versioning:** each artifact has version control in its front matter or footer
+- **Traceability:** `dependency-graph.yaml` maps relationships between artifacts; `impact-analyzer.py` detects which need updating when a source artifact changes
+- **Human review:** each artifact passes through a human gate before being considered approved
+- **Immutable history:** ACE session artifacts (`.ace/sessions/`) are append-only — never rewritten
+- **PRs & code review:** artifacts can be reviewed like code, with readable diffs in git This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
 
 ---
 

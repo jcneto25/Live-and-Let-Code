@@ -171,7 +171,101 @@ PRPs (~50-80 linhas cada)
 Tarefas (checkboxes no TASKS.md)
 ```
 
-Cada nível preserva o contexto completo necessário para sua execução, eliminando a necessidade de consultar o PRD original durante a implementação. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+Cada nível preserva o contexto completo necessário para sua execução, eliminando a necessidade de consultar o PRD original durante a implementação.
+
+---
+
+## Artefatos e Documentos
+
+### Quais artefatos são produzidos no workflow LLC?
+
+O pipeline LLC gera 25+ artefatos versionados, organizados por etapa:
+
+| Etapa | Artefatos | Descrição |
+|-------|-----------|-----------|
+| 0.5 | `visao_estrategica_e_negocio.md`, `MOD-*.md` | Visão do sistema e especificação de módulos |
+| 1 | 7 specs (`glossario.md`, `requisitos_funcionais.md`, `requisitos_nao_funcionais.md`, `regras_negocio.md`, `workflows_bpmn.md`, `perfis_permissoes.md`, `catalogo_integracoes.md`) | Especificações detalhadas cobrindo terminologia, funcionalidades, restrições, fluxos e integrações |
+| 2 | `executive_PRD.md`, `PRD_tecnico_institucional.md` | PRD executivo (stakeholders) e técnico (desenvolvedores) |
+| 3 | `PRP-*.md` | Contratos auto-contidos de implementação |
+| 4 | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | Planejamento: matriz de dependências, plano de entregas e ondas de execução |
+| 5 | `ARCHITECTURE.md` | Stack, diagramas C4, ADRs, segurança, CI/CD |
+| 6 | `TASKS.md` | Tarefas concretas com agentes, estimativas e checkboxes |
+| 7 | `DESIGN_SYSTEM.md` | Tokens, componentes, padrões de interface e acessibilidade |
+| 8 | `mocks/` (data + handlers) | Dados mockados (JSON) + handlers MSW para MVP |
+| 9 | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | Estratégia de testes, baseline e metas de cobertura |
+| 10 | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | Documentação do projeto, deploy e steering files |
+
+### O que é um PLAN.md?
+
+O `PLAN.md` é o documento de planejamento de entregas gerado no Step 4. Ele contém:
+
+- **Roadmap e milestones:** fases do projeto com datas-alvo e status
+- **Estratégia de deploy:** ambientes (dev, staging, prod) e pipelines
+- **Definition of Done (DoD):** 10+ critérios que cada entrega deve satisfazer
+- **Master PRP List:** todos os PRPs com estimativas (planejado vs. realizado)
+- **Velocity tracker:** acompanhamento de velocidade da equipe/agentes
+- **Documentação de planejamento:** links para design docs e PRPs
+
+É o documento que responde "quando ficará pronto?" e "o que já foi entregue?".
+
+### O que é um TASKS.md?
+
+O `TASKS.md` é o backlog de desenvolvimento gerado no Step 6. Ele decompõe cada PRP em tarefas concretas e acionáveis:
+
+- **Tarefas por PRP:** scaffolding, backend, frontend, testes, documentação
+- **Agentes atribuídos:** cada tarefa indica qual agente a executa (dev, qa, security)
+- **Paralelização explícita:** ✅ (paralelo), ⚠️ (após setup), ❌ (sequencial)
+- **Checkboxes:** `[ ]` pendente, `[/]` em progresso, `[x]` concluído
+- **Estimativas:** em horas ou dias por tarefa
+
+O `<task_completed>` do ACE atualiza automaticamente os checkboxes ao final de cada sessão.
+
+### O que é um DEPENDENCY_MATRIX.md?
+
+O `DEPENDENCY_MATRIX.md` é o grafo de dependências entre PRPs gerado no Step 4. Ele contém:
+
+- **Inventário de PRPs:** tabela mestre com ID, fase, estimativa, complexidade, status
+- **Caminho crítico:** a sequência mais longa de PRPs dependentes que determina o prazo mínimo
+- **Matriz de dependências:** tabela "Pode Começar Após" → "Bloqueia" para cada PRP
+- **Diagrama Mermaid:** visualização do grafo completo de dependências
+- **Riscos de dependência:** análise de impacto de atrasos em PRPs críticos
+- **Alocação de capacidade:** distribuição de PRPs por onda e por agente
+
+É o artefato que o `impact-analyzer.py` consulta para propagar mudanças.
+
+### O que é um ARCHITECTURE.md?
+
+O `ARCHITECTURE.md` é o documento de definição arquitetural gerado no Step 5. Ele contém:
+
+- **Stack tecnológico:** frontend, backend, banco, infraestrutura com justificativas e alternativas descartadas
+- **Diagramas C4:** contexto (Level 1), containers (Level 2), componentes (Level 3) — todos em Mermaid
+- **ADRs (Architecture Decision Records):** decisões arquiteturais com contexto, decisão, consequências e alternativas
+- **Estratégia de segurança:** autenticação, autorização, criptografia, compliance
+- **CI/CD:** pipeline, ambientes, quality gates
+- **Riscos arquiteturais:** registro de riscos com probabilidade, impacto e mitigação
+- **Monitoramento e observabilidade:** métricas de negócio, SLIs, SLOs, logging
+
+### O que é um DESIGN_SYSTEM.md?
+
+O `DESIGN_SYSTEM.md` é o documento de design system gerado no Step 7 a partir do template expandido `Design_System_Master.md`. Ele contém:
+
+- **Design tokens:** cores (light + dark mode), tipografia, espaçamento, elevação
+- **Biblioteca de componentes:** 8+ componentes com variantes, estados e props TypeScript
+- **Padrões de interface:** tabelas, formulários, navegação, feedback, dashboards
+- **UI consciente de permissões:** ocultar, desabilitar, read-only por perfil
+- **Micro-interações:** catálogo de animações com duração e easing
+- **Matriz de estados:** estados universais (default, hover, focus, disabled, loading, error) por componente
+- **Acessibilidade:** WCAG 2.1 AA, contraste, touch targets, aria labels
+
+### Como os artefatos são versionados?
+
+Todos os artefatos LLC são documentos Markdown persistentes versionados em **Git**, tratados como entregáveis de software de primeira classe:
+
+- **Versionamento semântico:** cada artefato tem controle de versão no front matter ou footer
+- **Rastreabilidade:** o `dependency-graph.yaml` mapeia relações entre artefatos; o `impact-analyzer.py` detecta quais precisam ser atualizados quando um artefato fonte muda
+- **Revisão humana:** cada artefato passa por um human gate antes de ser considerado aprovado
+- **Histórico imutável:** artefatos de sessão ACE (`.ace/sessions/`) são append-only — nunca reescritos
+- **PRs e code review:** artefatos podem ser revisados como código, com diff legível no git Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
 
 ---
 

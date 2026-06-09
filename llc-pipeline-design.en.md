@@ -96,8 +96,9 @@ project-root/
 │   │   ├── llc-step-9.md
 │   │   ├── llc-step-10.md
 │   │   ├── llc-subflow-prototyping.md
-│   │   ├── llc-ace-context.md
-│   │   └── llc-impact-analyzer.md
+  │   │   ├── llc-ace-context.md
+  │   │   ├── llc-code-health.md
+  │   │   └── llc-impact-analyzer.md
 │   │
 │   └── [9 spec templates].md                   # Templates (Step 0.5-1)
 │
@@ -231,6 +232,9 @@ graph TD
 | `llc-step-9` | 9 | Testing documentation (Guide, Baseline, Progress) |
 | `llc-step-10` | 10 | README.md + DEPLOYMENT.md |
 | `llc-subflow-prototyping` | Subflow | 6-phase agentic prototyping for UI modules |
+| `llc-ace-context` | Transversal | ACE context protocol — append-only session history, anti-amnesia |
+| `llc-code-health` | 11 | Monitors structural code health (Moved Code, Copy/Paste, Legacy Touch) |
+| `llc-impact-analyzer` | Transversal | Analyzes change impact via git diff + dependency graph |
 
 ---
 

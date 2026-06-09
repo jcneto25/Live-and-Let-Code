@@ -109,6 +109,7 @@ project-root/
   │   │   ├── llc-step-10.md
   │   │   ├── llc-subflow-prototyping.md
   │   │   ├── llc-ace-context.md
+  │   │   ├── llc-code-health.md
   │   │   └── llc-impact-analyzer.md
   │   │
 │   ├── superpowers/                             # Meta-documentação
@@ -283,6 +284,9 @@ tags: [categoria, llc-pipeline]
 | `llc-step-9` | 9 | Gera documentação de testes (Guia, Baseline, Progresso) |
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
+| `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
+| `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
+| `llc-impact-analyzer` | Transversal | Analisa impacto de alterações via git diff + grafo de dependências |
 
 ---
 

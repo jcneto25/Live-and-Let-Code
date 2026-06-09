@@ -76,6 +76,20 @@ O pipeline LLC tem dois momentos distintos que se beneficiam de modos de operaç
 
 ## Passo a Passo
 
+### ⚠️ Atenção: Você tem documentação prévia?
+
+**Se SIM** (já existem manuais, atas, regulamentos) → siga para o Passo 0.
+
+**Se NÃO** (sistema novo, sem documentação) → execute o fluxo greenfield:
+
+```
+Execute a skill docs/skills/llc-step-0-greenfield.md
+```
+
+A IA conduzirá uma entrevista estruturada em 4 dimensões (15 perguntas no total) e gerará a base documental. Depois, prossiga normalmente para o Step 0.5.
+
+---
+
 ### Passo 0: Carregue os Documentos de Domínio
 
 **Você faz:** Coloque todos os documentos de negócio na pasta `docs/business/ingestion/`.

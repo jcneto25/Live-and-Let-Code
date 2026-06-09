@@ -19,7 +19,8 @@ tags: [conversion, ingestion, markdown, llc-pipeline]
 
 ## 📋 Pré-requisitos
 
-- [ ] Documentos raw carregados em `docs/business/ingestion/` (PDF, DOCX, PPTX, HTML, TXT, imagens com texto)
+- [ ] **Fluxo normal:** Documentos raw carregados em `docs/business/ingestion/` (PDF, DOCX, PPTX, HTML, TXT, imagens com texto)
+- [ ] **Fluxo greenfield:** Se `ingestion/` estiver vazia, execute `@llc-step-0-greenfield` primeiro para conduzir entrevista de descoberta e gerar a base documental
 - [ ] **Python 3.10+** instalado: `python --version`
   - Windows: `winget install Python.Python.3.12` ou https://python.org
   - macOS: `brew install python@3.12`

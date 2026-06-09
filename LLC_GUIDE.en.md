@@ -76,6 +76,20 @@ The LLC pipeline has two distinct moments that benefit from different operation 
 
 ## Step by Step
 
+### ⚠️ Attention: Do you have existing documentation?
+
+**If YES** (manuals, meeting minutes, regulations already exist) → go to Step 0.
+
+**If NO** (brand new system, no documentation) → run the greenfield flow:
+
+```
+Execute the skill docs/skills/llc-step-0-greenfield.md
+```
+
+The AI will conduct a structured interview across 4 dimensions (max 15 questions) and generate the documentation baseline. Then proceed normally to Step 0.5.
+
+---
+
 ### Step 0: Load Domain Documents
 
 **You do:** Place all business documents in the `docs/business/ingestion/` folder.

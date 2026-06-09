@@ -82,6 +82,36 @@ Um PRP típico tem 2 a 8 dias de esforço estimado. É granular o suficiente par
 
 A história de usuário é uma **promessa de conversa** — cabe ao time preencher as lacunas durante a sprint. O PRP é um **contrato executável** — o agente recebe, implementa e testa sem precisar perguntar nada. Um PRP equivale a uma história de usuário + especificação técnica + plano de testes + análise de riscos, tudo em um documento.
 
+### Quais agentes são usados no LLC?
+
+O pipeline LLC define papéis por etapa, não por pessoa. Cada papel é exercido pela IA quando o skill correspondente é executado:
+
+| Papel | Skill LLC | Responsabilidade |
+|-------|-----------|-----------------|
+| **Analista de Negócio** | `llc-step-0-greenfield`, `llc-step-0-5` | Extrai conhecimento via entrevista ou documentos, gera visão estratégica e módulos |
+| **Especificador** | `llc-step-1`, `llc-step-2` | Gera specs, glossário e PRDs (executivo + técnico) com Grill Me |
+| **Arquiteto** | `llc-step-5` | Define stack, diagramas C4, ADRs, segurança e CI/CD |
+| **Designer UX/UI** | `llc-step-7`, Subfluxo F1-F4 | Design System, wireframes, protótipos hi-fi |
+| **Planejador** | `llc-step-3`, `llc-step-4` | Decompõe em PRPs, gera matriz de dependências e ondas de execução |
+| **Desenvolvedor** | `llc-step-8`, Step 11, Subfluxo F5 | Setup do projeto, mock data, implementação de PRPs |
+| **QA Engineer** | `llc-step-9`, `llc-code-health` | Estratégia de testes, thresholds, métricas de saúde estrutural |
+| **Tech Writer** | `llc-step-10` | README, DEPLOYMENT, CLAUDE.md, AGENTS.md |
+| **Orquestrador** | `llc-impact-analyzer`, `llc-ace-context` | Rastreabilidade, continuidade de contexto, análise de impacto cross-PRP |
+
+Cada agente opera com contexto escopo restrito — recebe apenas os artefatos necessários para sua etapa, não o projeto inteiro.
+
+### Preciso usar todos os agentes para todo projeto?
+
+Não. Projetos pequenos (ex: single-page app, script CLI) podem condensar múltiplos papéis em menos skills. O LLC é modular — você pode pular steps que não se aplicam. O mínimo viável é: Step 0-GF (se greenfield) ou 0.5 → Step 1 → Step 6 (Tasks) → Step 11 (Execução). Projetos corporativos ou regulados se beneficiam do pipeline completo.
+
+### Agentes substituem engenheiros humanos?
+
+Não. Humanos definem direção, negociam escopo, supervisionam design e aprovam releases. Os agentes melhoram o retorno da atenção humana, não a substituem. O LLC formaliza isso com **human-in-the-loop** em todas as fases críticas: 11 human gates, 1 checkpoint visual e checkpoints de QA na execução. Nenhum step avança sem aprovação explícita.
+
+### Como os agentes se comunicam entre si?
+
+Através de **handoffs de artefatos persistentes** (visão estratégica, specs, PRDs, PRPs, arquitetura) versionados em Git, não por conversas em chat. O ACE (`<context_seed>`) comprime o estado da sessão em 4 campos para a sessão seguinte. O `dependency-graph.yaml` + `impact-analyzer.py` garantem que alterações em um artefato propaguem corretamente para os artefatos downstream. Cada agente recebe apenas o necessário para sua tarefa, otimizando o uso da janela de contexto.
+
 ---
 
 ## Pipeline — Visão Geral

@@ -22,6 +22,20 @@ Vibe coding é uma abordagem informal de codificação com IA onde os requisitos
 
 É a prática de front-loading especificações estruturadas e legíveis por máquina (visão estratégica, specs, PRDs, PRPs) para que agentes de IA possam contribuir de forma confiável à base de código. No LLC, os Steps 0-GF a 3 produzem especificações em cascata com rastreabilidade total — da visão estratégica ao PRP, cada artefato referencia sua origem. O Grill Me garante que lacunas sejam expostas antes da geração, não descobertas depois.
 
+### Como o LLC aperfeiçoa o Spec-Driven Development?
+
+O SDD tradicional tem 5 críticas legítimas. O LLC foi desenhado para endereçar cada uma delas:
+
+| Crítica ao SDD tradicional | Como o LLC resolve |
+|---------------------------|-------------------|
+| **1. Waterfall rígido e lento** — documentação pesada antes de qualquer código, 10x mais lento | O LLC **não é waterfall**. As 11 etapas são pipeline, não fase congelada. PRPs têm 2-8 dias e rodam em **ondas paralelas** assim que validados. O Grill Me é uma rodada curta de perguntas (~15 min), não meses de documentação. O MVP mockado (Step 8) entrega algo funcional e demonstrável em dias, não meses |
+| **2. "Markdown Madness"** — milhares de linhas de documentação, 80% do tempo lendo Markdown | O ACE resolve isso: o `<context_seed>` comprime o estado em **4 campos (~300 tokens)**. Um agente de implementação recebe **apenas o PRP que vai executar** (~50-80 linhas), não o projeto inteiro. O `impact-analyzer.py` diz exatamente quais artefatos ler, eliminando leitura desnecessária |
+| **3. Bugs persistentes e código insustentável** — mesmo com specs, código gerado contém erros triviais | **TDD embutido em cada PRP** + `code-health.py` + self-healing loop. A IA escreve teste → vê falhar → implementa → vê passar. Se falhar, o ciclo recomeça. O agente não entrega código sem teste passando. Métricas de Moved Code, Copy/Paste e Legacy Touch são monitoradas a cada onda |
+| **4. Spec Drift** — código alterado manualmente quebra a "fonte única da verdade" | O `dependency-graph.yaml` + `impact-analyzer.py` detectam drift automaticamente: `git diff` → cruza com grafo → reporta quais artefatos estão desatualizados. **Não é manual.** O pre-commit hook alerta antes do commit. O `<gate_result>` força validação humana antes de prosseguir |
+| **5. Obsolescência por modelos nativos** — frameworks externos se tornam redundantes conforme LLMs evoluem | O LLC **não é um framework externo** — é uma metodologia codificada em **skills Markdown tool-agnostic**. Se um modelo ganhar capacidade nativa de planejamento, os skills evoluem para usar essa capacidade. O LLC não compete com a LLM — ele a **orquestra** |
+
+O resultado: o LLC mantém os benefícios do SDD (rastreabilidade, especificações formais, gates de qualidade) sem cair nas armadilhas do waterfall, da fadiga de documentação ou da obsolescência. **Especificação sim, burocracia não.**
+
 ### O que é PRRS (Prismatic Ranked Recursive Summarization)?
 
 É o padrão arquitetural onde uma mesma fonte de dados é analisada sob **múltiplos ângulos simultâneos** (prismas) e depois converge em camadas de granularidade crescente. No LLC: os 7 specs do Step 1 são 7 prismas sobre a documentação de ingestion; os 2 PRDs do Step 2 são 2 prismas sobre os specs (executivo vs técnico); os N PRPs do Step 3 são N prismas sobre o PRD técnico.

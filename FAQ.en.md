@@ -22,6 +22,20 @@ The phenomenon where AI quality drops as the context window fills up: 0-30% = pe
 
 The practice of front-loading structured, machine-readable specifications (strategic vision, specs, PRDs, PRPs) so AI agents can contribute reliably to the codebase. In LLC, Steps 0-GF through 3 produce specifications in cascade with full traceability — from strategic vision to PRP, each artifact references its origin. Grill Me ensures gaps are exposed before generation, not discovered after.
 
+### How does LLC improve upon Spec-Driven Development?
+
+Traditional SDD has 5 legitimate criticisms. LLC was designed to address each one:
+
+| Traditional SDD criticism | How LLC solves it |
+|--------------------------|-------------------|
+| **1. Rigid waterfall, too slow** — heavy documentation before any code, 10x slower | LLC **is not waterfall**. The 11 steps are a pipeline, not frozen phases. PRPs are 2-8 days and run in **parallel waves** as soon as validated. Grill Me is a short Q&A round (~15 min), not months of documentation. The mocked MVP (Step 8) delivers something functional and demonstrable in days, not months |
+| **2. "Markdown Madness"** — thousands of lines of docs, 80% of time reading Markdown | ACE solves this: `<context_seed>` compresses state into **4 fields (~300 tokens)**. An implementation agent receives **only the PRP it will execute** (~50-80 lines), not the entire project. `impact-analyzer.py` tells exactly which artifacts to read, eliminating unnecessary reading |
+| **3. Persistent bugs, unmaintainable code** — even with specs, generated code has trivial errors | **TDD embedded in every PRP** + `code-health.py` + self-healing loop. AI writes test → sees it fail → implements → sees it pass. If it fails, the cycle restarts. The agent doesn't deliver code without passing tests. Moved Code, Copy/Paste, and Legacy Touch metrics are monitored every wave |
+| **4. Spec Drift** — manually changed code breaks the "single source of truth" | `dependency-graph.yaml` + `impact-analyzer.py` detect drift automatically: `git diff` → cross with graph → reports which artifacts are outdated. **Not manual.** Pre-commit hook alerts before commit. `<gate_result>` forces human validation before proceeding |
+| **5. Obsolescence by native models** — external frameworks become redundant as LLMs evolve | LLC **is not an external framework** — it's a methodology encoded in **tool-agnostic Markdown skills**. If a model gains native planning capability, the skills evolve to leverage it. LLC doesn't compete with the LLM — it **orchestrates** it |
+
+The result: LLC keeps SDD's benefits (traceability, formal specifications, quality gates) without falling into the waterfall, documentation fatigue, or obsolescence traps. **Specification yes, bureaucracy no.**
+
 ### What is PRRS (Prismatic Ranked Recursive Summarization)?
 
 The architectural pattern where the same data source is analyzed from **multiple simultaneous angles** (prisms) and then converges into layers of increasing granularity. In LLC: Step 1's 7 specs are 7 prisms over the ingestion docs; Step 2's 2 PRDs are 2 prisms over the specs (executive vs technical); Step 3's N PRPs are N prisms over the technical PRD.

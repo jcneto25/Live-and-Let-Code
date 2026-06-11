@@ -734,3 +734,40 @@ São complementares: YAML para máquina, Mermaid para entendimento visual.
 3. Integrações funcionando → implantar em staging
 4. Testes de aceite passando → implantar em produção
 5. Monitorar code-health e iterar
+
+---
+
+## 📖 Manual do Usuario
+
+### O que e o manual do usuario no LLC?
+
+E a documentacao voltada para o **usuario final** da aplicacao, gerada automaticamente pelo pipeline LLC. Diferente do README e DEPLOYMENT (que sao para desenvolvedores), o manual do usuario ensina como **usar** o sistema: como navegar, como cadastrar, como gerar relatorios, etc.
+
+O manual e composto por:
+- **Esqueleto** (`docs/user-guide/USER_GUIDE.md`): gerado pela skill `llc-user-guide` (Step 10.5), contem indice de paginas, guia por perfil e convencoes.
+- **Paginas de conteudo** (`docs/user-guide/[modulo]/*.md`): geradas pelos PRPs durante a execucao (Step 11). Cada PRP declara quais paginas de manual produz na secao `user_docs`.
+
+### Por que o manual do usuario e importante no desenvolvimento agentico?
+
+Agentes de IA produzem codigo, mas o usuario final precisa entender como usar o sistema. O manual do usuario fecha o ciclo: a mesma IA que implementa a feature tambem documenta como usa-la. Isso garante que a documentacao esteja sempre sincronizada com o codigo — se o codigo muda, reexecutar o PRP atualiza o manual.
+
+### O manual foi gerado sem screenshots. Como adicionar as telas reais?
+
+O LLC gera o manual com screenshots se o Playwright estiver instalado no ambiente. Caso contrario, usa diagramas Mermaid como fallback. Para adicionar screenshots reais:
+
+1. Instale o Playwright: `npm install -D @playwright/test && npx playwright install`
+2. Execute o servidor de desenvolvimento da aplicacao
+3. Navegue ate `docs/user-guide/[modulo]/img/`
+4. Substitua os diagramas por screenshots reais ou execute o script de captura do PRP novamente
+
+### Posso usar Puppeteer ou Selenium em vez de Playwright?
+
+Sim. O script de screenshot do LLC detecta automaticamente `playwright`, `puppeteer` ou `selenium-webdriver` no `package.json`. Qualquer um dos tres funciona. Instale o de sua preferencia e re-execute o PRP.
+
+### Como manter o manual atualizado apos mudancas?
+
+A cada PRP executado, as paginas de manual declaradas em `user_docs` sao regeneradas. Se uma feature existente mudou (ex: campo novo no formulario), re-execute o PRP correspondente. O analisador de impacto (`llc-impact-analyzer`) reporta quais paginas de manual sao afetadas por cada alteracao de codigo.
+
+### Preciso de um site separado para o manual?
+
+Nao. Os arquivos Markdown em `docs/user-guide/` sao renderizados nativamente no GitHub, GitLab e qualquer previewer de Markdown. Se desejar um site com busca e tema, ferramentas como MkDocs ou VitePress podem converter os `.md` em site estatico com comando unico (`mkdocs build`), sem alterar o conteudo.

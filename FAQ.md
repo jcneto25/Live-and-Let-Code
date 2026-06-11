@@ -332,6 +332,40 @@ A causa principal da duplicação é o agente não saber o que já existe no rep
 
 **Regra prática no LLC:** antes de criar qualquer arquivo novo, o agente deve verificar se a funcionalidade já existe em um PRP existente, um módulo compartilhado ou um utilitário documentado no `CLAUDE.md`. O `impact-analyzer.py --files "caminho/planejado" --json` deve ser executado como verificação pré-implementação.
 
+### Como o LLC implementa o "learning loop" (ciclo de aprendizado)?
+
+O learning loop é o mecanismo que transforma a experiência de desenvolvimento em conhecimento persistente, evitando que erros se repitam e que decisões se percam entre sessões. O LLC implementa as 4 camadas do ecossistema de aprendizado:
+
+| Documento de aprendizado | Equivalente LLC | Frequência | Função |
+|--------------------------|-----------------|-----------|--------|
+| **Diário de decisões técnicas** | `ARCHITECTURE.md` (ADRs) + ACE `<learning_point>` → `memory/learning_points.md` | Por etapa / por descoberta | Registrar o "porquê" das decisões e promover aprendizados validados para memória cross-sessão |
+| **Especificação viva (spec.md)** | `docs/business/specs/` + `docs/prd/` + `docs/prps/` | Por alteração de requisito | Fonte única da verdade sobre o comportamento do sistema. Artefatos versionados em git, atualizados pelo pipeline quando requisitos mudam |
+| **Arquivo de progresso** | ACE `<context_seed>` (4 campos) + `.ace/sessions/YYYY-MM-DD-NNN.md` | Por sessão | Continuidade entre sessões. O `<context_seed>` comprime o estado em ~300 tokens. O `finalize_session.py` atualiza TASKS.md automaticamente |
+| **Constituição do projeto** | `CLAUDE.md` + `AGENTS.md` | Por onda / quando regras mudam | Internalizar padrões e lições aprendidas de longo prazo. Gerados pelo Step 10 e atualizados quando a arquitetura evolui |
+
+**O ciclo completo no LLC:**
+
+```
+Sessão N
+  ↓ implementa, descobre, decide
+  ↓ appenda <action>, <thinking>, <learning_point>
+  ↓ finalize_session.py:
+  ↓   → promove <learning_point priority="high"> → memory/learning_points.md
+  ↓   → gera <context_seed> com state/pending/blockers/next_action
+  ↓   → atualiza TASKS.md (checkboxes [x])
+  ↓
+Sessão N+1
+  ↓ initialize_session.py carrega context_seed (~300 tokens)
+  ↓ agente sabe exatamente: o que foi feito, o que falta, blockers, próximo passo
+  ↓ não repete erros da sessão anterior
+```
+
+### O que ainda pode ser melhorado no learning loop do LLC?
+
+O LLC cobre 90% do ciclo de aprendizado descrito na literatura. Uma oportunidade de melhoria:
+
+**Feedback do agente sobre os próprios skills.** Hoje, se um skill produz resultados inconsistentes, o desenvolvedor precisa perceber e ajustar manualmente. Um mecanismo onde o próprio agente, ao final de uma sessão, sugere melhorias no prompt do skill que acabou de executar — "o Grill Me deveria ter perguntado sobre X", "o Step 4 deveria incluir verificação Y" — fecharia o loop de engenharia composta. Essas sugestões poderiam ser registradas como `<skill_feedback>` no ACE e revisadas periodicamente pelo mantenedor da metodologia.
+
 ### O que é "human-in-the-loop"?
 
 É o princípio de que humanos permanecem no controle em todas as decisões críticas do ciclo de desenvolvimento. Agentes de IA executam dentro de guardrails definidos por humanos — nunca os substituem. No LLC:

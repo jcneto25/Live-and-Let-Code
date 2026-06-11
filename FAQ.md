@@ -374,7 +374,7 @@ O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um pad
 
 | Causa | Mecanismo LLC |
 |-------|---------------|
-| IA não vê o projeto inteiro | Grafo de Código (Depwire/Graphify) fornece dependências, assinaturas reais e análise de impacto |
+| IA não vê o projeto inteiro | Ferramentas de grafo de código (ver seção de ferramentas complementares abaixo) fornecem dependências, assinaturas reais e análise de impacto |
 | Falta de grounding estrutural | `context_seed` comprime estado essencial entre sessões; AGENTS.md força validação contra a realidade |
 | Loop sem feedback real | TDD obrigatório: RED (entendeu?) → GREEN (funciona?) → REFACTOR (não quebrou nada?) |
 | Degradação de contexto | ACE append-only: cada ação é atômica e verificável; `context_seed` mantém ~300 tokens de continuidade |
@@ -424,6 +424,23 @@ Agentes melhoram o retorno da atenção humana — não a substituem. Um engenhe
 | **Pencil MCP** | Protótipos hi-fi no subfluxo de prototipagem (F4) | https://docs.pencil.dev |
 | **Pandoc** | Fallback de conversão se Docling indisponível | `choco install pandoc` / `brew install pandoc` |
 | **MSW** | Mock Service Worker para camada de dados mockados (Step 8) | `npm install msw --save-dev` |
+
+### Quais ferramentas complementam o workflow LLC?
+
+Além do stack base, ferramentas externas podem potencializar o pipeline LLC atacando pontos específicos de fricção. Nenhuma é obrigatória — o LLC funciona sem elas — mas cada uma resolve um gargalo concreto do desenvolvimento com IA.
+
+**Ferramentas complementares (todas opcionais):**
+
+| Categoria | Ferramenta | O que resolve | Classificação |
+|-----------|-----------|---------------|:---:|
+| **Grafo de código** | Depwire, Graphify, Aider (tree-sitter) | Análise de dependências reais, assinaturas de funções (não alucinadas), impacto de mudanças — a IA para de "adivinhar" a estrutura do projeto | Opcional |
+| **Compressão de contexto** | Caveman, Headroom | Economia de 60-95% de tokens; reduz o problema de "lost in the middle" mantendo mais contexto útil na janela do LLM | Opcional |
+| **Memória semântica** | agentmemory, MemPalace | Busca semântica entre sessões — complementa o ACE com recuperação por similaridade em vez de busca exata | Opcional |
+| **Grill Me** | Skill LLC nativo (Steps 0.5-3) | Protocolo de perguntas obrigatórias antes de gerar artefatos — expõe lacunas e suposições não validadas | ✅ **Obrigatório** (núcleo LLC) |
+| **TDD + AGENTS.md** | Protocolo LLC nativo | Zonas de autonomia, RED/GREEN/REFACTOR, handoff — força verificação antes de prosseguir | ✅ **Obrigatório** (núcleo LLC) |
+| **ACE + context_seed** | Scripts `.ace/` | Continuidade entre sessões (~300 tokens), append-only delta, memória persistente de aprendizado | ✅ **Obrigatório** (núcleo LLC) |
+
+> **Nota:** As ferramentas obrigatórias já fazem parte do LLC. As opcionais são recomendações para equipes que querem ir além na mitigação do "problema dos 70%" e na eficiência de tokens. O LLC é agnóstico a ferramentas externas — qualquer alternativa equivalente serve.
 
 ### Quais LLMs funcionam com workflows agenticos?
 

@@ -374,7 +374,7 @@ The "70% problem" (coined by Addy Osmani, Google Chrome DX) describes a pattern 
 
 | Cause | LLC Mechanism |
 |-------|---------------|
-| AI doesn't see the full project | Code Graph (Depwire/Graphify) provides dependencies, real signatures, and impact analysis |
+| AI doesn't see the full project | Code graph tools (see complementary tools section below) provide dependencies, real signatures, and impact analysis |
 | Lack of structural grounding | `context_seed` compresses essential state between sessions; AGENTS.md enforces reality checks |
 | No real feedback loop | Mandatory TDD: RED (understood?) → GREEN (works?) → REFACTOR (didn't break anything?) |
 | Context degradation | ACE append-only: each action is atomic and verifiable; `context_seed` maintains ~300 tokens of continuity |
@@ -424,6 +424,23 @@ Agents improve the return on human attention — they don't replace it. An engin
 | **Pencil MCP** | Hi-fi prototypes in prototyping subflow (F4) | https://docs.pencil.dev |
 | **Pandoc** | Conversion fallback if Docling unavailable | `choco install pandoc` / `brew install pandoc` |
 | **MSW** | Mock Service Worker for mock data layer (Step 8) | `npm install msw --save-dev` |
+
+### What tools complement the LLC workflow?
+
+Beyond the base stack, external tools can enhance the LLC pipeline by addressing specific friction points. None are mandatory — LLC works without them — but each solves a concrete bottleneck in AI-assisted development.
+
+**Complementary tools (all optional):**
+
+| Category | Tool | What it solves | Classification |
+|----------|------|---------------|:---:|
+| **Code graph** | Depwire, Graphify, Aider (tree-sitter) | Real dependency analysis, function signatures (not hallucinated), change impact — AI stops "guessing" the project structure | Optional |
+| **Context compression** | Caveman, Headroom | 60-95% token savings; reduces "lost in the middle" by keeping more useful context in the LLM window | Optional |
+| **Semantic memory** | agentmemory, MemPalace | Cross-session semantic search — complements ACE with similarity-based retrieval instead of exact match | Optional |
+| **Grill Me** | Native LLC skill (Steps 0.5-3) | Mandatory Q&A protocol before generating artifacts — exposes gaps and unvalidated assumptions | ✅ **Required** (LLC core) |
+| **TDD + AGENTS.md** | Native LLC protocol | Autonomy zones, RED/GREEN/REFACTOR, handoff — forces verification before proceeding | ✅ **Required** (LLC core) |
+| **ACE + context_seed** | `.ace/` scripts | Session continuity (~300 tokens), append-only delta, persistent learning memory | ✅ **Required** (LLC core) |
+
+> **Note:** Required tools are already part of LLC. Optional ones are recommendations for teams wanting to go further in mitigating the "70% problem" and improving token efficiency. LLC is external-tool-agnostic — any equivalent alternative works.
 
 ### Which LLMs work with agentic workflows?
 

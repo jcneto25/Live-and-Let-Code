@@ -383,7 +383,31 @@ Qualquer LLM que suporte **tool calling** (invocação de ferramentas de termina
 | Médio (10-15 PRPs) | ~1.5M tokens | $4.50 - $9.00 |
 | Grande (30+ PRPs) | ~4M tokens | $12.00 - $24.00 |
 
-*Valores de junho/2026. O custo real depende do número de iterações Grill Me e re-execuções de skills após gates reprovados.* Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+*Valores de junho/2026. O custo real depende do número de iterações Grill Me e re-execuções de skills após gates reprovados.*
+
+### CodeAgent vs ToolCallingAgent: qual paradigma o LLC usa?
+
+O LLC usa **ambos** os paradigmas, em fases diferentes. A escolha não está no cliente de IA — está no **design do skill**:
+
+| Paradigma | Como funciona | Etapas por tarefa | Tokens |
+|-----------|--------------|-------------------|--------|
+| **ToolCallingAgent** | LLM gera JSON com tool + parâmetros. Uma tool por vez. Aguarda resultado antes da próxima | 12 etapas | ~29K tokens |
+| **CodeAgent** | LLM gera + executa bloco Python. Encadeia múltiplas ações em um passo. Pode loop e condicional | 2 etapas | ~5.4K tokens |
+
+**Uma skill bem escrita controla o paradigma — independente do cliente:**
+
+- **Skill com pausas e gates** → a IA age uma ação por vez, aguardando validação → **ToolCallingAgent-like**
+- **Skill com instruções encadeadas** → a IA executa múltiplas ações em sequência sem pausar → **CodeAgent-like**
+
+O LLC aplica cada paradigma onde ele é mais adequado:
+
+| Paradigma | Onde no LLC | Por que |
+|-----------|------------|---------|
+| **ToolCallingAgent-like** | Steps 0.5 a 10 (especificação e planejamento) | Um artefato por vez, human gate entre cada um. Grill Me força pausa para perguntas. `<gate_result>` força pausa para aprovação. Baixo risco — cada passo é pequeno e validado |
+| **CodeAgent-like** | Step 11 (execução) + Subfluxo F5-F6 | Um PRP inteiro é implementado em um passo contínuo. O agente cria arquivos, escreve testes, corrige bugs, faz commit — tudo encadeado. Alto throughput — o PRP é auto-contido, dispensa consultas externas |
+| **Híbrido** | Subfluxo F1-F4 (prototipagem) | F1-F3 (discovery, tokens, wireframes) são ToolCallingAgent-like com aprovação entre fases. F4 (hi-fi) tem CHECKPOINT VISUAL obrigatório. F5 (código) é CodeAgent-like |
+
+A vantagem arquitetural: o paradigma não está preso ao cliente de IA. Um skill Markdown bem escrito produz o comportamento desejado em **qualquer agente que leia arquivos e execute comandos** — Claude Code (nativo ToolCallingAgent), opencode, Cursor, Codex CLI. O LLC não depende de um formato específico de function calling — depende de **instruções claras**. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
 
 ---
 

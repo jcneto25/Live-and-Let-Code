@@ -771,3 +771,21 @@ A cada PRP executado, as paginas de manual declaradas em `user_docs` sao regener
 ### Preciso de um site separado para o manual?
 
 Nao. Os arquivos Markdown em `docs/user-guide/` sao renderizados nativamente no GitHub, GitLab e qualquer previewer de Markdown. Se desejar um site com busca e tema, ferramentas como MkDocs ou VitePress podem converter os `.md` em site estatico com comando unico (`mkdocs build`), sem alterar o conteudo.
+
+---
+
+## 📖 Compressao de Tokens
+
+### O LLC usa alguma estrategia de compressao de tokens?
+
+Sim, em **5 camadas** complementares. O objetivo e maximizar a quantidade de informacao util que cabe na janela de contexto da LLM, mantendo a IA sempre na zona de qualidade de pico (0-30% de preenchimento):
+
+| Camada | Mecanismo | Reducao |
+|--------|-----------|:------:|
+| **1. ACE `<context_seed>`** | Comprime o estado da sessao em 4 campos (~300 tokens) em vez de recarregar o historico completo (~22.000 tokens) | **93%** |
+| **2. PRPs auto-contidos** | Cada agente de implementacao recebe apenas o PRP (~50-80 linhas), nao o projeto inteiro (~25+ artefatos, ~5000+ linhas) | **95%+** |
+| **3. Indice comprimido no AGENTS.md** | Formato `|`-delimitado: 16 artefatos em ~400 tokens com keywords para roteamento. O agente decide quais arquivos carregar sob demanda (lazy loading) | **23% vs tabela tradicional** |
+| **4. Analisador de impacto** | `impact-analyzer.py` diz exatamente quais artefatos ler antes de cada alteracao — elimina leitura desnecessaria | **Sob demanda** |
+| **5. Markdown via Docling** | PDF/DOCX/HTML convertidos para Markdown puro (Step 0.1) — reduz ruido estrutural de tags pesadas (XML, HTML) | **60-80% vs formatos binarios** |
+
+**Principio de design:** descricoes sao para roteamento, nao para leitura integral. O agente usa o indice comprimido para decidir quais arquivos carregar — e so os carrega quando a tarefa realmente exige.

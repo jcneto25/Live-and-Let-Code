@@ -771,3 +771,21 @@ Each executed PRP regenerates the manual pages declared in `user_docs`. If an ex
 ### Do I need a separate website for the guide?
 
 No. The Markdown files in `docs/user-guide/` render natively on GitHub, GitLab, and any Markdown previewer. If you want a site with search and theming, tools like MkDocs or VitePress can convert the `.md` files into a static site with a single command (`mkdocs build`), without changing the content.
+
+---
+
+## 📖 Token Compression
+
+### Does LLC use any token compression strategy?
+
+Yes, across **5 complementary layers**. The goal is to maximize the amount of useful information that fits in the LLM context window, keeping the AI always in the peak quality zone (0-30% fill):
+
+| Layer | Mechanism | Reduction |
+|-------|-----------|:---------:|
+| **1. ACE `<context_seed>`** | Compresses session state into 4 fields (~300 tokens) instead of reloading full history (~22,000 tokens) | **93%** |
+| **2. Self-contained PRPs** | Each implementation agent receives only the PRP (~50-80 lines), not the entire project (~25+ artifacts, ~5000+ lines) | **95%+** |
+| **3. Compressed Index in AGENTS.md** | `|`-delimited format: 16 artifacts in ~400 tokens with routing keywords. The agent decides which files to load on demand (lazy loading) | **23% vs traditional table** |
+| **4. Impact Analyzer** | `impact-analyzer.py` tells exactly which artifacts to read before each change — eliminates unnecessary reading | **On demand** |
+| **5. Markdown via Docling** | PDF/DOCX/HTML converted to pure Markdown (Step 0.1) — reduces structural noise from heavy tags (XML, HTML) | **60-80% vs binary formats** |
+
+**Design principle:** descriptions are for routing, not full reading. The agent uses the compressed index to decide which files to load — and only loads them when the task actually requires it.

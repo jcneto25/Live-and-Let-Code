@@ -276,7 +276,46 @@ Além do README.md e DEPLOYMENT.md, gere os arquivos de direção (steering file
 
 **Relação:** CLAUDE.md = projeto (stack, domínio). AGENTS.md = desenvolvedor (como trabalha). Ambos referenciam a infraestrutura ACE.
 
-### 5. Validação Cruzada
+### 5. Preencha o Documentation Index no AGENTS.md
+
+No `AGENTS.md` gerado, localize o placeholder `{{DOCS_INDEX}}` e substitua pelo indice
+comprimido de todos os artefatos LLC existentes no projeto.
+
+#### Regras de preenchimento
+
+1. **Formato fixo por linha:** `directory | file (KEYWORDS) | step | depends_on`
+2. **KEYWORDS:** 3-5 palavras-chave em ingles, uppercase, que o agente encontrara
+   em suas tarefas. Ex: `(STACK, C4, ADRS, SEGURANCA)` para ARCHITECTURE.md.
+3. **step:** O step LLC que gerou o artefato. Ex: `Step 5`.
+4. **depends_on:** Artefatos que este depende (nomes curtos, separados por virgula).
+   Ex: `prd_tecnico, rnf`. Se nao depende de nenhum, use `-`.
+5. **So inclua artefatos que EXISTEM.** Se um spec nao foi gerado, nao o liste.
+6. **PRPs usam wildcard:** `PRP-*.md` — nao liste PRPs individuais.
+7. **Ordem:** Agrupe por diretorio, mesma ordem do pipeline (Step 0 → Step 10.5).
+8. **Diretorio:** Use caminho relativo a raiz do projeto. Ex: `docs/business/specs/`.
+
+#### Template de saida (preencha apenas as linhas cujos artefatos existem)
+
+```
+docs/business/specs/ | visao_estrategica_e_negocio.md (VISAO, ESCOPO, ATORES, OBJETIVOS) | Step 0.5 | ingestion
+docs/business/specs/ | glossario.md (TERMOS, SIGLAS, DEFINICOES, VOCABULARIO) | Step 1 | visao
+docs/business/specs/ | requisitos_funcionais.md (FEATURES, COMPORTAMENTO, GHERKIN) | Step 1 | visao, glossario
+docs/business/specs/ | requisitos_nao_funcionais.md (PERFORMANCE, SEGURANCA, RESTRICOES) | Step 1 | visao
+docs/business/specs/ | regras_negocio.md (REGRAS, VALIDACOES, CONDICOES) | Step 1 | visao, glossario
+docs/business/specs/ | workflows_bpmn.md (FLUXOS, PROCESSOS, DIAGRAMAS) | Step 1 | modulos
+docs/business/specs/ | perfis_permissoes.md (PERFIS, ROLES, ACESSOS, RBAC) | Step 1 | visao
+docs/business/specs/ | catalogo_integracoes.md (APIS, SERVICOS, EXTERNOS) | Step 1 | visao
+docs/prd/ | executive_PRD.md (RESUMO, STAKEHOLDERS, VALOR) | Step 2 | visao, glossario
+docs/prd/ | PRD_tecnico_institucional.md (STACK, REQUISITOS, API, DB) | Step 2 | specs
+docs/prps/ | PRP-*.md (CONTRATO, IMPLEMENTACAO, GHERKIN, TESTES) | Step 3 | prd_tecnico
+docs/architecture/ | ARCHITECTURE.md (STACK, C4, ADRS, CI/CD, SEGURANCA) | Step 5 | prd_tecnico, rnf
+docs/design/ | DESIGN_SYSTEM.md (TOKENS, COMPONENTES, PADROES, A11Y) | Step 7 | arquitetura, perfis
+docs/testing/ | TESTING_GUIDE.md (TDD, MOCKS, TEMPLATES, THRESHOLDS) | Step 9 | arquitetura, prps
+docs/ | DEPLOYMENT.md (AMBIENTES, PIPELINE, ROLLBACK, VARIAVEIS) | Step 10 | arquitetura
+docs/user-guide/ | USER_GUIDE.md (MANUAL, USUARIO, TUTORIAIS, NAVEGACAO) | Step 10.5 | prps, perfis
+```
+
+### 6. Validação Cruzada
 
 Após gerar ambos os documentos, verifique:
 
@@ -307,6 +346,9 @@ Após gerar os 2 documentos, **PARE** e apresente:
 2. **DEPLOYMENT.md:** Ambientes definidos, estratégia de deploy por ambiente, checklist.
 3. **Consistência:** Todos os comandos do README funcionam com os scripts do projeto?
 4. **Variáveis:** Lista de variáveis de ambiente documentadas. Alguma ficou de fora?
+5. **Documentation Index:** O indice comprimido foi preenchido no AGENTS.md?
+   Todas as keywords cobrem os dominios do projeto? Algum artefato existente ficou de fora?
+6. **Consistencia:** Todos os comandos do README funcionam com os scripts do projeto?
 
 **Este é o último passo antes da Execução (Step 11).**
 

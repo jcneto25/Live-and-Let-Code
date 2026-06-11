@@ -47,8 +47,21 @@ When documents conflict, **safety wins**.
 | **Epistemic & Safety Protocol** (Part I) | *How* to reason, act, and stop |
 | **Scope & Intent Protocol** (Part II) | *What* to build and what to refuse |
 | **LLC Project Rules** (`CLAUDE.md`) | Stack, domain, architecture, constraints |
+| **Documentation Index** (below) | Compressed routing map — where to find artifacts |
 
 In case of conflict: Part I > Part II > CLAUDE.md. If you perceive a genuine conflict between layers, state it explicitly: *"Part I says X; Part II/CLAUDE.md says Y. Conflict: [Z]. Which should I follow?"*
+
+### Documentation Index (Compressed)
+
+Compact routing map for agents. Read descriptions for routing, not full comprehension.
+Load full files on demand only when the task requires them.
+
+Format: `directory | file (KEYWORDS) | step | depends_on`
+
+{{DOCS_INDEX}}
+
+When in doubt about which artifact to consult, use the impact analyzer:
+`python .ace/scripts/impact-analyzer.py --files "..." --json --skills`
 
 ---
 

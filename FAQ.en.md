@@ -319,6 +319,19 @@ TDD provides an **objective target** for the AI to iterate against. Without it, 
 
 LLC enforces TDD at 3 levels: `CLAUDE.md`/`AGENTS.md` (developer golden rule), `TESTING_GUIDE.md` (coverage thresholds: ≥ 80% unit, ≥ 70% integration), and `code-health.py` (monitors whether agents add code without tests).
 
+### How to prevent AI agents from creating duplicate code?
+
+The root cause of duplication is the agent not knowing what already exists in the repository — so-called "contextual blindness." LLC implements 4 defense layers:
+
+| Strategy | LLC Mechanism | How it prevents duplication |
+|----------|-------------|---------------------------|
+| **1. Codebase map** | `CLAUDE.md` + `AGENTS.md` document where components, utilities, and patterns live. `dependency-graph.yaml` + `dependency-graph.mmd` map the full artifact topology | The AI consults the map before creating. It knows `src/components/ui/Button.tsx` exists and should be reused, not recreated |
+| **2. Pre-execution impact analysis** | `impact-analyzer.py` cross-references `git diff` with the dependency graph. The agent runs it BEFORE implementing | The AI sees exactly which existing files are affected by the change. It won't create `UserService2.ts` if `UserService.ts` already exists |
+| **3. Planning before code** | Grill Me (Steps 0.5-3) forces the AI to ask questions before generating. AGENTS.md requires "DOING/EXPECT/IF YES/IF NO" before every action | The AI announces what it will create BEFORE creating it. The human intercepts duplications in the plan, not in the code |
+| **4. Metric-forced refactoring** | `code-health.py` monitors Copy/Paste vs Moved Code. If copy > moved, it fires an alert and suggests a cross-PRP refactoring wave | Duplications that escaped layers 1-3 are detected and corrected in scheduled refactoring waves |
+
+**LLC practical rule:** before creating any new file, the agent must check whether the functionality already exists in an existing PRP, a shared module, or a utility documented in `CLAUDE.md`. `impact-analyzer.py --files "planned/path" --json` should be run as a pre-implementation check.
+
 ### What is "human-in-the-loop"?
 
 The principle that humans remain in control of all critical development decisions. AI agents operate within human-defined guardrails — they never replace humans. In LLC:

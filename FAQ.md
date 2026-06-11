@@ -319,6 +319,19 @@ O TDD fornece um **alvo objetivo** contra o qual a IA itera. Sem ele, a IA pode 
 
 O LLC reforça TDD em 3 níveis: `CLAUDE.md`/`AGENTS.md` (regra de ouro do desenvolvedor), `TESTING_GUIDE.md` (thresholds de cobertura: ≥ 80% unitários, ≥ 70% integração) e `code-health.py` (monitora se agentes estão adicionando código sem testes).
 
+### Como evitar que agentes de IA criem código duplicado?
+
+A causa principal da duplicação é o agente não saber o que já existe no repositório — a chamada "cegueira contextual". O LLC implementa 4 camadas de defesa:
+
+| Estratégia | Mecanismo LLC | Como previne duplicação |
+|-----------|---------------|------------------------|
+| **1. Mapa da base de código** | `CLAUDE.md` + `AGENTS.md` documentam onde estão componentes, utilitários e padrões. `dependency-graph.yaml` + `dependency-graph.mmd` mapeiam a topologia completa de artefatos | A IA consulta o mapa antes de criar. Sabe que `src/components/ui/Button.tsx` existe e deve ser reutilizado, não recriado |
+| **2. Análise de impacto pré-execução** | `impact-analyzer.py` cruza `git diff` com o grafo de dependências. O agente executa ANTES de implementar | A IA vê exatamente quais arquivos existentes são afetados pela mudança. Não cria `UserService2.ts` se `UserService.ts` já existe |
+| **3. Planejamento antes do código** | Grill Me (Steps 0.5-3) força a IA a fazer perguntas antes de gerar. AGENTS.md exige "DOING/EXPECT/IF YES/IF NO" antes de cada ação | A IA anuncia o que vai criar ANTES de criar. O humano intercepta duplicações no plano, não no código |
+| **4. Refatoração forçada por métricas** | `code-health.py` monitora Copy/Paste vs Moved Code. Se copy > moved, dispara alerta e sugere onda de refatoração cross-PRP | Duplicações que escaparam das camadas 1-3 são detectadas e corrigidas em ondas de refatoração programadas |
+
+**Regra prática no LLC:** antes de criar qualquer arquivo novo, o agente deve verificar se a funcionalidade já existe em um PRP existente, um módulo compartilhado ou um utilitário documentado no `CLAUDE.md`. O `impact-analyzer.py --files "caminho/planejado" --json` deve ser executado como verificação pré-implementação.
+
 ### O que é "human-in-the-loop"?
 
 É o princípio de que humanos permanecem no controle em todas as decisões críticas do ciclo de desenvolvimento. Agentes de IA executam dentro de guardrails definidos por humanos — nunca os substituem. No LLC:

@@ -434,6 +434,9 @@ Beyond the base stack, external tools can enhance the LLC pipeline by addressing
 | Category | Tool | What it solves | Classification |
 |----------|------|---------------|:---:|
 | **Code graph** | Depwire, Graphify, Aider (tree-sitter) | Real dependency analysis, function signatures (not hallucinated), change impact — AI stops "guessing" the project structure | Optional |
+| **Git bisect** | `git-bisect.py` (native ACE script) | Automates `git bisect run` — finds exact commit that introduced a regression and reports the diff | Optional |
+| **Structural map** | `code-map.py` (native ACE script) | Codebase structural index (file tree, signatures, imports) for agent grounding without hallucinated APIs | Optional |
+| **Worktrees** | `--worktree` in `initialize_session.py` (native) | Workspace isolation per PRP/session via git worktree — parallel branches without polluting the main workspace | Optional |
 | **Context compression** | Caveman, Headroom | 60-95% token savings; reduces "lost in the middle" by keeping more useful context in the LLM window | Optional |
 | **Semantic memory** | agentmemory, MemPalace | Cross-session semantic search — complements ACE with similarity-based retrieval instead of exact match | Optional |
 | **Grill Me** | Native LLC skill (Steps 0.5-3) | Mandatory Q&A protocol before generating artifacts — exposes gaps and unvalidated assumptions | ✅ **Required** (LLC core) |

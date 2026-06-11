@@ -225,6 +225,31 @@ python .ace/scripts/promote-skill-feedback.py --mark applied --id 2026-06-10-001
 python .ace/scripts/promote-skill-feedback.py --mark dismissed --id 2026-06-10-001
 ```
 
+### Git Bisect Automatizado (debug de regressões)
+
+```
+python .ace/scripts/git-bisect.py --good HEAD~20 --bad HEAD --test "pytest tests/auth/" --json --ace-session 2026-06-10-001
+```
+
+Automatiza `git bisect run`: identifica o commit que introduziu a regressão e reporta o diff completo. Registra `<action type="git_bisect">` na sessão ACE quando `--ace-session` é informado.
+
+### Mapa Estrutural do Codebase (grounding)
+
+```
+python .ace/scripts/code-map.py --include "src/**.ts" --max-files 50 --json
+python .ace/scripts/code-map.py --signatures-only --json
+```
+
+Gera índice estrutural do projeto (árvore de arquivos, assinaturas de funções/classes, imports) para evitar alucinações de API. Ideal para carregar no início da sessão antes de gerar código. Use `--include` para filtrar por linguagem/segmento.
+
+### Isolamento com Worktrees (sessões paralelas)
+
+```
+python .ace/scripts/initialize_session.py --step 5 --task "Refatoração JWT" --prp PRP-003 --wave 2 --worktree --json
+```
+
+O flag `--worktree` cria um git worktree isolado em `.ace/worktrees/{session_id}/`. O `finalize_session.py` faz merge automático se o gate for `approved` ou descarta o worktree se `rejected`. Ideal para PRPs em paralelo sem poluir o workspace principal. O branch segue a convenção `prp-{id}/wave-{n}`.
+
 ### Validação (antes de commit — hook automático)
 
 O pre-commit hook executa automaticamente. Para validar manualmente:

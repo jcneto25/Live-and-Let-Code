@@ -434,6 +434,9 @@ Além do stack base, ferramentas externas podem potencializar o pipeline LLC ata
 | Categoria | Ferramenta | O que resolve | Classificação |
 |-----------|-----------|---------------|:---:|
 | **Grafo de código** | Depwire, Graphify, Aider (tree-sitter) | Análise de dependências reais, assinaturas de funções (não alucinadas), impacto de mudanças — a IA para de "adivinhar" a estrutura do projeto | Opcional |
+| **Git bisect** | `git-bisect.py` (script ACE nativo) | Automação de `git bisect run` — encontra o commit exato que introduziu uma regressão e reporta o diff | Opcional |
+| **Mapa estrutural** | `code-map.py` (script ACE nativo) | Índice estrutural do codebase (árvore de arquivos, assinaturas, imports) para grounding do agente sem alucinações de API | Opcional |
+| **Worktrees** | `--worktree` em `initialize_session.py` (nativo) | Isolamento de workspace por PRP/sessão via git worktree — branches paralelos sem poluir o workspace principal | Opcional |
 | **Compressão de contexto** | Caveman, Headroom | Economia de 60-95% de tokens; reduz o problema de "lost in the middle" mantendo mais contexto útil na janela do LLM | Opcional |
 | **Memória semântica** | agentmemory, MemPalace | Busca semântica entre sessões — complementa o ACE com recuperação por similaridade em vez de busca exata | Opcional |
 | **Grill Me** | Skill LLC nativo (Steps 0.5-3) | Protocolo de perguntas obrigatórias antes de gerar artefatos — expõe lacunas e suposições não validadas | ✅ **Obrigatório** (núcleo LLC) |

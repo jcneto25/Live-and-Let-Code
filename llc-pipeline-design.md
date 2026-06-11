@@ -84,6 +84,17 @@ project-root/
 │   │   ├── Design_System_Master.md
 │   │   └── DESIGN_SYSTEM.md                    # [OUTPUT]
 │   │
+│   ├── user-guide/                               # [NOVO] Manual do usuario (Step 10.5)
+│   │   ├── USER_GUIDE.md                         # Esqueleto: indice, navegacao
+│   │   ├── index.md                              # Pagina inicial
+│   │   ├── visao-geral.md                        # Visao geral do sistema
+│   │   ├── perfis/
+│   │   │   └── index.md                          # Guia por perfil de usuario
+│   │   ├── [modulo]/
+│   │   │   ├── [pagina].md                       # Pagina de manual (PRP, Step 11)
+│   │   │   └── img/
+│   │   │       └── [screenshot].png              # Screenshot (opcional, Step 11)
+│   │
 │   ├── testing/                                # Testes (templates + gerados)
 │   │   ├── TESTING_GUIDE_TEMPLATE.md
 │   │   ├── COVERAGE_BASELINE_TEMPLATE.md
@@ -96,7 +107,8 @@ project-root/
 │   │   └── SPEC_TEMPLATE.md
 │   │
   │   ├── skills/                                 # Skills LLC (tool-agnostic)
-  │   │   └── ...
+  │   │   ├── llc-user-guide.md                    # [NOVO] Skill de manual do usuario
+│   │   └── ...
   │   │
   │   ├── templates/                              # Templates de arquivos de steering
   │   │   ├── CLAUDE_TEMPLATE.md                  # Template para CLAUDE.md (projeto)
@@ -198,7 +210,9 @@ graph TD
     S9 --> G10{👤 Gate 10}
     G10 -->|approved| S10[Step 10: AI → Project Docs]
     S10 --> G11{👤 Gate 11}
-    G11 -->|approved| S11[Step 11: LLC Execution]
+    G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
+    S105 --> G115{👤 Gate 11.5}
+    G115 -->|approved| S11[Step 11: LLC Execution]
     S11 --> BACK[PRPs sem UI → agente direto]
     S11 --> UI[PRPs com UI → Subfluxo F1-F6]
     UI --> F4[F4: Hi-Fi]
@@ -228,7 +242,8 @@ graph TD
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
 | 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
-| 11 | Execução | Todos os artefatos anteriores | Código fonte | — | Checkpoints QA |
+| 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
+| 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
 
 ---
 
@@ -273,6 +288,7 @@ tags: [categoria, llc-pipeline]
 | `llc-step-8` | 8 | Setup do projeto + Camada de dados mockados (JSON + MSW handlers) |
 | `llc-step-9` | 9 | Gera documentação de testes (Guia, Baseline, Progresso) |
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
+| `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
@@ -331,6 +347,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 9 | 8 | Projeto roda? Dados mock são realistas? Handlers cobrem o núcleo? |
 | 👤 10 | 9 | Estratégia de testes é adequada ao stack? Thresholds são realistas? |
 | 👤 11 | 10 | README permite onboarding em ≤ 10 min? DEPLOYMENT cobre rollback e monitoramento? |
+| 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 
@@ -374,6 +391,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 19 | Testing Guide | `docs/testing/TESTING_GUIDE_TEMPLATE.md` | IA (Step 9) | `docs/testing/TESTING_GUIDE.md` |
 | 20 | Coverage Baseline | `docs/testing/COVERAGE_BASELINE_TEMPLATE.md` | IA (Step 9) | `docs/testing/COVERAGE_BASELINE.md` |
 | 21 | Coverage Progress | `docs/testing/COVERAGE_PROGRESS_TEMPLATE.md` | IA (Step 9) | `docs/testing/COVERAGE_PROGRESS.md` |
+| 22 | User Guide | `docs/USER_GUIDE_TEMPLATE.md` | IA (Step 10.5) | `docs/user-guide/USER_GUIDE.md` |
 
 ---
 
@@ -501,6 +519,7 @@ Quando um alerta é disparado, o pipeline recomenda:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.3.0 | 11/06/2026 | Equipe LLC | Adicionado Step 10.5 (User Guide) com skill `llc-user-guide`, gate 11.5, template USER_GUIDE_TEMPLATE.md e secao `user_docs` no PRP |
 | 1.2.0 | 10/06/2026 | Equipe LLC | Adicionado Grill Me (Steps 0.5-3), fluxo greenfield, análise de saúde estrutural (Code Health §10) |
 | 1.1.0 | 10/06/2026 | Equipe LLC | Adicionado Mermaid ao fluxo do pipeline (§3.1), seções ACE (§8) e Análise de Impacto (§9), removidos archive/ e superpowers/ |
 | 1.0.0 | 04/06/2026 | Equipe LLC | Versão inicial do pipeline LLC |

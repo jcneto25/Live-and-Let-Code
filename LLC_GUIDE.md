@@ -381,6 +381,31 @@ Execute a skill docs/skills/llc-step-10.md
 
 ---
 
+### Passo 10.5: Manual do Usuario 🆕
+
+**Voce faz:**
+
+```
+Execute a skill docs/skills/llc-user-guide.md
+```
+
+**A IA faz:**
+- Le todos os PRPs e extrai as paginas declaradas na secao `user_docs`
+- Gera `docs/user-guide/USER_GUIDE.md` — esqueleto completo com indice e navegacao
+- Gera `docs/user-guide/index.md` — pagina inicial do manual
+- Gera `docs/user-guide/visao-geral.md` — visao geral em linguagem de usuario final
+- Gera `docs/user-guide/perfis/index.md` — guia indexado por perfil
+
+**Voce valida:** 👤 Gate 11.5
+- A estrutura cobre todos os modulos?
+- Os perfis tem paginas relevantes?
+- O indice e navegavel?
+- A linguagem e adequada ao usuario final?
+
+**So avance quando aprovar.**
+
+---
+
 ### Passo 11: Execução
 
 **Agora começa o desenvolvimento.** Você tem duas trilhas:
@@ -422,6 +447,7 @@ O subfluxo tem 6 fases:
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
+Step 10.5 ──👤──→
 
 Step 11:
   ├── PRPs sem UI → agente direto
@@ -483,6 +509,7 @@ Se alertas críticos forem disparados, agende uma onda de refatoração cross-PR
 | Iniciar o pipeline | `Execute a skill docs/skills/llc-step-0-1.md` (conversão) |
 | Pular para um passo específico | `Execute a skill docs/skills/llc-step-N.md` certificando-se de que os gates anteriores foram aprovados |
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
+| Gerar manual do usuario | `Execute a skill docs/skills/llc-user-guide.md` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |
 | Entender um termo | Leia [`llc-pipeline-design.md` §8](llc-pipeline-design.md#8-glossário-llc) |

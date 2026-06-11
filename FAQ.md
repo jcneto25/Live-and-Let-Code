@@ -407,7 +407,23 @@ O LLC aplica cada paradigma onde ele é mais adequado:
 | **CodeAgent-like** | Step 11 (execução) + Subfluxo F5-F6 | Um PRP inteiro é implementado em um passo contínuo. O agente cria arquivos, escreve testes, corrige bugs, faz commit — tudo encadeado. Alto throughput — o PRP é auto-contido, dispensa consultas externas |
 | **Híbrido** | Subfluxo F1-F4 (prototipagem) | F1-F3 (discovery, tokens, wireframes) são ToolCallingAgent-like com aprovação entre fases. F4 (hi-fi) tem CHECKPOINT VISUAL obrigatório. F5 (código) é CodeAgent-like |
 
-A vantagem arquitetural: o paradigma não está preso ao cliente de IA. Um skill Markdown bem escrito produz o comportamento desejado em **qualquer agente que leia arquivos e execute comandos** — Claude Code (nativo ToolCallingAgent), opencode, Cursor, Codex CLI. O LLC não depende de um formato específico de function calling — depende de **instruções claras**. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
+A vantagem arquitetural: o paradigma não está preso ao cliente de IA. Um skill Markdown bem escrito produz o comportamento desejado em **qualquer agente que leia arquivos e execute comandos** — Claude Code (nativo ToolCallingAgent), opencode, Cursor, Codex CLI. O LLC não depende de um formato específico de function calling — depende de **instruções claras**.
+
+### O que é o "scaffold" e como ele orienta a IA no LLC?
+
+Scaffold é a estrutura inicial do projeto — o "esqueleto" que serve como base técnica sobre a qual o software será construído. Em vez de começar do zero, o projeto já nasce com convenções de pastas, padrões de código, ferramentas configuradas e exemplos funcionais que ensinam a IA **como** desenvolver naquele contexto específico.
+
+No LLC, o scaffold opera em 3 camadas complementares:
+
+| Camada | O que contém | Gerado por | Como orienta a IA |
+|--------|-------------|-----------|-------------------|
+| **Arquitetural** | Estrutura de pastas (monorepo), configuração de lint/type-check, dependências base | Step 8 (Setup) + `ARCHITECTURE.md` (Step 5) | A IA sabe exatamente onde cada arquivo vai. Não inventa estruturas — replica a existente |
+| **Visual** | Design tokens (CSS/JSON), componentes base, padrões de interface | `DESIGN_SYSTEM.md` (Step 7) | A IA gera componentes que seguem o Design System. Não inventa cores, espaçamentos ou variantes |
+| **Comportamental** | `CLAUDE.md` + `AGENTS.md` com regras de domínio, restrições, TDD | Step 10 | A IA sabe que deve escrever testes primeiro, filtrar por tenant ID, nunca usar `any` — as "regras da casa" estão documentadas |
+
+**Por que funciona:** a IA aprende por exemplos. Um scaffold bem estruturado fornece modelos concretos para replicar — é mais eficaz que descrever regras abstratas em texto. Se a pasta `src/components/ui/` já tem um `Button.tsx` com variantes, estados e props TypeScript, a IA gera o `Input.tsx` seguindo o mesmo padrão — sem precisar ser instruída.
+
+**No LLC, o scaffold é auto-gerado:** o pipeline produz a estrutura, as convenções e os exemplos como artefatos versionados. O desenvolvedor não precisa criar o scaffold manualmente — ele emerge dos Steps 5, 7, 8 e 10. Isso garante rastreabilidade total (PRP-003 → MOD-PLN-002 → PRD Técnico → Visão Estratégica) e permite que múltiplos agentes trabalhem em paralelo sem conflito de contexto.
 
 ---
 

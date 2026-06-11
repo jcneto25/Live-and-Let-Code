@@ -332,4 +332,37 @@ export const mock{Dependency} = () => ({
 
 ---
 
+## 13. 📖 user_docs — Documentacao de Usuario
+
+> Preenchimento obrigatorio se o PRP envolver interface de usuario ou fluxo
+> visivel ao usuario final. Deixar vazio para PRPs puramente internos (infra, CI/CD).
+>
+> As paginas aqui declaradas serao geradas automaticamente como arquivos Markdown
+> em `docs/user-guide/[modulo]/` durante a execucao do PRP (Step 11).
+
+### Paginas
+
+| Arquivo | Titulo | Perfil |
+|---------|--------|--------|
+| `modulo/pagina.md` | Titulo Amigavel | {Nome do Perfil} |
+
+### `modulo/pagina.md`
+
+#### Topicos
+- [ ] Topico 1 — o que o usuario aprende
+- [ ] Topico 2 — passo a passo
+- [ ] ...
+
+#### Capturas de Tela (se aplicavel)
+- [ ] 📸 Tela: [nome da tela] — [o que o usuario ve]
+- [ ] 📸 Tela: [nome da tela] — [o que o usuario ve]
+
+> **📸 Capturas de Tela:**
+> - Se **Playwright, Puppeteer ou Selenium** estiver instalado, screenshots PNG sao geradas automaticamente em `docs/user-guide/[modulo]/img/`.
+> - Caso contrario, **diagramas Mermaid** do fluxo da tela sao gerados inline no arquivo `.md`.
+> - Se nenhum dos dois estiver disponivel, uma **descricao textual estruturada** e gerada.
+> - Para adicionar screenshots manualmente, veja a secao de FAQ.
+
+---
+
 > **Nota:** Este PRP é um documento vivo. Atualize a "Última atualização" e "Versão" sempre que houver mudança. A versão no repositório (`docs/prps/PRP-XXX.md`) é a fonte da verdade.

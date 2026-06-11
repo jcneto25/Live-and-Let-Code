@@ -26,6 +26,10 @@ tags: [project-docs, readme, deployment, llc-pipeline]
 - [ ] `docs/testing/TESTING_GUIDE.md` — testes (Step 9)
 - [ ] `docs/business/specs/visao_estrategica_e_negocio.md` — visão do sistema (Step 0.5)
 - [ ] `docs/prd/executive_PRD.md` — sumário executivo (Step 2)
+- [ ] `docs/prps/PRP-*.md` — PRPs com secao `user_docs` preenchida (Step 3)
+- [ ] `docs/business/specs/perfis_permissoes.md` — perfis de usuario (Step 1)
+- [ ] `docs/business/specs/workflows_bpmn.md` — fluxos do sistema (Step 1)
+- [ ] `docs/business/specs/glossario.md` — glossario (Step 1)
 
 ---
 
@@ -129,6 +133,7 @@ npm run start      # Inicia servidor de produção
 | Design System | `docs/design/DESIGN_SYSTEM.md` | Tokens, componentes, padrões |
 | Guia de Testes | `docs/testing/TESTING_GUIDE.md` | Estratégia e templates |
 | Deploy | `docs/DEPLOYMENT.md` | Ambientes e pipelines |
+| Manual do Usuario | `docs/user-guide/USER_GUIDE.md` | Guia de uso em linguagem de usuario final |
 
 ## 🤖 Pipeline LLC
 
@@ -304,3 +309,20 @@ Após gerar os 2 documentos, **PARE** e apresente:
 4. **Variáveis:** Lista de variáveis de ambiente documentadas. Alguma ficou de fora?
 
 **Este é o último passo antes da Execução (Step 11).**
+
+---
+
+### 6. Proximo Passo: Manual do Usuario
+
+Apos a aprovacao do **Gate 11**, execute a skill `llc-user-guide` para gerar o esqueleto do manual do usuario:
+
+```
+Execute a skill docs/skills/llc-user-guide.md
+```
+
+A skill `llc-user-guide` gera a estrutura base do manual em `docs/user-guide/` com:
+- Indice de paginas (extraido da secao `user_docs` de cada PRP)
+- Guias por perfil de usuario
+- Visao geral do sistema em linguagem de usuario final
+
+A validacao do esqueleto ocorre no **Gate 11.5**. Apos aprovacao, siga para o Step 11 (Execucao), onde cada PRP preenchera suas paginas de manual incrementalmente.

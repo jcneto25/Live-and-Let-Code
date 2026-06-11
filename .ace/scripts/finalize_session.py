@@ -35,6 +35,7 @@ INDEX_FILE = ACE_DIR / "index.json"
 SESSIONS_DIR = ACE_DIR / "sessions"
 MEMORY_DIR = ACE_DIR / "memory"
 LEARNING_POINTS_FILE = MEMORY_DIR / "learning_points.md"
+SKILL_FEEDBACK_FILE = MEMORY_DIR / "skill_feedback.md"
 TASKS_FILE = Path("docs/planning/TASKS.md")
 
 
@@ -203,6 +204,52 @@ def extract_task_completions(content: str) -> list[dict]:
     return results
 
 
+def extract_skill_feedback(content: str) -> list[dict]:
+    """Extrai sugestões de melhoria de skills via <skill_feedback>."""
+    pattern = r'<skill_feedback([^>]*)>(.*?)</skill_feedback>'
+    matches = re.findall(pattern, content, re.DOTALL)
+    results = []
+    for attrs_str, body in matches:
+        attrs = {}
+        for attr_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
+            attrs[attr_match.group(1)] = attr_match.group(2)
+        results.append({
+            "skill": attrs.get("skill", "unknown"),
+            "priority": attrs.get("priority", "medium"),
+            "content": body.strip()
+        })
+    return results
+
+
+def save_skill_feedback(feedback_items: list[dict], session_id: str, dry_run: bool = False) -> int:
+    """Appenda sugestões de melhoria de skills ao arquivo de feedback."""
+    if not feedback_items:
+        return 0
+
+    MEMORY_DIR.mkdir(exist_ok=True)
+
+    if SKILL_FEEDBACK_FILE.exists():
+        existing = SKILL_FEEDBACK_FILE.read_text(encoding='utf-8')
+    else:
+        existing = ""
+
+    new_count = 0
+    for item in feedback_items:
+        if item["content"] not in existing:
+            if not dry_run:
+                with open(SKILL_FEEDBACK_FILE, "a", encoding="utf-8") as f:
+                    f.write(f"\n## [{item['priority'].upper()}] {item['skill']} — {session_id}\n\n"
+                            f"{item['content']}\n"
+                            f"<!-- status: pending -->\n")
+            new_count += 1
+
+    if new_count > 0 and not dry_run:
+        logger.info(f"✅ {new_count} skill_feedback appenado(s) a {SKILL_FEEDBACK_FILE}")
+    elif new_count > 0:
+        logger.info(f"🔍 [DRY RUN] {new_count} skill_feedback seriam appenados")
+    return new_count
+
+
 def update_tasks_md(completed_tasks: list[dict], dry_run: bool = False) -> int:
     """Atualiza TASKS.md marcando checkboxes concluídas."""
     if not completed_tasks:
@@ -302,13 +349,15 @@ def main():
                 f"{len(blockers)} blockers, gate={'✓' if gate_present else '✗'}")
 
     completed_tasks = extract_task_completions(content)
-    logger.info(f"📋 {len(completed_tasks)} task_completed encontradas")
+    skill_feedback = extract_skill_feedback(content)
+    logger.info(f"📋 {len(completed_tasks)} task_completed, {len(skill_feedback)} skill_feedback")
 
     context_seed = build_context_seed(actions, learnings, blockers, gate_present, args.context_seed)
     logger.info(f"📦 Context seed gerado ({len(context_seed)} chars)")
 
     write_context_seed(session_file, context_seed)
     promote_learning_points(session_file)
+    feedback_saved = save_skill_feedback(skill_feedback, session_id)
     tasks_updated = update_tasks_md(completed_tasks)
     update_index(session_id, status="completed")
 
@@ -319,7 +368,8 @@ def main():
         "session_id": session_id, "file": str(session_file),
         "context_seed": context_seed, "actions_count": len(actions),
         "learnings_count": len(learnings), "blockers_count": len(blockers),
-        "gate_present": gate_present, "tasks_updated": tasks_updated
+        "gate_present": gate_present, "tasks_updated": tasks_updated,
+        "feedback_saved": feedback_saved
     }
 
     if args.json:

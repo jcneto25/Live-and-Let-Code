@@ -33,6 +33,10 @@ prev_session: "{{prev_session_id}}"
 
 <!-- <task_completed id="TASK-NNN" prp="PRP-NNN" status="done">...</task_completed> -->
 
+## Feedback de Skills
+
+<!-- <skill_feedback skill="llc-step-N" priority="medium">...</skill_feedback> -->
+
 ## Encerramento
 
 <context_seed>

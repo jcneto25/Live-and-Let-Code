@@ -22,6 +22,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 │   └── YYYY-MM-DD-NNN.md
 ├── memory/
 │   ├── learning_points.md        # Promovidos de <learning_point priority="high">
+│   ├── skill_feedback.md        # Sugestões de melhoria de skills via <skill_feedback>
 │   └── architecture.md           # ADRs consolidados
 ├── scripts/
 │   ├── session-init.py           # Inicialização
@@ -44,6 +45,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 | `<blocker resolved="...">` | Impedimento | `resolved`: `true` ou `false` |
 | `<task_completed id="..." prp="..." status="...">` | Tarefa concluída | `id`: TASK-NNN, `prp`: PRP-NNN, `status`: `done`/`partial` |
 | `<context_seed>` | Estado comprimido para próxima sessão | **Escrito apenas no encerramento** |
+| `<skill_feedback skill="..." priority="...">` | Sugestão de melhoria para um skill LLC | `skill`: nome do skill, `priority`: `high`/`medium`/`low` |
 
 ---
 
@@ -120,6 +122,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 - ✅ `<thinking>` é opcional — use apenas quando houver decisão não-óbvia
 - ✅ `<learning_point>` quando descobrir algo generalizável
 - ✅ `<task_completed>` ao concluir uma tarefa do TASKS.md — o `finalize_session.py` atualiza automaticamente os checkboxes
+- ✅ `<skill_feedback>` ao final da sessão se o skill executado puder ser melhorado — sugestões são consolidadas em `memory/skill_feedback.md`
 - ❌ **NUNCA editar `<action>` anteriores** — o histórico é imutável
 - ❌ **NUNCA reordenar ações**
 - ❌ **NUNCA deletar ações** — mesmo erradas, registre a correção como nova ação
@@ -209,6 +212,17 @@ next_action: implementar /auth/refresh" --json
 
 ```
 python .ace/scripts/promote-learning-points.py --all --json
+```
+
+### Revisão de Feedback de Skills (pós-sessão)
+
+Sugestões de melhoria registradas com `<skill_feedback>` são consolidadas em `.ace/memory/skill_feedback.md`. Para revisar e dar baixa:
+
+```
+python .ace/scripts/promote-skill-feedback.py                    # Lista pendentes
+python .ace/scripts/promote-skill-feedback.py --skill llc-step-5 # Filtra por skill
+python .ace/scripts/promote-skill-feedback.py --mark applied --id 2026-06-10-001
+python .ace/scripts/promote-skill-feedback.py --mark dismissed --id 2026-06-10-001
 ```
 
 ### Validação (antes de commit — hook automático)

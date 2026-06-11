@@ -32,7 +32,7 @@ SESSIONS_DIR = ACE_DIR / "sessions"
 
 BALANCED_TAGS = [
     "action_log", "action", "thinking", "learning_point",
-    "gate_result", "blocker", "context_seed",
+    "gate_result", "blocker", "context_seed", "skill_feedback",
     "file_delta", "description", "lines_changed", "result"
 ]
 
@@ -40,14 +40,16 @@ REQUIRED_ATTRS = {
     "action": ["type"],
     "gate_result": ["step", "decision"],
     "learning_point": ["priority"],
-    "blocker": ["resolved"]
+    "blocker": ["resolved"],
+    "skill_feedback": ["skill"]
 }
 
 VALID_VALUES = {
     "action": {"type": ["git_commit", "file_create", "file_modify", "file_delete", "test_run", "tool_call"]},
     "gate_result": {"decision": ["approved", "rejected", "conditional"]},
     "learning_point": {"priority": ["high", "medium", "low"]},
-    "blocker": {"resolved": ["true", "false"]}
+    "blocker": {"resolved": ["true", "false"]},
+    "skill_feedback": {"priority": ["high", "medium", "low"]}
 }
 
 CONTEXT_SEED_FIELDS = ["state", "pending", "blockers", "next_action"]

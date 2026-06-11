@@ -360,11 +360,29 @@ Sessão N+1
   ↓ não repete erros da sessão anterior
 ```
 
-### O que ainda pode ser melhorado no learning loop do LLC?
+### O que é o "problema dos 70%" e como o LLC ajuda a combatê-lo?
 
-O LLC cobre 90% do ciclo de aprendizado descrito na literatura. Uma oportunidade de melhoria:
+O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um padrão no desenvolvimento com IA: a IA gera ~70% do código em minutos — boilerplate, CRUD, padrões conhecidos — mas os 30% restantes (arquitetura, segurança, edge cases, integração, tratamento de erros) exigem esforço desproporcional, frequentemente maior que fazer tudo do zero.
 
-**Feedback do agente sobre os próprios skills.** Hoje, se um skill produz resultados inconsistentes, o desenvolvedor precisa perceber e ajustar manualmente. Um mecanismo onde o próprio agente, ao final de uma sessão, sugere melhorias no prompt do skill que acabou de executar — "o Grill Me deveria ter perguntado sobre X", "o Step 4 deveria incluir verificação Y" — fecharia o loop de engenharia composta. Essas sugestões poderiam ser registradas como `<skill_feedback>` no ACE e revisadas periodicamente pelo mantenedor da metodologia.
+**Causas raiz:**
+- A IA otimiza para o happy path e ignora edge cases sistematicamente
+- Falta grounding estrutural: a IA não "enxerga" o projeto inteiro, alucina APIs
+- Loop sem feedback real: erro → IA chuta solução → novo erro → degradação de contexto
+- O contexto da janela do LLM se polui com tentativas falhas (lost in the middle)
+
+**Como o LLC mitiga cada causa:**
+
+| Causa | Mecanismo LLC |
+|-------|---------------|
+| IA não vê o projeto inteiro | Grafo de Código (Depwire/Graphify) fornece dependências, assinaturas reais e análise de impacto |
+| Falta de grounding estrutural | `context_seed` comprime estado essencial entre sessões; AGENTS.md força validação contra a realidade |
+| Loop sem feedback real | TDD obrigatório: RED (entendeu?) → GREEN (funciona?) → REFACTOR (não quebrou nada?) |
+| Degradação de contexto | ACE append-only: cada ação é atômica e verificável; `context_seed` mantém ~300 tokens de continuidade |
+| Edge cases ignorados | TDD + Grill Me + especificação antes de geração (spec-driven) |
+| IA não aprende com erros | `<learning_point>` registra lições; `<skill_feedback>` captura melhorias estruturais nos skills |
+| Dívida técnica invisível | 11 human gates + QA checkpoints: cada artefato passa por validação explícita antes de prosseguir |
+
+O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + ferramentas estruturais (grafos, testes, gates, memória persistente) para que o conjunto entregue 100% de valor com a IA cobrindo o que ela faz bem e o humano decidindo nos 30% críticos.
 
 ### O que é "human-in-the-loop"?
 

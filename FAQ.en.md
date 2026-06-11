@@ -360,11 +360,29 @@ Session N+1
   ↓ doesn't repeat previous session's mistakes
 ```
 
-### What could still be improved in LLC's learning loop?
+### What is the "70% problem" and how does LLC help combat it?
 
-LLC covers 90% of the learning cycle described in the literature. One improvement opportunity:
+The "70% problem" (coined by Addy Osmani, Google Chrome DX) describes a pattern in AI-assisted development: AI generates ~70% of the code in minutes — boilerplate, CRUD, known patterns — but the remaining 30% (architecture, security, edge cases, integration, error handling) requires disproportionate effort, often more than doing it all manually from scratch.
 
-**Agent feedback on its own skills.** Today, if a skill produces inconsistent results, the developer must notice and manually adjust. A mechanism where the agent, at the end of a session, suggests improvements to the skill prompt it just executed — "Grill Me should have asked about X," "Step 4 should include check Y" — would close the composite engineering loop. These suggestions could be logged as `<skill_feedback>` in ACE and periodically reviewed by the methodology maintainer.
+**Root causes:**
+- AI optimizes for the happy path and systematically ignores edge cases
+- Lack of structural grounding: AI doesn't "see" the entire project, hallucinates APIs
+- No real feedback loop: error → AI guesses solution → new error → context degradation
+- LLM context window gets polluted with failed attempts (lost in the middle)
+
+**How LLC mitigates each cause:**
+
+| Cause | LLC Mechanism |
+|-------|---------------|
+| AI doesn't see the full project | Code Graph (Depwire/Graphify) provides dependencies, real signatures, and impact analysis |
+| Lack of structural grounding | `context_seed` compresses essential state between sessions; AGENTS.md enforces reality checks |
+| No real feedback loop | Mandatory TDD: RED (understood?) → GREEN (works?) → REFACTOR (didn't break anything?) |
+| Context degradation | ACE append-only: each action is atomic and verifiable; `context_seed` maintains ~300 tokens of continuity |
+| Edge cases ignored | TDD + Grill Me + spec-driven generation |
+| AI doesn't learn from mistakes | `<learning_point>` records lessons; `<skill_feedback>` captures structural skill improvements |
+| Invisible tech debt | 11 human gates + QA checkpoints: every artifact undergoes explicit validation before proceeding |
+
+LLC doesn't try to make AI reach 100% on its own. It combines AI + human + structural tools (graphs, tests, gates, persistent memory) so the ensemble delivers 100% value — AI covering what it does well, and the human deciding on the critical 30%.
 
 ### What is "human-in-the-loop"?
 

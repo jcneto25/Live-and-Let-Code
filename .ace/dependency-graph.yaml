@@ -7,9 +7,9 @@
 #
 # Gerado e mantido pelo pipeline LLC. Atualizado a cada execução do Step 4.
 
-version: "1.0.0"
+version: "1.1.0"
 generated_by: "llc-step-4"
-last_updated: "2026-06-10"
+last_updated: "2026-06-11"
 
 artifacts:
 
@@ -277,4 +277,43 @@ artifacts:
       - architecture
       - perfis_permissoes
       - catalogo_integracoes
+    triggers_update: []
+
+  # ── STEP 10.5 (User Guide) ──
+  user_guide_skeleton:
+    path: "docs/user-guide/USER_GUIDE.md"
+    depends_on:
+      - prps
+      - perfis_permissoes
+      - workflows_bpmn
+      - glossario
+      - visao_estrategica
+    triggers_update: []
+
+  user_guide_index:
+    path: "docs/user-guide/index.md"
+    depends_on:
+      - user_guide_skeleton
+    triggers_update: []
+
+  user_guide_overview:
+    path: "docs/user-guide/visao-geral.md"
+    depends_on:
+      - visao_estrategica
+      - workflows_bpmn
+      - glossario
+    triggers_update: []
+
+  user_guide_profiles:
+    path: "docs/user-guide/perfis/index.md"
+    depends_on:
+      - perfis_permissoes
+      - prps
+    triggers_update: []
+
+  user_guide_pages:
+    path_pattern: "docs/user-guide/**/*.md"
+    depends_on:
+      - prps
+      - user_guide_skeleton
     triggers_update: []

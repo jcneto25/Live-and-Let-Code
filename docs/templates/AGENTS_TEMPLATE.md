@@ -94,6 +94,15 @@ Don't assume state. Derive it. Every session begins with orientation, not action
 6. State to {{DEVELOPER_NAME}}: current understanding of goal, last known state, and first intended action
 7. **Wait for explicit confirmation before any tool use.**
 
+### Prompt Caching Strategy
+This project is structured to maximize **prefix cache hits**. Follow these rules to keep latency low in long sessions:
+
+- **Static at top:** AGENTS.md, tool schemas, project rules, and LLC methodology instructions are loaded first and rarely change. This guarantees the prefix is cached between turns.
+- **Dynamic at end:** User messages, tool outputs, error logs, and task-specific instructions go at the end. These are the only tokens that change between turns.
+- **Don't reorder tools:** Adding or removing tools mid-session invalidates the prefix cache. Register all tools at the start.
+- **Lean prompts:** Load full files on demand via the Documentation Index. Don't include entire documents inline unless the task requires them.
+- **Fresh per session:** Use ACE `<context_seed>` (~300 tokens) instead of reloading history. This keeps both the prompt and the cache fresh.
+
 ### Grill Me Protocol (Steps 0.5–3)
 Nos steps de especificação do LLC, ANTES de gerar qualquer artefato:
 - Analise os documentos de entrada e identifique ambiguidades, lacunas e contradições

@@ -789,3 +789,17 @@ Sim, em **5 camadas** complementares. O objetivo e maximizar a quantidade de inf
 | **5. Markdown via Docling** | PDF/DOCX/HTML convertidos para Markdown puro (Step 0.1) — reduz ruido estrutural de tags pesadas (XML, HTML) | **60-80% vs formatos binarios** |
 
 **Principio de design:** descricoes sao para roteamento, nao para leitura integral. O agente usa o indice comprimido para decidir quais arquivos carregar — e so os carrega quando a tarefa realmente exige.
+
+### O LLC e compativel com prompt caching?
+
+Sim. O design do LLC maximiza **cache hits** por construcao, mesmo sem ter sido projetado explicitamente para isso:
+
+| Camada de cache | Mecanismo LLC | Efeito |
+|----------------|---------------|--------|
+| **1. Prefixo estatico** | `<!-- @include AGENTS.md -->` carrega regras, zonas, TDD e protocolo no topo de toda sessao. Skills LLC tem estrutura fixa (YAML → prereqs → prompt → regras). O prefixo e identico entre sessoes | Cache hit garantido no prefixo |
+| **2. Isolamento dinamico** | Conteudo dinamico (mensagens do usuario, saidas de ferramentas, logs de erro) e appenado ao final. O agente recebe apenas o PRP atual, nao o historico completo | Cache nao e invalidado entre tarefas |
+| **3. Sessoes curtas** | PRPs de 2-8 dias garantem sessoes atomicas. ACE `<context_seed>` (~300 tokens) substitui recarregar historico (~22K tokens) | Cache fresco a cada sessao |
+| **4. Ordem consistente** | Document Hierarchy fixa no AGENTS.md, indice comprimido em formato estavel, estrutura de skills imutavel entre execucoes | Zero cache miss por reordenacao |
+| **5. Lazy loading** | Indice comprimido + analisador de impacto — o agente so carrega arquivos sob demanda, mantendo o prompt enxuto | Menos tokens = menos cache pressure |
+
+**Regra pratica:** mantenha conteudo estatico (AGENTS.md, schemas de ferramentas, regras do projeto) no topo de cada prompt. Appenda conteudo dinamico (mensagens, saidas de ferramentas, erros) ao final. Isso maximiza prefix cache hits.

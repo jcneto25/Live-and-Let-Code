@@ -789,3 +789,17 @@ Yes, across **5 complementary layers**. The goal is to maximize the amount of us
 | **5. Markdown via Docling** | PDF/DOCX/HTML converted to pure Markdown (Step 0.1) — reduces structural noise from heavy tags (XML, HTML) | **60-80% vs binary formats** |
 
 **Design principle:** descriptions are for routing, not full reading. The agent uses the compressed index to decide which files to load — and only loads them when the task actually requires it.
+
+### Is LLC compatible with prompt caching?
+
+Yes. LLC's design maximizes **cache hits** by construction, even without being explicitly designed for it:
+
+| Cache layer | LLC Mechanism | Effect |
+|-------------|---------------|--------|
+| **1. Static prefix** | `<!-- @include AGENTS.md -->` loads rules, zones, TDD, and protocol at the top of every session. LLC skills have fixed structure (YAML → prereqs → prompt → rules). The prefix is identical across sessions | Guaranteed cache hit on prefix |
+| **2. Dynamic isolation** | Dynamic content (user messages, tool outputs, error logs) is appended at the end. The agent receives only the current PRP, not the full history | Cache not invalidated between tasks |
+| **3. Short sessions** | PRPs of 2-8 days ensure atomic sessions. ACE `<context_seed>` (~300 tokens) replaces reloading history (~22K tokens) | Fresh cache per session |
+| **4. Consistent ordering** | Fixed Document Hierarchy in AGENTS.md, compressed index in stable format, immutable skill structure across runs | Zero cache miss from reordering |
+| **5. Lazy loading** | Compressed index + impact analyzer — the agent only loads files on demand, keeping the prompt lean | Fewer tokens = less cache pressure |
+
+**Practical rule:** keep static content (AGENTS.md, tool schemas, project rules) at the top of every prompt. Append dynamic content (messages, tool outputs, errors) at the end. This maximizes prefix cache hits.

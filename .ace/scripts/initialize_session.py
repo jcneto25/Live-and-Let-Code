@@ -19,6 +19,7 @@ import argparse
 import json
 import logging
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -165,6 +166,50 @@ def update_index(session_id: str, llc_step: float, tags: list):
     logger.info("✅ index.json atualizado")
 
 
+WORKTREES_DIR = ACE_DIR / "worktrees"
+
+
+def create_worktree(session_id: str, prp_id: str | None, wave: int) -> Path | None:
+    """Cria um git worktree para isolar o workspace desta sessão."""
+    WORKTREES_DIR.mkdir(parents=True, exist_ok=True)
+
+    worktree_path = WORKTREES_DIR / session_id
+
+    branch_name = f"prp-{prp_id}/wave-{wave}" if prp_id else f"session/{session_id}"
+
+    logger.info(f"📂 Criando worktree: {worktree_path} (branch: {branch_name})")
+
+    try:
+        subprocess.run(
+            ["git", "worktree", "add", str(worktree_path), "-b", branch_name],
+            capture_output=True, text=True, check=True
+        )
+        logger.info(f"✅ Worktree criado em {worktree_path}")
+        return worktree_path
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Falha ao criar worktree: {e.stderr}")
+        return None
+
+
+def cleanup_orphan_worktrees() -> int:
+    """Remove worktrees sem sessão correspondente."""
+    if not WORKTREES_DIR.exists():
+        return 0
+
+    removed = 0
+    for wt_path in WORKTREES_DIR.iterdir():
+        if wt_path.is_dir():
+            session_file = SESSIONS_DIR / f"{wt_path.name}.md"
+            if not session_file.exists():
+                logger.info(f"🧹 Removendo worktree órfão: {wt_path}")
+                subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(wt_path)],
+                    capture_output=True, text=True
+                )
+                removed += 1
+    return removed
+
+
 def main():
     parser = argparse.ArgumentParser(description="Inicializa uma nova sessão ACE no LLC")
     parser.add_argument("--step", type=float, required=True,
@@ -174,6 +219,9 @@ def main():
     parser.add_argument("--task", type=str, required=True, help="Contexto da tarefa")
     parser.add_argument("--project", type=str, default="", help="Nome do projeto")
     parser.add_argument("--wave", type=int, default=1, help="Número da onda")
+    parser.add_argument("--prp", type=str, default=None, help="ID do PRP (ex: PRP-001)")
+    parser.add_argument("--worktree", action="store_true",
+                        help="Cria git worktree isolado para esta sessão")
     parser.add_argument("--tags", type=str, nargs="*", default=[], help="Tags da sessão")
     parser.add_argument("--json", action="store_true", help="Output em JSON (para tool calls)")
     args = parser.parse_args()
@@ -211,13 +259,23 @@ def main():
 
     update_index(session_id=session_id, llc_step=args.step, tags=args.tags)
 
+    worktree_path = None
+    if args.worktree:
+        cleanup_orphan_worktrees()
+        worktree_path = create_worktree(session_id, args.prp, args.wave)
+        if worktree_path:
+            logger.info(f"🔀 Sessão isolada em worktree: {worktree_path}")
+        else:
+            logger.warning("⚠️  Worktree não criado — continuando no workspace principal")
+
     result = {
         "session_id": session_id,
         "file": str(session_file),
         "prev_session": prev_session.session_id if prev_session else None,
         "context_seed": context_seed,
         "llc_step": args.step,
-        "llc_step_name": step_name
+        "llc_step_name": step_name,
+        "worktree": str(worktree_path) if worktree_path else None,
     }
 
     if args.json:

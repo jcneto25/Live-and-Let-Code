@@ -20,7 +20,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 2. **Humano no controle:** Nenhuma etapa avança sem validação humana explícita. A IA propõe, o humano dispõe.
 3. **Tool-agnóstico:** A metodologia define o processo, não as ferramentas. Claude Code, opencode, Codex ou qualquer cliente de IA terminal pode executar os skills.
 4. **Rastreabilidade total:** Cada artefato referencia sua origem. Da visão estratégica ao PRP, do PRP à tarefa, da tarefa ao commit.
-5. **Paralelismo por design:** PRPs são contratos auto-contidos que permitem execução paralela em worktrees independentes.
+5. **Paralelismo por design:** PRPs são contratos auto-contidos que permitem execução paralela em worktrees independentes. O isolamento via git worktree é automático para sessoes com `--prp` ou step >= 11 (gerido pelo `initialize_session.py`).
 
 ### 1.3 Estrutura do Documento
 

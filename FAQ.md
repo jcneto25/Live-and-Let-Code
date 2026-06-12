@@ -803,3 +803,38 @@ Sim. O design do LLC maximiza **cache hits** por construcao, mesmo sem ter sido 
 | **5. Lazy loading** | Indice comprimido + analisador de impacto — o agente so carrega arquivos sob demanda, mantendo o prompt enxuto | Menos tokens = menos cache pressure |
 
 **Regra pratica:** mantenha conteudo estatico (AGENTS.md, schemas de ferramentas, regras do projeto) no topo de cada prompt. Appenda conteudo dinamico (mensagens, saidas de ferramentas, erros) ao final. Isso maximiza prefix cache hits.
+
+---
+
+## 🔀 Git Worktree
+
+### O que e Git Worktree e como o LLC o utiliza?
+
+Git Worktree permite criar **multiplos diretorios de trabalho** vinculados a branches diferentes, todos compartilhando o mesmo repositorio `.git/`. Em vez de fazer `git checkout` e sobrescrever arquivos no mesmo diretorio, cada branch tem seu proprio diretorio fisico.
+
+```
+/projeto/              ← branch: main       (worktree principal)
+/projeto-prp-001/      ← branch: prp-001/wave-1
+/projeto-prp-002/      ← branch: prp-002/wave-1
+```
+
+**Como o LLC utiliza:**
+
+| Momento | Comportamento |
+|---------|--------------|
+| **Step 11 (Execucao)** | `initialize_session.py` cria worktree automaticamente quando `--prp` e informado ou `step >= 11` |
+| **PRPs em paralelo** | Cada PRP recebe seu proprio diretorio fisico — agentes nunca colidem em arquivos |
+| **Merge/descarte** | `finalize_session.py`: gate `approved` → merge + remove worktree; gate `rejected` → descarta sem merge |
+| **Branch naming** | `prp-{id}/wave-{n}` — consistente, previsivel, rastreavel |
+
+**Vantagens para desenvolvimento agentico:**
+
+| Vantagem | Como funciona |
+|----------|---------------|
+| **Paralelismo real** | 3 agentes implementam 3 PRPs simultaneamente, cada um em seu diretorio, sem clone do repositorio |
+| **Build isolado** | `node_modules/`, `dist/`, `.env` independentes por worktree — versoes diferentes de dependencias sem conflito |
+| **Sem stash** | Nao precisa esconder mudancas nao commitadas para revisar outro branch — `cd` para outro diretorio |
+| **Historico unificado** | `git log`, `git branch -a`, `git diff` entre branches funcionam de qualquer worktree |
+| **Limpeza automatica** | Worktrees orfaos sao removidos pelo `cleanup_orphan_worktrees()` no inicio de cada sessao |
+
+**Desativar isolamento:** use `--no-worktree` no `initialize_session.py`. Util para sessoes de especificacao (Steps 0-10) onde paralelismo nao e necessario.

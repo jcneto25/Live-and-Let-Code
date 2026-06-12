@@ -803,3 +803,38 @@ Yes. LLC's design maximizes **cache hits** by construction, even without being e
 | **5. Lazy loading** | Compressed index + impact analyzer — the agent only loads files on demand, keeping the prompt lean | Fewer tokens = less cache pressure |
 
 **Practical rule:** keep static content (AGENTS.md, tool schemas, project rules) at the top of every prompt. Append dynamic content (messages, tool outputs, errors) at the end. This maximizes prefix cache hits.
+
+---
+
+## 🔀 Git Worktree
+
+### What is Git Worktree and how does LLC use it?
+
+Git Worktree allows creating **multiple working directories** linked to different branches, all sharing the same `.git/` repository. Instead of running `git checkout` and overwriting files in the same directory, each branch gets its own physical directory.
+
+```
+/project/              ← branch: main       (main worktree)
+/project-prp-001/      ← branch: prp-001/wave-1
+/project-prp-002/      ← branch: prp-002/wave-1
+```
+
+**How LLC uses it:**
+
+| When | Behavior |
+|------|----------|
+| **Step 11 (Execution)** | `initialize_session.py` automatically creates a worktree when `--prp` is provided or `step >= 11` |
+| **Parallel PRPs** | Each PRP gets its own physical directory — agents never collide on files |
+| **Merge/discard** | `finalize_session.py`: gate `approved` → merge + remove worktree; gate `rejected` → discard without merge |
+| **Branch naming** | `prp-{id}/wave-{n}` — consistent, predictable, traceable |
+
+**Benefits for agentic development:**
+
+| Benefit | How it works |
+|----------|-------------|
+| **Real parallelism** | 3 agents implement 3 PRPs simultaneously, each in its own directory, without cloning the repo |
+| **Isolated builds** | `node_modules/`, `dist/`, `.env` independent per worktree — different dependency versions without conflict |
+| **No stashing** | No need to hide uncommitted changes to review another branch — just `cd` to another directory |
+| **Unified history** | `git log`, `git branch -a`, `git diff` between branches work from any worktree |
+| **Auto cleanup** | Orphan worktrees are removed by `cleanup_orphan_worktrees()` at the start of each session |
+
+**To disable isolation:** use `--no-worktree` with `initialize_session.py`. Useful for specification sessions (Steps 0-10) where parallelism is not needed.

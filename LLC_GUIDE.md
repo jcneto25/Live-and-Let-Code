@@ -406,15 +406,23 @@ Execute a skill docs/skills/llc-user-guide.md
 
 ---
 
-### Passo 11: Execução
+### Passo 11: Execucao
 
-**Agora começa o desenvolvimento.** Você tem duas trilhas:
+**Agora comeca o desenvolvimento.** Voce tem duas trilhas:
+
+> **🔀 Isolamento automatico via git worktree:** A skill `llc-ace-context` cria automaticamente
+> um worktree isolado para cada sessao de execucao (Step >= 11 ou quando `--prp` e informado).
+> Cada PRP roda em seu proprio diretorio fisico (`prp-{id}/wave-{n}`), com `node_modules`,
+> `dist/` e `.env` independentes — paralelismo real sem colisao de arquivos.
+>
+> Ao finalizar, se o gate for `approved`, o branch e mergeado automaticamente e o worktree
+> removido. Se `rejected`, o worktree e descartado sem merge.
 
 #### Trilha A: PRPs sem UI (backend, infra)
 
 ```
 Execute as tarefas do TASKS.md diretamente com agentes de desenvolvimento.
-Cada PRP sem UI é implementado sequencialmente ou em paralelo (conforme matriz).
+Cada PRP sem UI e implementado sequencialmente ou em paralelo (conforme matriz).
 ```
 
 #### Trilha B: PRPs com UI (frontend) — Subfluxo de Prototipagem

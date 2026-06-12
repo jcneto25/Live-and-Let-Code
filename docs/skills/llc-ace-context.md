@@ -242,13 +242,24 @@ python .ace/scripts/code-map.py --signatures-only --json
 
 Gera índice estrutural do projeto (árvore de arquivos, assinaturas de funções/classes, imports) para evitar alucinações de API. Ideal para carregar no início da sessão antes de gerar código. Use `--include` para filtrar por linguagem/segmento.
 
-### Isolamento com Worktrees (sessões paralelas)
+### Isolamento com Worktrees (automatico para sessoes de execucao)
 
 ```
-python .ace/scripts/initialize_session.py --step 5 --task "Refatoração JWT" --prp PRP-003 --wave 2 --worktree --json
+python .ace/scripts/initialize_session.py --step 11 --task "PRP-001: Cadastro de Usuarios" --prp PRP-001 --wave 2 --json
 ```
 
-O flag `--worktree` cria um git worktree isolado em `.ace/worktrees/{session_id}/`. O `finalize_session.py` faz merge automático se o gate for `approved` ou descarta o worktree se `rejected`. Ideal para PRPs em paralelo sem poluir o workspace principal. O branch segue a convenção `prp-{id}/wave-{n}`.
+O isolate via git worktree e **automatico** quando `--prp` e informado ou `step >= 11`. O script cria um diretorio isolado em `.ace/worktrees/{session_id}/` no branch `prp-{id}/wave-{n}`. O `finalize_session.py` faz merge automatico se o gate for `approved` ou descarta o worktree se `rejected`.
+
+Para desativar o isolamento em sessoes especificas:
+```
+python .ace/scripts/initialize_session.py --step 11 --task "..." --prp PRP-001 --no-worktree --json
+```
+
+**Vantagens:**
+- PRPs em paralelo sem colisao de arquivos (cada agente em seu diretorio fisico)
+- `node_modules`, `dist/`, `.env` isolados por worktree — versoes diferentes de dependencias sem conflito
+- Sem stash/sem perda de contexto ao alternar entre features
+- Commits unificados — um unico `.git/` compartilhado entre todos os worktrees
 
 ### Validação (antes de commit — hook automático)
 

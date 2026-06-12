@@ -10,9 +10,15 @@ Fluxo:
 5. Retorna informações da sessão para o agente
 
 Uso:
-    python .ace/scripts/initialize_session.py --step 0.5 --task "Visão Estratégica"
-    python .ace/scripts/initialize_session.py --step 5 --task "Refatoração JWT" --project tjce-audit --wave 1
-    python .ace/scripts/initialize_session.py --step 0.1 --task "Conversão Docling" --json
+    python .ace/scripts/initialize_session.py --step 0.5 --task "Visao Estrategica"
+    python .ace/scripts/initialize_session.py --step 5 --task "Refatoracao JWT" --project tjce-audit --wave 1
+    python .ace/scripts/initialize_session.py --step 0.1 --task "Conversao Docling" --json
+
+Worktree automático:
+    Por padrao, sessoes com --prp ou step >= 11 criam worktree isolado automaticamente.
+    Use --no-worktree para desativar.
+    python .ace/scripts/initialize_session.py --step 11 --task "PRP-001" --prp PRP-001 --wave 1
+    python .ace/scripts/initialize_session.py --step 11 --task "PRP-001" --prp PRP-001 --no-worktree
 """
 
 import argparse
@@ -220,8 +226,8 @@ def main():
     parser.add_argument("--project", type=str, default="", help="Nome do projeto")
     parser.add_argument("--wave", type=int, default=1, help="Número da onda")
     parser.add_argument("--prp", type=str, default=None, help="ID do PRP (ex: PRP-001)")
-    parser.add_argument("--worktree", action="store_true",
-                        help="Cria git worktree isolado para esta sessão")
+    parser.add_argument("--no-worktree", action="store_true",
+                        help="Desativa criacao automatica de git worktree (padrao: ativo para sessoes com --prp ou step >= 11)")
     parser.add_argument("--tags", type=str, nargs="*", default=[], help="Tags da sessão")
     parser.add_argument("--json", action="store_true", help="Output em JSON (para tool calls)")
     args = parser.parse_args()
@@ -260,13 +266,14 @@ def main():
     update_index(session_id=session_id, llc_step=args.step, tags=args.tags)
 
     worktree_path = None
-    if args.worktree:
+    auto_worktree = (args.prp is not None or args.step >= 11) and not args.no_worktree
+    if auto_worktree:
         cleanup_orphan_worktrees()
         worktree_path = create_worktree(session_id, args.prp, args.wave)
         if worktree_path:
-            logger.info(f"🔀 Sessão isolada em worktree: {worktree_path}")
+            logger.info(f"🔀 Sessao isolada em worktree: {worktree_path}")
         else:
-            logger.warning("⚠️  Worktree não criado — continuando no workspace principal")
+            logger.warning("⚠️  Worktree nao criado — continuando no workspace principal")
 
     result = {
         "session_id": session_id,

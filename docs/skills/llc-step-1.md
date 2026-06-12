@@ -22,7 +22,7 @@ tags: [specification, llc-pipeline]
 
 - [ ] `docs/business/specs/visao_estrategica_e_negocio.md` (validado no Step 0.5)
 - [ ] `docs/business/specs/MOD-*.md` (módulos validados no Step 0.5)
-- [ ] Templates: `docs/Template_Glossario.md`, `docs/Template_Requisitos_Nao_Funcionais.md`, `docs/template_requisitos_funcionais.md`, `docs/template_business_rules.md`, `docs/Template_WORKFLOWS_E_BPMN.md`, `docs/Template_Perfis_Permissoes.md`, `docs/Template_Catalogo_Integracoes.md`
+- [ ] Templates: `docs/Template_Glossario.md`, `docs/Template_Requisitos_Nao_Funcionais.md`, `docs/template_requisitos_funcionais.md`, `docs/template_business_rules.md`, `docs/Template_WORKFLOWS_E_BPMN.md`, `docs/business/specs/perfis_permissoes.md`, `docs/Template_Catalogo_Integracoes.md`
 
 ---
 

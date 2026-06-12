@@ -19,8 +19,9 @@ tags: [business-analysis, specification, llc-pipeline]
 ## 📋 Pré-requisitos (Verificação Automática)
 Antes de iniciar, use a ferramenta `list_directory` ou `read_file` para verificar se os seguintes itens existem no diretório de trabalho atual:
 - [ ] Diretório `docs/business/ingestion/` com documentos de domínio.
-- [ ] `docs/template_visao_estrategica_e_negocio.md`
-- [ ] `docs/guia_preenchimento_template_visao_estrategica_negocio.md`
+- [ ] `docs/business/specs/visao_estrategica_e_negocio.md`
+- [ ] `docs/business/specs/guia_preenchimento_visao_estrategica.md`
+- [ ] `docs/business/specs/analise_riscos.md`
 - [ ] `docs/business/Template_Especificacao_Modulo.md`
 
 *Se algum item faltar, PARE e liste os arquivos ausentes para o usuário.*
@@ -61,8 +62,8 @@ Você está operando no modo de execução da skill `llc-step-0-5` do pipeline L
 - Extraia: domínios funcionais, processos, público-alvo, premissas, restrições, regras de negócio, integrações, perfis de usuário, objetivos estratégicos e indicadores.
 
 ### 2. Gere a Visão Estratégica e de Negócio
-- Use o conteúdo de `docs/template_visao_estrategica_e_negocio.md` como base estrutural.
-- Siga ESTRITAMENTE as regras de `docs/guia_preenchimento_template_visao_estrategica_negocio.md`.
+- Use o conteúdo de `docs/business/specs/visao_estrategica_e_negocio.md` como base estrutural.
+- Siga ESTRITAMENTE as regras de `docs/business/specs/guia_preenchimento_visao_estrategica.md`.
 - Preencha TODAS as seções. Não deixe placeholders `[ ]` vazios.
 - Se a documentação não cobrir algum item, preencha com: `[NÃO IDENTIFICADO NA DOCUMENTAÇÃO — requer validação humana]`.
 - **Ação:** Use `write_file` para salvar em: `docs/business/specs/visao_estrategica_e_negocio.md`.

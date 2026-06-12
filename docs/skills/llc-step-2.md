@@ -20,7 +20,7 @@ tags: [prd, specification, llc-pipeline]
 ## 📋 Pré-requisitos
 
 - [ ] 7 documentos de especificação em `docs/business/specs/` (validados no Step 1)
-- [ ] `docs/prd/template_prd_executivo_institucional.md`
+- [ ] `docs/prd/executive_PRD.md`
 - [ ] `docs/prd/template_prd_tecnico_institucional.md`
 
 ---
@@ -49,7 +49,7 @@ Você está executando a skill `llc-step-2` do pipeline LLC. Seu objetivo é sin
 
 | # | Documento | Template | Público | Tom |
 |---|-----------|----------|---------|-----|
-| 1 | PRD Executivo | `docs/prd/template_prd_executivo_institucional.md` | Gestores, stakeholders | Institucional, valor de negócio, alto nível |
+| 1 | PRD Executivo | `docs/prd/executive_PRD.md` | Gestores, stakeholders | Institucional, valor de negócio, alto nível |
 | 2 | PRD Técnico | `docs/prd/template_prd_tecnico_institucional.md` | Equipe de desenvolvimento, arquitetos | Técnico, preciso, completo |
 
 ### 1. Leia as Entradas

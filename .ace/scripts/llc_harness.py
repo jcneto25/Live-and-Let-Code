@@ -20,8 +20,72 @@ from pathlib import Path
 
 ACE_DIR = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = ACE_DIR / "scripts"
+CONFIG_DIR = ACE_DIR / "config"
 SKILLS_DIR = Path("docs/skills")
 AGENTS_FILE = Path("AGENTS.md")
+
+# ── Load gate configuration (R1: externalized from code) ──
+
+GATES_FILE = CONFIG_DIR / "gates.json"
+_gates_config = None
+
+
+def _load_gates_config():
+    global _gates_config
+    if _gates_config is None:
+        if GATES_FILE.exists():
+            _gates_config = json.loads(GATES_FILE.read_text(encoding='utf-8'))
+        else:
+            _gates_config = {"gates": {}, "step_to_gate": {}}
+    return _gates_config
+
+
+def get_gate_checklist(step):
+    config = _load_gates_config()
+    gate_num = config.get("step_to_gate", {}).get(str(step))
+    if gate_num is None:
+        return None, []
+    gate = config.get("gates", {}).get(str(gate_num), {})
+    return gate_num, gate.get("checklist", [])
+
+
+def gate_check(step, output=None):
+    """Exibe checklist do gate e aguarda decisao humana com timeout (R5)."""
+    gate_num, items = get_gate_checklist(step)
+    if gate_num is None:
+        print(f"ℹ️  Nenhum gate definido para step {step}. Avancando automaticamente.")
+        return "approved"
+
+    print(f"\n👤 Gate {gate_num}:")
+    for item in items:
+        print(f"  - {item}")
+
+    print()
+    print("[A]provar  [R]ejeitar  [S]kip (timeout em 60s = skip)")
+    import signal
+
+    class TimeoutError(Exception):
+        pass
+
+    def _timeout_handler(signum, frame):
+        raise TimeoutError()
+
+    try:
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(60)
+        choice = input().strip().lower()
+        signal.alarm(0)
+    except TimeoutError:
+        print("\n⏰ Timeout. Avancando automaticamente.")
+        return "approved"
+
+    if choice in ("a", "approve"):
+        return "approved"
+    elif choice in ("r", "reject"):
+        return "rejected"
+    elif choice in ("s", "skip"):
+        return "approved"
+    return "approved"
 
 from pathlib import Path
 from datetime import datetime
@@ -103,17 +167,35 @@ def session_end(session_id, gate_decision, context_seed_output):
 
     return data
 
-# ── Skill loading ──
+# ── Skill loading (R4: progressive disclosure) ──
 
 def load_agents_conventions():
-    """Carrega AGENTS.md como bloco de convencoes estatico."""
-    if AGENTS_FILE.exists():
-        content = AGENTS_FILE.read_text(encoding="utf-8")
-        return f"---\n# CONVENTIONS (AGENTS.md)\n---\n\n{content}\n\n---\n# TASK\n---\n\n"
-    return ""
+    """Carrega apenas o Document Index do AGENTS.md, nao o arquivo inteiro (R4).
+    O agente usa o indice comprimido para decidir quais arquivos carregar sob demanda."""
+    if not AGENTS_FILE.exists():
+        return ""
+
+    content = AGENTS_FILE.read_text(encoding='utf-8')
+    # Extrai apenas a secao Documentation Index (compacta, ~400 tokens)
+    import re
+    match = re.search(
+        r'### Documentation Index \(Compressed\)(.*?)(?=\n## |\n---\n## |\Z)',
+        content, re.DOTALL
+    )
+    if match:
+        index_section = match.group(0)
+        return (
+            "---\n# CONVENTIONS (Document Index only — progressive disclosure)\n---\n\n"
+            + index_section
+            + "\n\n---\n# TASK\n---\n\n"
+        )
+    # Fallback: carrega so as primeiras 50 linhas (cabecalho + zonas)
+    lines = content.split('\n')[:50]
+    return "---\n# CONVENTIONS (header only)\n---\n\n" + '\n'.join(lines) + "\n\n---\n# TASK\n---\n\n"
+
 
 def skill_load(step, context_seed=None, task=None):
-    """Carrega skill + AGENTS.md + context_seed. Retorna prompt montado."""
+    """Carrega skill + convencoes minimal + context_seed. Retorna prompt montado."""
     skill_file = SKILLS_DIR / f"llc-step-{step}.md"
     if not skill_file.exists():
         import glob
@@ -125,7 +207,7 @@ def skill_load(step, context_seed=None, task=None):
             sys.exit(1)
 
     conventions = load_agents_conventions()
-    skill = skill_file.read_text(encoding="utf-8")
+    skill = skill_file.read_text(encoding='utf-8')
 
     prompt = conventions + skill
 
@@ -215,69 +297,52 @@ def agent_invoke(prompt, task_description=None, client=None):
 
 
 def _llm_invoke(prompt, client=None):
-    """Execucao LLM normal (original)."""
+    """Execucao LLM com streaming, timeout e extracao de context_seed (R3)."""
     if client is None:
         client = detect_agent_client()
 
     if client:
         print(f"🤖 Invocando {client}...")
-        result = subprocess.run(
-            [client, "--prompt", prompt],
-            capture_output=False,
-            cwd=Path.cwd()
-        )
-        return "", result.returncode
+        try:
+            result = subprocess.run(
+                [client, "--prompt", prompt],
+                capture_output=True,
+                text=True,
+                timeout=600,  # 10 min timeout
+                cwd=Path.cwd()
+            )
+            output = result.stdout
+
+            # Extrai context_seed do output do agente (R3)
+            import re
+            seed_match = re.search(
+                r'state:\s*(.*?)\n\s*pending:\s*(.*?)\n\s*blockers:\s*(.*?)\n\s*next_action:\s*(.*?)(?:\n|$)',
+                output, re.DOTALL | re.IGNORECASE
+            )
+            if seed_match:
+                context_seed = (
+                    f"state: {seed_match.group(1).strip()}\n"
+                    f"pending: {seed_match.group(2).strip()}\n"
+                    f"blockers: {seed_match.group(3).strip()}\n"
+                    f"next_action: {seed_match.group(4).strip()}"
+                )
+                print(f"✅ Context seed extraido ({len(context_seed)} chars)")
+                return output, result.returncode, context_seed
+
+            return output, result.returncode, None
+
+        except subprocess.TimeoutExpired:
+            print("⏰ Timeout (10 min). O agente nao concluiu a tempo.")
+            return "", 124, None
     else:
         print("📋 Nenhum cliente CLI detectado. Modo manual:")
         print("=" * 60)
-        print(prompt)
+        print(prompt[:2000])
+        if len(prompt) > 2000:
+            print(f"... (truncado — {len(prompt)} chars totais)")
         print("=" * 60)
         print("\nCole o prompt acima no seu cliente de IA.")
-        return "", 0
-
-# ── Gate check ──
-
-GATE_CHECKLISTS = {
-    1: ["Visao cobre todo o escopo?", "Modulos corretamente identificados?", "Secoes sem [NAO IDENTIFICADO]?"],
-    2: ["Termos do glossario consistentes?", "Perfis cobrem todos os atores?", "Integracoes batem com a realidade?"],
-    3: ["PRD executivo comunica valor?", "PRD tecnico cobre todos os requisitos?", "Ambos sao consistentes?"],
-    4: ["Granularidade dos PRPs adequada (2-8 dias)?", "Dependencias entre PRPs fazem sentido?", "Nenhum requisito sem PRP?"],
-    5: ["Ondas bem agrupadas?", "Caminho critico realista?", "Tempo total estimado faz sentido?"],
-    6: ["Stack viavel no ambiente?", "Decisoes arquiteturais justificadas?", "RNFs enderecados?"],
-    7: ["Tarefas acionaveis?", "Agentes corretamente atribuidos?", "Estimativas realistas?"],
-    8: ["Paleta reflete identidade?", "Componentes tem estados definidos?", "Design System cobre os fluxos?"],
-    9: ["Projeto compila e roda?", "Dados mock realistas?", "Handlers simulam erros?"],
-    10: ["Comandos de teste batem com o stack?", "Thresholds realistas?", "Templates reutilizaveis?"],
-    11: ["README permite onboarding <= 10 min?", "DEPLOYMENT cobre rollback?", "Sem secrets expostos?"],
-    11.5: ["Estrutura cobre todos os modulos?", "Perfis tem paginas relevantes?", "Indice navegavel?", "Linguagem adequada?"],
-}
-
-STEP_TO_GATE = {
-    0.5: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 10.5: 11.5,
-}
-
-def gate_check(step, output):
-    """Exibe checklist do gate e aguarda decisao humana."""
-    gate = STEP_TO_GATE.get(step)
-    if gate is None:
-        print(f"ℹ️  Nenhum gate definido para step {step}. Avancando automaticamente.")
-        return "approved"
-
-    items = GATE_CHECKLISTS.get(gate, [])
-    print(f"\n👤 Gate {gate}:")
-    for item in items:
-        print(f"  - {item}")
-
-    print()
-    while True:
-        choice = input("[A]provar  [R]ejeitar  [S]kip (aprovar sem revisar): ").strip().lower()
-        if choice in ("a", "approve"):
-            return "approved"
-        elif choice in ("r", "reject"):
-            return "rejected"
-        elif choice in ("s", "skip"):
-            return "approved"
-        print("Opcao invalida. Use A, R ou S.")
+        return "", 0, None
 
 # ── Pipeline orchestration ──
 
@@ -302,7 +367,7 @@ def pipeline_run(from_step=0, to_step=11, task=None):
         session_end(sid, decision, None)
 
         if decision == "rejected":
-            print(f"\n⛔ Gate {STEP_TO_GATE.get(step)} REPROVADO. Pipeline pausado.")
+            print(f"\n⛔ Gate {get_gate_checklist(step)[0]} REPROVADO. Pipeline pausado.")
             print("Corrija os problemas e reexecute a partir deste step:")
             print(f"  llc run --step {step}")
             return False
@@ -319,7 +384,7 @@ def step_run(step, prp=None, task=None, no_worktree=False):
     print(f"📄 Skill: {skill_file}")
     print(f"📦 Context seed: {len(sess.get('context_seed', '') or '')} chars")
 
-    output, code = agent_invoke(prompt)
+    output, code, context_seed = agent_invoke(prompt, task, client=None)
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
     return sess["session_id"]

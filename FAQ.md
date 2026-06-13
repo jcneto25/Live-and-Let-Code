@@ -987,7 +987,24 @@ llc status                           # Progresso do pipeline
 
 **O harness NAO substitui os scripts ACE** — ele os invoca via subprocess. Scripts ACE permanecem independentes e invocaveis manualmente.
 
-**Por que "thin"?** O harness tem ~500 linhas por design. Ele nao implementa tool-calling (isso e do cliente), nao define regras de seguranca (isso e do AGENTS.md), nao ensina o modelo a pensar (isso e das skills Markdown). Sua unica funcao e conectar as pecas que ja existem.
+**Por que "thin"?** O harness tem ~350 linhas por design. Ele NAO implementa tool-calling (cliente), NAO define regras de seguranca (AGENTS.md), NAO ensina o modelo (skills Markdown). Suas 5 responsabilidades sao estritas:
+
+| # | Responsabilidade | Como |
+|---|-----------------|------|
+| 1 | Sessao ACE | init/finalize, context_seed, worktree |
+| 2 | Carregamento de skill | Progressive disclosure — carrega o Document Index (~400 tokens), nao o AGENTS.md inteiro |
+| 3 | Invocacao do agente | Deteccao de cliente CLI, timeout 10min, extracao automatica de context_seed |
+| 4 | Validacao de gate | Checklist externo (`gates.json`), timeout 60s |
+| 5 | Orquestracao do pipeline | Iteracao sobre steps, parada em gates |
+
+**O que o harness NAO faz (e por que):**
+
+| Responsabilidade | Quem faz | Por que |
+|-----------------|----------|--------|
+| Prompt caching | Cliente de IA | O cliente gerencia cache de prefixo nativamente |
+| Sub-agentes paralelos | Git worktrees + cliente | Worktrees isolam; cliente lanca agentes |
+| Ferramentas especificas | Scripts ACE | `impact-analyzer.py`, `code-health.py` sao fat code |
+| Contexto de repositorio vivo | AGENTS.md + CLAUDE.md | Harness carrega so o indice comprimido |
 
 ---
 

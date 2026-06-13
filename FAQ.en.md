@@ -987,7 +987,24 @@ llc status                           # Pipeline progress
 
 **The harness does NOT replace ACE scripts** — it invokes them via subprocess. ACE scripts remain independent and manually invocable.
 
-**Why "thin"?** The harness is ~500 lines by design. It does not implement tool-calling (that's the client), does not define security rules (that's AGENTS.md), does not teach the model how to think (that's the skills). Its only function is to connect the pieces that already exist.
+**Why "thin"?** The harness is ~350 lines by design. It does NOT implement tool-calling (client), does NOT define security rules (AGENTS.md), does NOT teach the model (skills). Its 5 responsibilities are strict:
+
+| # | Responsibility | How |
+|---|---------------|-----|
+| 1 | ACE session | init/finalize, context_seed, worktree |
+| 2 | Skill loading | Progressive disclosure — loads the Document Index (~400 tokens), not full AGENTS.md |
+| 3 | Agent invocation | CLI client detection, 10min timeout, automatic context_seed extraction |
+| 4 | Gate validation | External checklist (`gates.json`), 60s timeout |
+| 5 | Pipeline orchestration | Step iteration, gate pauses |
+
+**What the harness does NOT do (and why):**
+
+| Responsibility | Who handles it | Why |
+|---------------|---------------|-----|
+| Prompt caching | AI client | Client manages prefix caching natively |
+| Parallel sub-agents | Git worktrees + client | Worktrees isolate; client launches agents |
+| Specific tools | ACE scripts | `impact-analyzer.py`, `code-health.py` are fat code |
+| Live repository context | AGENTS.md + CLAUDE.md | Harness loads only the compressed index |
 
 ---
 

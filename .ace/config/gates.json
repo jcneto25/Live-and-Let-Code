@@ -1,0 +1,127 @@
+{
+  "gates": {
+    "1": {
+      "step": 0.5,
+      "label": "Visao Estrategica + Modulos",
+      "checklist": [
+        "Visao cobre todo o escopo?",
+        "Modulos corretamente identificados?",
+        "Secoes sem [NAO IDENTIFICADO]?"
+      ]
+    },
+    "2": {
+      "step": 1,
+      "label": "7 Especificacoes",
+      "checklist": [
+        "Termos do glossario consistentes?",
+        "Perfis cobrem todos os atores?",
+        "Integracoes batem com a realidade?"
+      ]
+    },
+    "3": {
+      "step": 2,
+      "label": "PRDs",
+      "checklist": [
+        "PRD executivo comunica valor?",
+        "PRD tecnico cobre todos os requisitos?",
+        "Ambos sao consistentes?"
+      ]
+    },
+    "4": {
+      "step": 3,
+      "label": "PRPs",
+      "checklist": [
+        "Granularidade dos PRPs adequada (2-8 dias)?",
+        "Dependencias entre PRPs fazem sentido?",
+        "Nenhum requisito sem PRP?"
+      ]
+    },
+    "5": {
+      "step": 4,
+      "label": "Planejamento",
+      "checklist": [
+        "Ondas bem agrupadas?",
+        "Caminho critico realista?",
+        "Tempo total estimado faz sentido?"
+      ]
+    },
+    "6": {
+      "step": 5,
+      "label": "Arquitetura",
+      "checklist": [
+        "Stack viavel no ambiente?",
+        "Decisoes arquiteturais justificadas?",
+        "RNFs enderecados?"
+      ]
+    },
+    "7": {
+      "step": 6,
+      "label": "Tarefas",
+      "checklist": [
+        "Tarefas acionaveis?",
+        "Agentes corretamente atribuidos?",
+        "Estimativas realistas?"
+      ]
+    },
+    "8": {
+      "step": 7,
+      "label": "Design System",
+      "checklist": [
+        "Paleta reflete identidade?",
+        "Componentes tem estados definidos?",
+        "Design System cobre os fluxos?"
+      ]
+    },
+    "9": {
+      "step": 8,
+      "label": "Setup + Mock",
+      "checklist": [
+        "Projeto compila e roda?",
+        "Dados mock realistas?",
+        "Handlers simulam erros?"
+      ]
+    },
+    "10": {
+      "step": 9,
+      "label": "Testing Docs",
+      "checklist": [
+        "Comandos de teste batem com o stack?",
+        "Thresholds realistas?",
+        "Templates reutilizaveis?"
+      ]
+    },
+    "11": {
+      "step": 10,
+      "label": "Project Docs",
+      "checklist": [
+        "README permite onboarding <= 10 min?",
+        "DEPLOYMENT cobre rollback?",
+        "Sem secrets expostos?"
+      ]
+    },
+    "11.5": {
+      "step": 10.5,
+      "label": "User Guide",
+      "checklist": [
+        "Estrutura cobre todos os modulos?",
+        "Perfis tem paginas relevantes?",
+        "Indice navegavel?",
+        "Linguagem adequada ao usuario final?"
+      ]
+    }
+  },
+  "step_to_gate": {
+    "0.5": 1,
+    "1": 2,
+    "2": 3,
+    "3": 4,
+    "4": 5,
+    "5": 6,
+    "6": 7,
+    "7": 8,
+    "8": 9,
+    "9": 10,
+    "10": 11,
+    "10.5": 11.5
+  }
+}

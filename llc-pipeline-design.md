@@ -62,6 +62,32 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 
 Cada camada depende da camada inferior: sem contexto bem gerido, o conhecimento nao cabe na janela; sem conhecimento estruturado, agentes nao tem direcao; sem agentes bem instruidos, workflows nao produzem qualidade; sem workflows orquestrados, a entrega nao e confiavel.
 
+### 1.5 Thin Harness — Orquestracao
+
+O **Thin Harness** (`llc`) e a camada de orquestracao que conecta as 5 camadas arquiteturais. E um CLI Python (~500 linhas) que automatiza o ciclo de vida de cada step: init session → load skill → invoke agent → gate check → finalize session.
+
+O harness e "thin" por design: nao implementa tool-calling, nao define regras, nao ensina o modelo. Ele apenas conecta as pecas que ja existem.
+
+```
+FAT SKILLS (Markdown)     ← docs/skills/ (14 arquivos)
+     ↑
+THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~500 linhas)
+     ↑
+FAT CODE (Python)         ← .ace/scripts/ (7 scripts ACE)
+     ↑
+CLIENTE DE IA             ← Claude Code, opencode, Codex, Cursor...
+```
+
+**Comandos principais:**
+
+| Comando | Acao |
+|---------|------|
+| `llc run --step 5` | Executa um step completo |
+| `llc pipeline --from 0` | Pipeline completo (para nos gates) |
+| `llc session start --step 5` | Inicia sessao manual |
+| `llc session end --approve` | Finaliza sessao manual |
+| `llc status` | Progresso do pipeline |
+
 ---
 
 ## 2. Arquitetura de Diretórios

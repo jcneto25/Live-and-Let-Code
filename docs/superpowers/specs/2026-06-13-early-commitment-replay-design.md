@@ -482,7 +482,6 @@ Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado
         {"path": "schemas/cliente.schema.ts", "hash": "a1b2c3d4"}
       ],
       "steps": [
-        {"action": "preflight", "file": "{{target_file}}"},
         {"action": "open", "file": "{{target_file}}"},
         {"action": "insert_in_node", "node_id": "schema_field_{{field}}",
          "position": "after", "code": ".refine({{validator_fn}}, '{{field}} invalido')"},
@@ -503,7 +502,6 @@ Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado
 
 | Action | Descricao | Campos |
 |--------|-----------|--------|
-| `preflight` | Verifica existencia do arquivo e pattern (dry-run) | `file`, `pattern` (opcional) |
 | `open` | Abre arquivo para edicao | `file` |
 | `insert_in_node` | Insere codigo em um AST node | `node_id`, `position` (`before`/`after`/`end`), `code` |
 | `insert_after` | Insere apos pattern (com dry-run obrigatorio) | `file`, `pattern`, `code` |

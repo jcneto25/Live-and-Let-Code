@@ -493,6 +493,8 @@ Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
 
 **Tarefas:** `docs/planning/TASKS.md` §4 (SEC-001, SEC-002, SEC-003, SEC-004).
 
+**Exemplo real — Execucao completa no projeto SGI (Junho 2026):** As 3 skills foram executadas contra o repositorio LLC. Step 11-Security: Semgrep 340 regras em 147 arquivos → 0 findings; SCA N/A (sem dependencias); Gitleaks nao disponivel → verificacao manual limpa. Gate: APROVADO. Step 12-Null-Safety: 0 PRPs encontrados (fase de especificacao) → validacao do template `PRP_TEMPLATE.md` demonstrou boas praticas (`?` para opcionais, fallbacks documentados). Gate: APROVADO. Step 11-OWASP: auditoria manual dos 9 scripts `.py` (~85 KB) → A02 0 secrets, A03 28 `subprocess.run()` seguros, A08 `yaml.safe_load()`, A09 logs limpos, A10 0 network. Gate: APROVADO. Pipeline liberado para implementacao dos PRPs.
+
 ---
 
 ## Ferramentas e Integrações

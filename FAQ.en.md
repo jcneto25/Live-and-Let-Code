@@ -493,6 +493,8 @@ Step 11-Security (pre-code)       Step 12-Null-Safety (pre-code)
 
 **Tasks:** `docs/planning/TASKS.md` §4 (SEC-001, SEC-002, SEC-003, SEC-004).
 
+**Real example — Full execution on SGI project (June 2026):** All 3 skills were executed against the LLC repository. Step 11-Security: Semgrep 340 rules on 147 files → 0 findings; SCA N/A (no dependencies); Gitleaks unavailable → manual check clean. Gate: PASSED. Step 12-Null-Safety: 0 PRPs found (specification phase) → `PRP_TEMPLATE.md` validation showed good practices (`?` for optionals, documented fallbacks). Gate: PASSED. Step 11-OWASP: manual audit of 9 `.py` scripts (~85 KB) → A02 0 secrets, A03 28 safe `subprocess.run()`, A08 `yaml.safe_load()`, A09 clean logs, A10 0 network. Gate: PASSED. Pipeline cleared for PRP implementation.
+
 ---
 
 ## Tools & Integrations

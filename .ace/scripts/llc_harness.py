@@ -62,22 +62,16 @@ def gate_check(step, output=None):
 
     print()
     print("[A]provar  [R]ejeitar  [S]kip (timeout em 60s = skip)")
-    import signal
+    import select
 
-    class TimeoutError(Exception):
-        pass
+    print("Aguardando decisao...")
+    ready, _, _ = select.select([sys.stdin], [], [], 60)
 
-    def _timeout_handler(signum, frame):
-        raise TimeoutError()
-
-    try:
-        signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(60)
-        choice = input().strip().lower()
-        signal.alarm(0)
-    except TimeoutError:
+    if not ready:
         print("\n⏰ Timeout. Avancando automaticamente.")
         return "approved"
+
+    choice = sys.stdin.readline().strip().lower()
 
     if choice in ("a", "approve"):
         return "approved"
@@ -297,43 +291,62 @@ def agent_invoke(prompt, task_description=None, client=None):
 
 
 def _llm_invoke(prompt, client=None):
-    """Execucao LLM com streaming, timeout e extracao de context_seed (R3)."""
+    """Execucao LLM com streaming real e extracao de context_seed (G2, R3)."""
     if client is None:
         client = detect_agent_client()
 
     if client:
         print(f"🤖 Invocando {client}...")
+        import re
+        import time
+
+        process = subprocess.Popen(
+            [client, "--prompt", prompt],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            cwd=Path.cwd()
+        )
+
+        output_lines = []
+        start_time = time.time()
+        timeout = 600  # 10 min
+
         try:
-            result = subprocess.run(
-                [client, "--prompt", prompt],
-                capture_output=True,
-                text=True,
-                timeout=600,  # 10 min timeout
-                cwd=Path.cwd()
-            )
-            output = result.stdout
+            for line in process.stdout:
+                print(line, end="")  # Streaming em tempo real
+                output_lines.append(line)
 
-            # Extrai context_seed do output do agente (R3)
-            import re
-            seed_match = re.search(
-                r'state:\s*(.*?)\n\s*pending:\s*(.*?)\n\s*blockers:\s*(.*?)\n\s*next_action:\s*(.*?)(?:\n|$)',
-                output, re.DOTALL | re.IGNORECASE
-            )
-            if seed_match:
-                context_seed = (
-                    f"state: {seed_match.group(1).strip()}\n"
-                    f"pending: {seed_match.group(2).strip()}\n"
-                    f"blockers: {seed_match.group(3).strip()}\n"
-                    f"next_action: {seed_match.group(4).strip()}"
-                )
-                print(f"✅ Context seed extraido ({len(context_seed)} chars)")
-                return output, result.returncode, context_seed
+                if time.time() - start_time > timeout:
+                    process.kill()
+                    print(f"\n⏰ Timeout ({timeout}s).")
+                    return "\n".join(output_lines), 124, None
 
-            return output, result.returncode, None
-
+            process.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            print("⏰ Timeout (10 min). O agente nao concluiu a tempo.")
-            return "", 124, None
+            process.kill()
+            print(f"\n⏰ Timeout.")
+            return "\n".join(output_lines), 124, None
+
+        output = "\n".join(output_lines)
+
+        # Extrai context_seed do output do agente (G2)
+        seed_match = re.search(
+            r'state:\s*(.*?)\n\s*pending:\s*(.*?)\n\s*blockers:\s*(.*?)\n\s*next_action:\s*(.*?)(?:\n|$)',
+            output, re.DOTALL | re.IGNORECASE
+        )
+        if seed_match:
+            context_seed = (
+                f"state: {seed_match.group(1).strip()}\n"
+                f"pending: {seed_match.group(2).strip()}\n"
+                f"blockers: {seed_match.group(3).strip()}\n"
+                f"next_action: {seed_match.group(4).strip()}"
+            )
+            print(f"✅ Context seed extraido ({len(context_seed)} chars)")
+            return output, process.returncode, context_seed
+
+        return output, process.returncode, None
     else:
         print("📋 Nenhum cliente CLI detectado. Modo manual:")
         print("=" * 60)

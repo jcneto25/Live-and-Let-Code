@@ -607,6 +607,23 @@ In LLC, the scaffold operates across 3 complementary layers:
 
 **In LLC, the scaffold is auto-generated:** the pipeline produces the structure, conventions, and examples as versioned artifacts. The developer doesn't need to create the scaffold manually — it emerges from Steps 5, 7, 8, and 10. This ensures full traceability (PRP-003 → MOD-PLN-002 → Technical PRD → Strategic Vision) and allows multiple agents to work in parallel without context conflicts.
 
+### Does the LLC pipeline do automated pentesting?
+
+No. **Step 11-Security** runs static security auditing (SCA + SAST + secret scanning) with `npm audit` (or `pip-audit`), Semgrep, and Gitleaks. These tools run locally, are open-source, and require no external infrastructure.
+
+For pentesting and DAST (dynamic analysis of running applications), we recommend integrating complementary tools via CI/CD:
+
+| Tool | Type | GitHub |
+|------|------|--------|
+| **OWASP ZAP** | DAST (dynamic scanning) | [github.com/zaproxy/zaproxy](https://github.com/zaproxy/zaproxy) |
+| **Nuclei** | Vulnerability scanner | [github.com/projectdiscovery/nuclei](https://github.com/projectdiscovery/nuclei) |
+| **SQLMap** | SQL injection testing | [github.com/sqlmapproject/sqlmap](https://github.com/sqlmapproject/sqlmap) |
+| **Nikto** | Web server scanner | [github.com/sullo/nikto](https://github.com/sullo/nikto) |
+| **Bandit** | Additional Python SAST | [github.com/PyCQA/bandit](https://github.com/PyCQA/bandit) |
+| **Brakeman** | Additional Rails SAST | [github.com/presidentbeef/brakeman](https://github.com/presidentbeef/brakeman) |
+
+These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (generated in Step 10). LLC is tool-agnostic — any equivalent tool works.
+
 ---
 
 ## Pipeline Overview

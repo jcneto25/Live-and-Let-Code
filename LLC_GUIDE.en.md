@@ -381,6 +381,30 @@ Execute the skill docs/skills/llc-step-10.md
 
 ---
 
+### Step 11-Security: Security Audit 🆕
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-11-security.md
+```
+
+**The AI does:**
+- Runs **SCA** (npm audit or pip-audit) — dependency vulnerability scanning
+- Runs **SAST** (Semgrep) — static code analysis
+- Runs **Secret Scanning** (Gitleaks) — credential leak detection
+- Classifies findings by severity (CVSS): 🔴 Critical (≥ 9.0), 🟡 High (7.0–8.9), 🟢 Medium/Low (< 7.0)
+- Generates `docs/security/SECURITY_AUDIT_REPORT.md` with consolidated report and recommendations
+
+**You validate:** 👤 Gate 11-SEC
+- 0 critical vulnerabilities (CVSS ≥ 9.0)?
+- No real secrets exposed (false positives in mocks/docs are OK)?
+- High vulnerabilities reviewed and decision recorded?
+
+**Only advance when approved.**
+
+---
+
 ### Step 11: Execution
 
 **Now development begins.** You have two tracks:
@@ -421,7 +445,7 @@ The subflow has 6 phases:
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
-Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
+Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 11-Security ──👤──→
 
 Step 11:
   ├── Non-UI PRPs → direct agent

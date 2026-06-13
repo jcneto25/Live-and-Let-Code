@@ -547,6 +547,64 @@ def preflight_check(step):
 
 Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado e o LLM assume.
 
+### 8.4 D — Metricas de Sucesso e Observabilidade
+
+**Problema:** Sem metricas, nao ha como medir se o replay esta funcionando, iterar no limiar de match, ou justificar o investimento.
+
+**Logging estruturado:**
+
+```python
+def log_replay_event(event_type, script_id=None, **kwargs):
+    """Log estruturado para observabilidade do replay."""
+    event = {
+        "timestamp": datetime.now().isoformat(),
+        "event": event_type,
+        "script_id": script_id,
+        **kwargs
+    }
+    log_file = Path(".ace/logs/replay.jsonl")
+    log_file.parent.mkdir(exist_ok=True)
+    with open(log_file, 'a') as f:
+        f.write(json.dumps(event) + "\n")
+```
+
+**Tipos de evento:**
+
+| Evento | Quando | Campos extras |
+|--------|-------|---------------|
+| `classify` | Classificacao concluida | `type`, `confidence` |
+| `replay_hit` | Script encontrado no cache | `script_id`, `usage_count`, `match_score` |
+| `replay_miss` | Nenhum script no cache | `type`, `reason` (`no_cache`/`low_score`/`stale`) |
+| `replay_success` | Replay concluido sem erros | `script_id`, `steps_executed`, `duration_ms` |
+| `replay_rollback` | Replay falhou, rollback executado | `script_id`, `failed_step`, `error` |
+| `llm_fallback` | LLM assumiu a execucao | `reason` (`no_classify`/`cache_miss`/`zone_red`/`preflight`/`replay_fail`) |
+
+**Metricas-chave:**
+
+| Metrica | Formula | Alvo |
+|---------|---------|:----:|
+| Taxa de hit | `replay_hit / (replay_hit + replay_miss)` | >60% |
+| Taxa de sucesso | `replay_success / replay_hit` | >90% |
+| Tokens economizados | `llm_fallback * 5K` (estimativa) | — |
+| Tempo economizado | `replay_hit * 15s` (estimativa) | — |
+
+**Script de relatorio:**
+
+```bash
+python .ace/scripts/replay_stats.py --since "30 days ago"
+```
+
+```
+Replay Stats (ultimos 30 dias):
+- Total tarefas:     150
+- Classificadas:     120 (80.0%)
+- Hits:               89 (74.2% das classificadas)
+- Sucessos:           85 (95.5% dos hits)
+- Rollbacks:           4 (4.5%)
+- Tokens economizados: ~445.000
+- Tempo economizado:   ~22 minutos
+```
+
 ---
 
 ## 9. Schema de Cache Atualizado (v1.1.0)

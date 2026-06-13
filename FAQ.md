@@ -412,6 +412,38 @@ O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + fer
 
 Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA.
 
+### Como o LLC implementa hardening de seguranca OWASP Top 10?
+
+O LLC dedica o **Step 11-OWASP** (`docs/skills/llc-step-11-owasp-security.md`) exclusivamente ao hardening OWASP Top 10:2021. Diferente do Step 11-Security — que executa ferramentas automatizadas (SCA, SAST, secrets scanning) **antes** da implementacao — o Step 11-OWASP executa verificacoes manuais/IA **depois** que o codigo esta escrito, inspecionando controles que ferramentas nao detectam.
+
+**As 10 categorias verificadas:**
+
+| Categoria | O que e verificado |
+|-----------|-------------------|
+| A01 — Broken Access Control | Middleware de auth em todas as rotas, RBAC/ABAC conforme `perfis_permissoes.md`, ownership check (usuario nao acessa recursos de outros) |
+| A02 — Cryptographic Failures | Senhas com bcrypt/argon2 (nunca MD5/SHA1), TLS 1.2+, JWT com algoritmo seguro, secrets nunca hardcoded |
+| A03 — Injection | SQL parametrizado (nunca concatenacao), shell injection, validacao de input (Zod/Pydantic), XSS (`dangerouslySetInnerHTML`) |
+| A04 — Insecure Design | Rate limiting em endpoints sensiveis, lockout de conta, token de reset seguro (expiracao + uso unico), analise de riscos documentada |
+| A05 — Security Misconfiguration | Headers HTTP (CSP, HSTS, X-Frame-Options), debug mode desabilitado em producao, stack traces nao expostos |
+| A06 — Vulnerable Components | Dependencias sem CVEs com exploit publico, frameworks nao EOL, imagens de container atualizadas |
+| A07 — Auth Failures | MFA para perfis criticos, sessoes com expiracao, sem enumeracao de usuarios, sem credenciais padrao |
+| A08 — Integrity Failures | Lockfiles versionados (`package-lock.json`), CI/CD verifica integridade, sem `eval`/`unserialize` com input do usuario |
+| A09 — Logging Failures | Logs de auditoria conforme `perfis_permissoes.md` §7.1, dados sensiveis nunca em logs, logs imutaveis |
+| A10 — SSRF | URLs de requisicoes do servidor nao controladas pelo usuario, allowlist de dominios, bloqueio de redes internas |
+
+**Classificacao e gate:**
+
+| Severidade | Significado | Acao |
+|-----------|-------------|------|
+| 🔴 Critico | Ex: SQL concatenado com input do usuario, rota admin sem autenticacao | **Bloqueia release** — hotfix obrigatorio |
+| 🟡 Alto | Ex: `dangerouslySetInnerHTML` sem sanitizacao, JWT com `alg: none` | **Gera ticket** — correcao na proxima sprint |
+| 🟢 Medio | Ex: header CSP ausente, sem lockout de conta | **Backlog de melhoria** — priorizado pelo PM |
+| ⚪ N/A | Sem codigo para verificar (fase de especificacao) | **Aprovado** — re-executar apos implementacao |
+
+**Diferenca do Step 11-Security (pre-implementacao):** O Step 11-Security encontra vulnerabilidades em dependencias (SCA), padroes de codigo inseguros (SAST) e secrets expostos — tudo automatizado. O Step 11-OWASP complementa com verificacoes que exigem raciocinio: "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha expira e e de uso unico?". Ferramentas nao respondem essas perguntas — o hardening OWASP sim.
+
+**Relatorio:** `docs/security/OWASP_HARDENING_REPORT.md` (gerado pela skill, versionado no repo).
+
 ---
 
 ## Ferramentas e Integrações

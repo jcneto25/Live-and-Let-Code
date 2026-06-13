@@ -44,9 +44,10 @@ Dados brutos dos scans são armazenados em `.ace/security/` (não versionados).
 
 Se você descobrir uma vulnerabilidade de segurança no SGI, **NÃO** abra uma issue pública. Utilize o canal confidencial:
 
-- **Email:** [EMAIL_DE_SEGURANCA]
-- **Chave PGP:** [FINGERPRINT_DA_CHAVE_PGP]
-- **Formulário:** [URL_DO_FORMULARIO_DE_REPORTE]
+- **GitHub Security Advisories:** [Reportar via GitHub](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new) — canal recomendado
+- **Email:** `seguranca@{{ORGANIZACAO}}.jus.br` — para reportes confidenciais que não possam usar GitHub
+- **Chave PGP:** A ser publicada no site institucional da {{ORGANIZACAO}} (em implantação)
+- **Mantenedor do Projeto:** Equipe LLC — contato via `docs/skills/llc-step-11-security.md`
 
 ### 4.2 Informações Necessárias
 
@@ -134,6 +135,10 @@ Agradecemos a contribuição de pesquisadores e profissionais de segurança que 
 
 ## 8. Contato
 
-- **Segurança:** [EMAIL_DE_SEGURANCA]
+- **Segurança:** `seguranca@{{ORGANIZACAO}}.jus.br` ou via [GitHub Security Advisories](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new)
 - **Mantenedor do Projeto:** Equipe LLC
 - **Pipeline de Segurança:** `docs/skills/llc-step-11-security.md`
+- **Documentação de Segurança:** `docs/security/`
+- **Política de Segurança (este documento):** `SECURITY.md`
+- **Tarefas de Segurança:** `docs/planning/TASKS.md` §4
+- **Auditoria Inicial:** Executada em 2026-06-12 — `docs/security/SECURITY_AUDIT_REPORT.md`

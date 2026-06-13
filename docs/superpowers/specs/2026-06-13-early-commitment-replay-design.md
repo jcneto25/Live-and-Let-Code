@@ -346,7 +346,7 @@ def check_target_files(script):
 
 **Problema:** O AGENTS.md exige o ciclo 🔴 RED → 🟢 GREEN → 🔵 REFACTOR. Um script de replay que escreve teste e codigo de uma vez viola a regra fundamental do projeto.
 
-**Mitigacao:** Scripts do tipo `test_write` DEVEM incluir steps com `expect_exit_code`:
+**Mitigacao:** Scripts do tipo `test_write` DEVEM incluir steps com semantica explicita de resultado:
 
 ```json
 {
@@ -355,19 +355,27 @@ def check_target_files(script):
     "id": "test-001",
     "steps": [
       {"action": "write_file", "file": "{{test_file}}", "content": "{{test_code}}"},
-      {"action": "run", "command": "npm test -- {{test_file}}", "expect_exit_code": 1},
+      {"action": "run", "command": "npm test -- {{test_file}}", "expect": "fail"},
       {"action": "write_file", "file": "{{source_file}}", "content": "{{source_code}}"},
-      {"action": "run", "command": "npm test -- {{test_file}}", "expect_exit_code": 0}
+      {"action": "run", "command": "npm test -- {{test_file}}", "expect": "pass"}
     ]
   }]
 }
 ```
 
-O motor de replay **falha imediatamente** se `expect_exit_code` nao for atendido, acionando fallback para LLM.
+**Semantica de `expect`:**
+
+| Valor | Significado | Comportamento |
+|-------|------------|---------------|
+| `"pass"` | Espera sucesso | `exit_code == 0` |
+| `"fail"` | Espera falha (qualquer motivo) | `exit_code != 0` — cobre erro de compilacao (2), sintaxe (127), ou teste falhando (1) |
+| `0` (numero) | Exit code especifico (legado) | `exit_code == N` — usar apenas quando necessario |
+
+`expect: "fail"` expressa a **intencao** da fase RED, nao o mecanismo. Testes podem falhar por motivos diferentes (compilacao, sintaxe, assert) — todos validos para a fase RED.
 
 ### 7.5 R5 — Falha Parcial com Estado Inconsistente
 
-**Problema:** Se o replay executa 3 steps com sucesso e o 4o falha (ex: `expect_exit_code` nao bate), os primeiros 3 steps ja modificaram o sistema. O fallback para LLM assume um estado inconsistente.
+**Problema:** Se o replay executa 3 steps com sucesso e o 4o falha (ex: `expect: "pass"` nao bate), os primeiros 3 steps ja modificaram o sistema. O fallback para LLM assume um estado inconsistente.
 
 **Mitigacao:** Rollback instantaneo via Git. PRPs ja rodam em worktrees isolados — o blast radius e limitado. O rollback usa `git checkout` para reverter arquivos tracked e `git clean` para remover untracked criados pelo replay.
 
@@ -538,7 +546,7 @@ Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado
 | `insert_after` | Insere apos pattern (com dry-run obrigatorio) | `file`, `pattern`, `code` |
 | `replace` | Substitui pattern (com dry-run obrigatorio) | `file`, `old`, `new` |
 | `write_file` | Cria novo arquivo | `file`, `content` |
-| `run` | Executa comando com expected exit code | `command`, `expect_exit_code` (opcional) |
+| `run` | Executa comando com resultado esperado | `command`, `expect` (`"pass"`/`"fail"`/numero) |
 | `gate` | Pausa para gate humano (zonas RED) | `message` |
 
 ---

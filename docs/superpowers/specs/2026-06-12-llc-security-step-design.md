@@ -2,7 +2,7 @@
 
 **Versão:** 1.0.0  
 **Data:** 12 de Junho de 2026  
-**Status:** Aguardando Revisão  
+**Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Step de Segurança Pré-Execução  
 **Autor:** Equipe LLC  
 

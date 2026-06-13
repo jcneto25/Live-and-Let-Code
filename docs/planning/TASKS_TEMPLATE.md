@@ -1056,3 +1056,14 @@ Este documento é o **backlog operacional** do projeto. Ele organiza todas as ta
 ---
 
 > **Nota:** Este documento é a fonte da verdade operacional. Atualize diariamente. A versão no repositório (`docs/tasks.md`) é a referência oficial. Para especificação detalhada de cada PRP, consulte `docs/prps/PRP-XXX.md`.
+
+---
+
+### Tarefas de Seguranca (Obrigatorias)
+
+Tarefas de seguranca sao fixas e executadas uma vez no inicio do Step 11, antes de qualquer PRP:
+
+| ID | Tarefa | Agente | Paralelo? | Estimativa |
+|----|--------|--------|-----------|------------|
+| SEC-001 | Rodar auditoria de seguranca pre-execucao (SCA + SAST + secrets) | security_agent | ❌ Sequencial — antes de todos os PRPs | {X}h |
+| SEC-002 | Revisar PRs de auth/security durante execucao | security_agent | ✅ Paralelo — sob demanda | {X}h |

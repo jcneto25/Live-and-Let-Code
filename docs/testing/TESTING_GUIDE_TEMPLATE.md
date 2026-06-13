@@ -1477,3 +1477,16 @@ docs/testing/
 ---
 
 > **Nota:** Este guia é um documento vivo. Atualize sempre que houver mudança de stack, nova ferramenta, ou lição aprendida. A versão no repositório (`docs/testing/comprehensive-testing-guide.md`) é a fonte da verdade. Para especificação de testes de um PRP específico, consulte a seção 8 (Test Strategy) do PRP individual.
+
+---
+
+## Artefatos de Seguranca Complementares
+
+Os resultados da auditoria de seguranca (Step 11-Security) complementam a documentacao de testes:
+
+- `.ace/security/sca-report.json` — vulnerabilidades em dependencias (npm audit / pip-audit)
+- `.ace/security/sast-report.json` — analise estatica de codigo (Semgrep)
+- `.ace/security/secrets-report.json` — credenciais expostas (Gitleaks)
+- `docs/security/SECURITY_AUDIT_REPORT.md` — relatorio consolidado com decisao do gate
+
+Consulte `docs/security/SECURITY_AUDIT_REPORT.md` para verificar se ha vulnerabilidades que impactam a estrategia de testes.

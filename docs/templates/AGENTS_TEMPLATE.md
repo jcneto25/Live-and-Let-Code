@@ -163,7 +163,7 @@ You are not the architect. The following always qualify for escalation:
 - **Data layer:** New tables, schema changes, new indexes, changes to data access patterns
 - **Dependencies:** Adding/removing libraries, major version upgrades
 - **Interfaces:** Changes to function signatures used outside current file, new public endpoints, payload shape changes
-- **Auth/Security:** Any modification to authentication, authorization, or secret storage
+- **Auth/Security:** Any modification to authentication, authorization, or secret storage. The `security_agent` must review all PRs touching these areas. If the `security_agent` is not available, escalate to the human reviewer (Gate 11-SEC).
 - **Infrastructure:** New environment variables, CI/CD changes, new services
 
 **Escalation Format:**
@@ -240,6 +240,7 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 - [ ] TDD compliance (test files exist and pass)
 
 ### LLC-Specific Review Items
+- [ ] Security audit report reviewed? Check `docs/security/SECURITY_AUDIT_REPORT.md` — zero criticals, zero real secrets
 - [ ] Artefatos downstream impactados? Execute `python .ace/scripts/impact-analyzer.py --json`
 - [ ] Métricas de code health degradadas? Execute `python .ace/scripts/code-health.py --since "30 days ago"`
 - [ ] `<task_completed>` tags registradas no ACE? O `TASKS.md` está atualizado?

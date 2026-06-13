@@ -7,9 +7,9 @@
 #
 # Gerado e mantido pelo pipeline LLC. Atualizado a cada execução do Step 4.
 
-version: "1.1.0"
+version: "1.2.0"
 generated_by: "llc-step-4"
-last_updated: "2026-06-11"
+last_updated: "2026-06-13"
 
 artifacts:
 
@@ -316,4 +316,19 @@ artifacts:
     depends_on:
       - prps
       - user_guide_skeleton
+    triggers_update: []
+
+  # ── STEP 11-SEC (Security Audit) ──
+  security_audit_report:
+    path: "docs/security/SECURITY_AUDIT_REPORT.md"
+    depends_on:
+      - architecture
+      - mock_data
+    triggers_update: []
+
+  security_scan_outputs:
+    path_pattern: ".ace/security/*.json"
+    depends_on:
+      - architecture
+      - mock_data
     triggers_update: []

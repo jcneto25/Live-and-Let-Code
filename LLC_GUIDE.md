@@ -406,6 +406,30 @@ Execute a skill docs/skills/llc-user-guide.md
 
 ---
 
+### Passo 11-Security: Auditoria de Seguranca 🆕
+
+**Voce faz:**
+
+```
+Execute a skill docs/skills/llc-step-11-security.md
+```
+
+**A IA faz:**
+- Executa **SCA** (npm audit ou pip-audit) — varredura de vulnerabilidades em dependencias
+- Executa **SAST** (Semgrep) — analise estatica de codigo
+- Executa **Secret Scanning** (Gitleaks) — deteccao de credenciais expostas
+- Classifica achados por severidade (CVSS): 🔴 Critico (≥ 9.0), 🟡 Alto (7.0–8.9), 🟢 Medio/Baixo (< 7.0)
+- Gera `docs/security/SECURITY_AUDIT_REPORT.md` com relatorio consolidado e recomendacoes
+
+**Voce valida:** 👤 Gate 11-SEC
+- 0 vulnerabilidades criticas (CVSS ≥ 9.0)?
+- Nenhum secret real exposto (falsos positivos em mocks/docs sao ok)?
+- Vulnerabilidades altas revisadas e decisao registrada?
+
+**So avance quando aprovar.**
+
+---
+
 ### Passo 11: Execucao
 
 **Agora comeca o desenvolvimento.** Voce tem duas trilhas:
@@ -455,7 +479,7 @@ O subfluxo tem 6 fases:
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
-Step 10.5 ──👤──→
+Step 10.5 ──👤──→ Step 11-Security ──👤──→
 
 Step 11:
   ├── PRPs sem UI → agente direto

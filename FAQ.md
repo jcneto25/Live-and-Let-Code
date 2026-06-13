@@ -952,3 +952,39 @@ Git Worktree permite criar **multiplos diretorios de trabalho** vinculados a bra
 | **Limpeza automatica** | Worktrees orfaos sao removidos pelo `cleanup_orphan_worktrees()` no inicio de cada sessao |
 
 **Desativar isolamento:** use `--no-worktree` no `initialize_session.py`. Util para sessoes de especificacao (Steps 0-10) onde paralelismo nao e necessario.
+
+---
+
+## 🔧 Thin Harness
+
+### O que e o Thin Harness do LLC?
+
+O **Thin Harness** e a camada de orquestracao que conecta skills (Markdown), scripts ACE (Python) e o cliente de IA. E um CLI de ~500 linhas em Python que automatiza o ciclo de vida de cada step do pipeline.
+
+**Comandos principais:**
+
+```bash
+llc run --step 5                     # Executa um step completo
+llc pipeline --from 0                # Pipeline completo (para nos gates)
+llc session start --step 5           # Inicia sessao manual
+llc session end --approve            # Finaliza sessao manual
+llc status                           # Progresso do pipeline
+```
+
+**Beneficios em relacao ao modo manual:**
+
+| Dimensao | Sem harness | Com harness |
+|----------|:-----------:|:-----------:|
+| Acoes manuais por pipeline completo | ~88 | ~11 (so gates) |
+| Risco de pular um step | Alto (manual) | Zero (orquestrado) |
+| Risco de esquecer context_seed | Alto | Zero (automatico) |
+| Consistencia entre sessoes | Manual (copiar/colar JSON) | Automatica |
+| Curva de aprendizado | Precisa ler 3 docs | 1 comando |
+| Worktree para PRPs paralelos | Precisa lembrar `--worktree` | Automatico (step >= 11) |
+| Merge/descarte de worktrees | Manual | Automatico (por gate) |
+| Learning points promovidos | Manual (script separado) | Automatico (finalize) |
+| Onboarding de novo dev | ~30 min lendo guias | `llc pipeline --from 0` |
+
+**O harness NAO substitui os scripts ACE** — ele os invoca via subprocess. Scripts ACE permanecem independentes e invocaveis manualmente.
+
+**Por que "thin"?** O harness tem ~500 linhas por design. Ele nao implementa tool-calling (isso e do cliente), nao define regras de seguranca (isso e do AGENTS.md), nao ensina o modelo a pensar (isso e das skills Markdown). Sua unica funcao e conectar as pecas que ja existem.

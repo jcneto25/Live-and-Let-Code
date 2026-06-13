@@ -952,3 +952,39 @@ Git Worktree allows creating **multiple working directories** linked to differen
 | **Auto cleanup** | Orphan worktrees are removed by `cleanup_orphan_worktrees()` at the start of each session |
 
 **To disable isolation:** use `--no-worktree` with `initialize_session.py`. Useful for specification sessions (Steps 0-10) where parallelism is not needed.
+
+---
+
+## 🔧 Thin Harness
+
+### What is the LLC Thin Harness?
+
+The **Thin Harness** is the orchestration layer connecting skills (Markdown), ACE scripts (Python), and the AI client. It's a ~500-line Python CLI that automates the lifecycle of each pipeline step.
+
+**Main commands:**
+
+```bash
+llc run --step 5                     # Execute a complete step
+llc pipeline --from 0                # Full pipeline (stops at gates)
+llc session start --step 5           # Start manual session
+llc session end --approve            # End manual session
+llc status                           # Pipeline progress
+```
+
+**Benefits over manual mode:**
+
+| Dimension | Without harness | With harness |
+|-----------|:---------------:|:------------:|
+| Manual actions per full pipeline | ~88 | ~11 (gates only) |
+| Risk of skipping a step | High (manual) | Zero (orchestrated) |
+| Risk of forgetting context_seed | High | Zero (automatic) |
+| Consistency between sessions | Manual (copy/paste JSON) | Automatic |
+| Learning curve | Must read 3 docs | 1 command |
+| Worktree for parallel PRPs | Must remember `--worktree` | Automatic (step >= 11) |
+| Worktree merge/discard | Manual | Automatic (by gate) |
+| Learning points promoted | Manual (separate script) | Automatic (finalize) |
+| New developer onboarding | ~30 min reading guides | `llc pipeline --from 0` |
+
+**The harness does NOT replace ACE scripts** — it invokes them via subprocess. ACE scripts remain independent and manually invocable.
+
+**Why "thin"?** The harness is ~500 lines by design. It does not implement tool-calling (that's the client), does not define security rules (that's AGENTS.md), does not teach the model how to think (that's the skills). Its only function is to connect the pieces that already exist.

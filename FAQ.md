@@ -444,6 +444,8 @@ O LLC dedica o **Step 11-OWASP** (`docs/skills/llc-step-11-owasp-security.md`) e
 
 **Relatorio:** `docs/security/OWASP_HARDENING_REPORT.md` (gerado pela skill, versionado no repo).
 
+**Exemplo real — Auditoria dos scripts do pipeline (2026-06-13):** O hardening OWASP foi executado contra os scripts Python do proprio pipeline LLC (`.ace/scripts/*.py`, 9 arquivos, ~85 KB). Resultados: A02 ✅ 0 secrets hardcoded; A03 ✅ 28 `subprocess.run()` com listas, zero `shell=True` ou `eval()`; A08 ✅ `yaml.safe_load()` apenas; A09 ✅ logs estruturados sem dados sensiveis; A10 ✅ zero network requests. Gate: APROVADO (0 criticos).
+
 ### Como funciona o pipeline de auditoria de seguranca no LLC?
 
 O LLC tem **3 skills de seguranca** que operam em momentos diferentes do pipeline, formando uma barreira de protecao em camadas:

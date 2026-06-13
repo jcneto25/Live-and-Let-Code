@@ -365,6 +365,37 @@ def check_target_files(script):
 
 O motor de replay **falha imediatamente** se `expect_exit_code` nao for atendido, acionando fallback para LLM.
 
+### 7.5 R5 — Falha Parcial com Estado Inconsistente
+
+**Problema:** Se o replay executa 3 steps com sucesso e o 4o falha (ex: `expect_exit_code` nao bate), os primeiros 3 steps ja modificaram o sistema. O fallback para LLM assume um estado inconsistente.
+
+**Mitigacao:** Rollback instantaneo via Git. PRPs ja rodam em worktrees isolados — o blast radius e limitado. O rollback usa `git checkout` para reverter arquivos tracked e `git clean` para remover untracked criados pelo replay.
+
+```python
+def deterministic_replay(script, params):
+    target_files = [substitute(f) for f in extract_files_from_script(script)]
+
+    try:
+        for i, step in enumerate(script["steps"]):
+            execute_step(step, params)
+        return {"status": "success"}
+    except ReplayError as e:
+        # Rollback instantaneo via git
+        subprocess.run(["git", "checkout", "--"] + target_files, check=False)
+        subprocess.run(["git", "clean", "-fd"], check=False)
+        print(f"⚠️  Replay falhou no step {i}. Rollback executado. Fallback para LLM.")
+        return llm_invoke(prompt, client)
+```
+
+**Por que Git, nao snapshot manual:**
+
+| Abordagem | Velocidade | Cobre untracked? | Custo |
+|-----------|:---------:|:----------------:|:-----:|
+| Hash + restore manual | Lento (I/O) | Nao | Alto |
+| `git checkout -- {files}` | **Instantaneo** | **Sim** (+ `git clean`) | Zero (Git ja usado) |
+
+O LLC ja depende de Git em todas as sessoes. Nao ha custo adicional. Para projetos sem Git (raro no LLC), fallback para backup de conteudo em memoria.
+
 ---
 
 ## 8. Refinamentos de Design (v1.1.0)

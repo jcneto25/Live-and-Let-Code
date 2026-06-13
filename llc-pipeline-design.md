@@ -240,7 +240,10 @@ graph TD
     S10 --> G11{👤 Gate 11}
     G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
     S105 --> G115{👤 Gate 11.5}
-    G115 -->|approved| S11[Step 11: LLC Execution]
+    G115 -->|approved| S11SEC[Step 11-Security: SCA + SAST + Secrets]
+    S11SEC --> GSEC{👤 Gate 11-SEC}
+    GSEC -->|approved| S11[Step 11: LLC Execution]
+    GSEC -->|rejected| S11SEC
     S11 --> BACK[PRPs sem UI → agente direto]
     S11 --> UI[PRPs com UI → Subfluxo F1-F6]
     UI --> F4[F4: Hi-Fi]
@@ -271,6 +274,7 @@ graph TD
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
 | 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
+| 11-SEC | Security Audit | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
 
 ---
@@ -317,6 +321,7 @@ tags: [categoria, llc-pipeline]
 | `llc-step-9` | 9 | Gera documentação de testes (Guia, Baseline, Progresso) |
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
+| `llc-step-11-security` | 11-SEC | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
@@ -376,6 +381,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 10 | 9 | Estratégia de testes é adequada ao stack? Thresholds são realistas? |
 | 👤 11 | 10 | README permite onboarding em ≤ 10 min? DEPLOYMENT cobre rollback e monitoramento? |
 | 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
+| 👤 11-SEC | 11-SEC | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 

@@ -176,6 +176,25 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 **Artefatos:**
 - `SECURITY.md`
 
+### 4.4 OWASP Hardening (Step 11-OWASP)
+
+| ID | Tarefa | Descrição | Status | Prioridade | Dependências |
+|----|--------|-----------|--------|------------|--------------|
+| **SEC-004** | **Hardening OWASP Top 10:2021** | Executar `llc-step-11-owasp-security`: verificar 10 categorias OWASP pós-implementação dos PRPs. Gerar `OWASP_HARDENING_REPORT.md`. | ⏳ | **Alto** | FDN-008 (PRPs implementados), FDN-012 (ARCHITECTURE.md), SEC-001, SEC-002 |
+| SEC-004.1 | A01-A03: Access Control, Crypto, Injection | Verificar middleware de auth, hash de senhas, SQL parametrizado. | ⏳ | Crítico | Código implementado |
+| SEC-004.2 | A04-A06: Design, Misconfig, Components | Verificar rate limiting, headers HTTP, dependências atualizadas. | ⏳ | Alto | Código implementado |
+| SEC-004.3 | A07-A10: Auth, Integrity, Logging, SSRF | Verificar MFA, lockfiles, logs de auditoria, SSRF. | ⏳ | Alto | Código implementado |
+| SEC-004.4 | Relatório de Hardening | Preencher `docs/security/OWASP_HARDENING_REPORT.md`. | ✅ | Alto | — (executado: sem código, todas categorias N/A) |
+
+**Resultado da Execução (2026-06-13):**
+- **Status:** ⚪ N/A — projeto sem código de aplicação para inspecionar
+- **Gate:** **APROVADO** (sem código para verificar)
+- **Exceções:** A04 parcial (analise_riscos.md existe), A06 parcial (SCA executado)
+
+**Artefatos:**
+- `docs/skills/llc-step-11-owasp-security.md`
+- `docs/security/OWASP_HARDENING_REPORT.md`
+
 ---
 
 ## 5. PRPs (Product Requirements Pages)
@@ -213,6 +232,25 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 | GATE-04 | Null safety dos PRPs da onda validado | Tech Lead | ⏳ | ⏳ | ⏳ | ⏳ |
 | GATE-05 | `SECURITY_AUDIT_REPORT.md` atualizado | Tech Lead | ⏳ | ⏳ | ⏳ | ⏳ |
 | GATE-06 | `NULL_SAFETY_REPORT.md` atualizado | Tech Lead | ⏳ | ⏳ | ⏳ | ⏳ |
+| GATE-07 | OWASP: sem verificações 🔴 críticas | Tech Lead | ⏳ | ⏳ | ⏳ | ⏳ |
+| GATE-08 | `OWASP_HARDENING_REPORT.md` atualizado | Tech Lead | ⏳ | ⏳ | ⏳ | ⏳ |
+
+### 6.2 Pós-Onda N (Hardening OWASP)
+
+> **Regra:** Após cada onda de implementação, executar o hardening OWASP Top 10:2021 (`llc-step-11-owasp-security`) no código entregue.
+
+| ID | Categoria | Foco da Onda 1 (Fundação) | Foco da Onda 2 (Core) | Foco da Onda 3+ (Completo) |
+|----|-----------|---------------------------|-----------------------|----------------------------|
+| OW-01 | A01 — Access Control | Middleware de auth, RBAC básico | ABAC por unidade, ownership check | Segregação completa |
+| OW-02 | A02 — Cryptography | Hash de senhas, JWT seguro | Criptografia de dados sensíveis | TLS, key rotation |
+| OW-03 | A03 — Injection | Validação de input em APIs | SQL parametrizado | XSS, shell injection |
+| OW-04 | A04 — Insecure Design | Rate limiting em login | Lockout, reset seguro | Workflows críticos |
+| OW-05 | A05 — Misconfiguration | Headers HTTP de segurança | CSP, debug desabilitado | Hardening completo |
+| OW-06 | A06 — Components | Scan de dependências (SCA) | Atualização de frameworks | Container scanning |
+| OW-07 | A07 — Auth Failures | MFA para admin | Sessão segura | Sem enumeração |
+| OW-08 | A08 — Integrity | Lockfiles versionados | CI/CD seguro | Serialização segura |
+| OW-09 | A09 — Logging | Logs de auth | Logs de autorização | Alertas de segurança |
+| OW-10 | A10 — SSRF | Validação de URLs externas | Bloqueio de redes internas | Proteção completa |
 
 ---
 

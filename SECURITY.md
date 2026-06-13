@@ -110,6 +110,7 @@ Ao reportar uma vulnerabilidade, inclua sempre que possível:
 - **Revisão obrigatória** de PRs por pelo menos 1 revisor antes de merge.
 - **Análise estática** automatizada via Semgrep no Step 11.
 - **Secrets scanning** via Gitleaks no Step 11 e em pre-commit hooks.
+- **Hardening OWASP Top 10** pós-implementação via `llc-step-11-owasp-security` — verificações manuais de access control, crypto, injection, design, misconfig, auth, integrity, logging e SSRF antes do release.
 - **Proibição de segredos hardcoded** — usar variáveis de ambiente ou secret manager.
 - **Dependências** atualizadas com `npm audit fix` / `pip-audit --fix` antes de cada release.
 

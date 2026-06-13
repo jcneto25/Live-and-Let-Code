@@ -511,6 +511,7 @@ Inclui: Épicos 04, 09, 10 e evoluções do 11. Essa release eleva o sistema à 
 | **SEC-001** | Auditoria de Segurança (SCA + SAST + Secrets) | `llc-step-11-security` | ✅ Executado | `docs/security/SECURITY_AUDIT_REPORT.md` |
 | **SEC-002** | Validação de Null Safety nos PRPs | `llc-step-12-null-safety` | ✅ Executado | `docs/security/NULL_SAFETY_REPORT.md` |
 | **SEC-003** | Política de Segurança | — | ✅ Publicado | `SECURITY.md` |
+| **SEC-004** | Hardening OWASP Top 10:2021 | `llc-step-11-owasp-security` | ⏳ Pendente (sem código) | `docs/security/OWASP_HARDENING_REPORT.md` |
 
 ## Resultado dos Gates
 
@@ -518,6 +519,7 @@ Inclui: Épicos 04, 09, 10 e evoluções do 11. Essa release eleva o sistema à 
 |------|---------|----------|
 | SEC-001 (Security Audit) | ✅ **APROVADO** | Semgrep: 0 findings. SCA: N/A (sem dependências). Secrets: verificação manual limpa. |
 | SEC-002 (Null Safety) | ✅ **APROVADO** | Sem PRPs para validar. Template demonstra boas práticas de nulabilidade. |
+| SEC-004 (OWASP Hardening) | ✅ **APROVADO** (N/A) | Sem código de aplicação. Todas as 10 categorias ⚪ N/A. Re-executar após PRPs. |
 
 ## Critérios de Re-execução
 
@@ -532,6 +534,7 @@ Os security gates devem ser re-executados:
 Cada release do backlog deve incluir como **Definition of Done**:
 - [ ] Security gate aprovado para a release (SEC-001 re-executado)
 - [ ] Null safety dos PRPs da release validado (SEC-002 re-executado)
+- [ ] Hardening OWASP Top 10 executado no código da release (SEC-004): 0 🔴 críticos
 - [ ] `SECURITY.md` atualizado se houver novo canal de reporte ou mudança de SLAs
 
 ***

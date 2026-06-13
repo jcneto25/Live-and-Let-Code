@@ -23,6 +23,22 @@ SCRIPTS_DIR = ACE_DIR / "scripts"
 SKILLS_DIR = Path("docs/skills")
 AGENTS_FILE = Path("AGENTS.md")
 
+from pathlib import Path
+from datetime import datetime
+
+# ── Early Commitment + Replay imports ──
+try:
+    from llc_classify import classify_task
+    from llc_replay import (
+        find_best_script, deterministic_replay, record_script,
+        log_replay_event, is_red_zone, check_target_files_stale,
+        get_architecture_version, preflight_all_steps, extract_files_from_script,
+        load_cache, ReplayError
+    )
+    CLASSIFY_REPLAY_AVAILABLE = True
+except ImportError:
+    CLASSIFY_REPLAY_AVAILABLE = False
+
 # ── Agent CLI detection ──
 
 AGENT_CLIENTS = ["claude", "opencode", "codex", "cursor"]
@@ -130,8 +146,76 @@ def skill_load(step, context_seed=None, task=None):
 
 # ── Agent invocation ──
 
-def agent_invoke(prompt, client=None):
-    """Invoca cliente CLI ou exibe prompt para modo manual. Retorna (stdout, exit_code)."""
+def agent_invoke(prompt, task_description=None, client=None):
+    """Invoca cliente CLI com Early Commitment + Replay."""
+    if not CLASSIFY_REPLAY_AVAILABLE:
+        return _llm_invoke(prompt, client)
+
+    # 1. Early Commitment: classificar tarefa
+    classification = None
+    if task_description:
+        classification = classify_task(task_description, client)
+        if classification:
+            log_replay_event("classify", None,
+                             type=classification["type"],
+                             confidence=classification["confidence"])
+            print(f"🏷️  Classificado: {classification['type']} "
+                  f"(confianca: {classification['confidence']:.0%})")
+
+    if classification:
+        # 2. Buscar script no cache
+        script = find_best_script(classification["type"], task_description)
+
+        if script:
+            log_replay_event("replay_hit", script["id"],
+                             type=classification["type"],
+                             usage_count=script.get("usage_count", 0),
+                             match_score="computed")
+
+            # 2a. Stale cache check (R3)
+            if check_target_files_stale(script.get("target_files", [])):
+                log_replay_event("llm_fallback", None, reason="stale_cache")
+                print("⚠️  Script obsoleto (arquivos mudaram). Fallback para LLM.")
+                return _llm_invoke(prompt, client)
+
+            # 2b. Architecture version check (R3)
+            current_arch = get_architecture_version()
+            if script.get("architecture_version", "") != current_arch:
+                log_replay_event("llm_fallback", None, reason="arch_changed")
+                print("⚠️  Script obsoleto (arquitetura mudou). Fallback para LLM.")
+                return _llm_invoke(prompt, client)
+
+            # 2c. Zone check (R2)
+            target_files = extract_files_from_script(script)
+            if any(is_red_zone(Path(f)) for f in target_files):
+                print("🔴 Zona VERMELHA detectada. Gate humano necessario.")
+                if gate_check(11, script) != "approved":
+                    log_replay_event("llm_fallback", None, reason="zone_red_rejected")
+                    return _llm_invoke(prompt, client)
+
+            # 2d. Pre-flight (C)
+            if not preflight_all_steps(script, {}):
+                log_replay_event("llm_fallback", None, reason="preflight_fail")
+                return _llm_invoke(prompt, client)
+
+            # 3. REPLAY (R5: rollback integrado)
+            print(f"⚡ Replay: {classification['type']} "
+                  f"(script {script['id']}, {script.get('usage_count', 0)} usos)")
+            return deterministic_replay(
+                script, {}, gate_check, _llm_invoke, prompt, client
+            )
+        else:
+            log_replay_event("replay_miss", None,
+                             type=classification["type"], reason="no_cache")
+
+    # 4. Fallback: execucao normal via LLM
+    log_replay_event("llm_fallback", None,
+                     reason="no_classify" if not classification else "cache_miss")
+    return _llm_invoke(prompt, client)
+
+
+def _llm_invoke(prompt, client=None):
+    """Execucao LLM normal (original)."""
     if client is None:
         client = detect_agent_client()
 
@@ -149,7 +233,6 @@ def agent_invoke(prompt, client=None):
         print(prompt)
         print("=" * 60)
         print("\nCole o prompt acima no seu cliente de IA.")
-        print("Apos a conclusao, execute: llc session end")
         return "", 0
 
 # ── Gate check ──

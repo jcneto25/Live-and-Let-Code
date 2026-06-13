@@ -988,3 +988,24 @@ llc status                           # Pipeline progress
 **The harness does NOT replace ACE scripts** — it invokes them via subprocess. ACE scripts remain independent and manually invocable.
 
 **Why "thin"?** The harness is ~500 lines by design. It does not implement tool-calling (that's the client), does not define security rules (that's AGENTS.md), does not teach the model how to think (that's the skills). Its only function is to connect the pieces that already exist.
+
+---
+
+## ⚡ Early Commitment + Deterministic Replay
+
+### Does LLC use Early Commitment and Deterministic Replay?
+
+Yes. Starting from version 1.5.0, the Thin Harness includes two modules that reduce repetitive task costs by up to 99%:
+
+**Early Commitment:** Before execution, `llc_classify.py` classifies the task into 4 types (crud_endpoint, ui_component, validation_rule, test_write). This collapses the agent's search space and eliminates dead-end paths.
+
+**Deterministic Replay:** After the first human-gate-approved execution, the execution path (tool calls, generated code, commands) is recorded in `.ace/cache/{type}.json`. Future tasks of the same classification replay the script deterministically, with near-zero token cost.
+
+| Metric | Target |
+|--------|:------:|
+| Hit rate (tasks with replay) | >60% |
+| Success rate (replays without rollback) | >90% |
+| Token reduction per repeated task | ~99% |
+| Rollback on partial failure | Instant `git checkout` |
+
+**View metrics:** `python .ace/scripts/replay_stats.py`

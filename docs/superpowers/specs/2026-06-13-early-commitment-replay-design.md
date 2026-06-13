@@ -285,7 +285,11 @@ def agent_invoke(prompt, task_description, client=None):
 
 **Problema:** O AGENTS.md define que mudancas em Schema, Auth, CI/CD ou `.env` sao Zona VERMELHA e exigem confirmacao humana sempre. Um script em cache poderia modificar um schema sem gate humano — um backdoor de seguranca.
 
-**Mitigacao:** `llc_replay.py` verifica a Zona de Autonomia dos arquivos alvo ANTES de executar o replay. Se QUALQUER arquivo no script pertence a Zona Vermelha, o replay e pausado e exige `gate_check()` explicito.
+**Mitigacao:** `llc_replay.py` verifica a Zona de Autonomia dos arquivos alvo ANTES de executar o replay. Se QUALQUER arquivo no script pertence a Zona Vermelha, o replay e pausado e exige `gate_check()` explicito ANTES do replay iniciar.
+
+**Diferenca entre zone check e `gate` step:**
+- **Zone check (R2):** pre-replay — verifica se o script toca zonas RED e bloqueia/libera antes de executar
+- **`gate` step:** mid-replay — pausa o script em um ponto especifico (ex: antes de `DROP TABLE`) para aprovacao humana
 
 Zonas vermelhas detectadas por padrao de path:
 ```python
@@ -385,10 +389,17 @@ def deterministic_replay(script, params):
 
     try:
         for i, step in enumerate(script["steps"]):
+            # Gate mid-execucao: pausa para confirmacao humana
+            if step["action"] == "gate":
+                message = substitute(step.get("message", "Confirmar continuacao?"), params)
+                decision = gate_check("replay_mid_execution", message)
+                if decision != "approved":
+                    raise ReplayError(f"Gate reprovado pelo usuario no step {i}")
+                continue
+
             execute_step(step, params)
         return {"status": "success"}
     except ReplayError as e:
-        # Rollback instantaneo via git
         subprocess.run(["git", "checkout", "--"] + target_files, check=False)
         subprocess.run(["git", "clean", "-fd"], check=False)
         print(f"⚠️  Replay falhou no step {i}. Rollback executado. Fallback para LLM.")
@@ -546,8 +557,8 @@ Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado
 | `insert_after` | Insere apos pattern (com dry-run obrigatorio) | `file`, `pattern`, `code` |
 | `replace` | Substitui pattern (com dry-run obrigatorio) | `file`, `old`, `new` |
 | `write_file` | Cria novo arquivo | `file`, `content` |
+| `gate` | Pausa replay para aprovacao humana mid-execucao | `message` |
 | `run` | Executa comando com resultado esperado | `command`, `expect` (`"pass"`/`"fail"`/numero) |
-| `gate` | Pausa para gate humano (zonas RED) | `message` |
 
 ---
 

@@ -261,8 +261,276 @@ def agent_invoke(prompt, task_description, client=None):
 
 ---
 
-## 7. Controle de Versao
+## 7. Riscos Criticos e Mitigacoes (v1.1.0)
+
+### 7.1 R1 — String Matching Fragil
+
+**Problema:** Actions `insert_after` ou `replace` baseadas em pattern (regex/string) sao frageis. Um comentario adicionado, formatacao alterada ou variacao minima no codigo faz o replay falhar silenciosamente ou corromper o arquivo.
+
+**Mitigacao:**
+- Actions de escrita usam `ast_node` em vez de `pattern` sempre que possivel.
+- Se `ast_node` nao for viavel, o `pattern` e validado por **dry-run de busca** antes da execucao.
+- Se o pattern nao for encontrado no dry-run, o replay **aborta imediatamente** e faz fallback para LLM.
+
+```json
+// Em vez disso (fragil):
+{"action": "insert_after", "pattern": "{{field}}: z.string()", "code": ".refine(...)"}
+
+// Use isso (robusto):
+{"action": "insert_in_node", "node_id": "schema_field_{{field}}", "position": "after",
+ "code": ".refine({{validator_fn}}, '{{field}} invalido')"}
+```
+
+### 7.2 R2 — Violacao das Zonas de Autonomia (RED Zone)
+
+**Problema:** O AGENTS.md define que mudancas em Schema, Auth, CI/CD ou `.env` sao Zona VERMELHA e exigem confirmacao humana sempre. Um script em cache poderia modificar um schema sem gate humano — um backdoor de seguranca.
+
+**Mitigacao:** `llc_replay.py` verifica a Zona de Autonomia dos arquivos alvo ANTES de executar o replay. Se QUALQUER arquivo no script pertence a Zona Vermelha, o replay e pausado e exige `gate_check()` explicito.
+
+Zonas vermelhas detectadas por padrao de path:
+```python
+RED_ZONE_PATTERNS = [
+    "**/schema.prisma", "**/migrations/**",
+    "**/*.guard.ts", "**/*.strategy.ts",
+    "**/auth/**", "**/middleware/**",
+    ".env", ".env.*", "**/config/**",
+    ".github/workflows/**", "**/ci.yml"
+]
+```
+
+### 7.3 R3 — Cache Obsoleto (Stale Cache)
+
+**Problema:** Um script gravado ha 2 meses pode aplicar padroes arquiteturais obsoletos (ex: projeto migrou de validacao manual para Zod), criando divida tecnica silenciosa.
+
+**Mitigacao:** Metadados de validade no cache:
+
+```json
+{
+  "id": "val-001",
+  "architecture_version": "v2.1",
+  "target_file_hash": "a1b2c3d4",
+  "original_task_description": "Valide CPF no campo cliente.documento"
+}
+```
+
+- `architecture_version`: lido do `CLAUDE.md` ou `package.json`. Se a versao atual for maior, script ignorado.
+- `target_file_hash`: hash SHA256 do arquivo alvo no momento da gravacao. Se o hash atual for diferente (arquivo mudou), script ignorado.
+- Ambos falhando → fallback para LLM.
+
+### 7.4 R4 — Violacao do Protocolo TDD no test_write
+
+**Problema:** O AGENTS.md exige o ciclo 🔴 RED → 🟢 GREEN → 🔵 REFACTOR. Um script de replay que escreve teste e codigo de uma vez viola a regra fundamental do projeto.
+
+**Mitigacao:** Scripts do tipo `test_write` DEVEM incluir steps com `expect_exit_code`:
+
+```json
+{
+  "type": "test_write",
+  "scripts": [{
+    "id": "test-001",
+    "steps": [
+      {"action": "write_file", "file": "{{test_file}}", "content": "{{test_code}}"},
+      {"action": "run", "command": "npm test -- {{test_file}}", "expect_exit_code": 1},
+      {"action": "write_file", "file": "{{source_file}}", "content": "{{source_code}}"},
+      {"action": "run", "command": "npm test -- {{test_file}}", "expect_exit_code": 0}
+    ]
+  }]
+}
+```
+
+O motor de replay **falha imediatamente** se `expect_exit_code` nao for atendido, acionando fallback para LLM.
+
+---
+
+## 8. Refinamentos de Design (v1.1.0)
+
+### 8.1 A — Algoritmo de Match Aprimorado
+
+A formula original (`overlap / len(params_used)`) e substituida por 3 camadas:
+
+```python
+def find_best_script(type, task_description):
+    scripts = load_cache(type)
+    if not scripts:
+        return None
+
+    entities = extract_entities(task_description)
+
+    for script in scripts:
+        # Camada 1: Type exact match (obrigatorio)
+        if script["type"] != type:
+            continue
+
+        # Camada 2: Keyword overlap
+        keyword_score = len(set(script.get("params_used", [])) & set(entities))
+        keyword_score /= max(len(script.get("params_used", [])), 1)
+
+        # Camada 3: Contextual similarity (opcional — embedding leve)
+        cosine_score = 0.0
+        if EMBEDDING_MODEL_AVAILABLE:
+            original = script.get("original_task_description", "")
+            current = task_description
+            if original:
+                cosine_score = cosine_similarity(embed(original), embed(current))
+
+        # Score combinado: 50% keyword + 50% cosine (se disponivel)
+        if cosine_score > 0:
+            final_score = (keyword_score * 0.5) + (cosine_score * 0.5)
+        else:
+            final_score = keyword_score
+
+        if final_score > best_score:
+            best_score = final_score
+            best = script
+
+    # Threshold: >= 0.75 com embedding, >= 0.60 sem
+    min_score = 0.75 if EMBEDDING_MODEL_AVAILABLE else 0.60
+    return best if best_score >= min_score else None
+```
+
+Embedding leve opcional: `all-MiniLM-L6-v2` via `sentence-transformers` (~80MB, rapido em CPU). Se nao instalado, fallback para keyword overlap puro.
+
+### 8.2 B — Classifier para Tarefas Hibridas
+
+Prompt atualizado para tarefas que envolvem multiplos aspectos:
+
+```
+Classifique a tarefa abaixo em uma destas 4 categorias.
+Se a tarefa envolver multiplos aspectos (ex: "Criar endpoint com validacao"),
+escolha o tipo que representa a MAIOR PARTE do esforco de codificacao.
+Ex: "Criar endpoint de usuario com validacao de email" -> crud_endpoint
+(a validacao e um sub-passo; o CRUD e a acao principal).
+
+Categorias:
+- crud_endpoint: criar/alterar/deletar/listar endpoints de API
+- ui_component: criar/alterar componentes de interface (form, tabela, modal)
+- validation_rule: adicionar/alterar validacao em schema, campo ou sanitizacao
+- test_write: escrever testes unitarios, integracao ou E2E
+
+Se nao se encaixar em nenhuma, retorne type="unknown".
+
+Tarefa: {task_description}
+
+Responda APENAS com XML:
+<task_classification><type>...</type><confidence>0.XX</confidence>
+<reasoning>...</reasoning></task_classification>
+```
+
+### 8.3 C — Pre-flight Check no Replay
+
+Antes de executar QUALQUER acao de escrita (`insert`, `replace`, `write_file`), o motor verifica:
+
+```python
+def preflight_check(step):
+    if step["action"] in ("insert_after", "insert_before", "replace", "insert_in_node"):
+        target = substitute(step["file"])
+        if not Path(target).exists():
+            print(f"⚠️  Pre-flight: {target} nao existe. Fallback para LLM.")
+            return False
+
+        if "pattern" in step:
+            content = Path(target).read_text()
+            pattern = substitute(step["pattern"])
+            if pattern not in content:
+                print(f"⚠️  Pre-flight: pattern nao encontrado em {target}. Fallback para LLM.")
+                return False
+
+    return True
+```
+
+Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado e o LLM assume.
+
+---
+
+## 9. Schema de Cache Atualizado (v1.1.0)
+
+```json
+{
+  "type": "validation_rule",
+  "scripts": [
+    {
+      "id": "val-001",
+      "pattern": "zod_schema_refine",
+      "original_task_description": "Valide CPF no campo cliente.documento",
+      "architecture_version": "v1.4.0",
+      "target_file_hash": "a1b2c3d4e5f6",
+      "steps": [
+        {"action": "preflight", "file": "{{target_file}}"},
+        {"action": "open", "file": "{{target_file}}"},
+        {"action": "insert_in_node", "node_id": "schema_field_{{field}}",
+         "position": "after", "code": ".refine({{validator_fn}}, '{{field}} invalido')"},
+        {"action": "run", "command": "npm test {{test_file}}"}
+      ],
+      "params_used": ["target_file", "field", "validator_fn", "test_file"],
+      "gate_approved": true,
+      "zone_check_passed": true,
+      "usage_count": 5,
+      "created": "2026-06-13T15:30:00Z",
+      "last_used": "2026-06-13T16:45:00Z"
+    }
+  ]
+}
+```
+
+### Actions Suportadas (atualizado)
+
+| Action | Descricao | Campos |
+|--------|-----------|--------|
+| `preflight` | Verifica existencia do arquivo e pattern (dry-run) | `file`, `pattern` (opcional) |
+| `open` | Abre arquivo para edicao | `file` |
+| `insert_in_node` | Insere codigo em um AST node | `node_id`, `position` (`before`/`after`/`end`), `code` |
+| `insert_after` | Insere apos pattern (com dry-run obrigatorio) | `file`, `pattern`, `code` |
+| `replace` | Substitui pattern (com dry-run obrigatorio) | `file`, `old`, `new` |
+| `write_file` | Cria novo arquivo | `file`, `content` |
+| `run` | Executa comando com expected exit code | `command`, `expect_exit_code` (opcional) |
+| `gate` | Pausa para gate humano (zonas RED) | `message` |
+
+---
+
+## 10. Fluxo Final do `agent_invoke` (atualizado)
+
+```python
+def agent_invoke(prompt, task_description, client=None):
+    # 1. Early Commitment
+    classification = classify_task(task_description)
+
+    if classification and classification["type"] != "unknown" and classification["confidence"] >= 0.80:
+        # 2. Buscar script no cache (match aprimorado)
+        script = find_best_script(classification["type"], task_description)
+
+        if script:
+            # 3. Verificar cache validity (stale cache check)
+            current_arch = get_architecture_version()
+            if script.get("architecture_version") != current_arch:
+                print("⚠️  Script obsoleto (versao de arquitetura mudou). Fallback para LLM.")
+                return llm_invoke(prompt, client)
+
+            # 4. Zone check (RED zone verification)
+            target_files = extract_files_from_script(script)
+            if any(is_red_zone(f) for f in target_files):
+                print("🔴 Zona VERMELHA detectada. Aguardando gate humano...")
+                if gate_check("replay_red_zone", script) != "approved":
+                    print("Gate reprovado. Fallback para LLM.")
+                    return llm_invoke(prompt, client)
+
+            # 5. Pre-flight check
+            if not preflight_all_steps(script, classification.get("params", {})):
+                print("Pre-flight falhou. Fallback para LLM.")
+                return llm_invoke(prompt, client)
+
+            # 6. REPLAY
+            print(f"⚡ Replay: {classification['type']} (script {script['id']}, {script['usage_count']} usos)")
+            return deterministic_replay(script, classification.get("params", {}))
+
+    # 7. Fallback: LLM normal
+    return llm_invoke(prompt, client)
+```
+
+---
+
+## 11. Controle de Versao
 
 | Versao | Data | Autor | Alteracoes |
 |--------|------|-------|------------|
+| 1.1.0 | 13/06/2026 | Equipe LLC | Adicionadas mitigacoes de risco (R1-R4), refinamentos de design (A-C), e schema de cache expandido |
 | 1.0.0 | 13/06/2026 | Equipe LLC | Versao inicial: Early Commitment (4 tipos) + Deterministic Replay engine |

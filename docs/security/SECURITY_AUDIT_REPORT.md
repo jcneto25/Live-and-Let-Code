@@ -123,6 +123,7 @@ Nenhum bloqueio. O gate está aprovado.
 2. **Adicionar `.env.example`** ao repositório para documentar as variáveis de ambiente esperadas (sem valores reais).
 3. **Quando houver código de runtime:** executar `npm audit` ou `pip-audit` e re-gerar este relatório.
 4. **Manter o Semgrep** como parte do pipeline — a configuração atual (340 regras em 147 arquivos, 10.8s) é leve e eficaz.
+5. **Consultar `docs/planning/TASKS.md` §SEC-001** para o checklist completo de tarefas de segurança e gates por onda.
 
 ---
 

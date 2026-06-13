@@ -117,6 +117,7 @@ Nenhum. O gate está aprovado.
    - Prisma: usar `Type?` para campos opcionais
    - Markdown tables: incluir coluna "Nulável" com SIM/NÃO
 4. **Para cada campo nulável**, documentar o fallback (valor default, comportamento da UI, ou regra de negócio).
+5. **Consultar `docs/planning/TASKS.md` §SEC-002** para o checklist completo de validação de null safety e gates por onda.
 
 ---
 

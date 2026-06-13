@@ -498,6 +498,44 @@ Inclui: Épicos 04, 09, 10 e evoluções do 11. Essa release eleva o sistema à 
 
 ***
 
+# Security Gates (LLC Pipeline)
+
+> **Integração:** Pipeline Live and Let Code (LLC) — Steps 11 e 12
+> **Referência:** `docs/planning/TASKS.md` §4 (Tarefas de Segurança)
+> **Status:** Auditoria inicial executada em 2026-06-12.
+
+## Security Tasks Mapeadas
+
+| ID | Tarefa | Skill LLC | Status | Evidência |
+|----|--------|-----------|--------|-----------|
+| **SEC-001** | Auditoria de Segurança (SCA + SAST + Secrets) | `llc-step-11-security` | ✅ Executado | `docs/security/SECURITY_AUDIT_REPORT.md` |
+| **SEC-002** | Validação de Null Safety nos PRPs | `llc-step-12-null-safety` | ✅ Executado | `docs/security/NULL_SAFETY_REPORT.md` |
+| **SEC-003** | Política de Segurança | — | ✅ Publicado | `SECURITY.md` |
+
+## Resultado dos Gates
+
+| Gate | Decisão | Detalhes |
+|------|---------|----------|
+| SEC-001 (Security Audit) | ✅ **APROVADO** | Semgrep: 0 findings. SCA: N/A (sem dependências). Secrets: verificação manual limpa. |
+| SEC-002 (Null Safety) | ✅ **APROVADO** | Sem PRPs para validar. Template demonstra boas práticas de nulabilidade. |
+
+## Critérios de Re-execução
+
+Os security gates devem ser re-executados:
+- Antes do início de cada Release (ver seção "Proposta de fatiamento por releases" acima)
+- Após a criação dos PRPs (Step 3 do pipeline LLC)
+- Após adição de dependências de runtime (npm/pip)
+- Após qualquer alteração em `docs/business/specs/perfis_permissoes.md`
+
+## Integração com o Ciclo de Desenvolvimento
+
+Cada release do backlog deve incluir como **Definition of Done**:
+- [ ] Security gate aprovado para a release (SEC-001 re-executado)
+- [ ] Null safety dos PRPs da release validado (SEC-002 re-executado)
+- [ ] `SECURITY.md` atualizado se houver novo canal de reporte ou mudança de SLAs
+
+***
+
 # Próximos passos recomendados
 
 Posso transformar este backlog em qualquer um dos formatos abaixo:

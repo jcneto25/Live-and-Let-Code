@@ -1,1 +1,7 @@
 /.superpowers
+/docs/superpowers
+
+# Security scan artifacts — raw tool outputs are machine-generated and ephemeral.
+# They change with every rerun. Consolidated reports in docs/security/ are the
+# version-controlled source of truth.
+.ace/security/

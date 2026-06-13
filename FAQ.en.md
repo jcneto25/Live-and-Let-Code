@@ -10,6 +10,20 @@
 
 A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 13 skills, 11 human gates, and a context continuity protocol (ACE).
 
+### How is LLC architecturally organized?
+
+LLC is organized into **5 conceptual layers** from foundation to delivery:
+
+| Layer | Responsibility | Key mechanisms |
+|-------|---------------|----------------|
+| **1. Context** | Manages context window, session continuity, and token compression | ACE `<context_seed>`, Document Hierarchy, compressed index, prompt caching, append-only sessions |
+| **2. Knowledge** | Domain artifacts, specifications, and architectural decisions | Strategic vision, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
+| **3. Agents** | Who executes, how they reason, and with what rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, handoff), per-step roles, Grill Me, CODE-REVIEW |
+| **4. Workflows** | Pipeline, validation gates, and orchestration | 12 steps + subflow, 12 human gates + visual checkpoint, execution waves, PRRS, dependency matrix |
+| **5. Delivery** | Parallel execution, structural quality, and deployment | Auto git worktrees, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
+
+Each layer depends on the one below: without well-managed context, knowledge won't fit in the window; without structured knowledge, agents have no direction; without well-instructed agents, workflows produce no quality; without orchestrated workflows, delivery is unreliable.
+
 ### What is "vibe coding" and why do I need a structured workflow?
 
 Vibe coding is an informal AI coding approach where requirements are ad hoc and context easily gets lost. It works for quick experiments but generates technical debt, inconsistent code, and lack of governance. Structured workflows like LLC replace this with formal Grill Me-generated specifications, specialized per-stage agents, persistent git-versioned artifacts, and quality gates with mandatory human validation.

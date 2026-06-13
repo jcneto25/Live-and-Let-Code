@@ -10,6 +10,20 @@
 
 É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 13 skills, 11 human gates e um protocolo de continuidade de contexto (ACE).
 
+### Como o LLC esta organizado arquiteturalmente?
+
+O LLC se organiza em **5 camadas conceituais** que vao da fundacao a entrega:
+
+| Camada | Responsabilidade | Principais mecanismos |
+|--------|-----------------|----------------------|
+| **1. Contexto** | Gerencia a janela de contexto, continuidade entre sessoes e compressao de tokens | ACE `<context_seed>`, Document Hierarchy, indice comprimido, prompt caching, append-only sessions |
+| **2. Conhecimento** | Artefatos de dominio, especificacoes e decisoes arquiteturais | Visao estrategica, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
+| **3. Agentes** | Quem executa, como raciocina e com quais regras | AGENTS.md (protocolo epistemic, zonas, TDD, handoff), papeis por step, Grill Me, CODE-REVIEW |
+| **4. Workflows** | Pipeline, gates de validacao e orquestracao | 12 steps + subfluxo, 12 human gates + checkpoint visual, execution waves, PRRS, dependency matrix |
+| **5. Entrega** | Execucao paralela, qualidade estrutural e deploy | Git worktrees automaticos, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
+
+Cada camada depende da inferior: sem contexto bem gerido, o conhecimento nao cabe na janela; sem conhecimento estruturado, agentes nao tem direcao; sem agentes instruidos, workflows nao produzem qualidade; sem workflows orquestrados, a entrega nao e confiavel.
+
 ### O que é "vibe coding" e por que preciso de um workflow estruturado?
 
 Vibe coding é uma abordagem informal de codificação com IA onde os requisitos são ad hoc e o contexto se perde facilmente. Funciona para experimentos rápidos, mas gera dívida técnica, código inconsistente e falta de governança. Workflows estruturados como o LLC substituem isso por especificações formais geradas por Grill Me, agentes especializados por etapa, artefatos persistentes versionados em git e gates de qualidade com validação humana obrigatória.

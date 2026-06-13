@@ -34,6 +34,34 @@ Este documento especifica:
 - O sistema ACE de contexto entre sessões (§8)
 - O analisador de impacto e rastreabilidade (§9)
 
+### 1.4 Arquitetura em 5 Camadas
+
+O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
+
+| Camada | O que gerencia | Mecanismos LLC |
+|--------|---------------|----------------|
+| **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
+| **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
+| **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 12 steps + subfluxo F1-F6, 12 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py |
+| **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ 5. ENTREGA    ← paralelismo, qualidade, deploy           │
+├──────────────────────────────────────────────────────────┤
+│ 4. WORKFLOWS  ← pipeline, gates, orquestracao            │
+├──────────────────────────────────────────────────────────┤
+│ 3. AGENTES    ← papeis, protocolo epistemic, regras      │
+├──────────────────────────────────────────────────────────┤
+│ 2. CONHECIMENTO ← specs, PRDs, PRPs, arquitetura         │
+├──────────────────────────────────────────────────────────┤
+│ 1. CONTEXTO   ← janela, continuidade, compressao         │
+└──────────────────────────────────────────────────────────┘
+```
+
+Cada camada depende da camada inferior: sem contexto bem gerido, o conhecimento nao cabe na janela; sem conhecimento estruturado, agentes nao tem direcao; sem agentes bem instruidos, workflows nao produzem qualidade; sem workflows orquestrados, a entrega nao e confiavel.
+
 ---
 
 ## 2. Arquitetura de Diretórios

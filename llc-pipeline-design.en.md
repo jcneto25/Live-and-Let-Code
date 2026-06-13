@@ -35,6 +35,34 @@ This document specifies:
 - The ACE cross-session context system (§8)
 - The traceability and impact analyzer (§9)
 
+### 1.4 5-Layer Architecture
+
+LLC is organized into 5 conceptual layers from foundation to delivery:
+
+| Layer | Manages | LLC Mechanisms |
+|-------|---------|----------------|
+| **1. Context** | Context window, session continuity, token compression | ACE `<context_seed>` (~300 tokens, 93% reduction), Document Hierarchy in AGENTS.md, compressed documentation index, prompt caching strategy, append-only sessions |
+| **2. Knowledge** | Domain artifacts, specifications, architectural decisions | Strategic vision, 7 specs (glossary, FR, NFR, business rules, BPMN, profiles, integrations), PRDs (executive + technical), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
+| **3. Agents** | Who executes, how they reason, with which rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, ACE handoff), per-step roles (analyst, spec writer, architect, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
+| **4. Workflows** | Pipeline, validation gates, orchestration | 12 steps + F1-F6 subflow, 12 human gates + visual checkpoint, `<gate_result>`, execution waves, PRRS (7 analysis prisms), dependency matrix, impact-analyzer.py |
+| **5. Delivery** | Parallel execution, structural quality, deployment | Auto git worktrees (Step 11), code-health.py (4 metrics), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ 5. DELIVERY    ← parallelism, quality, deploy            │
+├──────────────────────────────────────────────────────────┤
+│ 4. WORKFLOWS   ← pipeline, gates, orchestration          │
+├──────────────────────────────────────────────────────────┤
+│ 3. AGENTS      ← roles, epistemic protocol, rules        │
+├──────────────────────────────────────────────────────────┤
+│ 2. KNOWLEDGE   ← specs, PRDs, PRPs, architecture         │
+├──────────────────────────────────────────────────────────┤
+│ 1. CONTEXT     ← window, continuity, compression         │
+└──────────────────────────────────────────────────────────┘
+```
+
+Each layer depends on the one below: without well-managed context, knowledge won't fit in the window; without structured knowledge, agents have no direction; without well-instructed agents, workflows produce no quality; without orchestrated workflows, delivery is unreliable.
+
 ---
 
 ## 2. Directory Architecture

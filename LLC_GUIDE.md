@@ -74,6 +74,30 @@ O pipeline LLC tem dois momentos distintos que se beneficiam de modos de operaç
 
 ---
 
+
+### Usando o Thin Harness (recomendado)
+
+A partir da versão 1.4.0, o LLC inclui um orquestrador CLI que automatiza o ciclo de vida de cada step:
+
+```bash
+# Instalar dependência única
+pip install click
+
+# Executar um step completo
+python .ace/scripts/llc.py run --step 5 --task "Arquitetura do sistema"
+
+# Pipeline completo (para em cada gate)
+python .ace/scripts/llc.py pipeline --from 0
+
+# Ver progresso
+python .ace/scripts/llc.py status
+```
+
+O harness gerencia automaticamente: sessão ACE, context_seed, carregamento da skill,
+invocação do agente, gate de validação e finalização. Se o cliente CLI estiver
+disponível (claude, opencode, codex, cursor), a invocação é automática. Caso
+contrário, o prompt é exibido para copiar e colar manualmente.
+
 ## Passo a Passo
 
 ### ⚠️ Atenção: Você tem documentação prévia?

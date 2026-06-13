@@ -23,6 +23,7 @@ O pipeline LLC integra verificações de segurança nos seguintes pontos:
 | **Step 12-Null-Safety** | Validação manual/IA | Nulabilidade nos PRPs | Bloqueia campos sem especificação |
 | **Step 1** | RBAC/ABAC via `perfis_permissoes.md` | Controle de acesso | Bloqueia segregação conflitante |
 | **Step 5** | Definição em `ARCHITECTURE.md` | Arquitetura de segurança | Bloqueia gaps de segurança |
+| **Step 11-OWASP** | Verificação manual/IA | Hardening OWASP Top 10:2021 | Bloqueia em 1+ verificação 🔴 |
 
 ### 3.1 Relatórios de Segurança
 
@@ -30,13 +31,37 @@ Os relatórios consolidados de auditoria de segurança são armazenados em:
 
 ```
 docs/security/
-├── SECURITY_AUDIT_REPORT.md        # SCA + SAST + Secrets (Step 11)
-├── NULL_SAFETY_REPORT.md           # Validação de nulabilidade (Step 12)
+├── SECURITY_AUDIT_REPORT.md            # SCA + SAST + Secrets (Step 11)
+├── NULL_SAFETY_REPORT.md               # Validação de nulabilidade (Step 12)
+├── OWASP_HARDENING_REPORT.md           # Hardening OWASP Top 10 (Step 11-OWASP)
 ├── SECURITY_AUDIT_REPORT_TEMPLATE.md   # Template SCA/SAST/Secrets
 └── NULL_SAFETY_REPORT_TEMPLATE.md      # Template Null Safety
 ```
 
 Dados brutos dos scans são armazenados em `.ace/security/` (não versionados).
+
+### 3.2 Hardening Pós-Implementação (OWASP Top 10:2021)
+
+Após a implementação dos PRPs (código escrito e PRs abertos), o Step 11-OWASP executa uma verificação de hardening baseada no OWASP Top 10:2021. Esta verificação complementa as ferramentas automatizadas (SCA + SAST + secrets) com inspeções manuais/IA de controles que ferramentas não detectam.
+
+**Categorias verificadas (10):**
+
+| ID | Categoria | Foco da Verificação |
+|----|-----------|---------------------|
+| A01 | Broken Access Control | Middleware de auth em todas as rotas, RBAC/ABAC, ownership check |
+| A02 | Cryptographic Failures | Hash de senhas (bcrypt/argon2), TLS, JWT seguro, secrets não hardcoded |
+| A03 | Injection | SQL parametrizado, shell injection, validação de input, XSS |
+| A04 | Insecure Design | Rate limiting, lockout, reset de senha seguro, análise de riscos |
+| A05 | Security Misconfiguration | Headers HTTP (CSP, HSTS), debug desabilitado, stack traces |
+| A06 | Vulnerable Components | Dependências atualizadas, sem CVEs com exploit público |
+| A07 | Auth Failures | MFA para perfis críticos, sessão segura, sem enumeração de usuários |
+| A08 | Integrity Failures | Lockfiles versionados, CI/CD seguro, sem desserialização insegura |
+| A09 | Logging Failures | Logs de auditoria, sem dados sensíveis em logs, logs imutáveis |
+| A10 | SSRF | Validação de URLs, bloqueio de redes internas, sem redirect cego |
+
+**Skill:** `docs/skills/llc-step-11-owasp-security.md`
+**Relatório:** `docs/security/OWASP_HARDENING_REPORT.md`
+**Gate:** Bloqueia release se 1+ verificação 🔴 (crítica). 🟡 (alto) deve gerar ticket.
 
 ## 4. Reportando Vulnerabilidades
 

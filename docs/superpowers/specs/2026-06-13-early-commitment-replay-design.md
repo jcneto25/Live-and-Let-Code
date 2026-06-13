@@ -315,6 +315,31 @@ RED_ZONE_PATTERNS = [
 
 - `architecture_version`: lido do `CLAUDE.md` ou `package.json`. Se a versao atual for maior, script ignorado.
 - `target_file_hash`: hash SHA256 do arquivo alvo no momento da gravacao. Se o hash atual for diferente (arquivo mudou), script ignorado.
+
+**Refinamento (v1.1.1):** `target_file_hash` e um array de `target_files`, nao um unico hash. Scripts frequentemente modificam multiplos arquivos (controller + service + module + test).
+
+```json
+{
+  "target_files": [
+    {"path": "src/clientes/clientes.controller.ts", "hash": "a1b2c3"},
+    {"path": "src/clientes/clientes.service.ts", "hash": "d4e5f6"},
+    {"path": "src/clientes/clientes.module.ts", "hash": "g7h8i9"}
+  ]
+}
+```
+
+Validacao: se QUALQUER arquivo do array teve o hash alterado, o script e considerado obsoleto e o LLM assume.
+
+```python
+def check_target_files(script):
+    for tf in script.get("target_files", []):
+        if not Path(tf["path"]).exists():
+            return False  # Arquivo foi deletado/renomeado
+        current_hash = sha256(Path(tf["path"]).read_bytes()).hexdigest()[:8]
+        if current_hash != tf["hash"]:
+            return False  # Arquivo mudou, script obsoleto
+    return True
+```
 - Ambos falhando → fallback para LLM.
 
 ### 7.4 R4 — Violacao do Protocolo TDD no test_write
@@ -453,7 +478,9 @@ Se o pre-flight falhar para QUALQUER step do script, o replay inteiro e abortado
       "pattern": "zod_schema_refine",
       "original_task_description": "Valide CPF no campo cliente.documento",
       "architecture_version": "v1.4.0",
-      "target_file_hash": "a1b2c3d4e5f6",
+      "target_files": [
+        {"path": "schemas/cliente.schema.ts", "hash": "a1b2c3d4"}
+      ],
       "steps": [
         {"action": "preflight", "file": "{{target_file}}"},
         {"action": "open", "file": "{{target_file}}"},

@@ -1,0 +1,6 @@
+# Output directory for security scan raw results.
+# Generated at runtime by llc-step-11-security skill:
+#   sca-report.json   — npm audit / pip-audit
+#   sast-report.json  — Semgrep
+#   secrets-report.json — Gitleaks
+# These files are gitignored — outputs are regenerated on each audit.

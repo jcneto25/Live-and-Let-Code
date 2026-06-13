@@ -444,6 +444,53 @@ O LLC dedica o **Step 11-OWASP** (`docs/skills/llc-step-11-owasp-security.md`) e
 
 **Relatorio:** `docs/security/OWASP_HARDENING_REPORT.md` (gerado pela skill, versionado no repo).
 
+### Como funciona o pipeline de auditoria de seguranca no LLC?
+
+O LLC tem **3 skills de seguranca** que operam em momentos diferentes do pipeline, formando uma barreira de protecao em camadas:
+
+| Skill | Step | Quando executa | O que verifica | Gate |
+|-------|------|---------------|----------------|------|
+| `llc-step-11-security` | Step 11 | **Pre-implementacao** (antes de codar) | SCA (dependencias), SAST (Semgrep), Secrets (Gitleaks) | Bloqueia em CVSS >= 9.0 ou secret real |
+| `llc-step-12-null-safety` | Step 12 | **Pre-implementacao** (antes de codar) | Nulabilidade nos PRPs: campos sem `?`/`Optional`, fallbacks ausentes, inconsistencias entre PRPs | Bloqueia em campos sem especificacao de nulabilidade |
+| `llc-step-11-owasp-security` | Step 11-OWASP | **Pos-implementacao** (depois de codar) | Hardening OWASP Top 10: access control, crypto, injection, design, misconfig, auth, logging, SSRF | Bloqueia em 1+ verificacao critica |
+
+**Fluxo completo de seguranca:**
+
+```
+Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
+        │                                    │
+        ▼                                    ▼
+   SCA + SAST + Secrets              Nulabilidade nos PRPs
+        │                                    │
+        ▼                                    ▼
+   APROVADO ────────────────────────── APROVADO
+        │                                    │
+        └──────────────┬─────────────────────┘
+                       ▼
+              Implementacao dos PRPs
+                       │
+                       ▼
+          Step 11-OWASP (pos-codigo)
+                       │
+                       ▼
+              Hardening OWASP Top 10
+                       │
+                       ▼
+          APROVADO → Release (Step 11-Release)
+```
+
+**Por que 3 skills separadas?**
+
+1. **Ferramentas automatizadas primeiro (Step 11-Security):** Antes de escrever uma linha de codigo, o pipeline verifica se as dependencias tem CVEs, se ha secrets expostos e se o codigo existente tem padroes inseguros. Isso evita que o time construa sobre uma base vulneravel.
+
+2. **Design seguro antes de codar (Step 12-Null-Safety):** Campos sem especificacao de nulabilidade sao a principal causa de `NullPointerException` e `Cannot read properties of null` em producao. O Step 12 valida que todo campo nos PRPs declara explicitamente se pode ser nulo e, se puder, qual o fallback. Isso previne a classe mais comum de bugs em producao antes de eles serem escritos.
+
+3. **Raciocinio manual/IA depois do codigo (Step 11-OWASP):** Ferramentas automatizadas nao respondem perguntas como "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha e de uso unico?". O Step 11-OWASP inspeciona o codigo implementado com as 10 categorias OWASP, exigindo evidencias arquivo:linha para cada verificacao.
+
+**Relatorios gerados:** `docs/security/SECURITY_AUDIT_REPORT.md`, `docs/security/NULL_SAFETY_REPORT.md`, `docs/security/OWASP_HARDENING_REPORT.md`.
+
+**Tarefas:** `docs/planning/TASKS.md` §4 (SEC-001, SEC-002, SEC-003, SEC-004).
+
 ---
 
 ## Ferramentas e Integrações

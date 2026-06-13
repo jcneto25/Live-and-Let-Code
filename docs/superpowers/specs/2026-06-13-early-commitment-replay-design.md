@@ -377,6 +377,38 @@ def check_target_files(script):
 
 `expect: "fail"` expressa a **intencao** da fase RED, nao o mecanismo. Testes podem falhar por motivos diferentes (compilacao, sintaxe, assert) — todos validos para a fase RED.
 
+### 7.6 R6 — Concorrencia no Cache (Race Condition)
+
+**Problema:** PRPs rodam em worktrees paralelos. Se duas sessoes tentam gravar no mesmo `.ace/cache/{type}.json` simultaneamente, pode haver corrupcao do JSON.
+
+**Mitigacao:** Atomic write via arquivo temporario + rename. Cross-platform (Windows + POSIX), sem dependencia de `fcntl`.
+
+```python
+import os
+from pathlib import Path
+
+def atomic_cache_write(cache_file: Path, data: dict):
+    """Grava cache atomicamente via temp file + rename."""
+    temp = cache_file.with_suffix('.tmp')
+    temp.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    # os.replace e atomico no Windows; Path.rename e atomico no POSIX
+    os.replace(str(temp), str(cache_file))
+```
+
+**Como previne race condition:** o sistema operacional garante que `rename`/`replace` e uma operacao atomica. Se duas sessoes escreverem simultaneamente, a ultima a executar o `replace` vence — mas o arquivo **nunca fica corrompido** (estado intermediario nunca e visivel).
+
+Leitura com cleanup de temp files orfaos (crashes anteriores):
+```python
+def atomic_cache_read(cache_file: Path) -> dict:
+    """Le cache com cleanup de temp files orfaos."""
+    temp = cache_file.with_suffix('.tmp')
+    if temp.exists():
+        temp.unlink()  # Crash anterior — descarta temp orfao
+    if not cache_file.exists():
+        return {"type": cache_file.stem, "scripts": []}
+    return json.loads(cache_file.read_text(encoding='utf-8'))
+```
+
 ### 7.5 R5 — Falha Parcial com Estado Inconsistente
 
 **Problema:** Se o replay executa 3 steps com sucesso e o 4o falha (ex: `expect: "pass"` nao bate), os primeiros 3 steps ja modificaram o sistema. O fallback para LLM assume um estado inconsistente.

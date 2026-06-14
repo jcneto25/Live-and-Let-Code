@@ -680,6 +680,15 @@ Markdown é mais eficiente para tokenização LLM. A ferramenta **Docling** (IBM
 
 **Ative o modo thinking/extended reasoning da sua LLM para esta fase.**
 
+### Por que o Grill Me para no Step 3?
+
+Grill Me e um protocolo de **clarificacao de requisitos** — resolve ambiguidade sobre "o que construir". Ele para no Step 3 porque:
+
+- **Steps 0.5-3** lidam com requisitos de negocio (escopo, atores, funcionalidades). So o usuario sabe as respostas.
+- **Steps 4+** lidam com **decisoes tecnicas** derivadas dos requisitos ja validados. O AI deve decidir baseado nos RNFs e specs, nao perguntar.
+
+Exemplo: "Qual stack usar?" (Step 5) — a resposta esta nos RNFs de performance, seguranca e escala definidos no Step 1. O AI analisa os RNFs e propoe; o humano valida no Gate 6. Perguntar ao usuario seria terceirizar uma decisao que os artefatos ja respondem.
+
 ---
 
 ## O que é PRRS (Prismatic Ranked Recursive Summarization)?

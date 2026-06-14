@@ -680,6 +680,15 @@ A mandatory question round the AI conducts **BEFORE** generating any artifact in
 
 **Enable thinking/extended reasoning mode for this phase.**
 
+### Why does Grill Me stop at Step 3?
+
+Grill Me is a **requirements clarification** protocol — it resolves ambiguity about "what to build." It stops at Step 3 because:
+
+- **Steps 0.5-3** deal with business requirements (scope, actors, features). Only the user knows the answers.
+- **Steps 4+** deal with **technical decisions** derived from already-validated requirements. The AI should decide based on NFRs and specs, not ask.
+
+Example: "Which stack to use?" (Step 5) — the answer is in the performance, security, and scale NFRs defined in Step 1. The AI analyzes NFRs and proposes; the human validates at Gate 6. Asking the user would be outsourcing a decision the artifacts already answer.
+
 ---
 
 ## What is PRRS (Prismatic Ranked Recursive Summarization)?

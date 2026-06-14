@@ -1,8 +1,8 @@
-# Guia de Execução — Live and Let Code (LLC)
+# Guia de Execucao — Live and Let Code (LLC)
 
-**Versão:** 1.0.0  
-**Público:** Desenvolvedores, Product Owners, Tech Leads  
-**Pré-requisito:** Leitura do [`llc-pipeline-design.md`](llc-pipeline-design.md) (visão geral da metodologia)
+**Versao:** 1.5.0
+**Publico:** Desenvolvedores, Product Owners, Tech Leads
+**Pre-requisito:** Leitura do [`llc-pipeline-design.md`](llc-pipeline-design.md) (visao geral da metodologia)
 
 ---
 
@@ -100,7 +100,27 @@ contrário, o prompt é exibido para copiar e colar manualmente.
 
 ## Passo a Passo
 
-### ⚠️ Atenção: Você tem documentação prévia?
+### 📋 Visao Geral do Pipeline (14 etapas)
+
+```
+Step 0   → Ingestao de documentos
+Step 0.1 → Conversao para Markdown (Docling)
+Step 0.5 → Visao Estrategica + Modulos       👤 Gate 1
+Step 1   → 7 Especificacoes                  👤 Gate 2
+Step 2   → PRDs (Executivo + Tecnico)         👤 Gate 3
+Step 3   → PRPs                               👤 Gate 4
+Step 4   → Planejamento                       👤 Gate 5
+Step 5   → Arquitetura                        👤 Gate 6
+Step 6   → Tarefas                            👤 Gate 7
+Step 7   → Design System                      👤 Gate 8
+Step 8   → Setup + Mock Data                  👤 Gate 9
+Step 9   → Testing Docs                       👤 Gate 10
+Step 10  → Project Docs + Steering Files      👤 Gate 11
+Step 10.5 → Manual do Usuario                 👤 Gate 11.5
+Step 11  → Execucao (PRPs + seguranca)        👤 Gate 11-SEC + QA
+```
+
+### ⚠️ Atencao: Voce tem documentacao previa?
 
 **Se SIM** (já existem manuais, atas, regulamentos) → siga para o Passo 0.
 

@@ -1,7 +1,7 @@
 # Execution Guide — Live and Let Code (LLC)
 
-**Version:** 1.0.0  
-**Audience:** Developers, Product Owners, Tech Leads  
+**Version:** 1.5.0
+**Audience:** Developers, Product Owners, Tech Leads
 **Prerequisite:** Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) (methodology overview)
 
 ---
@@ -77,7 +77,7 @@ The LLC pipeline has two distinct moments that benefit from different operation 
 
 ### Using the Thin Harness (recommended)
 
-Starting from version 1.4.0, LLC includes a CLI orchestrator that automates the lifecycle of each step:
+LLC includes a CLI orchestrator that automates the lifecycle of each step:
 
 ```bash
 # Install single dependency
@@ -99,6 +99,26 @@ is available (claude, opencode, codex, cursor), invocation is automatic. Otherwi
 the prompt is displayed for manual copy/paste.
 
 ## Step by Step
+
+### 📋 Pipeline Overview (14 steps)
+
+```
+Step 0   → Document Ingestion
+Step 0.1 → Markdown Conversion (Docling)
+Step 0.5 → Strategic Vision + Modules        👤 Gate 1
+Step 1   → 7 Specifications                   👤 Gate 2
+Step 2   → PRDs (Executive + Technical)       👤 Gate 3
+Step 3   → PRPs                                👤 Gate 4
+Step 4   → Planning                            👤 Gate 5
+Step 5   → Architecture                        👤 Gate 6
+Step 6   → Tasks                               👤 Gate 7
+Step 7   → Design System                       👤 Gate 8
+Step 8   → Setup + Mock Data                   👤 Gate 9
+Step 9   → Testing Docs                        👤 Gate 10
+Step 10  → Project Docs + Steering Files       👤 Gate 11
+Step 10.5 → User Guide                         👤 Gate 11.5
+Step 11  → Execution (PRPs + security)         👤 Gate 11-SEC + QA
+```
 
 ### ⚠️ Attention: Do you have existing documentation?
 

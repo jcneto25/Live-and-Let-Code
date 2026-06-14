@@ -105,7 +105,7 @@ contrario, o prompt e exibido para copiar e colar manualmente.
 
 ## Passo a Passo
 
-### 📋 Visao Geral do Pipeline (14 etapas + seguranca)
+### 📋 Visao Geral do Pipeline (14 principais + 5 auxiliares)
 
 ```
 Step 0   → Ingestao de documentos

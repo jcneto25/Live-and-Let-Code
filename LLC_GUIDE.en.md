@@ -104,7 +104,7 @@ the prompt is displayed for manual copy/paste.
 
 ## Step by Step
 
-### 📋 Pipeline Overview (14 steps + security)
+### 📋 Pipeline Overview (14 main + 5 auxiliary)
 
 ```
 Step 0   → Document Ingestion

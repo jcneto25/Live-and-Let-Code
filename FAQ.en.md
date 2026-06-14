@@ -597,6 +597,8 @@ Any LLM supporting **tool calling** (terminal tool invocation, file read/write) 
 
 *June 2026 values. Actual cost depends on Grill Me iteration count and skill re-executions after rejected gates.*
 
+*Blend assumption: input-dominant traffic (≤25% output tokens) at Claude 3.5 Sonnet pricing ($3/M input, $15/M output). Steps 0-10 are output-dominant (document generation) and typically cost 2-5× more — size up accordingly.*
+
 ### CodeAgent vs ToolCallingAgent: which paradigm does LLC use?
 
 LLC uses **both** paradigms, in different phases. The choice isn't in the AI client — it's in the **skill design**:

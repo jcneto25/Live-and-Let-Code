@@ -597,6 +597,8 @@ Qualquer LLM que suporte **tool calling** (invocação de ferramentas de termina
 
 *Valores de junho/2026. O custo real depende do número de iterações Grill Me e re-execuções de skills após gates reprovados.*
 
+*Premissa de blend: tráfego dominado por input (≤25% tokens de output) no preço do Claude 3.5 Sonnet ($3/M entrada, $15/M saída). Steps 0-10 são output-dominantes (geração de documentos) e tipicamente custam 2-5× mais — ajuste o porte para cima.*
+
 ### CodeAgent vs ToolCallingAgent: qual paradigma o LLC usa?
 
 O LLC usa **ambos** os paradigmas, em fases diferentes. A escolha não está no cliente de IA — está no **design do skill**:

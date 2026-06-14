@@ -66,6 +66,10 @@ Mandatory human validation points in the LLC pipeline. No step advances without 
 
 The mandatory questioning protocol the AI runs in Steps 0.5, 1, 2, and 3 BEFORE generating any artifact. The AI analyzes input documents, identifies ambiguities, and presents up to 8 questions ranked by criticality (🔴 blocking, 🟡 high, 🟢 medium). The user answers selectively and the AI then generates artifacts based on those answers. Eliminates the main vibe coding failure point: unvalidated assumptions.
 
+> **Note:** The **greenfield** flow (Step 0-GF, for projects without documentation) uses a different
+> protocol: structured interview of up to **15 questions** across 4 dimensions. Grill Me (up to 8
+> questions) is for resolving ambiguities in existing documents — not for generating from scratch.
+
 ### What is a PRD? Why is there an Executive PRD and a Technical PRD?
 
 A PRD (Product Requirements Document) formalizes a software product's requirements, serving as a contract between stakeholders and the development team. LLC generates two PRDs because each audience needs a different level of detail:

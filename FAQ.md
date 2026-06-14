@@ -66,6 +66,10 @@ São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step ava
 
 É o protocolo de questionamento obrigatório que a IA executa nos Steps 0.5, 1, 2 e 3 ANTES de gerar qualquer artefato. A IA analisa os documentos de entrada, identifica ambiguidades e apresenta até 8 perguntas ordenadas por criticidade (🔴 bloqueante, 🟡 alta, 🟢 média). O usuário responde seletivamente e a IA então gera os artefatos com base nas respostas. Elimina o principal ponto de falha do "vibe coding": suposições não validadas.
 
+> **Nota:** O fluxo **greenfield** (Step 0-GF, para projetos sem documentacao) usa um protocolo
+> diferente: entrevista estruturada de ate **15 perguntas** em 4 dimensoes. O Grill Me (ate 8
+> perguntas) e para resolver ambiguidades em documentos ja existentes — nao para gerar do zero.
+
 ### O que é um PRD? Por que há um PRD Executivo e um PRD Técnico?
 
 PRD (Product Requirements Document) é o documento que formaliza os requisitos de um produto de software, servindo como contrato entre stakeholders e equipe de desenvolvimento. O LLC gera dois PRDs porque cada público precisa de um nível diferente de detalhe:

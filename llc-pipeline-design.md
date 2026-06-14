@@ -332,6 +332,12 @@ graph TD
 | 6 | Tarefas | PRPs + Arquitetura + Planejamento | `TASKS.md` | `TASKS_TEMPLATE.md` | 👤 7 |
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
+>
+> **Nota sobre mock data:** O exemplo de referencia usa **MSW** (Mock Service Worker, JS/TS). Para
+> outros stacks, o conceito e o mesmo — dados mockados + handlers CRUD — mas a ferramenta varia:
+> Python usa `responses`/`httpx`, Go usa `httptest`, Rust usa `mockall`. O Step 8 gera a estrutura
+> `mocks/data/` e `mocks/handlers/` independente do stack; a implementacao concreta dos handlers e
+> adaptada pela IA conforme o stack definido no `ARCHITECTURE.md`. Veja [FAQ](FAQ.md#o-llc-funciona-para-stacks-que-nao-sao-javascripttypescript).
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
 | 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |

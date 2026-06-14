@@ -308,6 +308,12 @@ graph TD
 | 6 | Tasks | PRPs + Architecture + Planning | `TASKS.md` | — | 👤 7 |
 | 7 | Design System | Architecture + Vision + Profiles | `DESIGN_SYSTEM.md` | — | 👤 8 |
 | 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | — | 👤 9 |
+>
+> **Note on mock data:** The reference example uses **MSW** (Mock Service Worker, JS/TS). For
+> other stacks, the concept is the same — mock data + CRUD handlers — but the tool varies:
+> Python uses `responses`/`httpx`, Go uses `httptest`, Rust uses `mockall`. Step 8 generates the
+> `mocks/data/` and `mocks/handlers/` structure regardless of stack; the AI adapts handler
+> implementation based on the stack defined in `ARCHITECTURE.md`. See [FAQ](FAQ.en.md#does-llc-work-for-non-javascripttypescript-stacks).
 | 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | — | 👤 10 |
 | 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` + `CLAUDE.md` + `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Profiles + Workflows + Glossary | `USER_GUIDE.md`, `index.md`, `overview.md`, `profiles/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |

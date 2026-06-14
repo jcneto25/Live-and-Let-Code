@@ -1070,7 +1070,8 @@ Git Worktree permite criar **multiplos diretorios de trabalho** vinculados a bra
 |---------|--------------|
 | **Step 11 (Execucao)** | `initialize_session.py` cria worktree automaticamente quando `--prp` e informado ou `step >= 11` |
 | **PRPs em paralelo** | Cada PRP recebe seu proprio diretorio fisico — agentes nunca colidem em arquivos |
-| **Merge/descarte** | `finalize_session.py`: gate `approved` → merge + remove worktree; gate `rejected` → descarta sem merge |
+| **Merge/descarte** | `finalize_session.py`: gate `approved` → `git merge --no-ff <branch>` no master, depois remove o worktree e deleta o branch; gate `rejected` → descarta sem merge (`git worktree remove --force` + `git branch -D`) |
+| **Conflitos** | Não resolvidos automaticamente. Se dois PRPs modificam o mesmo arquivo, o merge do segundo falha e o operador resolve manualmente; PRPs bem projetados minimizam sobreposição de arquivos (ver Pipeline Design) |
 | **Branch naming** | `prp-{id}/wave-{n}` — consistente, previsivel, rastreavel |
 
 **Vantagens para desenvolvimento agentico:**
@@ -1126,7 +1127,7 @@ llc status                           # Progresso do pipeline
 | 1 | Sessao ACE | init/finalize, context_seed, worktree |
 | 2 | Carregamento de skill | Progressive disclosure — carrega o Document Index (~400 tokens), nao o AGENTS.md inteiro |
 | 3 | Invocacao do agente | Deteccao de cliente CLI, timeout 10min, extracao automatica de context_seed |
-| 4 | Validacao de gate | Checklist externo (`gates.json`), timeout 60s |
+| 4 | Validacao de gate | Checklist externo (`gates.json`) |
 | 5 | Orquestracao do pipeline | Iteracao sobre steps, parada em gates |
 
 **O que o harness NAO faz (e por que):**

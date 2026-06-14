@@ -1070,7 +1070,8 @@ Git Worktree allows creating **multiple working directories** linked to differen
 |------|----------|
 | **Step 11 (Execution)** | `initialize_session.py` automatically creates a worktree when `--prp` is provided or `step >= 11` |
 | **Parallel PRPs** | Each PRP gets its own physical directory — agents never collide on files |
-| **Merge/discard** | `finalize_session.py`: gate `approved` → merge + remove worktree; gate `rejected` → discard without merge |
+| **Merge/discard** | `finalize_session.py`: gate `approved` → `git merge --no-ff <branch>` into master, then remove the worktree and delete the branch; gate `rejected` → discard without merge (`git worktree remove --force` + `git branch -D`) |
+| **Conflicts** | Not auto-resolved. If two PRPs modify the same file, the second merge fails and the operator resolves manually; well-designed PRPs minimize file overlap (see Pipeline Design) |
 | **Branch naming** | `prp-{id}/wave-{n}` — consistent, predictable, traceable |
 
 **Benefits for agentic development:**
@@ -1091,7 +1092,7 @@ Git Worktree allows creating **multiple working directories** linked to differen
 
 ### What is the LLC Thin Harness?
 
-The **Thin Harness** is the orchestration layer connecting skills (Markdown), ACE scripts (Python), and the AI client. It's a ~500-line Python CLI that automates the lifecycle of each pipeline step.
+The **Thin Harness** is the orchestration layer connecting skills (Markdown), ACE scripts (Python), and the AI client. It's a ~390-line Python CLI that automates the lifecycle of each pipeline step.
 
 **Main commands:**
 
@@ -1126,7 +1127,7 @@ llc status                           # Pipeline progress
 | 1 | ACE session | init/finalize, context_seed, worktree |
 | 2 | Skill loading | Progressive disclosure — loads the Document Index (~400 tokens), not full AGENTS.md |
 | 3 | Agent invocation | CLI client detection, 10min timeout, automatic context_seed extraction |
-| 4 | Gate validation | External checklist (`gates.json`), 60s timeout |
+| 4 | Gate validation | External checklist (`gates.json`) |
 | 5 | Pipeline orchestration | Step iteration, gate pauses |
 
 **What the harness does NOT do (and why):**

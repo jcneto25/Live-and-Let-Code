@@ -205,6 +205,20 @@ Tasks (checkboxes in TASKS.md)
 
 Each level preserves the full context needed for its execution, eliminating the need to consult the original PRD during implementation.
 
+### Does LLC support multi-person teams?
+
+Yes. While each session is operated by a single human, LLC scales to teams because **each gate is a natural sync point:**
+
+| Aspect | Multi-person model |
+|--------|-------------------|
+| **Sequential steps (0-10)** | One operator drives; team reviews at gates. E.g.: Tech Lead runs Steps 0.5-3, team reviews Gates 1-4 |
+| **Parallel PRPs (Step 11)** | Each PRP is self-contained — different devs execute PRPs in isolated worktrees simultaneously |
+| **Specialty division** | Architect (Step 5), UX (Step 7), QA (Steps 9, 11-Security). Each specialist operates their step, presents the gate to the team |
+| **Gate decisions** | Recorded with `<gate_result reviewer="name">`. Any authorized member can approve. Conflicts: Tech Lead decides |
+| **Parallel gates** | Independent PRPs in parallel worktrees — gates of different PRPs approved simultaneously by different reviewers |
+
+`PLAN.md` defines PRP owners. `TASKS.md` assigns agents. `<gate_result>` records who approved. Git tracks authorship.
+
 ---
 
 ## Artifacts and Documents

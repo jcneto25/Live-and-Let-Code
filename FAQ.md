@@ -205,6 +205,20 @@ Tarefas (checkboxes no TASKS.md)
 
 Cada nível preserva o contexto completo necessário para sua execução, eliminando a necessidade de consultar o PRD original durante a implementação.
 
+### O LLC suporta times com multiplas pessoas?
+
+Sim. Embora cada sessao seja operada por um humano, o LLC escala para equipes porque **cada gate e um ponto de sincronizacao natural:**
+
+| Aspecto | Modelo multi-pessoa |
+|---------|---------------------|
+| **Steps sequenciais (0-10)** | Um operador conduz; o time revisa nos gates. Ex: Tech Lead executa Steps 0.5-3, time revisa Gates 1-4 |
+| **PRPs em paralelo (Step 11)** | Cada PRP e auto-contido — devs diferentes executam PRPs em worktrees isolados simultaneamente |
+| **Divisao por especialidade** | Arquiteto (Step 5), UX (Step 7), QA (Steps 9, 11-Security). Cada especialista opera seu step, apresenta o gate ao time |
+| **Gate decisions** | Registradas com `<gate_result reviewer="nome">`. Qualquer membro autorizado aprova. Conflitos: Tech Lead decide |
+| **Gates paralelos** | PRPs independentes em worktrees paralelos — gates de PRPs diferentes aprovados simultaneamente por revisores diferentes |
+
+O `PLAN.md` define owners por PRP. O `TASKS.md` atribui agentes. O `<gate_result>` registra quem aprovou. Git rastreia autoria.
+
 ---
 
 ## Artefatos e Documentos

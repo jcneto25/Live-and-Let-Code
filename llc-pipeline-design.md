@@ -647,7 +647,8 @@ Exemplo: alterar `perfis_permissoes.md` → o analisador reporta 6 artefatos em 
 | **Consistência garantida** | Nenhum artefato fica desatualizado por esquecimento |
 | **Ordem correta** | O report mostra a ordem exata de revisão (dependências antes de dependentes) |
 | **Sugestão de skills** | O agente sabe exatamente quais skills re-executar |
-| **Custo zero** | O grafo é gerido e mantido pelo próprio pipeline (Step 4) |
+| **Custo zero (matriz de PRPs)** | `DEPENDENCY_MATRIX.md` é auto-gerado pelo Step 4 — sem custo manual |
+| **Custo amortizado (grafo de artefatos)** | `dependency-graph.yaml` é mantido manualmente como artefato da metodologia — custo diluído entre projetos |
 | **Pré-commit** | Integrado ao hook de git — análise de impacto a cada commit |
 
 ---

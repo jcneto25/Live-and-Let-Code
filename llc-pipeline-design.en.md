@@ -435,6 +435,14 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 - Approved → advance. Approval recorded in the artifact.
 - No step executes without prior gate approval.
 
+**Rejection rollback (4 stages):**
+1. **Decision recording** — `<gate_result decision="rejected" reviewer="...">` is appended to the session's ACE file; the reason is logged as `<blocker resolved="...">`.
+2. **Downstream artifact rollback** — `impact-analyzer.py --files <changed> --skills` flags dependent artifacts as potentially stale (e.g., rejecting Gate 2 marks PRDs, PRPs, planning, architecture, and design system for review).
+3. **Correction and re-execution** — the user fixes the artifact and re-runs the step; skills are idempotent (overwrite). The new session's `<context_seed>` carries `pending: gate N rejected — re-executing step N`.
+4. **Worktree discard (if applicable)** — on `session_end` the harness discards any worktree without merge (`git worktree remove --force`); the next execution creates a fresh one.
+
+The rejected session's ACE history is **never deleted** — append-only, preserved for audit.
+
 ---
 
 ## 8. ACE — Agentic Context Engineering

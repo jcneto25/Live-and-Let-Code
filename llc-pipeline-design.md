@@ -516,6 +516,14 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 - Um gate **aprovado** permite o avanço. A aprovação é registrada no artefato (ex: `Status: Aprovado` no documento).
 - Nenhum passo pode ser executado sem o gate do passo anterior ter sido aprovado.
 
+**Rejeição — rollback em 4 estágios:**
+1. **Registro da decisão** — `<gate_result decision="rejected" reviewer="...">` é appended ao arquivo ACE da sessão; o motivo é registrado como `<blocker resolved="...">`.
+2. **Rollback de artefatos downstream** — `impact-analyzer.py --files <alterado> --skills` marca artefatos dependentes como potencialmente desatualizados (ex.: rejeitar o Gate 2 marca PRDs, PRPs, planejamento, arquitetura e design system para revisão).
+3. **Correção e reexecução** — o usuário corrige o artefato e reexecuta o step; skills são idempotentes (sobrescrevem). O `<context_seed>` da nova sessão carrega `pending: gate N rejeitado — reexecutando step N`.
+4. **Descarte do worktree (se aplicável)** — no `session_end` o harness descarta qualquer worktree sem merge (`git worktree remove --force`); a próxima execução cria um worktree novo.
+
+O histórico ACE da sessão rejeitada **nunca é deletado** — append-only, preservado para auditoria.
+
 ---
 
 ## 7. Templates — Inventário Completo

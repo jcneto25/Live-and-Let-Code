@@ -220,6 +220,8 @@ project-root/
 │   │   └── {type}.json
 │   ├── logs/                                      # [1.5.0] Replay event logs
 │   │   └── replay.jsonl
+│   ├── worktrees/                                 # Git worktree isolation (Step 11)
+│   │   └── {session_id}/
 │   └── templates/
 │       └── session.template.md
 │
@@ -342,6 +344,28 @@ graph TD
 > **11-SEC** (pre-code) escaneia dependencias, codigo e secrets. **12-NULL** (pre-code) valida contratos de dados.
 > Ambos executam ANTES do Step 11 (Execucao). Apos os PRPs implementados, o **11-OWASP** (post-code) faz
 > hardening contra OWASP Top 10. Este fluxo e consistente com o FAQ e o SECURITY.md.
+
+---
+
+### 3.3 Execucao Paralela com Git Worktrees
+
+PRPs auto-contidos permitem execucao paralela via git worktrees. O `initialize_session.py` gerencia automaticamente o ciclo de vida:
+
+**Convencao de nomes:** `prp-{id}/wave-{n}` (ex: `prp-001/wave-1`, `prp-002/wave-1`)
+
+**Ciclo de vida:**
+
+| Fase | Comportamento | Responsavel |
+|------|--------------|-------------|
+| Criacao | `initialize_session.py --prp PRP-001` cria worktree automaticamente em `.ace/worktrees/{session_id}/` | Automatico (step >= 11 ou --prp) |
+| Isolamento | Cada worktree tem `node_modules/`, `dist/`, `.env` independentes | Git |
+| Merge (gate aprovado) | `finalize_session.py` faz `git merge --no-ff prp-001/wave-1` na branch principal e remove o worktree | Automatico |
+| Descarte (gate rejeitado) | `finalize_session.py` descarta o worktree sem merge: `git worktree remove --force` + `git branch -D` | Automatico |
+| Limpeza de orfaos | `cleanup_orphan_worktrees()` remove worktrees sem sessao correspondente no inicio de cada nova sessao | Automatico |
+
+**Resolucao de conflitos:** Se dois PRPs modificarem o mesmo arquivo, o merge do segundo PRP falhara com conflito. O operador humano resolve o conflito manualmente antes de prosseguir. PRPs bem projetados minimizam sobreposicao de arquivos.
+
+**Desativar isolamento:** `--no-worktree` no `initialize_session.py` para sessoes onde paralelismo nao e necessario (Steps 0-10).
 
 ---
 

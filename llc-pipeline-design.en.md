@@ -202,6 +202,8 @@ project-root/
 │   │   └── {type}.json
 │   ├── logs/                                      # [1.5.0] Replay event logs
 │   │   └── replay.jsonl
+│   ├── worktrees/                                 # Git worktree isolation (Step 11)
+│   │   └── {session_id}/
 │   └── templates/
 │       └── session.template.md
 │
@@ -320,6 +322,28 @@ graph TD
 > OWASP Top 10. This matches the FAQ's documented security flow.
 
 > **Note:** `CLAUDE.md` describes **what the project is** — stack, domain, architecture. `AGENTS.md` describes **how the developer works** — zones, TDD, handoff conventions. If your AI tool does not support `CLAUDE.md`, consolidate its content into `AGENTS.md`.
+
+---
+
+### 3.3 Parallel Execution with Git Worktrees
+
+Self-contained PRPs enable parallel execution via git worktrees. `initialize_session.py` automatically manages the lifecycle:
+
+**Naming convention:** `prp-{id}/wave-{n}` (e.g., `prp-001/wave-1`, `prp-002/wave-1`)
+
+**Lifecycle:**
+
+| Phase | Behavior | Managed by |
+|-------|----------|------------|
+| Creation | `initialize_session.py --prp PRP-001` creates worktree at `.ace/worktrees/{session_id}/` | Automatic (step >= 11 or --prp) |
+| Isolation | Each worktree has independent `node_modules/`, `dist/`, `.env` | Git |
+| Merge (gate approved) | `finalize_session.py` runs `git merge --no-ff prp-001/wave-1` on main and removes worktree | Automatic |
+| Discard (gate rejected) | `finalize_session.py` discards worktree without merge: `git worktree remove --force` + `git branch -D` | Automatic |
+| Orphan cleanup | `cleanup_orphan_worktrees()` removes worktrees with no matching session at start of each new session | Automatic |
+
+**Conflict resolution:** If two PRPs modify the same file, the second PRP's merge will fail with a conflict. The human operator resolves the conflict manually before proceeding. Well-designed PRPs minimize file overlap.
+
+**Disable isolation:** `--no-worktree` on `initialize_session.py` for sessions where parallelism is not needed (Steps 0-10).
 
 ---
 

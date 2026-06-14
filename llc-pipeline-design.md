@@ -527,7 +527,16 @@ O pipeline LLC produz dezenas de artefatos interdependentes. Quando um artefato 
 
 ### 9.2 A Solução
 
-Um **grafo de dependências declarativo** (`.ace/dependency-graph.yaml`) mapeia cada artefato LLC: o que o originou (`depends_on`) e o que ele impacta quando alterado (`triggers_update`). Um script de análise cruza `git diff` com o grafo e propaga o impacto em cascata.
+Um **grafo de dependencias declarativo** (`.ace/dependency-graph.yaml`) mapeia cada artefato LLC: o que o originou (`depends_on`) e o que ele impacta quando alterado (`triggers_update`). Um script de analise cruza `git diff` com o grafo e propaga o impacto em cascata.
+
+**Diferenca entre os dois grafos:**
+
+| Grafo | Arquivo | Mantido por | Nivel |
+|-------|---------|-------------|-------|
+| **Matriz de dependencias de PRPs** | `docs/planning/DEPENDENCY_MATRIX.md` | Step 4 (gerado automaticamente) | PRP a PRP |
+| **Grafo de dependencias de artefatos** | `.ace/dependency-graph.yaml` | Mantido manualmente como artefato da metodologia | Artefato a artefato (Visao → Specs → PRDs → PRPs... ) |
+
+O `dependency-graph.yaml` e um **artefato estrutural da metodologia LLC** — mantido manualmente assim como o pipeline design e os templates. Ele evolui quando novos artefatos sao adicionados ao pipeline (ex: Step 10.5 User Guide, 11-Security). O `DEPENDENCY_MATRIX.md` e **gerado pelo Step 4** para cada projeto especifico, mapeando dependencias entre PRPs concretos.
 
 ### 9.3 Funcionamento
 

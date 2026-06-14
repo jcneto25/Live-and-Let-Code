@@ -730,8 +730,13 @@ Exemplo: "Qual stack usar?" (Step 5) — a resposta esta nos RNFs de performance
 
 - **Append-only:** arquivos de sessão nunca são reescritos — apenas deltas são appenados
 - **`<context_seed>`:** ao final de cada sessão, a IA comprime o estado em 4 campos (~300 tokens)
-- **Economia:** ~1.500 tokens/sessão vs ~22.000 do histórico completo
+- **Economia:** ~1.500 tokens/sessao vs ~22.000 do historico completo (93% de reducao — calculado, nao empirico)
 - **Tecnologia:** Python (scripts), Markdown + tags XML + YAML front matter
+
+> **Nota sobre metricas:** As estimativas de reducao de tokens, custo e tempo neste FAQ
+> sao **calculos baseados em precos de API e tamanhos tipicos de contexto**, nao resultados
+> empiricos de estudos de caso. O LLC esta em v1.5.0 — benchmarks com projetos reais estao
+> em andamento. Contribuicoes com dados empiricos sao bem-vindas.
 
 ### Qual o schema exato do context_seed?
 

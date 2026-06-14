@@ -730,8 +730,13 @@ The architectural pattern LLC uses to analyze the same data source from **multip
 
 - **Append-only:** session files are never rewritten — only deltas are appended
 - **`<context_seed>`:** at the end of each session, the AI compresses state into 4 fields (~300 tokens)
-- **Savings:** ~1,500 tokens/session vs ~22,000 for full history
+- **Savings:** ~1,500 tokens/session vs ~22,000 for full history (93% reduction — calculated, not empirical)
 - **Technology:** Python (scripts), Markdown + XML tags + YAML front matter
+
+> **Note on metrics:** Token reduction, cost, and time estimates in this FAQ are
+> **calculations based on API pricing and typical context sizes**, not empirical results
+> from case studies. LLC is at v1.5.0 — benchmarks with real projects are underway.
+> Contributions with empirical data are welcome.
 
 ### What is the exact context_seed schema?
 

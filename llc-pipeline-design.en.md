@@ -189,7 +189,19 @@ project-root/
 │   │   ├── promote-learning-points.py
 │   │   ├── validate-tags.py
 │   │   ├── impact-analyzer.py
+│   │   ├── code-health.py
+│   │   ├── llc.py                                # [1.5.0] Thin Harness CLI
+│   │   ├── llc_harness.py                        # [1.5.0] Harness orchestrator
+│   │   ├── llc_classify.py                       # [1.5.0] Early Commitment classifier
+│   │   ├── llc_replay.py                         # [1.5.0] Deterministic Replay engine
+│   │   ├── replay_stats.py                       # [1.5.0] Replay metrics dashboard
 │   │   └── pre-commit.sh
+│   ├── config/                                    # [1.5.0] Config files
+│   │   └── gates.json
+│   ├── cache/                                     # [1.5.0] Replay scripts cache
+│   │   └── {type}.json
+│   ├── logs/                                      # [1.5.0] Replay event logs
+│   │   └── replay.jsonl
 │   └── templates/
 │       └── session.template.md
 │

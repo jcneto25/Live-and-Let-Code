@@ -34,6 +34,13 @@ Live and Let Code (LLC) is an open-source methodology that structures the comple
 | Rastreabilidade total — da visão ao commit | Full traceability — from vision to commit |
 | Paralelismo por design — PRPs auto-contidos | Parallelism by design — self-contained PRPs |
 
+### 🚀 Quick Start (Thin Harness)
+
+```bash
+pip install click
+python .ace/scripts/llc.py pipeline --from 0
+```
+
 ### Pipeline
 
 ```

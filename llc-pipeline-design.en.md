@@ -1,8 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
 **Version:** 1.5.0
-**Date:** June 4, 2026 (updated June 13, 2026)
-**Date:** June 4, 2026  
+**Date:** June 4, 2026 (updated June 13, 2026)  
 **Status:** Design Approved  
 **Project:** Live and Let Code (LLC) — Agentic Autonomous Development Methodology  
 **Author:** LLC Team  
@@ -83,7 +82,7 @@ The harness is "thin" by design: it does not implement tool-calling, does not de
 | **Replay Stats** (`replay_stats.py`) | Metrics dashboard: hit rate, success rate, token savings | — |
 
 ```
-FAT SKILLS (Markdown)     ← docs/skills/ (14 files)
+FAT SKILLS (Markdown)     ← docs/skills/ (21 files)
      ↑
 THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 lines)
      ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)
@@ -154,7 +153,7 @@ project-root/
 │   │   ├── COVERAGE_PROGRESS_TEMPLATE.md
 │   │   └── *.md                                # [OUTPUT]
 │   │
-│   ├── skills/                                 # LLC Skills (tool-agnostic)
+│   ├── skills/                                 # LLC Skills (tool-agnostic — 21 files)
 │   │   ├── llc-step-0-greenfield.md
 │   │   ├── llc-step-0-1.md
 │   │   ├── llc-step-0-5.md
@@ -168,7 +167,11 @@ project-root/
 │   │   ├── llc-step-8.md
 │   │   ├── llc-step-9.md
 │   │   ├── llc-step-10.md
-│   │   ├── llc-subflow-prototyping.md
+│   │   ├── llc-user-guide.md
+  │   │   ├── llc-step-11-security.md
+  │   │   ├── llc-step-11-owasp-security.md
+  │   │   ├── llc-step-12-null-safety.md
+  │   │   ├── llc-subflow-prototyping.md
   │   │   ├── llc-ace-context.md
   │   │   ├── llc-code-health.md
   │   │   └── llc-impact-analyzer.md

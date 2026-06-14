@@ -81,7 +81,7 @@ O harness e "thin" por design: nao implementa tool-calling, nao define regras, n
 | **Replay Stats** (`replay_stats.py`) | Dashboard de metricas: hit rate, success rate, tokens economizados | — |
 
 ```
-FAT SKILLS (Markdown)     ← docs/skills/ (14 arquivos)
+FAT SKILLS (Markdown)     ← docs/skills/ (21 arquivos)
      ↑
 THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 linhas)
      ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)

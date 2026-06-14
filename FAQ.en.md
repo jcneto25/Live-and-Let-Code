@@ -333,7 +333,7 @@ All LLC artifacts are persistent Markdown documents versioned in **Git**, treate
 
 Phase transition checkpoints that verify each artifact meets defined criteria before the next agent starts. In LLC, gates are formal and recorded:
 
-- **15 human gates:** one after each generation step (0.5 through 11). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
+- **15 human gates:** one after each generation step and auxiliary step (0.5, 1–10, 10.5, 11-SEC, 11-OWASP, 12-NULL). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
 - **1 visual checkpoint:** in the prototyping subflow (F4 → F5). The hi-fi prototype doesn't become code without explicit visual approval
 - **QA checkpoints:** during execution (Step 11): score ≥ 7.0, coverage ≥ thresholds, security audit passed
 

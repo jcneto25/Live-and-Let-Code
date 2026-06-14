@@ -496,7 +496,7 @@ Step 11-Security (pre-code)       Step 12-Null-Safety (pre-code)
               OWASP Top 10 Hardening
                        │
                        ▼
-          PASSED → Release (Step 11-Release)
+          PASSED → Release (via DEPLOYMENT.md + CI/CD)
 ```
 
 **Why 3 separate skills?**

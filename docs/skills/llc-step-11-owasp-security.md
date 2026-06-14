@@ -256,7 +256,7 @@ docs/security/
 
 ### 6. Ações Pós-Execução
 
-- Se **APROVADO:** Prossiga para release (Step 11-Release ou Trilha B: Subfluxo F7).
+- Se **APROVADO:** Prossiga para release conforme estrategia definida em `docs/DEPLOYMENT.md` (Step 10).
 - Se **REPROVADO:**
   - Cada 🔴 crítico deve gerar um hotfix antes do merge para a branch principal.
   - Cada 🟡 alto deve gerar um ticket no backlog com prioridade para a próxima sprint.

@@ -496,7 +496,7 @@ Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
               Hardening OWASP Top 10
                        │
                        ▼
-          APROVADO → Release (Step 11-Release)
+          APROVADO → Release (via DEPLOYMENT.md + CI/CD)
 ```
 
 **Por que 3 skills separadas?**

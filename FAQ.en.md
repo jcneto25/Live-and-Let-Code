@@ -194,9 +194,9 @@ The principle that each work unit should be small enough to fit within ~50% of a
 The process of breaking a comprehensive PRD into focused, self-contained development units. In LLC, the decomposition chain is:
 
 ```
-Technical PRD (~400 lines)
+Ingestion documents
     ↓ Step 0.5: decomposed into modules (MOD-*)
-Modules (~100 lines each)
+Modules (~100 lines each) + Technical PRD + Specs
     ↓ Step 3: decomposed into PRPs (PRP-*)
 PRPs (~50-80 lines each)
     ↓ Step 6: decomposed into tasks (TASK-*)

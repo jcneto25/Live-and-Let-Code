@@ -194,9 +194,9 @@ O Agentic Planning responde "o que fazer e em qual ordem". O Context-Engineered 
 É o processo de quebrar um PRD abrangente em unidades de desenvolvimento focadas e auto-contidas. No LLC, a cadeia de decomposição é:
 
 ```
-PRD Técnico (~400 linhas)
-    ↓ Step 0.5: decomposto em módulos (MOD-*)
-Módulos (~100 linhas cada)
+Documentos de ingestion
+    ↓ Step 0.5: decomposto em modulos (MOD-*)
+Modulos (~100 linhas cada) + PRD Tecnico + Specs
     ↓ Step 3: decompostos em PRPs (PRP-*)
 PRPs (~50-80 linhas cada)
     ↓ Step 6: decompostos em tarefas (TASK-*)

@@ -1,5 +1,6 @@
 /.superpowers
 /docs/superpowers
+/CLAUDE.md
 
 # Security scan artifacts — raw tool outputs are machine-generated and ephemeral.
 # They change with every rerun. Consolidated reports in docs/security/ are the

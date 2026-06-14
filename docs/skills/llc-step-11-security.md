@@ -1,6 +1,6 @@
 ---
 name: llc-step-11-security
-description: Pipeline LLC — Auditoria de segurança pré-execução (SCA + SAST + secret scanning). Executa npm audit/pip-audit, Semgrep e Gitleaks antes dos agentes iniciarem os PRPs.
+description: Pipeline LLC — Auditoria de segurança pré-execução (SCA + SAST + secret scanning + SSRF + security headers + password policy + logging). Executa npm audit/pip-audit, Semgrep e Gitleaks antes dos agentes iniciarem os PRPs.
 version: 1.0.0
 tags: [security, audit, sast, sca, secrets, llc-pipeline]
 ---
@@ -25,6 +25,8 @@ tags: [security, audit, sast, sca, secrets, llc-pipeline]
 - [ ] `docs/security/SECURITY_AUDIT_REPORT_TEMPLATE.md` — template do relatório
 - [ ] Semgrep instalado: `pip install semgrep`
 - [ ] Gitleaks instalado: `brew install gitleaks` ou `go install github.com/gitleaks/gitleaks/v8@latest`
+- [ ] `express-rate-limit` ou equivalente instalado (para rate limiting no login)
+- [ ] `zxcvbn` ou equivalente instalado (para validação de força de senha)
 
 ---
 
@@ -32,7 +34,7 @@ tags: [security, audit, sast, sca, secrets, llc-pipeline]
 
 Você está executando a skill `llc-step-11-security` do pipeline LLC. Seu objetivo é realizar uma auditoria de segurança completa no código do projeto antes que os agentes iniciem a implementação dos PRPs.
 
-Esta auditoria cobre 3 dimensões: dependências (SCA), código estático (SAST) e credenciais expostas (secrets). Você executará ferramentas reais, lerá os outputs e gerará um relatório consolidado com recomendações.
+Esta auditoria cobre 7 dimensões: dependências (SCA), código estático (SAST), credenciais expostas (secrets), SSRF, headers de segurança, política de senha e logging. Você executará ferramentas reais, lerá os outputs e gerará um relatório consolidado com recomendações.
 
 ### 1. Leia as Entradas
 
@@ -40,7 +42,7 @@ Esta auditoria cobre 3 dimensões: dependências (SCA), código estático (SAST)
 - `docs/planning/TASKS.md` — tarefa `SEC-001` deve estar presente.
 - `docs/security/SECURITY_AUDIT_REPORT_TEMPLATE.md` — estrutura do relatório a ser gerado.
 
-### 2. Execute a Auditoria (3 Estágios)
+### 2. Execute a Auditoria (7 Estágios)
 
 #### Estágio 1: SCA — Dependency Audit
 

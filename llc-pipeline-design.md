@@ -571,11 +571,13 @@ O script `code-health.py` analisa o histórico do git e monitora 4 métricas est
 | % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto |
 | Consistência estrutural | Todos os thresholds OK | ✅ Saudável |
 
-### 10.3 Integração
+### 10.3 Integracao
 
-- **Checkpoint QA (Step 11):** se métricas críticas estão violadas, o gate QA bloqueia o avanço
-- **Pre-commit hook:** análise informativa a cada commit
-- **Execução manual:** `python .ace/scripts/code-health.py --json`
+- **Checkpoint QA (Step 11):** Bloqueia se:
+  - 🔴 1 metrica Critica abaixo do threshold (Moved Code < 10%), OU
+  - 🟡 2+ metricas Altas abaixo do threshold simultaneamente
+- **Pre-commit hook:** Alerta informativo a cada commit para qualquer metrica abaixo do threshold
+- **Execucao manual:** `python .ace/scripts/code-health.py --json`
 
 ### 10.4 Ações Corretivas
 

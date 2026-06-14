@@ -462,12 +462,12 @@ AI agents maximize short-term productivity at the cost of structural code health
 
 `code-health.py` (`docs/skills/code-health.py`) monitors 4 structural metrics derived from git history:
 
-| Metric | Threshold | Rationale |
-|--------|-----------|-----------|
-| **% Moved Code** | ≥ 10% of commits | Ensures continuous refactoring into reusable modules |
-| **Copy/Paste vs Moved** | copy ≤ moved | Duplication must not exceed intentional code organization |
-| **% Legacy Touch** | ≥ 20% of commits | Guarantees pre-existing code is consistently improved |
-| **Structural Consistency** | — | Qualitative check: folder conventions, naming, module boundaries |
+| Metric | Threshold | Severity | Rationale |
+|--------|-----------|----------|-----------|
+| **% Moved Code** | ≥ 10% of commits | 🔴 Critical | Ensures continuous refactoring into reusable modules |
+| **Copy/Paste vs Moved** | copy ≤ moved | 🟡 High | Duplication must not exceed intentional code organization |
+| **% Legacy Touch** | ≥ 20% of commits | 🟡 High | Guarantees pre-existing code is consistently improved |
+| **Structural Consistency** | — | ✅ Healthy | Qualitative check: folder conventions, naming, module boundaries |
 
 ### 10.3 Integration
 
@@ -475,8 +475,8 @@ AI agents maximize short-term productivity at the cost of structural code health
 
 | Level | Trigger | Behavior |
 |-------|---------|----------|
-| **QA Checkpoint (Step 11)** | Every execution cycle | Blocking if 2+ metrics are below threshold |
-| **Pre-commit hook** | Every `git commit` | Warning if 1 metric is below threshold |
+| **QA Checkpoint (Step 11)** | 1 🔴 Critical OR 2+ 🟡 High below threshold | Blocking |
+| **Pre-commit hook** | Any metric below threshold | Warning |
 | **Manual execution** | On demand | `python .ace/scripts/code-health.py --since "30 days ago"` |
 
 ### 10.4 Corrective Actions

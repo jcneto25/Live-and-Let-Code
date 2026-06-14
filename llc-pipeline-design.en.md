@@ -36,6 +36,10 @@ This document specifies:
 - The ACE cross-session context system (§8)
 - The traceability and impact analyzer (§9)
 
+> **📘 Practical guide:** For step-by-step execution, LLM operation modes, practical tips, and
+> Thin Harness usage, see [`LLC_GUIDE.en.md`](LLC_GUIDE.en.md). This document is the technical
+> specification; the guide is practical execution. Also see [`FAQ.en.md`](FAQ.en.md) for conceptual questions.
+
 ### 1.4 5-Layer Architecture
 
 LLC is organized into 5 conceptual layers from foundation to delivery:

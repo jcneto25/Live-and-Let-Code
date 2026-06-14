@@ -561,6 +561,18 @@ The script monitors 4 metrics:
 
 If critical alerts fire, schedule a cross-PRP refactoring wave.
 
+### Cross-Cutting Pipeline Tools
+
+Beyond the main steps, LLC includes tools that operate between stages. See [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) for full documentation:
+
+| Tool | Skill | Function | Pipeline Design |
+|------|-------|----------|:--------------:|
+| **Impact Analyzer** | `llc-impact-analyzer` | Detects which downstream artifacts are affected by changes. Use before refactoring. | [§9](llc-pipeline-design.en.md#9-rastreabilidade-e-analise-de-impacto) |
+| **Code Health** | `llc-code-health` | Monitors structural metrics (Moved Code, Copy/Paste, Legacy Touch). Use per wave. | [§10](llc-pipeline-design.en.md#10-saude-estrutural-do-codigo-code-health) |
+| **ACE Context** | `llc-ace-context` | Cross-session continuity protocol. Managed automatically by the harness. | [§8](llc-pipeline-design.en.md#8-ace--agentic-context-engineering) |
+
+**LLM Operation Modes:** For Steps 0-10 (specification), use Thinking/Reasoning mode. For Step 11 (execution), use Regular mode. For post-rejected-gate fixes, use Thinking mode. See the full table above in [LLM Operation Mode](#llm-operation-mode).
+
 ### If you need to restart a step
 - Skills are idempotent. The AI will ask before overwriting existing files.
 - Answer "yes, overwrite" or "no, create a new version with _v2 suffix."

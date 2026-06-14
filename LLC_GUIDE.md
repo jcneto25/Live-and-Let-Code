@@ -595,6 +595,18 @@ O script analisa 4 métricas:
 
 Se alertas críticos forem disparados, agende uma onda de refatoração cross-PRP.
 
+### Ferramentas Transversais do Pipeline
+
+Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Consulte o [`llc-pipeline-design.md`](llc-pipeline-design.md) para documentacao completa:
+
+| Ferramenta | Skill | Funcao | Pipeline Design |
+|-----------|-------|--------|:--------------:|
+| **Analisador de Impacto** | `llc-impact-analyzer` | Detecta quais artefatos downstream sao afetados por alteracoes. Use antes de refatorar. | [§9](llc-pipeline-design.md#9-rastreabilidade-e-analise-de-impacto) |
+| **Code Health** | `llc-code-health` | Monitora metricas estruturais (Moved Code, Copy/Paste, Legacy Touch). Use a cada onda. | [§10](llc-pipeline-design.md#10-saude-estrutural-do-codigo-code-health) |
+| **ACE Context** | `llc-ace-context` | Protocolo de continuidade entre sessoes. Gerenciado automaticamente pelo harness. | [§8](llc-pipeline-design.md#8-ace--agentic-context-engineering) |
+
+**Modos de operacao da LLM:** Para Steps 0-10 (especificacao), use modo Thinking/Reasoning. Para Step 11 (execucao), modo Regular. Para correcoes pos-gate reprovado, modo Thinking. Veja a tabela completa acima em [Modo de Operacao da LLM](#modo-de-operacao-da-llm).
+
 ### Se precisar recomeçar um passo
 - Skills são idempotentes. A IA perguntará antes de sobrescrever arquivos existentes.
 - Responda "sim, sobrescreva" ou "não, crie uma nova versão com sufixo _v2".

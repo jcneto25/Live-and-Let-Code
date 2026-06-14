@@ -34,6 +34,10 @@ Este documento especifica:
 - O sistema ACE de contexto entre sessões (§8)
 - O analisador de impacto e rastreabilidade (§9)
 
+> **📘 Guia pratico:** Para execucao passo a passo, modos de operacao da LLM, dicas praticas e
+> uso do Thin Harness, consulte o [`LLC_GUIDE.md`](LLC_GUIDE.md). Este documento e a especificacao
+> tecnica; o guia e a execucao pratica. Consulte tambem o [`FAQ.md`](FAQ.md) para duvidas conceituais.
+
 ### 1.4 Arquitetura em 5 Camadas
 
 O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:

@@ -576,6 +576,13 @@ AI agents maximize short-term productivity at the cost of structural code health
 | **% Legacy Touch** | ≥ 20% of commits | 🟡 High | Lines changed in files whose commit is older than 30 days / total lines changed |
 | **Structural Consistency** | — | ✅ Healthy | — |
 
+**How metrics are computed** (from `.ace/scripts/code-health.py`, parsing
+`git log --since=<period> --numstat --no-merges`):
+
+- **% Moved Code** — lines in git-detected renames (paths matching `{old => new}`) over total churn (added + moved + modified + deleted). This is a *minimum* estimate: refactors performed as delete+add without a rename are not counted, so the true moved fraction is higher than reported.
+- **Copy/Paste vs Moved** — heuristic, enabled only with ≥10 commits: flags pairs of *different* files sharing the same filename stem that each received >30 added lines within a 4-commit window. It matches filenames, not content similarity.
+- **% Legacy Touch** — share of changed lines whose *commit* is older than a fixed 30-day cutoff (independent of `--since`) over total lines changed in the period. Signals whether older commits in the window are refactoring existing code versus only adding new lines.
+
 ### 10.3 Integration
 
 `code-health.py` integrates at three levels:

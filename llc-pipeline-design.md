@@ -694,6 +694,13 @@ O script `code-health.py` analisa o histórico do git e monitora 4 métricas est
 | % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto | Linhas alteradas em arquivos cujo commit e anterior a 30 dias / total de linhas alteradas |
 | Consistência estrutural | Todos os thresholds OK | ✅ Saudável | — |
 
+**Como as métricas são calculadas** (a partir de `.ace/scripts/code-health.py`,
+parseando `git log --since=<período> --numstat --no-merges`):
+
+- **% Moved Code** — linhas em renames detectados pelo git (paths no formato `{old => new}`) sobre o churn total (added + moved + modified + deleted). É uma estimativa *mínima*: refactors feitos como delete+add sem rename não são contabilizados, então a fração real de código movido é maior que a reportada.
+- **Copy/Paste vs Moved** — heurística, habilitada apenas com ≥10 commits: sinaliza pares de arquivos *diferentes* com o mesmo filename stem que receberam >30 linhas adicionadas cada dentro de uma janela de 4 commits. Casa nomes de arquivo, não similaridade de conteúdo.
+- **% Legacy Touch** — fração de linhas alteradas cujo *commit* é mais antigo que um cutoff fixo de 30 dias (independente de `--since`) sobre o total de linhas alteradas no período. Indica se commits mais antigos na janela estão refatorando código existente vs. apenas adicionando linhas novas.
+
 ### 10.3 Integracao
 
 - **Checkpoint QA (Step 11):** Bloqueia se:

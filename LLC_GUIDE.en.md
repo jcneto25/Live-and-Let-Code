@@ -428,6 +428,31 @@ Execute the skill docs/skills/llc-step-10.md
 
 ---
 
+### Step 10.5: User Guide 🆕
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-user-guide.md
+```
+
+**The AI does:**
+- Reads all PRPs and extracts pages declared in the `user_docs` section
+- Generates `docs/user-guide/USER_GUIDE.md` — complete skeleton with index and navigation
+- Generates `docs/user-guide/index.md` — user guide home page
+- Generates `docs/user-guide/visao-geral.md` — system overview in end-user language
+- Generates `docs/user-guide/perfis/index.md` — profile-indexed guide
+
+**You validate:** 👤 Gate 11.5
+- Does the structure cover all modules?
+- Do profiles have relevant pages?
+- Is the index navigable?
+- Is the language end-user friendly?
+
+**Only advance when approved.**
+
+---
+
 ### Step 11-Security: Security Audit 🆕
 
 **You do:**

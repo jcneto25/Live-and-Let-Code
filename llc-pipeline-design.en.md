@@ -68,6 +68,40 @@ LLC is organized into 5 conceptual layers from foundation to delivery:
 
 Each layer depends on the one below: without well-managed context, knowledge won't fit in the window; without structured knowledge, agents have no direction; without well-instructed agents, workflows produce no quality; without orchestrated workflows, delivery is unreliable.
 
+### 1.5 Thin Harness — Orchestration
+
+The **Thin Harness** (`llc`) is the orchestration layer connecting the 5 architectural layers. It's a Python CLI (~390 lines) that automates each step's lifecycle: init session → load skill → invoke agent → gate check → finalize session.
+
+The harness is "thin" by design: it does not implement tool-calling, does not define rules, does not teach the model. It only connects the pieces that already exist.
+
+**Optimizations integrated into the harness (v1.5.0):**
+
+| Module | Function | Token Reduction |
+|--------|---------|:---------------:|
+| **Early Commitment** (`llc_classify.py`) | Classifies the task into 4 types BEFORE execution, collapsing the agent's search space | — |
+| **Deterministic Replay** (`llc_replay.py`) | Replays approved execution paths for tasks of the same classification | ~99% per repeated task |
+| **Replay Stats** (`replay_stats.py`) | Metrics dashboard: hit rate, success rate, token savings | — |
+
+```
+FAT SKILLS (Markdown)     ← docs/skills/ (14 files)
+     ↑
+THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 lines)
+     ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)
+FAT CODE (Python)         ← .ace/scripts/ (7 ACE scripts)
+     ↑
+AI CLIENT                 ← Claude Code, opencode, Codex, Cursor...
+```
+
+**Main commands:**
+
+| Command | Action |
+|---------|--------|
+| `llc run --step 5` | Execute a complete step |
+| `llc pipeline --from 0` | Full pipeline (stops at gates) |
+| `llc session start --step 5` | Start manual session |
+| `llc session end --approve` | End manual session |
+| `llc status` | Pipeline progress |
+
 ---
 
 ## 2. Directory Architecture

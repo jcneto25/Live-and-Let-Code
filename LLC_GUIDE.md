@@ -93,10 +93,15 @@ python .ace/scripts/llc.py pipeline --from 0
 python .ace/scripts/llc.py status
 ```
 
-O harness gerencia automaticamente: sessão ACE, context_seed, carregamento da skill,
-invocação do agente, gate de validação e finalização. Se o cliente CLI estiver
-disponível (claude, opencode, codex, cursor), a invocação é automática. Caso
-contrário, o prompt é exibido para copiar e colar manualmente.
+O harness gerencia automaticamente: sessao ACE, context_seed, carregamento da skill,
+invocacao do agente, gate de validacao e finalizacao. Se o cliente CLI estiver
+disponivel (claude, opencode, codex, cursor), a invocacao e automatica. Caso
+contrario, o prompt e exibido para copiar e colar manualmente.
+
+> **⚡ Early Commitment + Deterministic Replay (v1.5.0):** O harness classifica
+> automaticamente cada tarefa em 4 tipos e reutiliza caminhos de execucao aprovados
+> para tarefas repetidas — reduzindo o custo de tokens em ate 99%. Para detalhes,
+> consulte o [FAQ](FAQ.md#-early-commitment--deterministic-replay).
 
 ## Passo a Passo
 

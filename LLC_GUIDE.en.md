@@ -98,6 +98,10 @@ agent invocation, validation gate, and session finalization. If a CLI client
 is available (claude, opencode, codex, cursor), invocation is automatic. Otherwise,
 the prompt is displayed for manual copy/paste.
 
+> **⚡ Early Commitment + Deterministic Replay (v1.5.0):** The harness automatically
+> classifies each task into 4 types and reuses approved execution paths for repeated
+> tasks — reducing token cost by up to 99%. For details, see the [FAQ](FAQ.en.md#-early-commitment--deterministic-replay).
+
 ## Step by Step
 
 ### 📋 Pipeline Overview (14 steps + security)

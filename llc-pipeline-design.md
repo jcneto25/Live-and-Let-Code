@@ -68,15 +68,23 @@ Cada camada depende da camada inferior: sem contexto bem gerido, o conhecimento 
 
 ### 1.5 Thin Harness — Orquestracao
 
-O **Thin Harness** (`llc`) e a camada de orquestracao que conecta as 5 camadas arquiteturais. E um CLI Python (~500 linhas) que automatiza o ciclo de vida de cada step: init session → load skill → invoke agent → gate check → finalize session.
+O **Thin Harness** (`llc`) e a camada de orquestracao que conecta as 5 camadas arquiteturais. E um CLI Python (~390 linhas) que automatiza o ciclo de vida de cada step: init session → load skill → invoke agent → gate check → finalize session.
 
 O harness e "thin" por design: nao implementa tool-calling, nao define regras, nao ensina o modelo. Ele apenas conecta as pecas que ja existem.
+
+**Otimizacoes integradas ao harness (v1.5.0):**
+
+| Modulo | Funcao | Reducao de tokens |
+|--------|--------|:-----------------:|
+| **Early Commitment** (`llc_classify.py`) | Classifica a tarefa em 4 tipos ANTES da execucao, colapsando o espaco de busca do agente | — |
+| **Deterministic Replay** (`llc_replay.py`) | Reproduz caminhos de execucao aprovados para tarefas da mesma classificacao | ~99% por tarefa repetida |
+| **Replay Stats** (`replay_stats.py`) | Dashboard de metricas: hit rate, success rate, tokens economizados | — |
 
 ```
 FAT SKILLS (Markdown)     ← docs/skills/ (14 arquivos)
      ↑
-THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~500 linhas)
-     ↑
+THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 linhas)
+     ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)
 FAT CODE (Python)         ← .ace/scripts/ (7 scripts ACE)
      ↑
 CLIENTE DE IA             ← Claude Code, opencode, Codex, Cursor...

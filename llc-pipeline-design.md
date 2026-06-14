@@ -557,6 +557,45 @@ Um **grafo de dependencias declarativo** (`.ace/dependency-graph.yaml`) mapeia c
 
 O `dependency-graph.yaml` e um **artefato estrutural da metodologia LLC** — mantido manualmente assim como o pipeline design e os templates. Ele evolui quando novos artefatos sao adicionados ao pipeline (ex: Step 10.5 User Guide, 11-Security). O `DEPENDENCY_MATRIX.md` e **gerado pelo Step 4** para cada projeto especifico, mapeando dependencias entre PRPs concretos.
 
+### 9.2.1 Schema do dependency-graph.yaml
+
+```yaml
+version: "1.2.0"
+generated_by: "llc-step-4"
+last_updated: "2026-06-13"
+
+artifacts:
+  visao_estrategica:
+    path: "docs/business/specs/visao_estrategica_e_negocio.md"
+    depends_on:
+      - ingestion_converted
+    triggers_update:
+      - glossario
+      - requisitos_funcionais
+      - prd_executivo
+      - prd_tecnico
+      - architecture
+      - design_system
+
+  prps:
+    path_pattern: "docs/prps/PRP-*.md"
+    depends_on:
+      - requisitos_funcionais
+      - prd_tecnico
+    triggers_update:
+      - dependency_matrix
+      - plan
+      - tasks
+```
+
+**Campos:**
+- `path`: Caminho exato para um artefato unico
+- `path_pattern`: Glob para artefatos multiplos (ex: `PRP-*.md`)
+- `depends_on`: Lista de IDs de artefatos que este artefato requer
+- `triggers_update`: Lista de IDs de artefatos downstream que devem ser revisados quando este muda
+
+**Convencao de IDs:** snake_case, nome descritivo (ex: `visao_estrategica`, `requisitos_funcionais`). O ID deve corresponder ao nome do artefato sem extensao.
+
 ### 9.3 Funcionamento
 
 ```

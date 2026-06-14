@@ -631,12 +631,12 @@ Agentes de IA independentes, operando em PRPs paralelos, tendem a maximizar prod
 
 O script `code-health.py` analisa o histórico do git e monitora 4 métricas estruturais:
 
-| Métrica | Threshold de Alerta | Severidade |
-|---------|---------------------|------------|
-| % Moved Code | < 10% do total de alterações | 🔴 Crítico |
-| Copy/Paste vs Moved | Cópias > Movimentações | 🟡 Alto |
-| % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto |
-| Consistência estrutural | Todos os thresholds OK | ✅ Saudável |
+| Métrica | Threshold de Alerta | Severidade | Como e calculada |
+|---------|---------------------|------------|------------------|
+| % Moved Code | < 10% do total de alterações | 🔴 Crítico | `git log --numstat` detecta renames (`=>`). `moved / total_churn * 100` |
+| Copy/Paste vs Moved | Cópias > Movimentações | 🟡 Alto | Compara arquivos com mesmo stem (>30 linhas adicionadas) entre commits proximos |
+| % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto | Linhas alteradas em arquivos cujo commit e anterior a 30 dias / total de linhas alteradas |
+| Consistência estrutural | Todos os thresholds OK | ✅ Saudável | — |
 
 ### 10.3 Integracao
 

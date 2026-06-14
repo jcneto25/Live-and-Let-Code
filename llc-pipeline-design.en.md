@@ -529,12 +529,12 @@ AI agents maximize short-term productivity at the cost of structural code health
 
 `code-health.py` (`.ace/scripts/code-health.py`) monitors 4 structural metrics derived from git history:
 
-| Metric | Threshold | Severity | Rationale |
-|--------|-----------|----------|-----------|
-| **% Moved Code** | ≥ 10% of commits | 🔴 Critical | Ensures continuous refactoring into reusable modules |
-| **Copy/Paste vs Moved** | copy ≤ moved | 🟡 High | Duplication must not exceed intentional code organization |
-| **% Legacy Touch** | ≥ 20% of commits | 🟡 High | Guarantees pre-existing code is consistently improved |
-| **Structural Consistency** | — | ✅ Healthy | Qualitative check: folder conventions, naming, module boundaries |
+| Metric | Threshold | Severity | How it's calculated |
+|--------|-----------|----------|---------------------|
+| **% Moved Code** | ≥ 10% of commits | 🔴 Critical | `git log --numstat` detects renames (`=>`). `moved / total_churn * 100` |
+| **Copy/Paste vs Moved** | copy ≤ moved | 🟡 High | Compares files with same stem (>30 added lines) across nearby commits |
+| **% Legacy Touch** | ≥ 20% of commits | 🟡 High | Lines changed in files whose commit is older than 30 days / total lines changed |
+| **Structural Consistency** | — | ✅ Healthy | — |
 
 ### 10.3 Integration
 

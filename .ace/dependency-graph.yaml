@@ -5,7 +5,7 @@
 # Padrão: modificar um artefato fonte → revisar todos os triggers_update
 # em cascata até os artefatos terminais (sem triggers_update).
 #
-# Gerado e mantido pelo pipeline LLC. Atualizado a cada execução do Step 4.
+# Mantido manualmente como artefato da metodologia LLC. Evolui quando novos artefatos são adicionados ao pipeline.
 
 version: "1.2.0"
 generated_by: "llc-step-4"

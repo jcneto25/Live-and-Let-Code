@@ -118,6 +118,9 @@ Step 9   → Testing Docs                        👤 Gate 10
 Step 10  → Project Docs + Steering Files       👤 Gate 11
 Step 10.5 → User Guide                         👤 Gate 11.5
 Step 11  → Execution (PRPs + security)         👤 Gate 11-SEC + QA
+           └─ Pre: 11-Security (SCA/SAST/Secrets)
+           └─ Pre: 12-Null-Safety (data contracts)
+           └─ Post: 11-OWASP (hardening)
 ```
 
 ### ⚠️ Attention: Do you have existing documentation?
@@ -449,6 +452,31 @@ Execute the skill docs/skills/llc-step-11-security.md
 
 ---
 
+### Step 12-Null-Safety: Data Contract Validation 🆕
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-12-null-safety.md
+```
+
+**The AI does:**
+- Reads all PRPs and extracts data definitions (TypeScript, Python, Prisma, Markdown tables)
+- Checks that every field declares explicit nullability (`?`, `| null`, `Optional`)
+- Checks that nullable fields have documented fallbacks
+- Checks that endpoints declare `maxBodySize`, `rateLimit`, `maxItems` (A06 — DoS prevention)
+- Checks that every POST/PUT/PATCH endpoint has an input schema (Zod, Pydantic, etc.)
+- Generates `docs/security/NULL_SAFETY_REPORT.md` with complete inventory
+
+**You validate:** 👤 Gate 12-NULL
+- 0 fields without nullability specification?
+- 0 endpoints without input schema?
+- Payload limits declared in PRPs?
+
+**Only advance when approved.**
+
+---
+
 ### Step 11: Execution
 
 **Now development begins.** You have two tracks:
@@ -489,7 +517,7 @@ The subflow has 6 phases:
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
-Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 11-Security ──👤──→
+Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 11-Security ──👤──→ Step 12-Null-Safety ──👤──→
 
 Step 11:
   ├── Non-UI PRPs → direct agent

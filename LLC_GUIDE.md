@@ -118,6 +118,9 @@ Step 9   → Testing Docs                       👤 Gate 10
 Step 10  → Project Docs + Steering Files      👤 Gate 11
 Step 10.5 → Manual do Usuario                 👤 Gate 11.5
 Step 11  → Execucao (PRPs + seguranca)        👤 Gate 11-SEC + QA
+           └─ Pre: 11-Security (SCA/SAST/Secrets)
+           └─ Pre: 12-Null-Safety (data contracts)
+           └─ Post: 11-OWASP (hardening)
 ```
 
 ### ⚠️ Atencao: Voce tem documentacao previa?
@@ -474,6 +477,31 @@ Execute a skill docs/skills/llc-step-11-security.md
 
 ---
 
+### Passo 12-Null-Safety: Validacao de Contratos de Dados 🆕
+
+**Voce faz:**
+
+```
+Execute a skill docs/skills/llc-step-12-null-safety.md
+```
+
+**A IA faz:**
+- Le todos os PRPs e extrai definicoes de dados (TypeScript, Python, Prisma, tabelas Markdown)
+- Verifica se todo campo declara nulabilidade explicita (`?`, `| null`, `Optional`)
+- Verifica se campos nulaveis tem fallback documentado
+- Verifica se endpoints declaram `maxBodySize`, `rateLimit`, `maxItems` (A06 — DoS prevention)
+- Verifica se todo endpoint POST/PUT/PATCH tem schema de validacao (Zod, Pydantic, etc.)
+- Gera `docs/security/NULL_SAFETY_REPORT.md` com inventario completo
+
+**Voce valida:** 👤 Gate 12-NULL
+- 0 campos sem especificacao de nulabilidade?
+- 0 endpoints sem schema de validacao?
+- Payload limits declarados nos PRPs?
+
+**So avance quando aprovar.**
+
+---
+
 ### Passo 11: Execucao
 
 **Agora comeca o desenvolvimento.** Voce tem duas trilhas:
@@ -523,7 +551,7 @@ O subfluxo tem 6 fases:
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
-Step 10.5 ──👤──→ Step 11-Security ──👤──→
+Step 10.5 ──👤──→ Step 11-Security ──👤──→ Step 12-Null-Safety ──👤──→
 
 Step 11:
   ├── PRPs sem UI → agente direto

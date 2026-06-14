@@ -219,6 +219,18 @@ Sim. Embora cada sessao seja operada por um humano, o LLC escala para equipes po
 
 O `PLAN.md` define owners por PRP. O `TASKS.md` atribui agentes. O `<gate_result>` registra quem aprovou. Git rastreia autoria.
 
+### Gates podem ser automatizados em CI/CD?
+
+Sim, com o flag `--auto-approve` no `llc.py`:
+
+```bash
+python .ace/scripts/llc.py pipeline --from 0 --auto-approve
+```
+
+**Comportamento padrao (sem flag):** O `gate_check()` aguarda **indefinidamente** por decisao humana. Nao ha timeout que auto-aprove — isso violaria o principio "humano no controle".
+
+**Com `--auto-approve`:** Todos os gates sao aprovados automaticamente. Use apenas em pipelines CI/CD onde o codigo ja passou por revisao humana previa (ex: PR review). O gate ainda e registrado no ACE com `<gate_result decision="approved" reviewer="auto-approve">`.
+
 ---
 
 ## Artefatos e Documentos

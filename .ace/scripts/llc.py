@@ -46,7 +46,8 @@ def cli():
 @click.option("--prp", "-p", default=None, help="ID do PRP (ex: PRP-001)")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
 @click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
-def run(step, prp, task, no_worktree):
+@click.option("--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)")
+def run(step, prp, task, no_worktree, auto_approve):
     """Executa um step completo do pipeline LLC.
 
     Fluxo: init session -> load skill -> invoke agent -> gate check -> finalize session.
@@ -57,7 +58,7 @@ def run(step, prp, task, no_worktree):
     sid = step_run(step, prp=prp, task=task, no_worktree=no_worktree)
 
     print()
-    decision = gate_check(step, None)
+    decision = gate_check(step, None, auto_approve=auto_approve)
     session_end(sid, decision, None)
 
 

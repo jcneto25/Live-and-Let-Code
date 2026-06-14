@@ -219,6 +219,18 @@ Yes. While each session is operated by a single human, LLC scales to teams becau
 
 `PLAN.md` defines PRP owners. `TASKS.md` assigns agents. `<gate_result>` records who approved. Git tracks authorship.
 
+### Can gates be automated in CI/CD?
+
+Yes, with the `--auto-approve` flag on `llc.py`:
+
+```bash
+python .ace/scripts/llc.py pipeline --from 0 --auto-approve
+```
+
+**Default behavior (no flag):** `gate_check()` waits **indefinitely** for human decision. There is no timeout that auto-approves — that would violate the "human in control" principle.
+
+**With `--auto-approve`:** All gates are approved automatically. Use only in CI/CD pipelines where code has already passed prior human review (e.g., PR review). The gate is still recorded in ACE with `<gate_result decision="approved" reviewer="auto-approve">`.
+
 ---
 
 ## Artifacts and Documents

@@ -49,8 +49,10 @@ def get_gate_checklist(step):
     return gate_num, gate.get("checklist", [])
 
 
-def gate_check(step, output=None):
-    """Exibe checklist do gate e aguarda decisao humana com timeout (R5)."""
+def gate_check(step, output=None, auto_approve=False):
+    """Exibe checklist do gate e aguarda decisao humana.
+    Se auto_approve=True (CI/non-interactive), aprova automaticamente.
+    Caso contrario, aguarda indefinidamente — timeout NAO auto-aprova."""
     gate_num, items = get_gate_checklist(step)
     if gate_num is None:
         print(f"ℹ️  Nenhum gate definido para step {step}. Avancando automaticamente.")
@@ -60,25 +62,19 @@ def gate_check(step, output=None):
     for item in items:
         print(f"  - {item}")
 
-    print()
-    print("[A]provar  [R]ejeitar  [S]kip (timeout em 60s = skip)")
-    import select
-
-    print("Aguardando decisao...")
-    ready, _, _ = select.select([sys.stdin], [], [], 60)
-
-    if not ready:
-        print("\n⏰ Timeout. Avancando automaticamente.")
+    if auto_approve:
+        print("\n⚡ Modo auto-aprove (CI). Avancando automaticamente.")
         return "approved"
 
-    choice = sys.stdin.readline().strip().lower()
+    print()
+    print("[A]provar  [R]ejeitar")
+    print("(sem timeout — aguardando decisao humana)")
+    choice = input().strip().lower()
 
     if choice in ("a", "approve"):
         return "approved"
     elif choice in ("r", "reject"):
         return "rejected"
-    elif choice in ("s", "skip"):
-        return "approved"
     return "approved"
 
 from pathlib import Path

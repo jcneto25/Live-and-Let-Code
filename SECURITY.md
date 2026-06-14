@@ -1,170 +1,148 @@
-# Política de Segurança — SGI
+# Security Policy — Live and Let Code (LLC)
 
-## 1. Propósito
+## 1. Purpose
 
-Este documento define a política de segurança do **Sistema de Gestão de Investigações (SGI)**, projeto conduzido sob a metodologia **Live and Let Code (LLC)**. A política abrange o ciclo de vida de desenvolvimento, a operação da plataforma e o tratamento de vulnerabilidades reportadas.
+This document defines the security policy for the **Live and Let Code (LLC)** methodology and its reference implementation. It describes how the LLC pipeline enforces security throughout the development lifecycle, and how to report vulnerabilities in the methodology itself.
 
-## 2. Versões Suportadas
+## 2. Supported Versions
 
-| Versão | Status | Correções de Segurança |
-|--------|--------|------------------------|
-| 1.0.x (branch principal) | Em desenvolvimento ativo | ✅ Todas as vulnerabilidades |
-| < 1.0 (branches de feature) | Preview | Apenas vulnerabilidades críticas |
+| Version | Status | Security Fixes |
+|---------|--------|----------------|
+| `master` (latest) | Under active development | ✅ All vulnerabilities |
+| Tagged releases (v1.x) | Stable | Critical and high only |
 
-## 3. Ciclo de Segurança LLC
+## 3. LLC Security Model
 
-O pipeline LLC integra verificações de segurança nos seguintes pontos:
+The LLC methodology enforces security at **every stage** of the development lifecycle — not as a final gate before deploy. Security is integrated into the pipeline's 14 steps through 3 complementary layers:
 
-| Step | Ferramenta | Escopo | Gate |
-|------|-----------|-------|------|
-| **Step 11-Security** | npm audit / pip-audit | SCA — Dependências | Bloqueia em CVSS ≥ 9.0 |
-| **Step 11-Security** | Semgrep | SAST — Código estático | Bloqueia em ERROR |
-| **Step 11-Security** | Gitleaks | Secrets — Credenciais expostas | Bloqueia em secrets reais |
-| **Step 12-Null-Safety** | Validação manual/IA | Nulabilidade nos PRPs | Bloqueia campos sem especificação |
-| **Step 1** | RBAC/ABAC via `perfis_permissoes.md` | Controle de acesso | Bloqueia segregação conflitante |
-| **Step 5** | Definição em `ARCHITECTURE.md` | Arquitetura de segurança | Bloqueia gaps de segurança |
-| **Step 11-OWASP** | Verificação manual/IA | Hardening OWASP Top 10:2021 | Bloqueia em 1+ verificação 🔴 |
+### 3.1 Pre-Code Security (Step 11-Security)
 
-### 3.1 Relatórios de Segurança
+Executes automated tools **before** any PRP implementation begins:
 
-Os relatórios consolidados de auditoria de segurança são armazenados em:
+| Tool | Scope | Gate |
+|------|-------|------|
+| `npm audit` / `pip-audit` | SCA — Dependency vulnerabilities | Blocks on CVSS ≥ 9.0 |
+| Semgrep | SAST — Static code analysis | Blocks on ERROR findings |
+| Gitleaks | Secrets — Exposed credentials | Blocks on real secrets |
 
-```
-docs/security/
-├── SECURITY_AUDIT_REPORT.md            # SCA + SAST + Secrets (Step 11)
-├── NULL_SAFETY_REPORT.md               # Validação de nulabilidade (Step 12)
-├── OWASP_HARDENING_REPORT.md           # Hardening OWASP Top 10 (Step 11-OWASP)
-├── SECURITY_AUDIT_REPORT_TEMPLATE.md   # Template SCA/SAST/Secrets
-└── NULL_SAFETY_REPORT_TEMPLATE.md      # Template Null Safety
-```
+**Skill:** `docs/skills/llc-step-11-security.md`
+**Report:** `docs/security/SECURITY_AUDIT_REPORT.md`
+**Gate:** 11-SEC — blocks PRP execution on critical findings or real secrets.
 
-Dados brutos dos scans são armazenados em `.ace/security/` (não versionados).
+### 3.2 Design-Time Security (Step 12-Null-Safety)
 
-### 3.2 Hardening Pós-Implementação (OWASP Top 10:2021)
+Validates data contracts **before** code is written. Prevents null pointer exceptions, missing input schemas, undefined payload limits, and missing HTML sanitization at the PRP design level.
 
-Após a implementação dos PRPs (código escrito e PRs abertos), o Step 11-OWASP executa uma verificação de hardening baseada no OWASP Top 10:2021. Esta verificação complementa as ferramentas automatizadas (SCA + SAST + secrets) com inspeções manuais/IA de controles que ferramentas não detectam.
+**Skill:** `docs/skills/llc-step-12-null-safety.md`
+**Report:** `docs/security/NULL_SAFETY_REPORT.md`
+**Gate:** Blocks implementation on fields without explicit nullability or endpoints without schema validation.
 
-**Categorias verificadas (10):**
+### 3.3 Post-Code Security (Step 11-OWASP)
 
-| ID | Categoria | Foco da Verificação |
-|----|-----------|---------------------|
-| A01 | Broken Access Control | Middleware de auth em todas as rotas, RBAC/ABAC, ownership check |
-| A02 | Cryptographic Failures | Hash de senhas (bcrypt/argon2), TLS, JWT seguro, secrets não hardcoded |
-| A03 | Injection | SQL parametrizado, shell injection, validação de input, XSS |
-| A04 | Insecure Design | Rate limiting, lockout, reset de senha seguro, análise de riscos |
-| A05 | Security Misconfiguration | Headers HTTP (CSP, HSTS), debug desabilitado, stack traces |
-| A06 | Vulnerable Components | Dependências atualizadas, sem CVEs com exploit público |
-| A07 | Auth Failures | MFA para perfis críticos, sessão segura, sem enumeração de usuários |
-| A08 | Integrity Failures | Lockfiles versionados, CI/CD seguro, sem desserialização insegura |
-| A09 | Logging Failures | Logs de auditoria, sem dados sensíveis em logs, logs imutáveis |
-| A10 | SSRF | Validação de URLs, bloqueio de redes internas, sem redirect cego |
+After PRPs are implemented, performs manual/AI verification against the **OWASP Top 10:2021** — controls that automated tools cannot detect (e.g., ownership verification, business logic flaws, password policy enforcement).
+
+| ID | Category | Verification Focus |
+|----|----------|-------------------|
+| A01 | Broken Access Control | Auth middleware, RBAC/ABAC, ownership checks |
+| A02 | Cryptographic Failures | bcrypt/argon2, TLS, secure JWT, no hardcoded secrets |
+| A03 | Injection | Parameterized SQL, input validation, XSS |
+| A04 | Insecure Design | Rate limiting, lockout, secure password reset |
+| A05 | Security Misconfiguration | CSP, HSTS, debug disabled, stack traces hidden |
+| A06 | Vulnerable Components | Updated dependencies, no CVEs with public exploits |
+| A07 | Auth Failures | MFA, secure sessions, no user enumeration |
+| A08 | Integrity Failures | Lockfiles, secure CI/CD, no insecure deserialization |
+| A09 | Logging Failures | Audit logs, no sensitive data in logs, immutable logs |
+| A10 | SSRF | URL validation, internal network blocking |
 
 **Skill:** `docs/skills/llc-step-11-owasp-security.md`
-**Relatório:** `docs/security/OWASP_HARDENING_REPORT.md`
-**Gate:** Bloqueia release se 1+ verificação 🔴 (crítica). 🟡 (alto) deve gerar ticket.
+**Report:** `docs/security/OWASP_HARDENING_REPORT.md`
+**Gate:** Blocks release on 1+ critical (🔴) finding.
 
-## 4. Reportando Vulnerabilidades
+### 3.4 Security Reports
 
-### 4.1 Canal de Reporte
+Consolidated security audit reports are stored in `docs/security/`. Raw scan outputs are stored in `.ace/security/` (not versioned — regenerated on each audit).
 
-Se você descobrir uma vulnerabilidade de segurança no SGI, **NÃO** abra uma issue pública. Utilize o canal confidencial:
+## 4. Reporting Vulnerabilities
 
-- **GitHub Security Advisories:** [Reportar via GitHub](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new) — canal recomendado
-- **Email:** `seguranca@{{ORGANIZACAO}}.jus.br` — para reportes confidenciais que não possam usar GitHub
-- **Chave PGP:** A ser publicada no site institucional da {{ORGANIZACAO}} (em implantação)
-- **Mantenedor do Projeto:** Equipe LLC — contato via `docs/skills/llc-step-11-security.md`
+### 4.1 In the LLC Methodology
 
-### 4.2 Informações Necessárias
+If you discover a vulnerability in the LLC methodology itself (flawed skill logic, missing security step, insecure pipeline pattern), report it via:
 
-Ao reportar uma vulnerabilidade, inclua sempre que possível:
+- **[GitHub Issues](https://github.com/jcneto25/Live-and-Let-Code/issues)** — for methodology improvements (public)
+- **[GitHub Security Advisories](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new)** — for sensitive findings that could be exploited
 
-1. **Descrição detalhada** da vulnerabilidade e seu impacto potencial
-2. **Passos para reprodução** (proof of concept, payloads, configuração)
-3. **Versão afetada** do sistema ou componente
-4. **CVSS estimado** (se souber calcular)
-5. **Sugestão de mitigação** (se tiver)
-6. **Seu contato** para acompanhamento (email, GitHub, etc.)
+### 4.2 Reporting Vulnerabilities in Projects Using LLC
 
-### 4.3 Tempo de Resposta
+The SECURITY.md file generated by an LLC project (via Step 10) is a **template** — project maintainers should customize it with:
+- Their organization's contact email
+- Their specific infrastructure and compliance requirements
+- Their supported version matrix
+- Their response time SLAs
 
-| Severidade | Triagem Inicial | Correção | Divulgação |
-|------------|-----------------|----------|------------|
-| 🔴 Crítica (CVSS ≥ 9.0) | 24h | 72h | Após correção + 7 dias |
-| 🟡 Alta (CVSS 7.0–8.9) | 48h | 7 dias | Após correção + 14 dias |
-| 🟢 Média (CVSS 4.0–6.9) | 5 dias úteis | 30 dias | Próximo release notes |
-| ⚪ Baixa (CVSS < 4.0) | 10 dias úteis | Próximo milestone | Release notes |
+The LLC pipeline provides the security infrastructure (automated scans, hardening checklists, null-safety validation). The project's own SECURITY.md defines the human-facing policy.
 
-### 4.4 Processo de Tratamento
+### 4.3 Required Information
 
-1. **Recepção e Triagem** — A vulnerabilidade é recebida, registrada e classificada por severidade.
-2. **Validação** — A equipe reproduz e confirma a vulnerabilidade.
-3. **Correção** — A correção é desenvolvida em branch privada.
-4. **Teste** — A correção é validada com testes de regressão e segurança.
-5. **Release** — A correção é mergeada e publicada.
-6. **Divulgação** — Um advisory é publicado com crédito ao reportador (se autorizado).
+When reporting a vulnerability, include whenever possible:
 
-## 5. Práticas de Desenvolvimento Seguro
+1. **Detailed description** of the vulnerability and its potential impact
+2. **Steps to reproduce** (proof of concept, payloads, configuration)
+3. **Affected version** of LLC or the component
+4. **CVSS estimate** (if you can calculate it)
+5. **Suggested mitigation** (if available)
 
-### 5.1 Código
+### 4.4 Response Timeline
 
-- **Revisão obrigatória** de PRs por pelo menos 1 revisor antes de merge.
-- **Análise estática** automatizada via Semgrep no Step 11.
-- **Secrets scanning** via Gitleaks no Step 11 e em pre-commit hooks.
-- **Hardening OWASP Top 10** pós-implementação via `llc-step-11-owasp-security` — verificações manuais de access control, crypto, injection, design, misconfig, auth, integrity, logging e SSRF antes do release.
-- **Proibição de segredos hardcoded** — usar variáveis de ambiente ou secret manager.
-- **Dependências** atualizadas com `npm audit fix` / `pip-audit --fix` antes de cada release.
+| Severity | Initial Triage | Fix |
+|----------|---------------|-----|
+| 🔴 Critical (CVSS ≥ 9.0) | 24h | 72h |
+| 🟡 High (CVSS 7.0–8.9) | 48h | 7 days |
+| 🟢 Medium (CVSS 4.0–6.9) | 5 business days | 30 days |
+| ⚪ Low (CVSS < 4.0) | 10 business days | Next milestone |
 
-### 5.2 Dados
+## 5. LLC's Own Security Practices
 
-- **Classificação da informação** conforme `perfis_permissoes.md` (PÚBLICO, INTERNO, RESTRITO, SIGILOSO).
-- **Criptografia em trânsito** via TLS 1.3 como padrão mínimo.
-- **Criptografia em repouso** para dados sensíveis (campos definidos em `perfis_permissoes.md` §8.3).
-- **Sanitização de inputs** em todas as APIs (proteção contra XSS, SQL Injection, Command Injection).
-- **Validação de nulabilidade** conforme `NULL_SAFETY_REPORT.md` (prevenção de NPE).
+### 5.1 Pipeline Integrity
 
-### 5.3 Autenticação e Autorização
+- **All artifacts are versioned in Git** — full audit trail from vision to commit.
+- **ACE sessions are append-only** — never rewritten, always traceable.
+- **Human gates** at every stage — no step advances without explicit approval.
+- **Impact analyzer** (`impact-analyzer.py`) traces every change across all downstream artifacts.
+- **Pre-commit hooks** enforce ACE validation, tag schema checks, and security scan outputs cleanup.
 
-- Modelo **RBAC + ABAC** conforme `docs/business/specs/perfis_permissoes.md`.
-- **Segregação de funções (SoD)** — regras de incompatibilidade definidas em §6 do documento de perfis.
-- **MFA** para perfis críticos.
-- **JWT** com expiração configurável e refresh token rotation.
-- **Logs de auditoria** imutáveis para todos os eventos de autenticação e autorização.
+### 5.2 Code Quality
 
-### 5.4 Infraestrutura
+- **TDD enforcement** via `AGENTS.md` — RED → GREEN → REFACTOR required for every PRP.
+- **Code health metrics** (`code-health.py`) monitor moved code ratio, copy/paste detection, and legacy code touch.
+- **Tool-agnostic** — no dependency on a specific AI client or external service. Skills are Markdown files; scripts are standard Python.
 
-- **Contêineres** com imagens base atualizadas e scanning de vulnerabilidades.
-- **Configuração como código** — infraestrutura versionada e auditável.
-- **Segredos de infra** gerenciados via secret manager (nunca em código ou `.env` commitado).
+### 5.3 Dependency Security
 
-## 6. Política de Divulgação
+The LLC reference implementation has minimal dependencies: Python 3.10+ stdlib, Click (CLI framework), and optional `sentence-transformers` for embedding-based similarity. Dependency updates are managed via standard Python tooling.
+
+### 5.4 Infrastructure
+
+- LLC is a repository of Markdown documents and Python scripts — no runtime servers, no databases, no network services.
+- The reference implementation does not collect, store, or transmit any user data.
+- Git worktrees isolate parallel PRP sessions — no shared mutable state between agents.
+
+## 6. Disclosure Policy
 
 ### 6.1 Advisories
 
-Vulnerabilidades corrigidas são documentadas em advisories no GitHub, contendo:
-
-- Descrição da vulnerabilidade (CWE, CVSS)
-- Versões afetadas
-- Correção aplicada
-- Workarounds (se houver)
-- Crédito ao reportador (se autorizado)
+Fixed vulnerabilities are documented in GitHub advisories, containing: CWE, CVSS, affected versions, applied fix, workarounds, and credit to reporter (if authorized).
 
 ### 6.2 Embargo
 
-Durante o período de correção, a vulnerabilidade é mantida sob embargo. O reportador é mantido informado do progresso. Após a correção e publicação, a divulgação pública ocorre conforme os prazos da tabela §4.3.
+During the fix period, the vulnerability is kept under embargo. The reporter is informed of progress. Public disclosure occurs after fix + grace period per §4.4.
 
-## 7. Reconhecimento
+## 7. Recognition
 
-Agradecemos a contribuição de pesquisadores e profissionais de segurança que reportam vulnerabilidades de forma responsável. Reportadores que seguirem esta política receberão:
+We appreciate researchers and security professionals who responsibly report vulnerabilities. Reporters who follow this policy will receive credit in the advisory and on the project's acknowledgments page (if authorized).
 
-- Crédito no advisory (se autorizado)
-- Inclusão na página de agradecimentos do projeto (se autorizado)
+## 8. Contact
 
-## 8. Contato
-
-- **Segurança:** `seguranca@{{ORGANIZACAO}}.jus.br` ou via [GitHub Security Advisories](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new)
-- **Mantenedor do Projeto:** Equipe LLC
-- **Pipeline de Segurança:** `docs/skills/llc-step-11-security.md`
-- **Documentação de Segurança:** `docs/security/`
-- **Política de Segurança (este documento):** `SECURITY.md`
-- **Tarefas de Segurança:** `docs/planning/TASKS.md` §4
-- **Auditoria Inicial:** Executada em 2026-06-12 — `docs/security/SECURITY_AUDIT_REPORT.md`
+- **Security:** [GitHub Security Advisories](https://github.com/jcneto25/Live-and-Let-Code/security/advisories/new)
+- **General Issues:** [GitHub Issues](https://github.com/jcneto25/Live-and-Let-Code/issues)
+- **Pipeline Documentation:** `docs/skills/llc-step-11-security.md`
+- **Security Reports:** `docs/security/`

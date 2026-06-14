@@ -43,7 +43,7 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 | **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 12 steps + subfluxo F1-F6, 12 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6, 15 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py |
 | **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -412,6 +412,8 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 11 | 10 | README permite onboarding em ≤ 10 min? DEPLOYMENT cobre rollback e monitoramento? |
 | 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
 | 👤 11-SEC | 11-SEC | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
+| 👤 11-OWASP | 11-OWASP | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
+| 👤 12-NULL | 12-NULL | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 

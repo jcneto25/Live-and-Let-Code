@@ -99,6 +99,24 @@
         "Sem secrets expostos?"
       ]
     },
+    "11-SEC": {
+      "step": 11,
+      "label": "Security Audit",
+      "checklist": [
+        "0 vulnerabilidades criticas (CVSS >= 9.0)?",
+        "Secrets reais zerados?",
+        "Vulnerabilidades altas com decisao registrada?"
+      ]
+    },
+    "11-OWASP": {
+      "step": 11,
+      "label": "OWASP Hardening",
+      "checklist": [
+        "0 verificacoes OWASP criticas?",
+        "Verificacoes altas com plano de correcao?",
+        "Relatorio OWASP_HARDENING_REPORT.md atualizado?"
+      ]
+    },
     "11.5": {
       "step": 10.5,
       "label": "User Guide",
@@ -107,6 +125,15 @@
         "Perfis tem paginas relevantes?",
         "Indice navegavel?",
         "Linguagem adequada ao usuario final?"
+      ]
+    },
+    "12-NULL": {
+      "step": 12,
+      "label": "Null Safety",
+      "checklist": [
+        "0 campos sem especificacao de nulabilidade?",
+        "0 endpoints sem schema de validacao?",
+        "Payload limits declarados nos PRPs?"
       ]
     }
   },
@@ -122,6 +149,9 @@
     "8": 9,
     "9": 10,
     "10": 11,
-    "10.5": 11.5
+    "10.5": 11.5,
+    "11-security": "11-SEC",
+    "11-owasp": "11-OWASP",
+    "12-null": "12-NULL"
   }
 }

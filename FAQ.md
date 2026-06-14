@@ -8,7 +8,7 @@
 
 ### O que é um workflow agentico de desenvolvimento?
 
-É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 21 skills, 13 human gates e um protocolo de continuidade de contexto (ACE).
+É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 21 skills, 15 human gates e um protocolo de continuidade de contexto (ACE).
 
 ### Como o LLC esta organizado arquiteturalmente?
 
@@ -60,7 +60,7 @@ O resultado: o LLC mantém os benefícios do SDD (rastreabilidade, especificaç�
 
 ### O que são Human Gates?
 
-São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 13 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
+São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 15 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
 
 ### O que é Grill Me?
 
@@ -303,7 +303,7 @@ Todos os artefatos LLC são documentos Markdown persistentes versionados em **Gi
 
 São checkpoints de transição de fase que verificam se cada artefato atende aos critérios definidos antes do próximo agente começar. No LLC, os gates são formais e registrados:
 
-- **13 human gates:** um apos cada step de geracao (0.5 a 11). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
+- **15 human gates:** um apos cada step de geracao (0.5 a 11). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
 - **1 checkpoint visual:** no subfluxo de prototipagem (F4 → F5). O protótipo hi-fi não vira código sem aprovação visual explícita
 - **Checkpoints de QA:** durante a execução (Step 11): score ≥ 7.0, cobertura ≥ thresholds, security audit aprovado
 

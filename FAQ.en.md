@@ -8,7 +8,7 @@
 
 ### What is an agentic development workflow?
 
-A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 21 skills, 13 human gates, and a context continuity protocol (ACE).
+A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 21 skills, 15 human gates, and a context continuity protocol (ACE).
 
 ### How is LLC architecturally organized?
 
@@ -60,7 +60,7 @@ LLC's cross-session continuity protocol. Combines Markdown (human readability), 
 
 ### What are Human Gates?
 
-Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 13 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
+Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 15 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
 
 ### What is Grill Me?
 

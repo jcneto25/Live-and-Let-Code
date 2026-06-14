@@ -536,6 +536,9 @@ When alerts fire, apply corrective actions in order:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.5.0 | 06/13/2026 | LLC Team | Added Thin Harness (CLI orchestrator), Early Commitment + Deterministic Replay, security steps (11-Security, 11-OWASP, 12-Null-Safety), compressed documentation index, 15 human gates |
+| 1.4.0 | 06/12/2026 | LLC Team | Added Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, auto git worktrees, prompt caching strategy |
+| 1.3.0 | 06/11/2026 | LLC Team | Added Step 10.5 (User Guide) with `llc-user-guide` skill, gate 11.5, USER_GUIDE_TEMPLATE.md and `user_docs` section in PRP |
 | 1.2.0 | 06/10/2026 | LLC Team | Added Grill Me (Steps 0.5-3), greenfield flow, structural code health analysis (§10) |
 | 1.1.0 | 06/10/2026 | LLC Team | Added Mermaid pipeline flow (§3.1), ACE (§8) and Impact Analysis (§9) sections, removed archive/ and superpowers/ |
 | 1.0.0 | 06/04/2026 | LLC Team | Initial LLC pipeline design |

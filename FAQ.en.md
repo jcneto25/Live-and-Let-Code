@@ -1050,7 +1050,7 @@ llc status                           # Pipeline progress
 
 **The harness does NOT replace ACE scripts** — it invokes them via subprocess. ACE scripts remain independent and manually invocable.
 
-**Why "thin"?** The harness is ~350 lines by design. It does NOT implement tool-calling (client), does NOT define security rules (AGENTS.md), does NOT teach the model (skills). Its 5 responsibilities are strict:
+**Why "thin"?** The harness is ~390 lines by design. It does NOT implement tool-calling (client), does NOT define security rules (AGENTS.md), does NOT teach the model (skills). Its 5 responsibilities are strict:
 
 | # | Responsibility | How |
 |---|---------------|-----|

@@ -1022,7 +1022,7 @@ Git Worktree permite criar **multiplos diretorios de trabalho** vinculados a bra
 
 ### O que e o Thin Harness do LLC?
 
-O **Thin Harness** e a camada de orquestracao que conecta skills (Markdown), scripts ACE (Python) e o cliente de IA. E um CLI de ~500 linhas em Python que automatiza o ciclo de vida de cada step do pipeline.
+O **Thin Harness** e a camada de orquestracao que conecta skills (Markdown), scripts ACE (Python) e o cliente de IA. E um CLI de ~390 linhas em Python que automatiza o ciclo de vida de cada step do pipeline.
 
 **Comandos principais:**
 
@@ -1050,7 +1050,7 @@ llc status                           # Progresso do pipeline
 
 **O harness NAO substitui os scripts ACE** — ele os invoca via subprocess. Scripts ACE permanecem independentes e invocaveis manualmente.
 
-**Por que "thin"?** O harness tem ~350 linhas por design. Ele NAO implementa tool-calling (cliente), NAO define regras de seguranca (AGENTS.md), NAO ensina o modelo (skills Markdown). Suas 5 responsabilidades sao estritas:
+**Por que "thin"?** O harness tem ~390 linhas por design. Ele NAO implementa tool-calling (cliente), NAO define regras de seguranca (AGENTS.md), NAO ensina o modelo (skills Markdown). Suas 5 responsabilidades sao estritas:
 
 | # | Responsabilidade | Como |
 |---|-----------------|------|

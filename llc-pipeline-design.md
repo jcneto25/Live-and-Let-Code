@@ -252,7 +252,7 @@ graph TD
     START{Documentação prévia?}
     START -->|Sim| S0[Step 0: User loads raw docs]
     START -->|Não| GF[Step 0-Greenfield: Entrevista estruturada]
-    GF --> S01
+    GF --> S05
     S0 --> S01[Step 0.1: Docling → Markdown]
     S01 --> S05[Step 0.5: AI → Vision + Module Specs]
     S05 --> G1{👤 Gate 1}

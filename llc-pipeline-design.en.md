@@ -228,7 +228,7 @@ project-root/
 graph TD
     START{Prior documentation?} -->|Yes| S0[Step 0: User loads raw docs]
     START -->|No| S0GF[Step 0-Greenfield: Structured Interview]
-    S0GF --> S01
+    S0GF --> S05
     S0 --> S01[Step 0.1: Docling → Markdown]
     S01 --> S05[Step 0.5: AI → Vision + Module Specs]
     S05 --> G1{👤 Gate 1}
@@ -469,7 +469,7 @@ AI agents maximize short-term productivity at the cost of structural code health
 
 ### 10.2 The Solution
 
-`code-health.py` (`docs/skills/code-health.py`) monitors 4 structural metrics derived from git history:
+`code-health.py` (`.ace/scripts/code-health.py`) monitors 4 structural metrics derived from git history:
 
 | Metric | Threshold | Severity | Rationale |
 |--------|-----------|----------|-----------|

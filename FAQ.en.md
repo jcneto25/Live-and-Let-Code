@@ -880,6 +880,16 @@ Yes. LLC is **tool-agnostic by design** — skills are Markdown files, ACE scrip
 
 **The docs use JS/TS as examples because it's the most common stack**, but all concepts are translatable. The only real dependency is Python 3.10+ (for ACE scripts). Everything else is Markdown, Git, and processes.
 
+### Why does the reference implementation use Python?
+
+The LLC **methodology** (Markdown skills, gates, versioned artifacts) is tool-agnostic — works with any terminal AI client. The **reference implementation** (ACE scripts, Thin Harness, code-health, impact-analyzer) uses Python 3.10+ because:
+
+- Python is the most widely available language in development environments (pre-installed on Linux/macOS, easy on Windows)
+- ACE scripts need `subprocess`, `json`, `pathlib`, `hashlib` — all in stdlib
+- The only external dependency is `click` (CLI framework, `pip install click`)
+
+Alternative implementations in other languages (Node.js, Go, Rust) are welcome — as long as they follow the same contracts (4-field context_seed, gates.json, atomic cache writes). LLC is an open specification, not a Python product.
+
 ---
 
 ## What does each Python script do?

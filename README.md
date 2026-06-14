@@ -30,7 +30,7 @@ Live and Let Code (LLC) is an open-source methodology that structures the comple
 |-----|-----|
 | Documentação como código — todo artefato é versionável | Documentation as code — every artifact is versionable |
 | Humano no controle — IA propõe, humano dispõe | Human in control — AI proposes, human decides |
-| Tool-agnóstico — qualquer cliente de IA terminal | Tool-agnostic — any terminal AI client |
+| Tool-agnostic — any terminal AI client | A metodologia (skills Markdown, gates, artefatos) e independente de ferramenta. A implementacao de referencia usa Python 3.10+ para automacao. |
 | Rastreabilidade total — da visão ao commit | Full traceability — from vision to commit |
 | Paralelismo por design — PRPs auto-contidos | Parallelism by design — self-contained PRPs |
 

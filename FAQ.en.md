@@ -8,7 +8,7 @@
 
 ### What is an agentic development workflow?
 
-A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 13 skills, 11 human gates, and a context continuity protocol (ACE).
+A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 21 skills, 13 human gates, and a context continuity protocol (ACE).
 
 ### How is LLC architecturally organized?
 
@@ -42,7 +42,7 @@ Traditional SDD has 5 legitimate criticisms. LLC was designed to address each on
 
 | Traditional SDD criticism | How LLC solves it |
 |--------------------------|-------------------|
-| **1. Rigid waterfall, too slow** — heavy documentation before any code, 10x slower | LLC **is not waterfall**. The 11 steps are a pipeline, not frozen phases. PRPs are 2-8 days and run in **parallel waves** as soon as validated. Grill Me is a short Q&A round (~15 min), not months of documentation. The mocked MVP (Step 8) delivers something functional and demonstrable in days, not months |
+| **1. Rigid waterfall, too slow** — heavy documentation before any code, 10x slower | LLC **is not waterfall**. The 14 steps are a pipeline, not frozen phases. PRPs are 2-8 days and run in **parallel waves** as soon as validated. Grill Me is a short Q&A round (~15 min), not months of documentation. The mocked MVP (Step 8) delivers something functional and demonstrable in days, not months |
 | **2. "Markdown Madness"** — thousands of lines of docs, 80% of time reading Markdown | ACE solves this: `<context_seed>` compresses state into **4 fields (~300 tokens)**. An implementation agent receives **only the PRP it will execute** (~50-80 lines), not the entire project. `impact-analyzer.py` tells exactly which artifacts to read, eliminating unnecessary reading |
 | **3. Persistent bugs, unmaintainable code** — even with specs, generated code has trivial errors | **TDD embedded in every PRP** + `code-health.py` + self-healing loop. AI writes test → sees it fail → implements → sees it pass. If it fails, the cycle restarts. The agent doesn't deliver code without passing tests. Moved Code, Copy/Paste, and Legacy Touch metrics are monitored every wave |
 | **4. Spec Drift** — manually changed code breaks the "single source of truth" | `dependency-graph.yaml` + `impact-analyzer.py` detect drift automatically: `git diff` → cross with graph → reports which artifacts are outdated. **Not manual.** Pre-commit hook alerts before commit. `<gate_result>` forces human validation before proceeding |
@@ -60,7 +60,7 @@ LLC's cross-session continuity protocol. Combines Markdown (human readability), 
 
 ### What are Human Gates?
 
-Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 11 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
+Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 13 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
 
 ### What is Grill Me?
 
@@ -303,7 +303,7 @@ All LLC artifacts are persistent Markdown documents versioned in **Git**, treate
 
 Phase transition checkpoints that verify each artifact meets defined criteria before the next agent starts. In LLC, gates are formal and recorded:
 
-- **11 human gates:** one after each generation step (0.5 through 10). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
+- **13 human gates:** one after each generation step (0.5 through 11). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
 - **1 visual checkpoint:** in the prototyping subflow (F4 → F5). The hi-fi prototype doesn't become code without explicit visual approval
 - **QA checkpoints:** during execution (Step 11): score ≥ 7.0, coverage ≥ thresholds, security audit passed
 
@@ -630,7 +630,7 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 
 ### How many steps does LLC have?
 
-13 main skills + 1 subflow. The pipeline goes from business knowledge ingestion to production deployment:
+21 main skills + 1 subflow. The pipeline goes from business knowledge ingestion to production deployment:
 
 | # | Stage | Skill | Technology / Tool |
 |---|-------|-------|-------------------|

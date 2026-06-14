@@ -26,7 +26,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 
 Este documento especifica:
 - A arquitetura de diretórios do LLC (§2)
-- O pipeline completo com 11 etapas principais + 1 subfluxo (§3)
+- O pipeline completo com 14 etapas principais + 1 subfluxo (§3)
 - O catálogo de skills (§4)
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)

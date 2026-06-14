@@ -8,7 +8,7 @@
 
 ### O que é um workflow agentico de desenvolvimento?
 
-É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 13 skills, 11 human gates e um protocolo de continuidade de contexto (ACE).
+É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 21 skills, 13 human gates e um protocolo de continuidade de contexto (ACE).
 
 ### Como o LLC esta organizado arquiteturalmente?
 
@@ -42,7 +42,7 @@ O SDD tradicional tem 5 críticas legítimas. O LLC foi desenhado para endereça
 
 | Crítica ao SDD tradicional | Como o LLC resolve |
 |---------------------------|-------------------|
-| **1. Waterfall rígido e lento** — documentação pesada antes de qualquer código, 10x mais lento | O LLC **não é waterfall**. As 11 etapas são pipeline, não fase congelada. PRPs têm 2-8 dias e rodam em **ondas paralelas** assim que validados. O Grill Me é uma rodada curta de perguntas (~15 min), não meses de documentação. O MVP mockado (Step 8) entrega algo funcional e demonstrável em dias, não meses |
+| **1. Waterfall rígido e lento** — documentação pesada antes de qualquer código, 10x mais lento | O LLC **não é waterfall**. As 14 etapas são pipeline, não fase congelada. PRPs têm 2-8 dias e rodam em **ondas paralelas** assim que validados. O Grill Me é uma rodada curta de perguntas (~15 min), não meses de documentação. O MVP mockado (Step 8) entrega algo funcional e demonstrável em dias, não meses |
 | **2. "Markdown Madness"** — milhares de linhas de documentação, 80% do tempo lendo Markdown | O ACE resolve isso: o `<context_seed>` comprime o estado em **4 campos (~300 tokens)**. Um agente de implementação recebe **apenas o PRP que vai executar** (~50-80 linhas), não o projeto inteiro. O `impact-analyzer.py` diz exatamente quais artefatos ler, eliminando leitura desnecessária |
 | **3. Bugs persistentes e código insustentável** — mesmo com specs, código gerado contém erros triviais | **TDD embutido em cada PRP** + `code-health.py` + self-healing loop. A IA escreve teste → vê falhar → implementa → vê passar. Se falhar, o ciclo recomeça. O agente não entrega código sem teste passando. Métricas de Moved Code, Copy/Paste e Legacy Touch são monitoradas a cada onda |
 | **4. Spec Drift** — código alterado manualmente quebra a "fonte única da verdade" | O `dependency-graph.yaml` + `impact-analyzer.py` detectam drift automaticamente: `git diff` → cruza com grafo → reporta quais artefatos estão desatualizados. **Não é manual.** O pre-commit hook alerta antes do commit. O `<gate_result>` força validação humana antes de prosseguir |
@@ -60,7 +60,7 @@ O resultado: o LLC mantém os benefícios do SDD (rastreabilidade, especificaç�
 
 ### O que são Human Gates?
 
-São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 11 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
+São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 13 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
 
 ### O que é Grill Me?
 
@@ -303,7 +303,7 @@ Todos os artefatos LLC são documentos Markdown persistentes versionados em **Gi
 
 São checkpoints de transição de fase que verificam se cada artefato atende aos critérios definidos antes do próximo agente começar. No LLC, os gates são formais e registrados:
 
-- **11 human gates:** um após cada step de geração (0.5 a 10). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
+- **13 human gates:** um apos cada step de geracao (0.5 a 11). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
 - **1 checkpoint visual:** no subfluxo de prototipagem (F4 → F5). O protótipo hi-fi não vira código sem aprovação visual explícita
 - **Checkpoints de QA:** durante a execução (Step 11): score ≥ 7.0, cobertura ≥ thresholds, security audit aprovado
 

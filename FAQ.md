@@ -905,7 +905,25 @@ Sim. O LLC é **tool-agnostic**. Cada skill é um arquivo Markdown que qualquer 
 
 ## O que acontece se um gate humano for reprovado?
 
-O fluxo retorna ao passo anterior para correção. A IA registra o motivo no ACE via `<gate_result decision="rejected">` e `<blocker>`. Após a correção, o gate é reavaliado. Nenhum passo avança sem aprovação explícita.
+O fluxo retorna ao passo anterior para correcao. A IA registra o motivo no ACE via `<gate_result decision="rejected">` e `<blocker>`. Apos a correcao, o gate e reavaliado. Nenhum passo avanca sem aprovacao explicita.
+
+### O que exatamente acontece quando um gate e reprovado?
+
+O processo de rejeicao de gate segue 4 etapas:
+
+**1. Registro da decisao:** O `<gate_result decision="rejected" reviewer="...">` e appendido ao arquivo ACE da sessao. O motivo da rejeicao e registrado como `<blocker resolved="...">` para rastreabilidade.
+
+**2. Rollback de artefatos downstream:** O `impact-analyzer.py` detecta quais artefatos dependem do artefato rejeitado e os marca como potencialmente desatualizados. Exemplo: rejeitar Gate 2 (7 specs) → `impact-analyzer.py` reporta que PRDs, PRPs, planejamento, arquitetura e design system precisam ser revisados.
+
+```bash
+python .ace/scripts/impact-analyzer.py --files "docs/business/specs/glossario.md" --json --skills
+```
+
+**3. Correcao e reexecucao:** O usuario corrige o artefato e reexecuta o step. Skills sao idempotentes — sobrescrevem o artefato anterior. A nova sessao ACE recebe um `<context_seed>` com o `pending: gate N rejeitado — reexecutando step N`.
+
+**4. Worktree (se aplicavel):** Se o step usava git worktree, o harness descarta automaticamente o worktree no `session_end` (sem merge). A proxima execucao cria um worktree fresco.
+
+**O que NAO acontece:** O historico ACE da sessao rejeitada **nunca e apagado** — e append-only. O historico de falhas e mantido para auditoria.
 
 ---
 

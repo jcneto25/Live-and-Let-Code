@@ -907,6 +907,24 @@ Yes. LLC is **tool-agnostic**. Each skill is a Markdown file any terminal AI cli
 
 The flow returns to the previous step for correction. The AI logs the reason in ACE via `<gate_result decision="rejected">` and `<blocker>`. After the fix, the gate is re-evaluated. No step advances without explicit approval.
 
+### What exactly happens when a gate is rejected?
+
+The gate rejection process follows 4 stages:
+
+**1. Decision recording:** `<gate_result decision="rejected" reviewer="...">` is appended to the session's ACE file. The rejection reason is logged as `<blocker resolved="...">` for traceability.
+
+**2. Downstream artifact rollback:** `impact-analyzer.py` detects which artifacts depend on the rejected one and flags them as potentially stale. Example: rejecting Gate 2 (7 specs) → `impact-analyzer.py` reports that PRDs, PRPs, planning, architecture, and design system need review.
+
+```bash
+python .ace/scripts/impact-analyzer.py --files "docs/business/specs/glossario.md" --json --skills
+```
+
+**3. Correction and re-execution:** The user fixes the artifact and re-runs the step. Skills are idempotent — they overwrite the previous artifact. The new ACE session receives a `<context_seed>` with `pending: gate N rejected — re-executing step N`.
+
+**4. Worktree (if applicable):** If the step used a git worktree, the harness automatically discards the worktree on `session_end` (no merge). The next execution creates a fresh worktree.
+
+**What does NOT happen:** The ACE history of the rejected session is **never deleted** — it's append-only. The failure history is preserved for audit.
+
 ---
 
 ## What's the difference between dependency-graph.yaml and dependency-graph.mmd?

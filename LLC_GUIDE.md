@@ -100,7 +100,7 @@ contrário, o prompt é exibido para copiar e colar manualmente.
 
 ## Passo a Passo
 
-### 📋 Visao Geral do Pipeline (14 etapas)
+### 📋 Visao Geral do Pipeline (14 etapas + seguranca)
 
 ```
 Step 0   → Ingestao de documentos
@@ -117,10 +117,10 @@ Step 8   → Setup + Mock Data                  👤 Gate 9
 Step 9   → Testing Docs                       👤 Gate 10
 Step 10  → Project Docs + Steering Files      👤 Gate 11
 Step 10.5 → Manual do Usuario                 👤 Gate 11.5
-Step 11  → Execucao (PRPs + seguranca)        👤 Gate 11-SEC + QA
-           └─ Pre: 11-Security (SCA/SAST/Secrets)
-           └─ Pre: 12-Null-Safety (data contracts)
-           └─ Post: 11-OWASP (hardening)
+Step 11-Security → Auditoria (SCA+SAST+Secrets) 👤 Gate 11-SEC
+Step 12-Null-Safety → Contratos de Dados      👤 Gate 12-NULL
+Step 11  → Execucao (PRPs)                    QA Checkpoints
+Step 11-OWASP → Hardening (post-code)         👤 Gate 11-OWASP
 ```
 
 ### ⚠️ Atencao: Voce tem documentacao previa?

@@ -217,8 +217,11 @@ graph TD
     S105 --> G115{👤 Gate 11.5}
     G115 -->|approved| S11SEC[Step 11-Security: SCA + SAST + Secrets]
     S11SEC --> GSEC{👤 Gate 11-SEC}
-    GSEC -->|approved| S11[Step 11: LLC Execution]
+    GSEC -->|approved| S12NULL[Step 12-Null-Safety: Data Contracts]
     GSEC -->|rejected| S11SEC
+    S12NULL --> G12NULL{👤 Gate 12-NULL}
+    G12NULL -->|approved| S11[Step 11: LLC Execution]
+    G12NULL -->|rejected| S12NULL
     S11 --> BACK[Non-UI PRPs → direct agent]
     S11 --> UI[UI PRPs → Subflow F1-F6]
     UI --> F4[F4: Hi-Fi]

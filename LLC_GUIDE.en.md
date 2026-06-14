@@ -100,7 +100,7 @@ the prompt is displayed for manual copy/paste.
 
 ## Step by Step
 
-### 📋 Pipeline Overview (14 steps)
+### 📋 Pipeline Overview (14 steps + security)
 
 ```
 Step 0   → Document Ingestion
@@ -117,10 +117,10 @@ Step 8   → Setup + Mock Data                   👤 Gate 9
 Step 9   → Testing Docs                        👤 Gate 10
 Step 10  → Project Docs + Steering Files       👤 Gate 11
 Step 10.5 → User Guide                         👤 Gate 11.5
-Step 11  → Execution (PRPs + security)         👤 Gate 11-SEC + QA
-           └─ Pre: 11-Security (SCA/SAST/Secrets)
-           └─ Pre: 12-Null-Safety (data contracts)
-           └─ Post: 11-OWASP (hardening)
+Step 11-Security → Audit (SCA+SAST+Secrets)    👤 Gate 11-SEC
+Step 12-Null-Safety → Data Contracts           👤 Gate 12-NULL
+Step 11  → Execution (PRPs)                    QA Checkpoints
+Step 11-OWASP → Hardening (post-code)          👤 Gate 11-OWASP
 ```
 
 ### ⚠️ Attention: Do you have existing documentation?

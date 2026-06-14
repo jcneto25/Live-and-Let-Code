@@ -19,7 +19,7 @@ O LLC se organiza em **5 camadas conceituais** que vao da fundacao a entrega:
 | **1. Contexto** | Gerencia a janela de contexto, continuidade entre sessoes e compressao de tokens | ACE `<context_seed>`, Document Hierarchy, indice comprimido, prompt caching, append-only sessions |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes e decisoes arquiteturais | Visao estrategica, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
 | **3. Agentes** | Quem executa, como raciocina e com quais regras | AGENTS.md (protocolo epistemic, zonas, TDD, handoff), papeis por step, Grill Me, CODE-REVIEW |
-| **4. Workflows** | Pipeline, gates de validacao e orquestracao | 12 steps + subfluxo, 12 human gates + checkpoint visual, execution waves, PRRS, dependency matrix |
+| **4. Workflows** | Pipeline, gates de validacao e orquestracao | 14 steps + subfluxo, 15 human gates + checkpoint visual, execution waves, PRRS, dependency matrix |
 | **5. Entrega** | Execucao paralela, qualidade estrutural e deploy | Git worktrees automaticos, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
 
 Cada camada depende da inferior: sem contexto bem gerido, o conhecimento nao cabe na janela; sem conhecimento estruturado, agentes nao tem direcao; sem agentes instruidos, workflows nao produzem qualidade; sem workflows orquestrados, a entrega nao e confiavel.
@@ -134,7 +134,7 @@ Não. Projetos pequenos (ex: single-page app, script CLI) podem condensar múlti
 
 ### Agentes substituem engenheiros humanos?
 
-Não. Humanos definem direção, negociam escopo, supervisionam design e aprovam releases. Os agentes melhoram o retorno da atenção humana, não a substituem. O LLC formaliza isso com **human-in-the-loop** em todas as fases críticas: 11 human gates, 1 checkpoint visual e checkpoints de QA na execução. Nenhum step avança sem aprovação explícita.
+Não. Humanos definem direção, negociam escopo, supervisionam design e aprovam releases. Os agentes melhoram o retorno da atenção humana, não a substituem. O LLC formaliza isso com **human-in-the-loop** em todas as fases críticas: 15 human gates, 1 checkpoint visual e checkpoints de QA na execução. Nenhum step avança sem aprovação explícita.
 
 ### Como os agentes se comunicam entre si?
 
@@ -153,7 +153,7 @@ Um workflow agentico completo cobre o ciclo de vida do software em 4 macro-fases
 | **1. Descoberta e Especificação** | 0-GF a 3 | Levantamento de requisitos (ou entrevista greenfield), geração de specs, PRDs e PRPs com Grill Me |
 | **2. Planejamento e Arquitetura** | 4 a 7 | Matriz de dependências, ondas de execução, arquitetura (C4 + ADRs), Design System |
 | **3. Fundação e MVP** | 8 a 10 | Setup do projeto, camada mock (MSW), documentação de testes, steering files (CLAUDE.md/AGENTS.md) |
-| **4. Execução e Entrega** | 11 + Subfluxo | PRPs sem UI (agentes diretos), PRPs com UI (subfluxo F1-F6), code health, QA gates, deploy |
+| **4. Execucao e Entrega** | 14 + Subfluxo | PRPs sem UI (agentes diretos), PRPs com UI (subfluxo F1-F6), code health, QA gates, deploy |
 
 ### O que é "Agentic Planning" e "Context-Engineered Development"?
 
@@ -317,7 +317,7 @@ O LLC implementa 6 camadas de garantia de qualidade:
 |--------|---------------|
 | **1. Especificação antes do código** | Steps 0-GF a 3 geram specs, PRDs e PRPs detalhados com Grill Me — a IA não escreve uma linha de código antes que os requisitos estejam validados |
 | **2. Agentes especializados por fase** | Cada etapa tem um agente com contexto restrito: o arquiteto não implementa, o dev não define requisitos |
-| **3. Quality gates em cada transição** | 11 human gates + 1 checkpoint visual + QA gates — nenhum artefato avança sem validação |
+| **3. Quality gates em cada transição** | 15 human gates + 1 checkpoint visual + QA gates — nenhum artefato avança sem validação |
 | **4. TDD embutido nos PRPs** | Cada PRP define estratégia de testes (unitários, integração, E2E). O `code-health.py` monitora se agentes estão seguindo TDD |
 | **5. Revisão por pares (humanos e agentes)** | `<gate_result>` humano + `llc-impact-analyzer` automatizado + pre-commit hooks de validação |
 | **6. Rastreabilidade de requisitos a código** | Cadeia completa: Visão → Módulo → Spec → PRD → PRP → Tarefa → Commit. O `dependency-graph.yaml` + `impact-analyzer.py` garantem que mudanças propaguem corretamente |
@@ -394,7 +394,7 @@ O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um pad
 | Degradação de contexto | ACE append-only: cada ação é atômica e verificável; `context_seed` mantém ~300 tokens de continuidade |
 | Edge cases ignorados | TDD + Grill Me + especificação antes de geração (spec-driven) |
 | IA não aprende com erros | `<learning_point>` registra lições; `<skill_feedback>` captura melhorias estruturais nos skills |
-| Dívida técnica invisível | 11 human gates + QA checkpoints: cada artefato passa por validação explícita antes de prosseguir |
+| Dívida técnica invisível | 15 human gates + QA checkpoints: cada artefato passa por validação explícita antes de prosseguir |
 
 O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + ferramentas estruturais (grafos, testes, gates, memória persistente) para que o conjunto entregue 100% de valor com a IA cobrindo o que ela faz bem e o humano decidindo nos 30% críticos.
 
@@ -407,7 +407,7 @@ O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + fer
 | **Definir objetivos** | O humano descreve o sistema (ingestion) ou responde à entrevista greenfield |
 | **Negociar escopo** | Grill Me: a IA pergunta, o humano responde. Suposições não validadas são bloqueadas |
 | **Supervisionar design** | CHECKPOINT VISUAL no subfluxo F4 → F5: protótipo não vira código sem aprovação |
-| **Aprovar releases** | 11 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
+| **Aprovar releases** | 15 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
 | **Registrar decisões** | `<gate_result>` no ACE fecha o loop de accountability |
 
 Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA.
@@ -975,7 +975,7 @@ llc status                           # Progresso do pipeline
 
 | Dimensao | Sem harness | Com harness |
 |----------|:-----------:|:-----------:|
-| Acoes manuais por pipeline completo | ~88 | ~11 (so gates) |
+| Acoes manuais por pipeline completo | ~88 | ~15 (so gates) |
 | Risco de pular um step | Alto (manual) | Zero (orquestrado) |
 | Risco de esquecer context_seed | Alto | Zero (automatico) |
 | Consistencia entre sessoes | Manual (copiar/colar JSON) | Automatica |

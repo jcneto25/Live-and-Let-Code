@@ -19,7 +19,7 @@ LLC is organized into **5 conceptual layers** from foundation to delivery:
 | **1. Context** | Manages context window, session continuity, and token compression | ACE `<context_seed>`, Document Hierarchy, compressed index, prompt caching, append-only sessions |
 | **2. Knowledge** | Domain artifacts, specifications, and architectural decisions | Strategic vision, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
 | **3. Agents** | Who executes, how they reason, and with what rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, handoff), per-step roles, Grill Me, CODE-REVIEW |
-| **4. Workflows** | Pipeline, validation gates, and orchestration | 12 steps + subflow, 12 human gates + visual checkpoint, execution waves, PRRS, dependency matrix |
+| **4. Workflows** | Pipeline, validation gates, and orchestration | 14 steps + subflow, 15 human gates + visual checkpoint, execution waves, PRRS, dependency matrix |
 | **5. Delivery** | Parallel execution, structural quality, and deployment | Auto git worktrees, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
 
 Each layer depends on the one below: without well-managed context, knowledge won't fit in the window; without structured knowledge, agents have no direction; without well-instructed agents, workflows produce no quality; without orchestrated workflows, delivery is unreliable.
@@ -134,7 +134,7 @@ No. Small projects (e.g., single-page app, CLI script) can condense multiple rol
 
 ### Do agents replace human engineers?
 
-No. Humans define direction, negotiate scope, oversee design, and approve releases. Agents improve the return on human attention — they don't replace it. LLC formalizes this with **human-in-the-loop** at every critical phase: 11 human gates, 1 visual checkpoint, and QA checkpoints during execution. No step advances without explicit approval.
+No. Humans define direction, negotiate scope, oversee design, and approve releases. Agents improve the return on human attention — they don't replace it. LLC formalizes this with **human-in-the-loop** at every critical phase: 15 human gates, 1 visual checkpoint, and QA checkpoints during execution. No step advances without explicit approval.
 
 ### How do agents communicate with each other?
 
@@ -153,7 +153,7 @@ A complete agentic workflow covers the software lifecycle in 4 macro-phases, eac
 | **1. Discovery & Specification** | 0-GF to 3 | Requirements gathering (or greenfield interview), spec generation, PRDs and PRPs with Grill Me |
 | **2. Planning & Architecture** | 4 to 7 | Dependency matrix, execution waves, architecture (C4 + ADRs), Design System |
 | **3. Foundation & MVP** | 8 to 10 | Project setup, mock layer (MSW), testing documentation, steering files (CLAUDE.md/AGENTS.md) |
-| **4. Execution & Delivery** | 11 + Subflow | Non-UI PRPs (direct agents), UI PRPs (subflow F1-F6), code health, QA gates, deploy |
+| **4. Execution & Delivery** | 14 + Subflow | Non-UI PRPs (direct agents), UI PRPs (subflow F1-F6), code health, QA gates, deploy |
 
 ### What are "Agentic Planning" and "Context-Engineered Development"?
 
@@ -317,7 +317,7 @@ LLC implements 6 quality assurance layers:
 |-------|---------------|
 | **1. Specification before code** | Steps 0-GF through 3 generate detailed specs, PRDs, and PRPs with Grill Me — the AI doesn't write a single line of code before requirements are validated |
 | **2. Specialized agents per phase** | Each stage has an agent with restricted context: the architect doesn't implement, the developer doesn't define requirements |
-| **3. Quality gates at every transition** | 11 human gates + 1 visual checkpoint + QA gates — no artifact advances without validation |
+| **3. Quality gates at every transition** | 15 human gates + 1 visual checkpoint + QA gates — no artifact advances without validation |
 | **4. TDD embedded in PRPs** | Each PRP defines test strategy (unit, integration, E2E). `code-health.py` monitors whether agents follow TDD |
 | **5. Peer review (human and agent)** | Human `<gate_result>` + automated `llc-impact-analyzer` + pre-commit validation hooks |
 | **6. Requirements-to-code traceability** | Full chain: Vision → Module → Spec → PRD → PRP → Task → Commit. `dependency-graph.yaml` + `impact-analyzer.py` ensure changes propagate correctly |
@@ -394,7 +394,7 @@ The "70% problem" (coined by Addy Osmani, Google Chrome DX) describes a pattern 
 | Context degradation | ACE append-only: each action is atomic and verifiable; `context_seed` maintains ~300 tokens of continuity |
 | Edge cases ignored | TDD + Grill Me + spec-driven generation |
 | AI doesn't learn from mistakes | `<learning_point>` records lessons; `<skill_feedback>` captures structural skill improvements |
-| Invisible tech debt | 11 human gates + QA checkpoints: every artifact undergoes explicit validation before proceeding |
+| Invisible tech debt | 15 human gates + QA checkpoints: every artifact undergoes explicit validation before proceeding |
 
 LLC doesn't try to make AI reach 100% on its own. It combines AI + human + structural tools (graphs, tests, gates, persistent memory) so the ensemble delivers 100% value — AI covering what it does well, and the human deciding on the critical 30%.
 
@@ -407,7 +407,7 @@ The principle that humans remain in control of all critical development decision
 | **Define objectives** | Human describes the system (ingestion) or answers the greenfield interview |
 | **Negotiate scope** | Grill Me: AI asks, human answers. Unvalidated assumptions are blocked |
 | **Oversee design** | VISUAL CHECKPOINT in subflow F4 → F5: prototype doesn't become code without approval |
-| **Approve releases** | 11 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
+| **Approve releases** | 15 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
 | **Record decisions** | `<gate_result>` in ACE closes the accountability loop |
 
 Agents improve the return on human attention — they don't replace it. An engineer who used to spend 4 hours writing specs now spends 30 minutes reviewing and approving AI-generated specs.
@@ -573,7 +573,7 @@ LLC uses **both** paradigms, in different phases. The choice isn't in the AI cli
 
 | Paradigm | How it works | Steps per task | Tokens |
 |----------|-------------|---------------|--------|
-| **ToolCallingAgent** | LLM generates JSON with tool + params. One tool at a time. Waits for result before next | 12 steps | ~29K tokens |
+| **ToolCallingAgent** | LLM generates JSON with tool + params. One tool at a time. Waits for result before next | 14 steps | ~29K tokens |
 | **CodeAgent** | LLM generates + executes Python block. Chains multiple actions in one step. Can loop and branch | 2 steps | ~5.4K tokens |
 
 **A well-written skill controls the paradigm — regardless of the client:**
@@ -630,7 +630,7 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 
 ### How many steps does LLC have?
 
-21 main skills + 1 subflow. The pipeline goes from business knowledge ingestion to production deployment:
+14 steps, 21 skills + 1 subflow. The pipeline goes from business knowledge ingestion to production deployment:
 
 | # | Stage | Skill | Technology / Tool |
 |---|-------|-------|-------------------|
@@ -975,7 +975,7 @@ llc status                           # Pipeline progress
 
 | Dimension | Without harness | With harness |
 |-----------|:---------------:|:------------:|
-| Manual actions per full pipeline | ~88 | ~11 (gates only) |
+| Manual actions per full pipeline | ~88 | ~15 (gates only) |
 | Risk of skipping a step | High (manual) | Zero (orchestrated) |
 | Risk of forgetting context_seed | High | Zero (automatic) |
 | Consistency between sessions | Manual (copy/paste JSON) | Automatic |

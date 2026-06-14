@@ -292,6 +292,12 @@ graph TD
 |---|------|-------|--------|-----------|------|
 | 0 | Ingestion | User docs | `business/ingestion/` | — | — |
 | 0-GF | Greenfield (alternative) | User interview | `ingestion/converted/` (interview .md) | — | — |
+>
+> **Note on 0-GF:** The greenfield flow replaces Steps 0 and 0.1 for projects without prior
+> documentation. The structured interview (up to 15 questions across 4 dimensions) serves as its
+> own validation — the user's answers ARE the gate. There is no separate `👤` because the interview
+> itself is the validation process. Unlike Grill Me (up to 8 questions, Steps 0.5-3) which resolves
+> ambiguities in existing documents — greenfield generates from scratch.
 | 0.1 | Conversion | `ingestion/` | `ingestion/converted/` | — | — |
 | 0.5 | Vision + Modules | `ingestion/converted/` | Vision + MOD-*.md | — | 👤 1 |
 | 1 | 7 Specs | Vision + Modules | Glossary, FR, NFR, BR, BPMN, Profiles, Integrations | — | 👤 2 |

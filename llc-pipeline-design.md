@@ -316,6 +316,12 @@ graph TD
 |---|------|---------|-------|-------------|------|
 | 0 | Ingestão | Documentos do usuário | `business/ingestion/` | — | — |
 | 0-GF | Greenfield (alternativo) | Entrevista com usuário | `ingestion/converted/` (.md de entrevista) | — | — |
+>
+> **Nota sobre 0-GF:** O fluxo greenfield substitui os Steps 0 e 0.1 para projetos sem documentacao
+> previa. A entrevista estruturada (ate 15 perguntas em 4 dimensoes) funciona como sua propria
+> validacao — as respostas do usuario sao o gate. Nao ha `👤` separado porque a entrevista em si
+> e o processo de validacao. Diferente do Grill Me (ate 8 perguntas, Steps 0.5-3) que resolve
+> ambiguidades em documentos ja existentes — o greenfield gera do zero.
 | 0.1 | Conversão | `ingestion/` | `ingestion/converted/` | — | — |
 | 0.5 | Visão + Módulos | `ingestion/converted/` | Visão + MOD-*.md | `template_visao_estrategica_e_negocio.md`, `Template_Especificacao_Modulo.md`, guia de preenchimento | 👤 1 |
 | 1 | 7 Especificações | Visão + Módulos | Glossário, RF, RNF, RN, BPMN, Perfis, Integrações | 7 templates em `docs/` | 👤 2 |

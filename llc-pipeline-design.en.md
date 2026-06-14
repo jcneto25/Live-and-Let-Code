@@ -422,6 +422,7 @@ Each LLC session produces a `.ace/sessions/YYYY-MM-DD-NNN.md` file that is **nev
 | `<learning_point priority="...">` | Consolidated knowledge (`high`/`medium`/`low`) |
 | `<gate_result>` | Human decision at LLC gates |
 | `<blocker resolved="...">` | Session blockers |
+| `<skill_feedback skill="..." priority="...">` | Suggested improvement for an LLC skill. Consolidated in `memory/skill_feedback.md` |
 | `<context_seed>` | Compressed state for the next session (4-field schema) |
 
 ### 8.5 Advantages

@@ -521,9 +521,10 @@ Cada sessão LLC produz um arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` que é **nu
 | `<action type="...">` | Ação atômica: `git_commit`, `file_create`, `file_modify`, `file_delete`, `test_run`, `tool_call` |
 | `<thinking ref="...">` | Chain-of-thought que levou a uma decisão |
 | `<learning_point priority="...">` | Conhecimento consolidado (`high`/`medium`/`low`) |
-| `<gate_result>` | Decisão humana nos gates LLC |
-| `<blocker resolved="...">` | Impedimentos da sessão |
-| `<context_seed>` | Estado comprimido para a próxima sessão (schema de 4 campos) |
+| `<gate_result>` | Decisao humana nos gates LLC |
+| `<blocker resolved="...">` | Impedimentos da sessao |
+| `<skill_feedback skill="..." priority="...">` | Sugestao de melhoria para um skill LLC. Consolidado em `memory/skill_feedback.md` |
+| `<context_seed>` | Estado comprimido para a proxima sessao (schema de 4 campos) |
 
 ### 8.5 Vantagens
 

@@ -172,9 +172,28 @@ project-root/
 │   ├── specs/                                  # Template de especificação
 │   │   └── SPEC_TEMPLATE.md
 │   │
-  │   ├── skills/                                 # Skills LLC (tool-agnostic)
-  │   │   ├── llc-user-guide.md                    # [NOVO] Skill de manual do usuario
-│   │   └── ...
+│   ├── skills/                                 # Skills LLC (tool-agnostic — 21 arquivos)
+│   │   ├── llc-step-0-greenfield.md
+│   │   ├── llc-step-0-1.md
+│   │   ├── llc-step-0-5.md
+│   │   ├── llc-step-1.md
+│   │   ├── llc-step-2.md
+│   │   ├── llc-step-3.md
+│   │   ├── llc-step-4.md
+│   │   ├── llc-step-5.md
+│   │   ├── llc-step-6.md
+│   │   ├── llc-step-7.md
+│   │   ├── llc-step-8.md
+│   │   ├── llc-step-9.md
+│   │   ├── llc-step-10.md
+│   │   ├── llc-user-guide.md
+│   │   ├── llc-step-11-security.md
+│   │   ├── llc-step-11-owasp-security.md
+│   │   ├── llc-step-12-null-safety.md
+│   │   ├── llc-subflow-prototyping.md
+│   │   ├── llc-ace-context.md
+│   │   ├── llc-code-health.md
+│   │   └── llc-impact-analyzer.md
   │   │
   │   ├── templates/                              # Templates de arquivos de steering
   │   │   ├── CLAUDE_TEMPLATE.md                  # Template para CLAUDE.md (projeto)

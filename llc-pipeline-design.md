@@ -317,6 +317,13 @@ graph TD
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
 | 11-SEC | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
 | 12-NULL | Null Safety (pre-code) | PRPs com secao `data_model` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
+
+> **📋 Sequenciamento:** Apesar da numeracao "11" e "12", estes steps executam **ANTES** do Step 11
+> (Execucao). Sao gates pre-implementacao: primeiro audita-se o codigo existente e validam-se
+> os contratos de dados; depois implementam-se os PRPs. O "11" em "11-Security" significa
+> "associado ao Step 11", nao "dentro do Step 11". O "12" em "12-NULL" e simplesmente o
+> proximo numero disponivel na sequencia de skills de seguranca.
+
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
 | 11-OWASP | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
 

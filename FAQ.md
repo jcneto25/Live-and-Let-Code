@@ -841,12 +841,14 @@ O fluxo retorna ao passo anterior para correção. A IA registra o motivo no ACE
 
 ## Qual a diferença entre dependency-graph.yaml e dependency-graph.mmd?
 
-| Arquivo | Função | Quem lê |
-|---------|--------|---------|
-| `dependency-graph.yaml` | Estrutura real — usada pelo `impact-analyzer.py` | Scripts Python |
-| `dependency-graph.mmd` | Intenção documentada — visualização topológica | Humanos e LLMs |
+| Arquivo | Função | Quem lê | Mantido por |
+|---------|--------|---------|-------------|
+| `dependency-graph.yaml` | Estrutura real — usada pelo `impact-analyzer.py` | Scripts Python | **Fonte da verdade** — mantido manualmente como artefato da metodologia |
+| `dependency-graph.mmd` | Visualizacao topologica em Mermaid — entendimento visual | Humanos e LLMs | **Derivado do .yaml** — gerado a partir do YAML, nao mantido independentemente |
 
-São complementares: YAML para máquina, Mermaid para entendimento visual.
+> **Regra:** O `.yaml` e a fonte da verdade. O `.mmd` deve ser regenerado a partir do `.yaml`
+> sempre que o grafo de dependencias for atualizado. Nao edite o `.mmd` manualmente —
+> edite o `.yaml` e atualize o `.mmd` como derivado. Isso evita dessincronizacao.
 
 ---
 

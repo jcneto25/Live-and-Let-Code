@@ -662,7 +662,7 @@ Essas ferramentas podem ser adicionadas ao pipeline CI/CD definido no `docs/DEPL
 
 ### Quantas etapas tem o LLC?
 
-14 etapas principais + 5 auxiliares (19 no total), 21 skills + 1 subfluxo. O pipeline vai da ingestao de conhecimento de negocio ao deploy:
+14 etapas principais + 5 auxiliares (19 no total), 21 skills (incluindo 1 subfluxo composto de prototipagem). O pipeline vai da ingestao de conhecimento de negocio ao deploy:
 
 > **Principais (14):** Steps numerados sequenciais — 0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.
 > **Auxiliares (5):** 0-GF (alternativa greenfield), 10.5 (manual do usuario), 11-SEC (auditoria pre-code),

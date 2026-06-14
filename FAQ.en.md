@@ -662,7 +662,7 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 
 ### How many steps does LLC have?
 
-14 main steps + 5 auxiliary (19 total), 21 skills + 1 subflow. The pipeline goes from business knowledge ingestion to production deployment:
+14 main steps + 5 auxiliary (19 total), 21 skills (including 1 composite prototyping subflow). The pipeline goes from business knowledge ingestion to production deployment:
 
 > **Main (14):** Numbered sequential steps — 0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.
 > **Auxiliary (5):** 0-GF (greenfield alternative), 10.5 (user guide), 11-SEC (pre-code audit),

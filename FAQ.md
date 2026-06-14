@@ -648,25 +648,29 @@ Essas ferramentas podem ser adicionadas ao pipeline CI/CD definido no `docs/DEPL
 
 ### Quantas etapas tem o LLC?
 
-13 skills principais + 1 subfluxo. O pipeline vai da ingestão de conhecimento de negócio ao deploy:
+14 steps, 21 skills + 1 subfluxo. O pipeline vai da ingestao de conhecimento de negocio ao deploy:
 
 | # | Etapa | Skill | Tecnologia / Ferramenta |
 |---|-------|-------|-------------------------|
-| 0 | Ingestão | — | PDF, DOCX, PPTX, HTML, TXT |
+| 0 | Ingestao | — | PDF, DOCX, PPTX, HTML, TXT |
 | 0-GF | Greenfield (alternativo) | `llc-step-0-greenfield` | LLM em modo brainstorming + thinking |
-| 0.1 | Conversão | `llc-step-0-1` | **Docling** (Python 3.10+) / Pandoc |
-| 0.5 | Visão + Módulos | `llc-step-0-5` | Grill Me, Templates Markdown |
-| 1 | 7 Especificações | `llc-step-1` | Grill Me, **PRRS** (7 prismas de análise) |
+| 0.1 | Conversao | `llc-step-0-1` | **Docling** (Python 3.10+) / Pandoc |
+| 0.5 | Visao + Modulos | `llc-step-0-5` | Grill Me, Templates Markdown |
+| 1 | 7 Especificacoes | `llc-step-1` | Grill Me, **PRRS** (7 prismas de analise) |
 | 2 | PRDs | `llc-step-2` | Grill Me, Templates institucionais |
 | 3 | PRPs | `llc-step-3` | Grill Me, Contratos Gherkin |
-| 4 | Planejamento | `llc-step-4` | **Mermaid** (grafo de dependências), YAML |
+| 4 | Planejamento | `llc-step-4` | **Mermaid** (grafo de dependencias), YAML |
 | 5 | Arquitetura | `llc-step-5` | **Mermaid** (C4), ADRs, Stack decisions |
 | 6 | Tarefas | `llc-step-6` | **TASKS.md** com checkboxes |
 | 7 | Design System | `llc-step-7` | Design tokens (CSS/JSON), Componentes |
 | 8 | Setup + Mock | `llc-step-8` | **MSW** (Mock Service Worker), JSON |
 | 9 | Testing Docs | `llc-step-9` | Jest, Vitest, Playwright, thresholds |
 | 10 | Project Docs | `llc-step-10` | **CLAUDE.md**, **AGENTS.md**, README, DEPLOYMENT |
-| 11 | Execução | Subfluxo F1-F6 | Excalidraw, Pencil, agentes paralelos |
+| 10.5 | Manual do Usuario | `llc-user-guide` | Markdown, Playwright (opcional) |
+| 11-SEC | Auditoria de Seguranca (pre-code) | `llc-step-11-security` | **npm audit** / **pip-audit**, **Semgrep**, **Gitleaks** |
+| 12-NULL | Null Safety (pre-code) | `llc-step-12-null-safety` | Validacao de contratos de dados |
+| 11 | Execucao | Subfluxo F1-F6 | Excalidraw, Pencil, agentes paralelos |
+| 11-OWASP | Hardening OWASP (post-code) | `llc-step-11-owasp-security` | 10 categorias com verificacao manual/IA |
 | Transversal | ACE | `llc-ace-context` | **Python** (scripts), Markdown + XML, YAML |
 | Transversal | Impacto | `llc-impact-analyzer` | **Python**, **PyYAML**, git diff |
 | Transversal | Code Health | `llc-code-health` | **Python**, git log --numstat |

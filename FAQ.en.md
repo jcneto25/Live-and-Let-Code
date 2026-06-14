@@ -321,7 +321,7 @@ All LLC artifacts are persistent Markdown documents versioned in **Git**, treate
 
 Phase transition checkpoints that verify each artifact meets defined criteria before the next agent starts. In LLC, gates are formal and recorded:
 
-- **13 human gates:** one after each generation step (0.5 through 11). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
+- **15 human gates:** one after each generation step (0.5 through 11). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
 - **1 visual checkpoint:** in the prototyping subflow (F4 → F5). The hi-fi prototype doesn't become code without explicit visual approval
 - **QA checkpoints:** during execution (Step 11): score ≥ 7.0, coverage ≥ thresholds, security audit passed
 
@@ -666,7 +666,11 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 | 8 | Setup + Mock | `llc-step-8` | **MSW** (Mock Service Worker), JSON |
 | 9 | Testing Docs | `llc-step-9` | Jest, Vitest, Playwright, thresholds |
 | 10 | Project Docs | `llc-step-10` | **CLAUDE.md**, **AGENTS.md**, README, DEPLOYMENT |
+| 10.5 | User Guide | `llc-user-guide` | Markdown, Playwright (optional) |
+| 11-SEC | Security Audit (pre-code) | `llc-step-11-security` | **npm audit** / **pip-audit**, **Semgrep**, **Gitleaks** |
+| 12-NULL | Null Safety (pre-code) | `llc-step-12-null-safety` | Data contracts validation |
 | 11 | Execution | Subflow F1-F6 | Excalidraw, Pencil, parallel agents |
+| 11-OWASP | OWASP Hardening (post-code) | `llc-step-11-owasp-security` | 10 categories manual/AI verification |
 | Transversal | ACE | `llc-ace-context` | **Python** (scripts), Markdown + XML, YAML |
 | Transversal | Impact | `llc-impact-analyzer` | **Python**, **PyYAML**, git diff |
 | Transversal | Code Health | `llc-code-health` | **Python**, git log --numstat |

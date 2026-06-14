@@ -1,5 +1,7 @@
 # Security Policy — Live and Let Code (LLC)
 
+**Version:** 1.5.0 — June 2026
+
 ## 1. Purpose
 
 This document defines the security policy for the **Live and Let Code (LLC)** methodology and its reference implementation. It describes how the LLC pipeline enforces security throughout the development lifecycle, and how to report vulnerabilities in the methodology itself.

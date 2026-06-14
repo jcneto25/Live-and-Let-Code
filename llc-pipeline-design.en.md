@@ -326,7 +326,7 @@ graph TD
 
 ## 4. Skills Catalog
 
-12 skills in `docs/skills/`. Each is a Markdown file with YAML frontmatter — tool-agnostic, executable by any terminal AI client.
+21 skills in `docs/skills/`. Each is a Markdown file with YAML frontmatter — tool-agnostic, executable by any terminal AI client.
 
 | Skill | Step | Description |
 |-------|------|-------------|

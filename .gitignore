@@ -2,6 +2,15 @@
 /docs/superpowers
 /CLAUDE.md
 
+# Local AI tooling dirs (per-clone, not shared)
+/.claude/
+/.commandcode/
+/.omc/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+
 # Security scan artifacts — raw tool outputs are machine-generated and ephemeral.
 # They change with every rerun. Consolidated reports in docs/security/ are the
 # version-controlled source of truth.

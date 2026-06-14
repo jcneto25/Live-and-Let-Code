@@ -49,6 +49,10 @@ Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 
 ─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Execution
 ```
 
+> 🔒 **Security gates** wrap every execution wave — SCA/SAST/secrets audit (pre-code), OWASP hardening + null-safety (post-code). See the [Execution Guide](LLC_GUIDE.en.md).
+>
+> 🔒 **Gates de segurança** envolvem cada onda de execução — auditoria SCA/SAST/secrets (pré-código), hardening OWASP + null-safety (pós-código). Veja o [Guia de Execução](LLC_GUIDE.md).
+
 ---
 
 **[GitHub](https://github.com/jcneto25/Live-and-Let-Code)** | **MIT License**

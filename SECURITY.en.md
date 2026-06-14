@@ -36,7 +36,7 @@ Executes automated tools **before** any PRP implementation begins:
 Validates data contracts **before** code is written. Prevents null pointer exceptions, missing input schemas, undefined payload limits, and missing HTML sanitization at the PRP design level.
 
 **Skill:** `docs/skills/llc-step-12-null-safety.md`
-**Report:** `docs/security/NULL_SAFETY_REPORT.md`
+**Report:** `docs/security/NULL_SAFETY_REPORT.md` (generated per-project)
 **Gate:** Blocks implementation on fields without explicit nullability or endpoints without schema validation.
 
 ### 3.3 Post-Code Security (Step 11-OWASP)
@@ -62,7 +62,7 @@ After PRPs are implemented, performs manual/AI verification against the **OWASP 
 
 ### 3.4 Security Reports
 
-Consolidated security audit reports are stored in `docs/security/`. Raw scan outputs are stored in `.ace/security/` (not versioned — regenerated on each audit).
+Consolidated security audit reports are stored in each project's `docs/security/`. Raw scan outputs are stored in `.ace/security/` (not versioned — regenerated on each audit).
 
 ## 4. Reporting Vulnerabilities
 

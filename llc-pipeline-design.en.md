@@ -378,7 +378,7 @@ Self-contained PRPs enable parallel execution via git worktrees. `initialize_ses
 | `llc-step-5` | 5 | Architecture (Stack, C4, ADRs, CI/CD) |
 | `llc-step-6` | 6 | TASKS.md with concrete tasks, agents, and estimates |
 | `llc-step-7` | 7 | Design System (tokens, components, patterns) |
-| `llc-step-8` | 8 | Project setup + Mock data layer (JSON + MSW handlers) |
+| `llc-step-8` | 8 | Project setup + Mock data layer (JSON + mock handlers, e.g., MSW for JS/TS) |
 | `llc-step-9` | 9 | Testing documentation (Guide, Baseline, Progress) |
 | `llc-step-10` | 10 | README.md + DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | User manual skeleton from PRPs, profiles and workflows |

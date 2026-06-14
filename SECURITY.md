@@ -57,12 +57,12 @@ After PRPs are implemented, performs manual/AI verification against the **OWASP 
 | A10 | SSRF | URL validation, internal network blocking |
 
 **Skill:** `docs/skills/llc-step-11-owasp-security.md`
-**Report:** `docs/security/OWASP_HARDENING_REPORT.md`
+**Report:** `docs/security/OWASP_HARDENING_REPORT.md` (gerado por projeto)
 **Gate:** Blocks release on 1+ critical (🔴) finding.
 
 ### 3.4 Security Reports
 
-Consolidated security audit reports are stored in `docs/security/`. Raw scan outputs are stored in `.ace/security/` (not versioned — regenerated on each audit).
+Relatórios consolidados de auditoria de segurança são armazenados no diretório `docs/security/` de cada projeto. Scans crus ficam em `.ace/security/` (não versionados — regenerados a cada auditoria).
 
 ## 4. Reporting Vulnerabilities
 

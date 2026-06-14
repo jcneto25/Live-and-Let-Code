@@ -727,7 +727,7 @@ Quando um alerta é disparado, o pipeline recomenda:
 | **Gate** | Ponto de validação humana obrigatório. O pipeline não avança sem aprovação explícita. |
 | **Subfluxo** | Processo interno a uma etapa do pipeline. No LLC, a prototipagem agentica é um subfluxo da Execução. |
 | **Ingestion** | Pasta onde o usuário deposita documentos brutos de domínio para consumo pela IA. |
-| **Mock Data Layer** | Camada de dados falsos realistas (JSON + MSW handlers) que simula o backend real durante o desenvolvimento do MVP. |
+| **Mock Data Layer** | Camada de dados falsos realistas (JSON + mock handlers, ex.: MSW para JS/TS) que simula o backend real durante o desenvolvimento do MVP. |
 | **CHECKPOINT VISUAL** | Gate específico do subfluxo de prototipagem: o protótipo hi-fi não avança para código sem aprovação visual humana. |
 | **Execution Wave** | Agrupamento de PRPs executados em paralelo dentro de um intervalo de tempo (1-2 semanas). |
 

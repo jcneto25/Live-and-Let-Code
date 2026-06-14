@@ -302,6 +302,8 @@ graph TD
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
 | 11-SEC | Security Audit | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
+| 11-OWASP | OWASP Hardening | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
+| 12-NULL | Null Safety | PRPs com secao `data_model` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 🔴 Bloqueia campos sem especificacao |
 
 ---
 
@@ -348,6 +350,8 @@ tags: [categoria, llc-pipeline]
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
 | `llc-step-11-security` | 11-SEC | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
+| `llc-step-11-owasp-security` | 11-OWASP | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
+| `llc-step-12-null-safety` | 12-NULL | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |

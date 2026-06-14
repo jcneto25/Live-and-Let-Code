@@ -28,7 +28,7 @@ Live and Let Code (LLC) is an agentic software development methodology that stru
 
 This document specifies:
 - The LLC directory architecture (§2)
-- The complete pipeline with 11 main steps + 1 subflow (§3)
+- The complete pipeline with 14 main steps + 1 subflow (§3)
 - The skills catalog (§4)
 - The agentic prototyping subflow (§5)
 - The human gate system (§6)
@@ -213,7 +213,12 @@ graph TD
     S9 --> G10{👤 Gate 10}
     G10 -->|approved| S10[Step 10: AI → Project Docs]
     S10 --> G11{👤 Gate 11}
-    G11 -->|approved| S11[Step 11: LLC Execution]
+    G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
+    S105 --> G115{👤 Gate 11.5}
+    G115 -->|approved| S11SEC[Step 11-Security: SCA + SAST + Secrets]
+    S11SEC --> GSEC{👤 Gate 11-SEC}
+    GSEC -->|approved| S11[Step 11: LLC Execution]
+    GSEC -->|rejected| S11SEC
     S11 --> BACK[Non-UI PRPs → direct agent]
     S11 --> UI[UI PRPs → Subflow F1-F6]
     UI --> F4[F4: Hi-Fi]
@@ -243,7 +248,11 @@ graph TD
 | 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | — | 👤 9 |
 | 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | — | 👤 10 |
 | 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` + `CLAUDE.md` + `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
-| 11 | Execution | All previous artifacts | Source code | — | QA Checkpoints |
+| 10.5 | User Guide | PRPs + Profiles + Workflows + Glossary | `USER_GUIDE.md`, `index.md`, `overview.md`, `profiles/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
+| 11-SEC | Security Audit | Setup + Dependencies installed (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
+| 11 | Execution | All previous artifacts | Source code + user guide pages (`docs/user-guide/[module]/*.md`) | — | QA Checkpoints |
+| 11-OWASP | OWASP Hardening | Implemented code (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Blocks on 1+ critical |
+| 12-NULL | Null Safety | PRPs with `data_model` section | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 🔴 Blocks on unspecified fields |
 
 > **Note:** `CLAUDE.md` describes **what the project is** — stack, domain, architecture. `AGENTS.md` describes **how the developer works** — zones, TDD, handoff conventions. If your AI tool does not support `CLAUDE.md`, consolidate its content into `AGENTS.md`.
 
@@ -256,6 +265,7 @@ graph TD
 | Skill | Step | Description |
 |-------|------|-------------|
 | `llc-step-0-greenfield` | 0-GF | Alternative greenfield flow: structured interview for projects without prior documentation |
+| `llc-step-0-1` | 0.1 | Document conversion to Markdown via Docling |
 | `llc-step-0-5` | 0.5 | Strategic Vision + Module Specs from ingestion docs |
 | `llc-step-1` | 1 | 7 specification documents (Glossary, FR, NFR, BR, BPMN, Profiles, Integrations) |
 | `llc-step-2` | 2 | Executive PRD + Technical PRD |
@@ -267,6 +277,10 @@ graph TD
 | `llc-step-8` | 8 | Project setup + Mock data layer (JSON + MSW handlers) |
 | `llc-step-9` | 9 | Testing documentation (Guide, Baseline, Progress) |
 | `llc-step-10` | 10 | README.md + DEPLOYMENT.md |
+| `llc-user-guide` | 10.5 | User manual skeleton from PRPs, profiles and workflows |
+| `llc-step-11-security` | 11-SEC | Pre-execution security audit: SCA (npm audit), SAST (Semgrep), secrets (Gitleaks) |
+| `llc-step-11-owasp-security` | 11-OWASP | Post-implementation OWASP Top 10:2021 hardening — manual/AI verification |
+| `llc-step-12-null-safety` | 12-NULL | Null safety validation for PRPs — nullability contracts, schemas, payload limits |
 | `llc-subflow-prototyping` | Subflow | 6-phase agentic prototyping for UI modules |
 | `llc-ace-context` | Transversal | ACE context protocol — append-only session history, anti-amnesia |
 | `llc-code-health` | 11 | Monitors structural code health (Moved Code, Copy/Paste, Legacy Touch) |

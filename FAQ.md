@@ -715,6 +715,39 @@ Exemplo: "Qual stack usar?" (Step 5) — a resposta esta nos RNFs de performance
 - **Economia:** ~1.500 tokens/sessão vs ~22.000 do histórico completo
 - **Tecnologia:** Python (scripts), Markdown + tags XML + YAML front matter
 
+### Qual o schema exato do context_seed?
+
+O `<context_seed>` e um bloco de texto com **4 campos obrigatorios**, separados por quebra de linha. Este e o schema formal — o contrato que todo cliente de IA deve implementar para ser compativel com o LLC:
+
+```
+state: [acoes concluidas, arquivos alterados, decisoes tomadas]
+pending: [tarefas incompletas, proximos passos planejados]
+blockers: [impedimentos ativos — tecnicos, dependencias, duvidas]
+next_action: [proximo passo recomendado — especifico, acionavel]
+```
+
+**Regras de formato:**
+
+| Regra | Detalhe |
+|-------|---------|
+| Nomes dos campos | Exatos: `state`, `pending`, `blockers`, `next_action` (case-sensitive, ingles) |
+| Separador | `: ` (dois-pontos + espaco) apos cada nome de campo |
+| Quebra de linha | `\n` entre campos |
+| Encoding | UTF-8, sem marcadores Markdown ou XML no valor dos campos |
+| Tamanho maximo | ~300 tokens (aproximadamente 1200 caracteres) |
+| Campos vazios | Permitidos (ex: `blockers: nenhum` ou `blockers: `) |
+
+**Exemplo real:**
+
+```
+state: Step 5 concluido. ARCHITECTURE.md gerado com stack NestJS + PostgreSQL. ADRs documentados para autenticacao JWT e multi-tenancy. Diagrama C4 nivel 2 criado.
+pending: Aguardando aprovacao do Gate 6. Step 6 (Tarefas) e o proximo.
+blockers: Duvida sobre qual ORM usar — Prisma vs TypeORM. Aguardando decisao do tech lead.
+next_action: Executar llc-step-6.md apos Gate 6 aprovado. Se Prisma for escolhido, usar schema.prisma.
+```
+
+**Onde o schema esta documentado:** Alem desta secao, o schema completo esta no `AGENTS_TEMPLATE.md` §Handoff Protocol e nos scripts `initialize_session.py` / `finalize_session.py`.
+
 ---
 
 ## Como manter a consistência entre artefatos?

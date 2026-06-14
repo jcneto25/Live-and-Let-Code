@@ -715,6 +715,39 @@ The architectural pattern LLC uses to analyze the same data source from **multip
 - **Savings:** ~1,500 tokens/session vs ~22,000 for full history
 - **Technology:** Python (scripts), Markdown + XML tags + YAML front matter
 
+### What is the exact context_seed schema?
+
+The `<context_seed>` is a text block with **4 mandatory fields**, separated by newlines. This is the formal schema — the contract every AI client must implement to be compatible with LLC:
+
+```
+state: [completed actions, changed files, decisions made]
+pending: [incomplete tasks, planned next steps]
+blockers: [active blockers — technical, dependencies, questions]
+next_action: [recommended next step — specific, actionable]
+```
+
+**Format rules:**
+
+| Rule | Detail |
+|------|--------|
+| Field names | Exact: `state`, `pending`, `blockers`, `next_action` (case-sensitive, English) |
+| Separator | `: ` (colon + space) after each field name |
+| Line break | `\n` between fields |
+| Encoding | UTF-8, no Markdown or XML markers in field values |
+| Max size | ~300 tokens (approximately 1200 characters) |
+| Empty fields | Allowed (e.g., `blockers: none` or `blockers: `) |
+
+**Real example:**
+
+```
+state: Step 5 completed. ARCHITECTURE.md generated with NestJS + PostgreSQL stack. ADRs documented for JWT auth and multi-tenancy. C4 Level 2 diagram created.
+pending: Awaiting Gate 6 approval. Step 6 (Tasks) is next.
+blockers: Uncertain which ORM to use — Prisma vs TypeORM. Awaiting tech lead decision.
+next_action: Run llc-step-6.md after Gate 6 approved. If Prisma chosen, use schema.prisma.
+```
+
+**Where the schema is documented:** In addition to this section, the full schema is in `AGENTS_TEMPLATE.md` §Handoff Protocol and in the `initialize_session.py` / `finalize_session.py` scripts.
+
 ---
 
 ## How do I maintain consistency between artifacts?

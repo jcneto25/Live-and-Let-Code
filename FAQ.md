@@ -838,6 +838,21 @@ Regras:
 
 Alternativa: invoque pelo caminho direto — `Execute a skill docs/skills/llc-step-0-5.md`
 
+### O LLC funciona para stacks que nao sao JavaScript/TypeScript?
+
+Sim. O LLC e **tool-agnostic por design** — skills sao arquivos Markdown, scripts ACE sao Python, gates sao processos humanos. Nenhum componente do pipeline depende de Node.js ou npm.
+
+**Onde o JS/TS aparece (e o equivalente para outras stacks):**
+
+| Componente LLC | Exemplo JS/TS | Equivalente Python | Equivalente Go | Equivalente Rust |
+|---------------|--------------|-------------------|----------------|-----------------|
+| Mock data layer (Step 8) | MSW + `mocks/handlers/*.ts` | `responses` + `mocks/handlers/*.py` | `httptest` + `mocks/handlers/*.go` | `mockall` + `mocks/handlers/*.rs` |
+| Dependency audit (Step 11) | `npm audit` | `pip-audit` | `govulncheck` | `cargo audit` |
+| Screenshots (User Guide) | Playwright | Playwright (funciona com Python) | Chromedp | Chromedp |
+| Steering files | `CLAUDE.md` / `AGENTS.md` | Idem — Markdown puro | Idem | Idem |
+
+**A documentacao usa JS/TS como exemplo porque e o stack mais comum**, mas todos os conceitos sao traduziveis. A unica dependencia real e Python 3.10+ (para scripts ACE). O restante e Markdown, Git e processos.
+
 ---
 
 ## O que cada script Python faz?

@@ -1,6 +1,6 @@
 # FAQ — Live and Let Code (LLC)
 
-**Version:** 1.2.0 — June 2026
+**Version:** 1.5.0 — June 2026
 
 ---
 

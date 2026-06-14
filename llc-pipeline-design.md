@@ -1,7 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versão:** 1.0.0  
-**Data:** 04 de Junho de 2026  
+**Versao:** 1.5.0
+**Data:** 04 de Junho de 2026 (atualizado em 13/06/2026)
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
 **Autor:** Equipe LLC  
@@ -593,6 +593,8 @@ Quando um alerta é disparado, o pipeline recomenda:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.5.0 | 13/06/2026 | Equipe LLC | Adicionado Thin Harness (orquestrador CLI), Early Commitment + Deterministic Replay, steps de seguranca (11-Security, 11-OWASP, 12-Null-Safety), indice comprimido de documentacao, 15 human gates |
+| 1.4.0 | 12/06/2026 | Equipe LLC | Adicionado Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, git worktrees automaticos, prompt caching strategy |
 | 1.3.0 | 11/06/2026 | Equipe LLC | Adicionado Step 10.5 (User Guide) com skill `llc-user-guide`, gate 11.5, template USER_GUIDE_TEMPLATE.md e secao `user_docs` no PRP |
 | 1.2.0 | 10/06/2026 | Equipe LLC | Adicionado Grill Me (Steps 0.5-3), fluxo greenfield, análise de saúde estrutural (Code Health §10) |
 | 1.1.0 | 10/06/2026 | Equipe LLC | Adicionado Mermaid ao fluxo do pipeline (§3.1), seções ACE (§8) e Análise de Impacto (§9), removidos archive/ e superpowers/ |

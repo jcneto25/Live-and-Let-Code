@@ -1,6 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Version:** 1.0.0  
+**Version:** 1.5.0
+**Date:** June 4, 2026 (updated June 13, 2026)
 **Date:** June 4, 2026  
 **Status:** Design Approved  
 **Project:** Live and Let Code (LLC) — Agentic Autonomous Development Methodology  

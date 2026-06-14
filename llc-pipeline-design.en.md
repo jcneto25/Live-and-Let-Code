@@ -122,7 +122,7 @@ project-root/
 │   ├── business/                               # Business hub
   │   │   ├── ingestion/                          # [INPUT] Raw user docs
   │   │   │   └── converted/                      # [OUTPUT] Markdown files (Step 0.1)
-  │   │   ├── specs/                              # [OUTPUT] 8 specs + vision + modules
+  │   │   ├── specs/                              # [OUTPUT] 7 specs + vision + modules
   │   │   └── Template_Especificacao_Modulo.md    # Module template
 │   │
 │   ├── prd/                                    # PRDs (templates + generated)

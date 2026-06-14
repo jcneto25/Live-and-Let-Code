@@ -118,7 +118,7 @@ project-root/
   │   ├── business/                               # Hub de negócio
   │   │   ├── ingestion/                          # [INPUT] Docs brutos do usuário
   │   │   │   └── converted/                      # [OUTPUT] Markdown convertido (Step 0.1)
-  │   │   ├── specs/                              # [OUTPUT] 8 specs + visão + módulos
+  │   │   ├── specs/                              # [OUTPUT] 7 specs + visão + módulos
   │   │   └── Template_Especificacao_Modulo.md    # Template de módulo
 │   │
 │   ├── prd/                                    # PRDs (templates + gerados)

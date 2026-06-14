@@ -37,9 +37,9 @@ Live and Let Code (LLC) is an open-source methodology that structures the comple
 ### Pipeline
 
 ```
-Ingestion → Conversion (Docling) → Vision + Modules → 7 Specs → PRDs → PRPs
-→ Planning → Architecture → Tasks → Design System → Setup + Mock → Testing
-→ Project Docs → Execution
+Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 7 Specs ─👤─→ PRDs ─👤─→ PRPs
+─👤─→ Planning ─👤─→ Architecture ─👤─→ Tasks ─👤─→ Design System ─👤─→ Setup + Mock
+─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Execution
 ```
 
 ---

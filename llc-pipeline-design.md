@@ -25,6 +25,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 ### 1.3 Estrutura do Documento
 
 Este documento especifica:
+
 - A arquitetura de diretórios do LLC (§2)
 - O pipeline completo com 14 etapas principais + 1 subfluxo (§3)
 - O catálogo de skills (§4)
@@ -407,6 +408,7 @@ PRPs auto-contidos permitem execucao paralela via git worktrees. O `initialize_s
 Cada skill é um arquivo Markdown com YAML frontmatter, armazenado em `docs/skills/`. O formato é tool-agnostic: qualquer cliente de IA terminal pode ler e executar.
 
 **Estrutura de um skill:**
+
 ```yaml
 ---
 name: llc-step-N
@@ -417,6 +419,7 @@ tags: [categoria, llc-pipeline]
 ```
 
 **Seções obrigatórias em cada skill:**
+
 1. Metadados (YAML frontmatter)
 2. Como usar (3 modos: referência, pipe, cópia)
 3. Pré-requisitos (checklist com paths)
@@ -517,6 +520,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 - Nenhum passo pode ser executado sem o gate do passo anterior ter sido aprovado.
 
 **Rejeição — rollback em 4 estágios:**
+
 1. **Registro da decisão** — `<gate_result decision="rejected" reviewer="...">` é appended ao arquivo ACE da sessão; o motivo é registrado como `<blocker resolved="...">`.
 2. **Rollback de artefatos downstream** — `impact-analyzer.py --files <alterado> --skills` marca artefatos dependentes como potencialmente desatualizados (ex.: rejeitar o Gate 2 marca PRDs, PRPs, planejamento, arquitetura e design system para revisão).
 3. **Correção e reexecução** — o usuário corrige o artefato e reexecuta o step; skills são idempotentes (sobrescrevem). O `<context_seed>` da nova sessão carrega `pending: gate N rejeitado — reexecutando step N`.
@@ -594,10 +598,22 @@ Cada sessão LLC produz um arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` que é **nu
 | Vantagem | Impacto |
 |----------|---------|
 | **Economia de tokens** | ~1.500 tokens/sessão vs ~22.000 do histórico completo (93% de redução) |
-| **Imutabilidade** | Histórico nunca corrompido — sessões são append-only |
+| **Imutabilidade** | Conteúdo das sessões é append-only (conteúdo prévio sobrevive a truncamento); recuperação em §8.6 |
 | **Rastreabilidade** | Cada ação, decisão e aprendizado é registrado com timestamp e origem |
 | **Integração com LLC** | `<gate_result>` fecha o loop de accountability da metodologia |
 | **Promoção de conhecimento** | `<learning_point priority="high">` é automaticamente promovido para `memory/learning_points.md` |
+
+### 8.6 Recuperação de Corrupção (Corruption Recovery)
+
+O invariant "append-only" preserva o **conteúdo das sessões**, mas não cobre **estado derivado** (index, tags, context_seed). Procedimento por edge case:
+
+| Cenário | Detecção | Recuperação |
+|---------|----------|-------------|
+| **Sessão truncada** (crash no meio de `finalize_session.py`) | `validate-tags.py` reporta tags não-fechadas | Conteúdo prévio intacto → `validate-tags.py --fix` fecha tags → re-rodar `finalize_session.py` (idempotente) |
+| **context_seed stale/wrong** | Humano percebe informação desatualizada no início da nova sessão | **Não auto-reparado** (script só checa presença dos 4 campos). Correção: append de bloco corrigido à sessão (nunca reescrever — invariant append-only); próxima sessão carrega o último bloco |
+| **index.json corrompido** (JSON inválido ou drift) | `validate-tags.py` reporta JSON inválido; `initialize_session.py` loga `index.json inválido` e retorna `None` | **Sem auto-rebuild.** Workaround: backup do index atual → deletar → `initialize_session.py` cria novo (sessões em disco permanecem, mas chain `prev_session` perdida). Rebuild total exige `.ace/scripts/rebuild-index.py` ou reconstrução manual a partir dos YAML frontmatters |
+
+**Limitação conhecida:** sem `rebuild-index.py`, perda de `index.json` significa perda da navegação de sessões anteriores até reconstrução manual.
 
 ---
 
@@ -652,6 +668,7 @@ artifacts:
 ```
 
 **Campos:**
+
 - `path`: Caminho exato para um artefato unico
 - `path_pattern`: Glob para artefatos multiplos (ex: `PRP-*.md`)
 - `depends_on`: Lista de IDs de artefatos que este artefato requer
@@ -720,6 +737,7 @@ parseando `git log --since=<período> --numstat --no-merges`):
 ### 10.4 Ações Corretivas
 
 Quando um alerta é disparado, o pipeline recomenda:
+
 1. Agendar onda de refatoração cross-PRP
 2. Identificar blocos duplicados e consolidar em módulo compartilhado
 3. Revisar PRPs recentes que priorizaram `file_create` sobre `file_modify`

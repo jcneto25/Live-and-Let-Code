@@ -27,6 +27,7 @@ Live and Let Code (LLC) is an agentic software development methodology that stru
 ### 1.3 Document Structure Summary
 
 This document specifies:
+
 - The LLC directory architecture (§2)
 - The complete pipeline with 14 main steps + 1 subflow (§3)
 - The skills catalog (§4)
@@ -431,11 +432,13 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 | CP | Step 11 | QA score ≥ 7.0? Coverage ≥ thresholds? Security audit passed? |
 
 **Gate Rules:**
+
 - Failed → return to previous step for correction.
 - Approved → advance. Approval recorded in the artifact.
 - No step executes without prior gate approval.
 
 **Rejection rollback (4 stages):**
+
 1. **Decision recording** — `<gate_result decision="rejected" reviewer="...">` is appended to the session's ACE file; the reason is logged as `<blocker resolved="...">`.
 2. **Downstream artifact rollback** — `impact-analyzer.py --files <changed> --skills` flags dependent artifacts as potentially stale (e.g., rejecting Gate 2 marks PRDs, PRPs, planning, architecture, and design system for review).
 3. **Correction and re-execution** — the user fixes the artifact and re-runs the step; skills are idempotent (overwrite). The new session's `<context_seed>` carries `pending: gate N rejected — re-executing step N`.
@@ -477,10 +480,22 @@ Each LLC session produces a `.ace/sessions/YYYY-MM-DD-NNN.md` file that is **nev
 | Advantage | Impact |
 |----------|---------|
 | **Token savings** | ~1,500 tokens/session vs ~22,000 full history (93% reduction) |
-| **Immutability** | History never corrupted — sessions are append-only |
+| **Immutability** | Session content is append-only (prior content survives truncation); recovery in §8.6 |
 | **Traceability** | Every action, decision, and learning point is recorded with timestamp and origin |
 | **LLC integration** | `<gate_result>` closes the methodology's accountability loop |
 | **Knowledge promotion** | `<learning_point priority="high">` is automatically promoted to `memory/learning_points.md` |
+
+### 8.6 Corruption Recovery
+
+The "append-only" invariant preserves **session content**, but does not cover **derived state** (index, tags, context_seed). Procedure per edge case:
+
+| Scenario | Detection | Recovery |
+|----------|-----------|----------|
+| **Truncated session** (crash mid-`finalize_session.py`) | `validate-tags.py` reports unclosed tags | Prior content intact → `validate-tags.py --fix` closes tags → re-run `finalize_session.py` (idempotent) |
+| **Stale/wrong context_seed** | Human notices outdated information at the start of a new session | **Not auto-repaired** (script only checks presence of the 4 fields). Fix: append a corrected block to the session (never rewrite — append-only invariant); next session loads the latest block |
+| **Corrupted index.json** (invalid JSON or drift) | `validate-tags.py` reports invalid JSON; `initialize_session.py` logs `index.json inválido` and returns `None` | **No auto-rebuild.** Workaround: back up current index → delete → `initialize_session.py` creates a new one (sessions on disk remain, but `prev_session` chain is lost). Full rebuild requires `.ace/scripts/rebuild-index.py` or manual reconstruction from YAML frontmatters |
+
+**Known limitation:** without `rebuild-index.py`, loss of `index.json` means loss of the previous-session navigation chain until manual reconstruction.
 
 ---
 
@@ -535,6 +550,7 @@ artifacts:
 ```
 
 **Fields:**
+
 - `path`: Exact path for a single artifact
 - `path_pattern`: Glob for multiple artifacts (e.g., `PRP-*.md`)
 - `depends_on`: List of artifact IDs this artifact requires

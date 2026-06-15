@@ -667,6 +667,22 @@ artifacts:
       - tasks
 ```
 
+**Exemplo minimo** (um unico artefato, sem versionamento):
+
+```yaml
+artifacts:
+  prps:
+    path_pattern: "docs/prps/PRP-*.md"
+    depends_on:
+      - module_specs
+      - prd_tecnico
+    triggers_update:
+      - tasks
+      - dependency_matrix
+```
+
+> **Nota:** o schema e *map-based* — os IDs dos artefatos sao chaves do dicionario `artifacts`, nao itens de uma lista. Usar `- id: prp-001` quebraria o `impact-analyzer.py`, que itera `artifacts.values()`.
+
 **Campos:**
 
 - `path`: Caminho exato para um artefato unico

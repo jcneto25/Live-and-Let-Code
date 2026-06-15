@@ -739,6 +739,7 @@ Exemplo: "Qual stack usar?" (Step 5) — a resposta esta nos RNFs de performance
 - Step 2: 2 PRDs = 2 prismas (executivo vs técnico) sobre os 7 specs
 - Step 3: N PRPs = N prismas (unidades de implementação) sobre o PRD técnico
 - Greenfield: 4 dimensões de entrevista sobre a ideia do sistema
+  (precursor do PRRS — elícita a fonte em vez de prismá-la)
 
 ---
 

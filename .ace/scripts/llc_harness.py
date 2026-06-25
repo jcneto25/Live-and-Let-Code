@@ -386,9 +386,9 @@ def pipeline_run(from_step=0, to_step=11, task=None):
     print(f"{'='*60}")
     return True
 
-def step_run(step, prp=None, task=None, no_worktree=False):
+def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
     """Executa um step e retorna session_id."""
-    sess = session_start(step, prp=prp, task=task, no_worktree=no_worktree)
+    sess = session_start(step, prp=prp, task=task, wave=wave, no_worktree=no_worktree)
     skill_file, prompt = skill_load(step, sess["context_seed"], task)
     print(f"📄 Skill: {skill_file}")
     print(f"📦 Context seed: {len(sess.get('context_seed', '') or '')} chars")

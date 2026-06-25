@@ -1,7 +1,7 @@
 ---
 name: llc-ace-context
 description: Protocolo ACE de gestão de contexto entre sessões — append-only, delta incremental, anti-amnésia.
-version: 1.0.0
+version: 1.1.0
 tags: [ace, context, session, memory, anti-amnesia, llc-pipeline]
 ---
 
@@ -43,7 +43,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 | `<learning_point priority="...">` | Conhecimento validado | `priority`: `high`, `medium`, `low` |
 | `<gate_result>` | Decisão humana no gate LLC | `step`, `decision` (`approved`/`rejected`/`conditional`) |
 | `<blocker resolved="...">` | Impedimento | `resolved`: `true` ou `false` |
-| `<task_completed id="..." prp="..." status="...">` | Tarefa concluída | `id`: TASK-NNN, `prp`: PRP-NNN, `status`: `done`/`partial` |
+| `<task_completed id="..." prp="..." status="...">` | Tarefa concluída | `id`: coluna ID do TASKS.md (FDN-NNN/SEC-NNN/F0.X/PRP-NNN), `prp`: PRP-NNN ou "—", `status`: `done`/`partial` |
 | `<context_seed>` | Estado comprimido para próxima sessão | **Escrito apenas no encerramento** |
 | `<skill_feedback skill="..." priority="...">` | Sugestão de melhoria para um skill LLC | `skill`: nome do skill, `priority`: `high`/`medium`/`low` |
 
@@ -121,7 +121,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 - ✅ Escrever cada `<action>` e `<thinking>` IMEDIATAMENTE após a ação — não acumular em buffer
 - ✅ `<thinking>` é opcional — use apenas quando houver decisão não-óbvia
 - ✅ `<learning_point>` quando descobrir algo generalizável
-- ✅ `<task_completed>` ao concluir uma tarefa do TASKS.md — o `finalize_session.py` atualiza automaticamente os checkboxes
+- ✅ `<task_completed id="FDN-001" prp="—" status="done">descrição</task_completed>` ao concluir uma tarefa — `id` bate com a coluna ID do TASKS.md; o `finalize_session.py` reflete o status nas **tabelas de Status** (✅/🔄) de TASKS.md, EXECUTION_WAVES.md e PLAN.md (e em checkboxes `- [ ]` quando aplicável). Ver *Progress Reflection Protocol* no AGENTS.md.
 - ✅ `<skill_feedback>` ao final da sessão se o skill executado puder ser melhorado — sugestões são consolidadas em `memory/skill_feedback.md`
 - ❌ **NUNCA editar `<action>` anteriores** — o histórico é imutável
 - ❌ **NUNCA reordenar ações**

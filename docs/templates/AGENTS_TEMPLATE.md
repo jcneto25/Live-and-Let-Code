@@ -1,5 +1,5 @@
 ---
-template_version: "1.0.0"
+template_version: "1.1.0"
 template_name: "AGENTS.md (LLC-Harmonized)"
 last_updated: "{{TODAY}}"
 project_name: "{{PROJECT_NAME}}"
@@ -152,6 +152,8 @@ Know where you can move freely and where you must stop.
 
 *When in doubt, treat the zone as RED.*
 
+**Exceção sancionada (Progress Reflection):** atualizações de **status/progresso** aplicadas pelo **harness** (`finalize_session.py` a partir de tags `<task_completed>` registradas na sessão) são permitidas e **não** violam a zona 🔴 — refletem fatos registrados, não decisões. Permanece 🔴 a edição **substantiva** de decisões de planejamento (escopo, dependências, estimativas, arquitetura), que exige validação humana. Ver *Progress Reflection Protocol* abaixo.
+
 **Regra adicional LLC:** Antes de modificar qualquer arquivo em zona 🟡 ou 🔴, execute:
 ```bash
 python .ace/scripts/impact-analyzer.py --files "caminho/do/arquivo" --json --skills
@@ -192,6 +194,19 @@ pending: ...
 blockers: ...
 next_action: ..." --json
 ```
+
+### Progress Reflection Protocol (LLC)
+
+O progresso implementado **DEVE** ser refletido nos docs de planejamento — não é opcional. O mecanismo é determinístico e respeita as zonas:
+
+1. **Durante a sessão**, ao concluir cada tarefa/sub-tarefa, emita no arquivo de sessão:
+   `<task_completed id="FDN-001" prp="PRP-001" status="done">descrição curta do que foi feito</task_completed>`
+   - `id` **DEVE** bater com a coluna ID do `TASKS.md` (ex.: `FDN-001`, `SEC-001`, `F0.1`, `PRP-001`). Tarefa sem PRP: use `prp="—"`.
+   - `status`: `done` (vira ✅) ou `partial` (vira 🔄).
+2. **No encerramento**, `finalize_session.py` reflete essas tags nas **tabelas de Status** de `TASKS.md`, `EXECUTION_WAVES.md` e `PLAN.md` (e em checkboxes `- [ ]` quando o formato aplicar).
+3. **Granularidade:** marque `<task_completed>` para **tarefas** concluídas. Só marque um **PRP** como `done` quando o DoD do PRP estiver 100% atendido (merge + staging); do contrário use `partial`.
+
+> Esta é a via sancionada para atualizar `docs/planning/` (ver *Autonomy Zones*): o **harness** edita, não o agente. O agente apenas registra `<task_completed>` e deixa o `finalize_session.py` aplicar o status.
 
 ---
 
@@ -243,7 +258,7 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 - [ ] Security audit report reviewed? Check `docs/security/SECURITY_AUDIT_REPORT.md` — zero criticals, zero real secrets
 - [ ] Artefatos downstream impactados? Execute `python .ace/scripts/impact-analyzer.py --json`
 - [ ] Métricas de code health degradadas? Execute `python .ace/scripts/code-health.py --since "30 days ago"`
-- [ ] `<task_completed>` tags registradas no ACE? O `TASKS.md` está atualizado?
+- [ ] `<task_completed>` emitidos para tarefas feitas? O status em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md` reflete o trabalho (aplicado pelo `finalize_session.py`)?
 - [ ] Gate LLC da etapa atual registrado? `<gate_result step="N" decision="approved">`
 
 ---

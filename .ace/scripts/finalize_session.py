@@ -173,7 +173,7 @@ def build_context_seed(
     return f"state: {state}\npending: {pending}\nblockers: {blockers_str}\nnext_action: {next_action}"
 
 
-def write_context_seed(session_file: Path, context_seed: str):
+def write_context_seed(session_file: Path, context_seed: str, dry_run: bool = False):
     """
     Substitui APENAS o placeholder de context_seed na seção ## Encerramento.
     Não modifica o <context_seed> da seção ## Contexto (que é da sessão anterior).
@@ -183,16 +183,18 @@ def write_context_seed(session_file: Path, context_seed: str):
     placeholder = "state: [preencher no encerramento]\npending: [preencher no encerramento]\nblockers: [preencher no encerramento]\nnext_action: [preencher no encerramento]"
 
     if placeholder in content:
-        content = content.replace(placeholder, context_seed)
-        session_file.write_text(content, encoding='utf-8')
+        if not dry_run:
+            content = content.replace(placeholder, context_seed)
+            session_file.write_text(content, encoding='utf-8')
         logger.info("✅ context_seed gravado na seção Encerramento")
     else:
         logger.warning("⚠️  Placeholder de context_seed não encontrado — appendando ao final")
-        with open(session_file, "a", encoding="utf-8") as f:
-            f.write(f"\n\n## Contexto para Próxima Sessão\n\n<context_seed>\n{context_seed}\n</context_seed>\n")
+        if not dry_run:
+            with open(session_file, "a", encoding="utf-8") as f:
+                f.write(f"\n\n## Contexto para Próxima Sessão\n\n<context_seed>\n{context_seed}\n</context_seed>\n")
 
 
-def promote_learning_points(session_file: Path):
+def promote_learning_points(session_file: Path, dry_run: bool = False):
     content = session_file.read_text(encoding='utf-8')
     learnings = extract_learning_points(content)
     high_priority = [l for l in learnings if l["attrs"].get("priority") == "high"]
@@ -212,13 +214,14 @@ def promote_learning_points(session_file: Path):
             promoted += 1
 
     if promoted:
-        LEARNING_POINTS_FILE.write_text(existing, encoding='utf-8')
+        if not dry_run:
+            LEARNING_POINTS_FILE.write_text(existing, encoding='utf-8')
         logger.info(f"✅ {promoted} learning_point(s) promovido(s)")
     else:
         logger.info("ℹ️  Todos os learning_points já foram promovidos")
 
 
-def update_index(session_id: str, status: str = "completed"):
+def update_index(session_id: str, status: str = "completed", dry_run: bool = False):
     if not INDEX_FILE.exists():
         logger.error("❌ index.json não encontrado")
         return
@@ -240,7 +243,8 @@ def update_index(session_id: str, status: str = "completed"):
         logger.warning(f"⚠️  Sessão {session_id} não encontrada no index")
         return
 
-    INDEX_FILE.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding='utf-8')
+    if not dry_run:
+        INDEX_FILE.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding='utf-8')
     logger.info(f"✅ index.json atualizado (status: {status})")
 
 
@@ -308,48 +312,129 @@ def save_skill_feedback(feedback_items: list[dict], session_id: str, dry_run: bo
     return new_count
 
 
-def update_tasks_md(completed_tasks: list[dict], dry_run: bool = False) -> int:
-    """Atualiza TASKS.md marcando checkboxes concluídas."""
-    if not completed_tasks:
-        return 0
+# Mapeia <task_completed status="..."> -> emoji da coluna Status (TASKS.md §2.1).
+STATUS_EMOJI = {
+    "done": "✅",
+    "partial": "🔄",
+}
 
-    if not TASKS_FILE.exists():
-        logger.warning("⚠️  TASKS.md não encontrado — task_completed ignorados")
-        return 0
 
-    content = TASKS_FILE.read_text(encoding='utf-8')
-    updated_count = 0
+def map_status_emoji(status: str) -> str:
+    """Converte status de <task_completed> no emoji da coluna Status do TASKS.md."""
+    return STATUS_EMOJI.get(status, "✅")
 
-    for task in completed_tasks:
-        task_id = task["task_id"]
-        if not task_id:
+
+def update_status_cell(content: str, id_to_emoji: dict) -> tuple[str, int]:
+    """
+    Atualiza tabelas markdown: para cada linha de dados sob um header que contenha uma
+    coluna "Status", se alguma célula da linha casar um task_id (word-boundary), substitui
+    o conteúdo da célula Status pelo emoji mapeado. Tabelas sem coluna "Status" não são
+    tocadas. Retorna (novo_conteúdo, n_células_atualizadas).
+    """
+    if not id_to_emoji:
+        return content, 0
+
+    id_patterns = {tid: re.compile(rf"\b{re.escape(tid)}\b") for tid in id_to_emoji}
+    lines = content.split("\n")
+    status_col = None  # índice (em line.split('|')) da coluna Status na tabela atual
+    updated = 0
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not (stripped.startswith("|") and stripped.endswith("|")):
+            status_col = None  # saiu da tabela
             continue
 
+        parts = line.split("|")
+        cells = [p.strip() for p in parts]
+
+        if status_col is None:
+            # procura um header cuja célula seja exatamente "Status"
+            col = next((idx for idx, c in enumerate(cells) if c.lower() == "status"), None)
+            if col is not None:
+                status_col = col
+            continue  # header/separador: nunca atualiza
+
+        # linha de dados dentro de uma tabela com coluna Status
+        if status_col >= len(parts):
+            continue
+        matched_emoji = None
+        for tid, pat in id_patterns.items():
+            if any(pat.search(c) for c in cells):
+                matched_emoji = id_to_emoji[tid]
+                break
+        if matched_emoji is not None and parts[status_col].strip() != matched_emoji:
+            parts[status_col] = f" {matched_emoji} "
+            lines[i] = "|".join(parts)
+            updated += 1
+
+    return "\n".join(lines), updated
+
+
+def update_planning_doc(file_path: Path, completed_tasks: list[dict],
+                        dry_run: bool, label: str) -> int:
+    """Reflete task_completed num doc de planejamento: checkboxes `- [ ]` + coluna Status."""
+    if not completed_tasks or not file_path.exists():
+        return 0
+
+    content = file_path.read_text(encoding="utf-8")
+    updated = 0
+
+    # 1) checkboxes no formato "- [x] ... <task_id> ..." (legenda TASKS.md §2.2)
+    for task in completed_tasks:
+        tid = task["task_id"]
+        if not tid:
+            continue
         pattern = re.compile(
-            rf'^(\s*- \[)([ x/])(\] .*?\b{re.escape(task_id)}\b.*)$',
+            rf'^(\s*- \[)([^\]])(\] .*?\b{re.escape(tid)}\b.*)$',
             re.MULTILINE
         )
 
         def replace_cb(match):
-            nonlocal updated_count
+            nonlocal updated
             if match.group(2) != 'x':
-                updated_count += 1
+                updated += 1
                 return f'{match.group(1)}x{match.group(3)}'
             return match.group(0)
 
-        new_content = pattern.sub(replace_cb, content)
-        if new_content != content:
-            content = new_content
+        content = pattern.sub(replace_cb, content)
 
-    if updated_count > 0 and not dry_run:
-        TASKS_FILE.write_text(content, encoding='utf-8')
-        logger.info(f"✅ TASKS.md atualizado — {updated_count} tarefa(s) marcada(s) como [x]")
-    elif updated_count > 0:
-        logger.info(f"🔍 [DRY RUN] {updated_count} tarefa(s) seriam marcadas no TASKS.md")
-    else:
-        logger.info("ℹ️  Nenhuma task_completed nova encontrada ou já marcada")
+    # 2) tabelas com coluna "Status" (formato real do TASKS/WAVES/PLAN)
+    id_to_emoji = {
+        t["task_id"]: map_status_emoji(t["status"])
+        for t in completed_tasks if t["task_id"]
+    }
+    content, table_updated = update_status_cell(content, id_to_emoji)
+    updated += table_updated
 
-    return updated_count
+    if updated > 0:
+        if not dry_run:
+            file_path.write_text(content, encoding="utf-8")
+            logger.info(f"✅ {label} atualizado — {updated} status refletem task_completed")
+        else:
+            logger.info(f"🔍 [DRY RUN] {updated} status seriam atualizados em {label}")
+    return updated
+
+
+# Docs de planejamento cujas tabelas de Status refletem task_completed.
+# Nota: o status de onda em chave-valor (EXECUTION_WAVES §2.{N}.1 "| **Status** | ...")
+# tem formato distinto e permanece atualização manual/da skill.
+PLANNING_DOCS = [
+    (TASKS_FILE, "TASKS.md"),
+    (Path("docs/planning/EXECUTION_WAVES.md"), "EXECUTION_WAVES.md"),
+    (Path("docs/planning/PLAN.md"), "PLAN.md"),
+]
+
+
+def update_planning_docs(completed_tasks: list[dict], dry_run: bool = False) -> int:
+    """Reflete task_completed nas tabelas de Status de TASKS.md, EXECUTION_WAVES.md e PLAN.md."""
+    total = 0
+    for path, label in PLANNING_DOCS:
+        total += update_planning_doc(path, completed_tasks, dry_run, label)
+    if total == 0 and completed_tasks:
+        logger.info("ℹ️  Nenhum task_completed pôde ser refletido nos docs de planejamento "
+                    "(IDs sem linha correspondente ou já marcados)")
+    return total
 
 
 def git_commit(session_id: str):
@@ -367,6 +452,7 @@ def main():
     parser.add_argument("--context-seed", type=str, default=None,
                         help="Context seed fornecido pelo agente (schema: state/pending/blockers/next_action)")
     parser.add_argument("--commit", action="store_true", help="Faz git commit automático")
+    parser.add_argument("--dry-run", action="store_true", help="Simula sem gravar alterações em arquivos")
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     args = parser.parse_args()
 
@@ -413,11 +499,11 @@ def main():
     context_seed = build_context_seed(actions, learnings, blockers, gate_present, args.context_seed)
     logger.info(f"📦 Context seed gerado ({len(context_seed)} chars)")
 
-    write_context_seed(session_file, context_seed)
-    promote_learning_points(session_file)
-    feedback_saved = save_skill_feedback(skill_feedback, session_id)
-    tasks_updated = update_tasks_md(completed_tasks)
-    update_index(session_id, status="completed")
+    write_context_seed(session_file, context_seed, dry_run=args.dry_run)
+    promote_learning_points(session_file, dry_run=args.dry_run)
+    feedback_saved = save_skill_feedback(skill_feedback, session_id, dry_run=args.dry_run)
+    tasks_updated = update_planning_docs(completed_tasks, dry_run=args.dry_run)
+    update_index(session_id, status="completed", dry_run=args.dry_run)
 
     gate_decision = None
     for m in re.finditer(r'<gate_result[^>]*decision="([^"]*)"', content):
@@ -425,13 +511,13 @@ def main():
 
     worktree_cleaned = False
     if gate_decision:
-        worktree_cleaned = merge_and_cleanup_worktree(session_id, gate_decision)
+        worktree_cleaned = merge_and_cleanup_worktree(session_id, gate_decision, dry_run=args.dry_run)
     else:
         wt = get_worktree_for_session(session_id)
         if wt:
             logger.info(f"ℹ️  Worktree existe mas sem gate_decision — mantido para revisão manual: {wt}")
 
-    if args.commit:
+    if args.commit and not args.dry_run:
         git_commit(session_id)
 
     result = {

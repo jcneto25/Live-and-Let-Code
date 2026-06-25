@@ -1,7 +1,7 @@
 ---
 name: llc-step-8
 description: Pipeline LLC Passo 8: Setup do projeto e camada de dados mockados (JSON + MSW handlers) — fundação para o MVP.
-version: 1.1.0
+version: 1.2.0
 tags: [mvp, mock, foundation, llc-pipeline]
 ---
 
@@ -195,7 +195,7 @@ Para cada PRP da Wave 1:
 4. **Cobertura de perfis:** Todo perfil definido em `perfis_permissoes.md` deve ter pelo menos um usuário mock.
 5. **Cobertura de estados:** Cada entidade deve ter registros em diferentes estados conforme BPMN.
 6. **Handlers completos:** Todo endpoint do núcleo deve ter tratamento de erros realistas.
-7. **Documentação atualizada:** TASKS.md, PRPs e WAVES devem refletir o progresso real.
+7. **Progresso refletido (Progress Reflection):** ao concluir cada tarefa de setup/scaffolding, emita `<task_completed id="<ID-do-TASKS.md>" prp="—" status="done|partial">` na sessão — o `finalize_session.py` reflete o status nas tabelas de TASKS.md/WAVES/PLAN. TASKS.md, PRPs e WAVES devem refletir o progresso real (ver *Progress Reflection Protocol* no AGENTS.md).
 8. **Idempotência:** Se o projeto já estiver inicializado, pergunte antes de sobrescrever. Se arquivos mock já existirem, pergunte se atualiza ou mantém.
 
 ---

@@ -102,6 +102,11 @@ AI CLIENT                 ← Claude Code, opencode, Codex, Cursor...
 | `llc session end --approve` | End manual session |
 | `llc status` | Pipeline progress |
 
+> **Enforcement:** the harness runs the init → agent → finalize cycle, but does not force the
+> agent to go through it. How to **guarantee** sessions are recorded in `.ace` (advisory layers +
+> a deterministic pre-commit + per-client hooks) is documented in
+> [§8.7](#87-guaranteed-session-registration-enforcement).
+
 ---
 
 ## 2. Directory Architecture
@@ -117,7 +122,8 @@ project-root/
 │   │
 │   ├── templates/                              # Global templates
 │   │   ├── CLAUDE_TEMPLATE.md
-│   │   └── AGENTS_TEMPLATE.md
+│   │   ├── AGENTS_TEMPLATE.md                  # PT (default)
+│   │   └── AGENTS_TEMPLATE.en.md               # EN mirror
 │   │
 │   ├── business/                               # Business hub
   │   │   ├── ingestion/                          # [INPUT] Raw user docs
@@ -496,6 +502,48 @@ The "append-only" invariant preserves **session content**, but does not cover **
 | **Corrupted index.json** (invalid JSON or drift) | `validate-tags.py` reports invalid JSON; `initialize_session.py` logs `index.json inválido` and returns `None` | **No auto-rebuild.** Workaround: back up current index → delete → `initialize_session.py` creates a new one (sessions on disk remain, but `prev_session` chain is lost). Full rebuild requires `.ace/scripts/rebuild-index.py` or manual reconstruction from YAML frontmatters |
 
 **Known limitation:** without `rebuild-index.py`, loss of `index.json` means loss of the previous-session navigation chain until manual reconstruction.
+
+### 8.7 Guaranteed Session Registration (Enforcement)
+
+`.ace/index.json` is the index of **sessions** — the unit of recording is the lifecycle
+(`initialize_session.py` opens → work → `finalize_session.py` closes), **not** tasks or waves.
+Implementing code, completing tasks, or generating scaffolding artifacts **does not by itself write
+anything to the index**: only `initialize_session.py` appends an entry (`status: in_progress`) and
+`finalize_session.py` completes it (`status: completed`). `<task_completed>` is reflected in
+`TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md`, not in the index.
+
+**Failure mode this prevents:** a wave executed "directly" (bypassing the cycle) leaves
+`.ace/index.json` with `sessions: []`. The work happened and was committed, but there's no session
+history proving incremental delivery — exactly what a protocol audit detects.
+
+Since the Thin Harness flow (`llc run --step N`: init → skill → agent → gate → finalize) is already
+**tool-agnostic** at execution, the remaining question is **enforcement**: guaranteeing the agent
+enters through the flow instead of coding around it. LLC applies layers with distinct roles:
+
+| Layer | Mechanism | Nature | Tool-agnostic? |
+|-------|-----------|--------|:---:|
+| **Contract** | `AGENTS.md`/`CLAUDE.md` (`AGENTS_TEMPLATE.en.md` §Workflow Discipline) state the rule | Advisory | ✅ |
+| **Procedure** | the step's skill, auto-loaded by `llc run` | Advisory | ✅ |
+| **Guarantee** | `pre-commit.sh` + `validate-tags.py --coverage` — a commit with code but no session is **rejected** | **Deterministic** | ✅ |
+| **Per-client UX** | a client hook (e.g. Claude Code `PreToolUse`) blocks edits with no `in_progress` session | Deterministic | ❌ (per-client) |
+
+**The deterministic, tool-agnostic layer is the git pre-commit hook.** `validate-tags.py --coverage`
+implements two policies:
+
+- **ERROR (blocks the commit):** staged diff in code files (excludes `.ace/`, `docs/`, `.md` and
+  root meta) **+ zero** `in_progress`/`completed` sessions in the index. This is the direct guarantee
+  against `sessions: []`.
+- **WARNING** (error only under `--strict`): staged code files not referenced in any session's
+  `<file_delta>` — heuristic coverage, does not block by default to avoid false positives.
+
+Git runs the pre-commit **regardless of the AI client** (Claude Code, Codex, Cursor, opencode, or
+plain `git commit`), making it the only portable guarantee. Install:
+`cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (or `pre-commit install`).
+
+> Per-client hook snippets (Claude Code `PreToolUse`/`SessionStart`) in `docs/templates/hooks/`.
+> **Caveat:** the pre-commit is bypassable with `git commit --no-verify` and client hooks can be
+> disabled — no mechanism is 100%. Layered, they shift the failure mode from "the agent forgot" to
+> "someone had to actively bypass it".
 
 ---
 

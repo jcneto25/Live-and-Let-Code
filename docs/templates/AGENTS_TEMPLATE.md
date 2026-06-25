@@ -38,6 +38,44 @@ next_action: ..." --json
 
 ---
 
+## Workflow Discipline — Session Enrollment (Obrigatório)
+
+O `.ace/index.json` registra **sessões**, não tarefas ou ondas. Implementar código ou gerar artefatos **por si só não cria sessão alguma** — apenas o ciclo `initialize → work → finalize` escreve no índice. Trabalho feito "direto", por fora desse ciclo, fica **sem registro** (`.ace/index.json` com `sessions: []`) e não pode provar entrega incremental.
+
+**Regra de ouro:** toda unidade de trabalho (step, PRP, onda) é embrulhada numa sessão. Editar código fora de uma sessão aberta é uma violação de protocolo.
+
+1. **Antes de codar/gerar artefatos** — abra a sessão:
+   ```bash
+   # modo manual (qualquer cliente de IA):
+   python .ace/scripts/initialize_session.py --step N --task "..." --project {{PROJECT_NAME}} --json
+   # modo harness (tool-agnostic — detecta claude/opencode/codex/cursor, ou imprime o prompt):
+   python .ace/scripts/llc.py run --step N --task "..."
+   ```
+2. **Durante** — edite somente dentro da sessão aberta e registre deltas no `.ace/sessions/YYYY-MM-DD-NNN.md`:
+   ```xml
+   <action type="file_modify"><file_delta>src/caminho/do/arquivo.ts</file_delta><description>o que mudou</description></action>
+   <task_completed id="FDN-001" prp="PRP-001" status="done">descrição curta</task_completed>
+   ```
+   O `<file_delta>` é o que prova que a sessão **cobre** os arquivos alterados.
+3. **Ao final** — feche a sessão:
+   ```bash
+   python .ace/scripts/finalize_session.py --commit
+   ```
+   Gera o `<context_seed>`, reflete o status em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md` e marca a sessão `completed`.
+
+### Aplicação — defense in depth (independente do cliente de IA)
+
+| Camada | Mecanismo | Força |
+|--------|-----------|-------|
+| **Contrato** | esta seção + `AGENTS.md`/`CLAUDE.md` | Advisory — define a regra (tool-agnostic) |
+| **Procedimento** | skill do step (auto-carregada pelo `llc run`) | Advisory — operacionaliza o passo-a-passo |
+| **Garantia (agnóstica)** | `pre-commit.sh` + `validate-tags.py --coverage`: commit com código sem sessão é **rejeitado** pelo git | Determinística — roda independente do cliente |
+| **UX (por cliente)** | hook do cliente (ex.: Claude Code `PreToolUse`/`SessionStart`) auto-abre/bloqueia sessões | Determinística — mas específica por cliente |
+
+> O **pre-commit do git** é a única garantia **tool-agnostic**: ele é executado não importa qual agente fez o commit. Pode ser contornado com `git commit --no-verify` — sob responsabilidade explícita do operador. Snippets de hook por cliente ficam em `docs/templates/hooks/`.
+
+---
+
 ## Document Hierarchy
 
 When documents conflict, **safety wins**.

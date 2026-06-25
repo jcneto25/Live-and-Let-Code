@@ -103,6 +103,40 @@ contrario, o prompt e exibido para copiar e colar manualmente.
 > para tarefas repetidas — reduzindo o custo de tokens em ate 99%. Para detalhes,
 > consulte o [FAQ](FAQ.md#-early-commitment--deterministic-replay).
 
+### Garantindo o registro de sessões no `.ace` (tool-agnostic)
+
+O fluxo `llc run --step N` já é **agnóstico ao cliente de IA**: o harness faz
+`initialize_session.py → carrega a skill → invoca o agente CLI (claude/opencode/codex/cursor, ou imprime o prompt) → finalize_session.py`.
+O problema não é executar o fluxo — é **garantir** que o agente entre por ele em vez de
+codar "direto". Codar fora do ciclo deixa `.ace/index.json` com `sessions: []`: o trabalho
+existiu, mas não há histórico que prove a entrega incremental.
+
+O LLC aplica **defense in depth** — camadas com papéis distintos:
+
+| Camada | Mecanismo | Força | Tool-agnostic? |
+|--------|-----------|-------|:---:|
+| **Contrato** | `AGENTS.md`/`CLAUDE.md` declaram "todo trabalho vira sessão" | Advisory (define a regra) | ✅ |
+| **Procedimento** | skill do step (auto-carregada pelo `llc run`) | Advisory (operacionaliza) | ✅ |
+| **Garantia** | `pre-commit.sh` + `validate-tags.py --coverage`: commit com código sem sessão é **rejeitado** pelo git | **Determinística** | ✅ |
+| **UX por cliente** | hook do cliente (ex.: Claude Code `PreToolUse`) bloqueia edição sem sessão aberta | Determinística | ❌ (por cliente) |
+
+A camada que **realmente garante** o registro é o **pre-commit do git** — o git o executa
+independente do agente que fez o commit. Instale no projeto-alvo:
+
+```bash
+cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# ou, com o framework pre-commit: pre-commit install
+```
+
+Para enforcement *durante* a sessão (antes do commit), use o hook do seu cliente.
+Snippets prontos (Claude Code `PreToolUse` + `SessionStart`) em
+[`docs/templates/hooks/claude-code-session-hooks.md`](docs/templates/hooks/claude-code-session-hooks.md).
+
+> O pre-commit pode ser contornado com `git commit --no-verify` (sob responsabilidade do
+> operador). Nenhum mecanismo é 100% — mas, em camadas, mudam o jogo de "o agente esqueceu"
+> para "alguém precisou contornar ativamente". Detalhes no
+> [`llc-pipeline-design.md` §8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement).
+
 ## Passo a Passo
 
 ### 📋 Visao Geral do Pipeline (14 principais + 5 auxiliares)
@@ -631,6 +665,7 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Pular para um passo específico | `Execute a skill docs/skills/llc-step-N.md` certificando-se de que os gates anteriores foram aprovados |
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Gerar manual do usuario | `Execute a skill docs/skills/llc-user-guide.md` |
+| Garantir que toda onda vire sessão no `.ace` | Instale o pre-commit: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ver [§8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement)) |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |
 | Entender um termo | Leia [`llc-pipeline-design.md` §8](llc-pipeline-design.md#8-glossário-llc) |

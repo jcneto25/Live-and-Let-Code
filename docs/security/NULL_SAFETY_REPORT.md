@@ -20,9 +20,9 @@ tags: [null-safety, validation, report, llc-pipeline]
 
 - ✅ Campos com nulabilidade explícita: 0 (sem PRPs reais)
 - 🔴 Campos sem especificação: 0
-- 🟡 Campos nuláveis sem fallback: 0
-- 🟡 Inconsistências entre PRPs: 0
-- 🟢 Divergências com DATA_MODEL.md: 0
+- 🔴 Inconsistências entre PRPs: 0
+- 🟡 Campos NULL sem fallback: 0
+- 🟢 Divergências com ARCHITECTURE.md: 0
 
 ### Recomendação
 
@@ -41,11 +41,11 @@ Nenhum PRP foi encontrado no diretório `docs/prps/`. Apenas o template `PRP_TEM
 | TEMPLATE (Component §6.1) | Props | `patientId` | string | NÃO | N/A | ✅ Explícito |
 | TEMPLATE (Component §6.1) | Props | `onSave` | (data: FormData) => void | SIM (`?`) | Não documentado | 🟡 FALLBACK AUSENTE |
 | TEMPLATE (Component §6.1) | Props | `readOnly` | boolean | SIM (`?`) | `default: false` | ✅ Completo |
-| TEMPLATE (DB §7) | users | `id` | uuid | NÃO | N/A | ✅ Explícito |
-| TEMPLATE (DB §7) | users | `email` | string | NÃO | N/A | ✅ Explícito |
-| TEMPLATE (DB §7) | users | `password_hash` | string | NÃO | N/A | ✅ Explícito |
-| TEMPLATE (DB §7) | users | `role` | enum | NÃO ESPECIFICADO | — | 🔴 NÃO ESPECIFICADO |
-| TEMPLATE (DB §7) | users | `organization_id` | uuid | NÃO ESPECIFICADO | — | 🔴 NÃO ESPECIFICADO |
+| TEMPLATE (DB §8) | users | `id` | uuid | NÃO | N/A | ✅ Explícito |
+| TEMPLATE (DB §8) | users | `email` | string | NÃO | N/A | ✅ Explícito |
+| TEMPLATE (DB §8) | users | `password_hash` | string | NÃO | N/A | ✅ Explícito |
+| TEMPLATE (DB §8) | users | `role` | enum | NÃO ESPECIFICADO | — | 🔴 NÃO ESPECIFICADO |
+| TEMPLATE (DB §8) | users | `organization_id` | uuid | NÃO ESPECIFICADO | — | 🔴 NÃO ESPECIFICADO |
 
 **Nota:** Os campos marcados como 🔴 e 🟡 acima referem-se ao template, não a PRPs reais. O template serve como guia de preenchimento e seus placeholders não representam decisões de design finalizadas.
 
@@ -59,10 +59,18 @@ Nenhum PRP foi encontrado no diretório `docs/prps/`. Apenas o template `PRP_TEM
 
 | PRP | Entidade | Campo | Tipo Atual | Recomendação |
 |---|---|---|---|---|
-| TEMPLATE (DB §7) | users | `role` | `enum` | Adicionar `NOT NULL` ou `?` conforme regra de negócio |
-| TEMPLATE (DB §7) | users | `organization_id` | `uuid` | Adicionar `NOT NULL` ou `?` conforme regra de negócio |
+| TEMPLATE (DB §8) | users | `role` | `enum` | Adicionar `NOT NULL` ou `?` conforme regra de negócio |
+| TEMPLATE (DB §8) | users | `organization_id` | `uuid` | Adicionar `NOT NULL` ou `?` conforme regra de negócio |
 
-### 3.2 Campos Nuláveis sem Fallback (🟡 Alto)
+### 3.2 Inconsistências entre PRPs (🔴 Crítico)
+
+**Nenhuma.** Apenas um template existe, sem PRPs para comparar.
+
+| Campo | PRP A | Definição A | PRP B | Definição B | Recomendação |
+|---|---|---|---|---|---|
+| — | — | — | — | — | — |
+
+### 3.3 Campos NULL sem Fallback (🟡 Alto)
 
 **Nenhum em PRPs reais.** No template:
 
@@ -71,19 +79,11 @@ Nenhum PRP foi encontrado no diretório `docs/prps/`. Apenas o template `PRP_TEM
 | TEMPLATE (API §5.1) | Request | `campo_opcional` | tipo | Documentar valor default no contrato da API |
 | TEMPLATE (Component §6.1) | Props | `onSave` | (data: FormData) => void | Documentar comportamento quando `undefined` (ex.: botão de save não renderiza) |
 
-### 3.3 Inconsistências entre PRPs (🟡 Alto)
+### 3.4 Divergências com ARCHITECTURE.md (🟢 Médio)
 
-**Nenhuma.** Apenas um template existe, sem PRPs para comparar.
+**Nenhuma.** `docs/architecture/ARCHITECTURE.md` não traz modelo de dados canônico em `§6.1 (Entidades principais)`.
 
-| Campo | PRP A | Definição A | PRP B | Definição B | Recomendação |
-|---|---|---|---|---|---|
-| — | — | — | — | — | — |
-
-### 3.4 Divergências com DATA_MODEL.md (🟢 Médio)
-
-**Nenhuma.** `docs/architecture/DATA_MODEL.md` não existe.
-
-| Campo | PRP | Definição PRP | DATA_MODEL.md | Recomendação |
+| Campo | PRP | Definição PRP | ARCHITECTURE.md | Recomendação |
 |---|---|---|---|---|
 | — | — | — | — | — |
 
@@ -104,13 +104,13 @@ Nenhum. O gate está aprovado.
 
 **Observações:**
 1. **Ausência de PRPs:** O diretório `docs/prps/` contém apenas `PRP_TEMPLATE.md`. Não há Product Requirements Pages para validar. Quando os PRPs forem criados (Step 3 do pipeline LLC), esta skill deve ser re-executada.
-2. **Ausência de DATA_MODEL.md:** Não há modelo de dados canônico para validação de consistência entre PRPs. Recomenda-se criar `docs/architecture/DATA_MODEL.md` no Step 5.
+2. **Ausência de modelo de dados canônico no ARCHITECTURE.md:** Não há definição per-campo para validação de consistência entre PRPs. Recomenda-se detalhar nulabilidade em `§6.1 (Entidades principais)` em `docs/architecture/ARCHITECTURE.md` no Step 5.
 3. **Template com boas práticas:** O `PRP_TEMPLATE.md` demonstra consciência de nulabilidade — usa TypeScript `?` para campos opcionais, comenta `// opcional` em JSON, e define `default: false` para `readOnly`. Essas práticas devem ser mantidas nos PRPs reais.
 
 ### Recomendações
 
 1. **Criar PRPs (Step 3)** e re-executar `llc-step-12-null-safety` imediatamente após.
-2. **Criar DATA_MODEL.md (Step 5)** para servir como referência canônica de nulabilidade.
+2. **Detalhar nulabilidade em §6.1 (Entidades principais) da ARCHITECTURE.md (Step 5)** para servir como referência canônica entre PRPs.
 3. **Adotar o padrão do template:**
    - TypeScript: usar `field?: type` para opcionais e `field: type | null` para explicitamente nulável
    - Python/Pydantic: usar `Optional[type] = None` com default explícito
@@ -127,8 +127,8 @@ Nenhum. O gate está aprovado.
 |---|---|---|---|
 | `docs/prps/PRP_TEMPLATE.md` | §5 API Contracts | JSON (template) | 2 campos de exemplo |
 | `docs/prps/PRP_TEMPLATE.md` | §6 Component Spec | TypeScript interface | 3 props de exemplo |
-| `docs/prps/PRP_TEMPLATE.md` | §7 Database Changes | Markdown table | 5 colunas de exemplo |
-| `docs/architecture/DATA_MODEL.md` | — | — | Arquivo não existe |
+| `docs/prps/PRP_TEMPLATE.md` | §8 Database Changes | Markdown table | 5 colunas de exemplo |
+| `docs/architecture/ARCHITECTURE.md` | §6.1 (Entidades principais) | — | Sem modelo de dados canônico |
 
 ---
 
@@ -139,7 +139,7 @@ Nenhum. O gate está aprovado.
 [2026-06-12] Buscando PRPs em docs/prps/...
 [2026-06-12] PRPs encontrados: 0
 [2026-06-12] Arquivos no diretório: PRP_TEMPLATE.md (template, não é PRP)
-[2026-06-12] Verificando DATA_MODEL.md... não encontrado
+[2026-06-12] Verificando ARCHITECTURE.md §6.1 (Entidades principais)... não encontrado
 [2026-06-12] Verificando TESTING_GUIDE.md... não encontrado (apenas template)
 [2026-06-12] Analisando PRP_TEMPLATE.md como referência de boas práticas...
 [2026-06-12] Template usa TypeScript ? para opcionais — boa prática

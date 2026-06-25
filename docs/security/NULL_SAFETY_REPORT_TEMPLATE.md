@@ -20,9 +20,9 @@ tags: [null-safety, validation, template, llc-pipeline]
 
 - ✅ Campos com nulabilidade explícita: {{EXPLICIT_COUNT}}
 - 🔴 Campos sem especificação: {{UNSPECIFIED_COUNT}}
-- 🟡 Campos nuláveis sem fallback: {{NO_FALLBACK_COUNT}}
-- 🟡 Inconsistências entre PRPs: {{INCONSISTENT_COUNT}}
-- 🟢 Divergências com DATA_MODEL.md: {{DIVERGENT_COUNT}}
+- 🔴 Inconsistências entre PRPs: {{INCONSISTENT_COUNT}}
+- 🟡 Campos NULL sem fallback: {{NO_FALLBACK_COUNT}}
+- 🟢 Divergências com ARCHITECTURE.md: {{DIVERGENT_COUNT}}
 
 ### Recomendação
 
@@ -50,15 +50,7 @@ tags: [null-safety, validation, template, llc-pipeline]
 
 *(Repetir linha para cada campo sem especificação)*
 
-### 3.2 Campos Nuláveis sem Fallback (🟡 Alto)
-
-| PRP | Entidade | Campo | Tipo | Sugestão de Fallback |
-|---|---|---|---|---|
-| {{F_PRP_1}} | {{F_ENTITY_1}} | {{F_FIELD_1}} | {{F_TYPE_1}} | {{F_SUGGESTION_1}} |
-
-*(Repetir linha para cada campo nulável sem fallback)*
-
-### 3.3 Inconsistências entre PRPs (🟡 Alto)
+### 3.2 Inconsistências entre PRPs (🔴 Crítico)
 
 | Campo | PRP A | Definição A | PRP B | Definição B | Recomendação |
 |---|---|---|---|---|---|
@@ -66,9 +58,17 @@ tags: [null-safety, validation, template, llc-pipeline]
 
 *(Repetir linha para cada inconsistência encontrada)*
 
-### 3.4 Divergências com DATA_MODEL.md (🟢 Médio)
+### 3.3 Campos NULL sem Fallback (🟡 Alto)
 
-| Campo | PRP | Definição PRP | DATA_MODEL.md | Recomendação |
+| PRP | Entidade | Campo | Tipo | Sugestão de Fallback |
+|---|---|---|---|---|
+| {{F_PRP_1}} | {{F_ENTITY_1}} | {{F_FIELD_1}} | {{F_TYPE_1}} | {{F_SUGGESTION_1}} |
+
+*(Repetir linha para cada campo NULL sem fallback)*
+
+### 3.4 Divergências com ARCHITECTURE.md (🟢 Médio)
+
+| Campo | PRP | Definição PRP | ARCHITECTURE.md | Recomendação |
 |---|---|---|---|---|
 | {{D_FIELD_1}} | {{D_PRP_1}} | {{D_DEF_PRP}} | {{D_DEF_DM}} | {{D_REC_1}} |
 

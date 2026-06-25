@@ -180,15 +180,39 @@ interface {Nome}Props {
 
 ---
 
-## 7. Database Changes (se aplicável)
+## 7. Data Model
+
+> **Defina o modelo de dados deste PRP.** Cada entidade deve ter seus campos listados individualmente com tipo, nulabilidade e fallback. Esta seção é a fonte primária para validação de null safety (Step 12).
+
+### 7.1 Entidade: `{nome_tabela}`
+
+| Campo | Tipo | Nulabilidade | Fallback (se NULL) |
+|-------|------|:------------:|--------------------|
+| {id} | {UUID PK} | NOT NULL | N/A |
+| {campo_obrigatorio} | {tipo} | NOT NULL | N/A |
+| {campo_opcional} | {tipo} | NULL | {valor default ou → PRP-NNN §7.1 campo} |
+| {campo_com_default} | {tipo} | DEFAULT {valor} | — |
+
+**Legenda:**
+- `NOT NULL` — campo obrigatório, nunca é nulo. Fallback: N/A.
+- `NULL` — campo pode ser nulo; **exige fallback** documentado na coluna ao lado.
+- `DEFAULT <valor>` — banco atribui valor padrão na INSERT; código nunca vê null vindo do DB. Fallback: —.
+
+### 7.N Entidade: `{outra_tabela}`
+{Repetir estrutura acima para cada entidade neste PRP.}
+
+---
+
+## 8. Database Changes (se aplicável)
 
 > **Se este PRP não altera banco, escreva "N/A — apenas lógica/frontend."**
+> A definição detalhada dos campos de cada tabela está na seção §7 (Data Model). Esta seção documenta apenas operações de migration e índices.
 
-| Operação | Tabela | Campos (novos/alterados) | Índice | Migration | Dados sensíveis? |
-|----------|--------|--------------------------|--------|-----------|------------------|
-| CREATE | {users} | {id, email, password_hash, role, organization_id} | {idx_email, idx_org} | {20240601_add_users} | {Sim — password_hash} |
-| ALTER | {patients} | {ADD diagnosis_level (enum)} | — | {20240602_add_diagnosis} | {Sim — dados de saúde} |
-| CREATE | {sessions} | {id, patient_id, duration, mood, created_at} | {idx_patient_created} | {20240603_add_sessions} | {Sim — dados de saúde} |
+| Operação | Tabela | Índice | Migration | Dados sensíveis? |
+|----------|--------|--------|-----------|------------------|
+| CREATE | {users} | {idx_email, idx_org} | {20240601_add_users} | {Sim — password_hash} |
+| ALTER | {patients} | — | {20240602_add_diagnosis} | {Sim — dados de saúde} |
+| CREATE | {sessions} | {idx_patient_created} | {20240603_add_sessions} | {Sim — dados de saúde} |
 
 **Regras de migração:**
 - {Ex: Migration deve ser reversível (down script testado)}
@@ -197,12 +221,12 @@ interface {Nome}Props {
 
 ---
 
-## 8. Test Strategy (TDD Estruturado)
+## 9. Test Strategy (TDD Estruturado)
 
 > **⚠️ REGRA DE OURO: Escreva estes testes ANTES do código de produção.**
 > **Se não consegue listar os testes, o PRP não está pronto para ser executado.**
 
-### 8.1 Unit Tests
+### 9.1 Unit Tests
 
 | # | Descrição | Entrada | Saída Esperada | Factory / Mock | Arquivo |
 |---|-----------|---------|-----------------|----------------|---------|
@@ -211,7 +235,7 @@ interface {Nome}Props {
 | 3 | Deve validar {regra de negócio} | `{ campo: "inválido" }` | `Throw BadRequestException` | `mock{Dependency}()` | `{service}.spec.ts` |
 | 4 | Deve aplicar RBAC (role X não pode Y) | `{ user: { role: THERAPIST } }` | `Throw ForbiddenException` | `mockAuthContext(THERAPIST)` | `{guard}.spec.ts` |
 
-### 8.2 Integration Tests
+### 9.2 Integration Tests
 
 | # | Descrição | Setup | Banco | Arquivo |
 |---|-----------|-------|-------|---------|
@@ -220,14 +244,14 @@ interface {Nome}Props {
 | 3 | GET {/rota} requer autenticação | `app without auth` | — | `{module}.e2e-spec.ts` |
 | 4 | GET {/rota} isola por organization_id | `2 orgs + 2 users` | Dados de ambas | `{module}.e2e-spec.ts` |
 
-### 8.3 E2E Tests (Frontend / Mobile)
+### 9.3 E2E Tests (Frontend / Mobile)
 
 | # | Fluxo do usuário | Ferramenta | Arquivo |
 |---|------------------|------------|---------|
 | 1 | {Login → Ação → Resultado esperado} | Playwright / Detox | `{fluxo}.spec.ts` |
 | 2 | {Ação offline → Sync → Verificação no web} | Detox | `{sync}.spec.ts` |
 
-### 8.4 Factories e Mocks Compartilhados
+### 9.4 Factories e Mocks Compartilhados
 
 ```typescript
 // Factory obrigatória para este PRP:
@@ -249,7 +273,7 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 9. Riscos e Mitigações
+## 10. Riscos e Mitigações
 
 | ID | Risco | Probabilidade | Impacto | Mitigação | Status |
 |----|-------|---------------|---------|-----------|--------|
@@ -259,7 +283,7 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 10. Dívida Técnica e Decisões
+## 11. Dívida Técnica e Decisões
 
 > **Registre aqui decisões tomadas durante o desenvolvimento e dívidas conscientes.**
 
@@ -270,7 +294,7 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 11. Execution Log
+## 12. Execution Log
 
 > **Atualize este log a cada mudança de status ou descoberta importante.**
 > **Não apague entradas antigas — append only.**
@@ -300,7 +324,7 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 12. Definition of Done (DoD) — Checklist Final
+## 13. Definition of Done (DoD) — Checklist Final
 
 > **Este PRP só pode ser marcado como ✅ Complete se TODOS os itens obrigatórios estiverem checkados.**
 > **Itens opcionais são marcados com [O].**
@@ -309,10 +333,11 @@ export const mock{Dependency} = () => ({
 - [ ] Todos os RF listados na seção 2 estão implementados e testados
 - [ ] API Contracts (seção 5) refletem exatamente o código entregue
 - [ ] Component Spec (seção 6) reflete exatamente o UI entregue
-- [ ] Database Changes (seção 7) estão aplicados e testados em staging
+- [ ] Data Model (seção 7) definido para todas as entidades deste PRP
+- [ ] Database Changes (seção 8) estão aplicados e testados em staging
 
 ### Técnico
-- [ ] Todos os testes da seção 8 estão escritos e passando
+- [ ] Todos os testes da seção 9 estão escritos e passando
 - [ ] Cobertura de testes unitários ≥ 80% neste PRP
 - [ ] Testes E2E críticos passando (se aplicável)
 - [ ] Sem regressões — testes de PRPs anteriores continuam verdes
@@ -326,13 +351,13 @@ export const mock{Dependency} = () => ({
 ### Documentação e Processo
 - [ ] Código revisado (Code Review aprovado por 1+ dev sênior)
 - [ ] Este PRP documento foi atualizado para refletir o que foi entregue
-- [ ] Dívida técnica registrada na seção 10 (se houver)
+- [ ] Dívida técnica registrada na seção 11 (se houver)
 - [ ] Deploy em staging validado e acessível
 - [ ] Changelog atualizado (se houver breaking change)
 
 ---
 
-## 13. 📖 user_docs — Documentacao de Usuario
+## 14. 📖 user_docs — Documentacao de Usuario
 
 > Preenchimento obrigatorio se o PRP envolver interface de usuario ou fluxo
 > visivel ao usuario final. Deixar vazio para PRPs puramente internos (infra, CI/CD).

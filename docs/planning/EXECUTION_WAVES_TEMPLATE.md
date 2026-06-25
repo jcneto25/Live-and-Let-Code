@@ -11,7 +11,7 @@
 
 Este documento deve ser atualizado **ao final de cada onda** (nunca antes). Antes de preencher:
 - [ ] Todos os PRPs da onda estão marcados como ✅ Complete no Development Plan
-- [ ] DoD de cada PRP foi validado (seção 12 dos PRPs individuais)
+- [ ] DoD de cada PRP foi validado (seção 13 dos PRPs individuais)
 - [ ] Code review foi realizado para todos os PRPs da onda
 - [ ] Testes (unit, integration, E2E) estão passando na branch principal
 - [ ] Deploy em staging foi validado
@@ -44,7 +44,7 @@ Este documento é o **relato histórico** do que foi efetivamente construído em
 | **Tempo total estimado** | {X semanas} | Do Dependency Matrix |
 | **Tempo total real** | {Y semanas} | Até a data deste documento |
 | **Velocity média** | {PRPs/semana} | Completos / semanas reais |
-| **Débito técnico acumulado** | {N itens} | Da seção 10 dos PRPs |
+| **Débito técnico acumulado** | {N itens} | Da seção 11 dos PRPs |
 
 ---
 

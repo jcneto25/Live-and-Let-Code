@@ -42,7 +42,7 @@ Este documento é o **backlog operacional** do projeto. Ele organiza todas as ta
 | **Onda atual** | {Onda M} | — | {Nome da onda} |
 | **Velocity média** | {PRPs/semana} | — | Baseado em Execution Waves |
 | **Cobertura de testes** | {X%} | {↑/↓/→} | Target: 80% |
-| **Débito técnico** | {N itens} | {↑/↓/→} | Da seção 10 dos PRPs |
+| **Débito técnico** | {N itens} | {↑/↓/→} | Da seção 11 dos PRPs |
 
 ---
 

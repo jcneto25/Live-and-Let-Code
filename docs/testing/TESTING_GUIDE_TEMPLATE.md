@@ -1476,7 +1476,7 @@ docs/testing/
 
 ---
 
-> **Nota:** Este guia é um documento vivo. Atualize sempre que houver mudança de stack, nova ferramenta, ou lição aprendida. A versão no repositório (`docs/testing/comprehensive-testing-guide.md`) é a fonte da verdade. Para especificação de testes de um PRP específico, consulte a seção 8 (Test Strategy) do PRP individual.
+> **Nota:** Este guia é um documento vivo. Atualize sempre que houver mudança de stack, nova ferramenta, ou lição aprendida. A versão no repositório (`docs/testing/comprehensive-testing-guide.md`) é a fonte da verdade. Para especificação de testes de um PRP específico, consulte a seção 9 (Test Strategy) do PRP individual.
 
 ---
 

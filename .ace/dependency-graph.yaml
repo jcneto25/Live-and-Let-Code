@@ -9,7 +9,7 @@
 
 version: "1.2.0"
 generated_by: "llc-step-4"
-last_updated: "2026-06-13"
+last_updated: "2026-06-25"
 
 artifacts:
 
@@ -331,4 +331,20 @@ artifacts:
     depends_on:
       - architecture
       - mock_data
+    triggers_update: []
+
+  # ── STEP 12-NULL (Null-Safety / Data Contracts — pre-code) ──
+  null_safety_report:
+    path: "docs/security/NULL_SAFETY_REPORT.md"
+    depends_on:
+      - prps
+      - architecture
+    triggers_update: []
+
+  # ── STEP 11-OWASP (OWASP Hardening — post-code) ──
+  owasp_hardening_report:
+    path: "docs/security/OWASP_HARDENING_REPORT.md"
+    depends_on:
+      - prps
+      - architecture
     triggers_update: []

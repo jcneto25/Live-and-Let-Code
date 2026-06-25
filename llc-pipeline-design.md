@@ -362,7 +362,7 @@ graph TD
 | 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
 | 11-SEC | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
-| 12-NULL | Null Safety (pre-code) | PRPs com secao `data_model` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
+| 12-NULL | Null Safety (pre-code) | PRPs com secao `§7 (Data Model)` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
 
 > **📋 Sequenciamento:** 11-SEC e 12-NULL executam **ANTES** do Step 11 (gates pre-implementacao:
 > auditar codigo existente e validar contratos de dados). 11-OWASP executa **DEPOIS** do Step 11

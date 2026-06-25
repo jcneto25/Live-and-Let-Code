@@ -102,6 +102,40 @@ the prompt is displayed for manual copy/paste.
 > classifies each task into 4 types and reuses approved execution paths for repeated
 > tasks — reducing token cost by up to 99%. For details, see the [FAQ](FAQ.en.md#-early-commitment--deterministic-replay).
 
+### Guaranteeing sessions are recorded in `.ace` (tool-agnostic)
+
+The `llc run --step N` flow is already **AI-client-agnostic**: the harness runs
+`initialize_session.py → loads the skill → invokes the CLI agent (claude/opencode/codex/cursor, or prints the prompt) → finalize_session.py`.
+The problem isn't running the flow — it's **enforcing** that the agent goes through it instead of
+coding "directly". Coding outside the cycle leaves `.ace/index.json` with `sessions: []`: the work
+happened, but there's no history proving incremental delivery.
+
+LLC applies **defense in depth** — layers with distinct roles:
+
+| Layer | Mechanism | Strength | Tool-agnostic? |
+|-------|-----------|----------|:---:|
+| **Contract** | `AGENTS.md`/`CLAUDE.md` state "all work becomes a session" | Advisory (states the rule) | ✅ |
+| **Procedure** | the step's skill (auto-loaded by `llc run`) | Advisory (operationalizes) | ✅ |
+| **Guarantee** | `pre-commit.sh` + `validate-tags.py --coverage`: a commit with code but no session is **rejected** by git | **Deterministic** | ✅ |
+| **Per-client UX** | a client hook (e.g. Claude Code `PreToolUse`) blocks edits with no open session | Deterministic | ❌ (per-client) |
+
+The layer that **actually guarantees** recording is the **git pre-commit hook** — git runs it
+regardless of which agent made the commit. Install it in the target project:
+
+```bash
+cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# or, with the pre-commit framework: pre-commit install
+```
+
+For enforcement *during* the session (before commit), use your client's hook.
+Ready-made snippets (Claude Code `PreToolUse` + `SessionStart`) in
+[`docs/templates/hooks/claude-code-session-hooks.en.md`](docs/templates/hooks/claude-code-session-hooks.en.md).
+
+> The pre-commit hook can be bypassed with `git commit --no-verify` (at the operator's own risk).
+> No mechanism is 100% — but, layered, they shift the failure mode from "the agent forgot" to
+> "someone had to actively bypass it". Details in
+> [`llc-pipeline-design.en.md` §8.7](llc-pipeline-design.en.md#87-guaranteed-session-registration-enforcement).
+
 ## Step by Step
 
 ### 📋 Pipeline Overview (14 main + 5 auxiliary)
@@ -620,6 +654,7 @@ Beyond the main steps, LLC includes tools that operate between stages. See [`llc
 | Start the pipeline | `Execute the skill docs/skills/llc-step-0-1.md` (conversion) |
 | Jump to a specific step | `Execute the skill docs/skills/llc-step-N.md` ensuring previous gates are approved |
 | Prototype a module | `Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
+| Guarantee every wave becomes an `.ace` session | Install the pre-commit hook: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (see [§8.7](llc-pipeline-design.en.md#87-guaranteed-session-registration-enforcement)) |
 | See the full design | Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) |
 | See the directory structure | Read [`llc-pipeline-design.en.md` §2](llc-pipeline-design.en.md#2-directory-architecture) |
 | Understand a term | Read [`llc-pipeline-design.en.md` §7](llc-pipeline-design.en.md#7-glossary) |

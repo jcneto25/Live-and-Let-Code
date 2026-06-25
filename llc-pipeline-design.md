@@ -101,6 +101,11 @@ CLIENTE DE IA             ← Claude Code, opencode, Codex, Cursor...
 | `llc session end --approve` | Finaliza sessao manual |
 | `llc status` | Progresso do pipeline |
 
+> **Enforcement:** o harness executa o ciclo init → agente → finalize, mas não obriga o
+> agente a entrar por ele. Como **garantir** o registro das sessões no `.ace` (camadas
+> advisory + pre-commit determinístico + hooks por cliente) está documentado em
+> [§8.7](#87-registro-garantido-de-sessões-session-enrollment-enforcement).
+
 ---
 
 ## 2. Arquitetura de Diretórios
@@ -614,6 +619,50 @@ O invariant "append-only" preserva o **conteúdo das sessões**, mas não cobre 
 | **index.json corrompido** (JSON inválido ou drift) | `validate-tags.py` reporta JSON inválido; `initialize_session.py` loga `index.json inválido` e retorna `None` | **Sem auto-rebuild.** Workaround: backup do index atual → deletar → `initialize_session.py` cria novo (sessões em disco permanecem, mas chain `prev_session` perdida). Rebuild total exige `.ace/scripts/rebuild-index.py` ou reconstrução manual a partir dos YAML frontmatters |
 
 **Limitação conhecida:** sem `rebuild-index.py`, perda de `index.json` significa perda da navegação de sessões anteriores até reconstrução manual.
+
+### 8.7 Registro Garantido de Sessões (Session Enrollment Enforcement)
+
+O `.ace/index.json` é o índice de **sessões** — a unidade de registro é o ciclo de vida
+(`initialize_session.py` abre → trabalho → `finalize_session.py` fecha), **não** tarefas ou
+ondas. Implementar código, concluir tarefas ou gerar artefatos de scaffolding **por si só
+não escreve nada no índice**: só o `initialize_session.py` anexa uma entrada (`status:
+in_progress`) e o `finalize_session.py` a conclui (`status: completed`). O `<task_completed>`
+reflete-se em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md`, não no índice.
+
+**Modo de falha que isto previne:** uma onda executada "diretamente" (sem passar pelo ciclo)
+deixa `.ace/index.json` com `sessions: []`. O trabalho existiu e foi commitado, mas não há
+histórico de sessões que prove a entrega incremental — exatamente o que uma auditoria do
+protocolo detecta.
+
+Como o fluxo do Thin Harness (`llc run --step N`: init → skill → agente → gate → finalize)
+já é **tool-agnostic** na execução, a questão restante é **enforcement**: garantir que o
+agente entre pelo fluxo em vez de codar por fora. O LLC aplica camadas com papéis distintos:
+
+| Camada | Mecanismo | Natureza | Tool-agnostic? |
+|--------|-----------|----------|:---:|
+| **Contrato** | `AGENTS.md`/`CLAUDE.md` (`AGENTS_TEMPLATE.md` §Workflow Discipline) declaram a regra | Advisory | ✅ |
+| **Procedimento** | skill do step, auto-carregada pelo `llc run` | Advisory | ✅ |
+| **Garantia** | `pre-commit.sh` + `validate-tags.py --coverage` — commit com código sem sessão é **rejeitado** | **Determinística** | ✅ |
+| **UX por cliente** | hook do cliente (ex.: Claude Code `PreToolUse`) bloqueia edição sem sessão `in_progress` | Determinística | ❌ (por cliente) |
+
+**A camada determinística e tool-agnostic é o pre-commit do git.** O `validate-tags.py
+--coverage` implementa duas políticas:
+
+- **ERRO (bloqueia o commit):** diff staged em arquivos de código (exclui `.ace/`, `docs/`,
+  `.md` e meta de raiz) **+ zero** sessões `in_progress`/`completed` no índice. É a garantia
+  direta contra o `sessions: []`.
+- **AVISO** (erro só em `--strict`): arquivos de código staged não citados em nenhum
+  `<file_delta>` de sessão — cobertura heurística, não bloqueia por padrão para evitar
+  falsos positivos.
+
+O git executa o pre-commit **independentemente do cliente de IA** (Claude Code, Codex,
+Cursor, opencode ou `git commit` puro), o que o torna a única garantia portável. Instalação:
+`cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ou `pre-commit install`).
+
+> Snippets de hook por cliente (Claude Code `PreToolUse`/`SessionStart`) em
+> `docs/templates/hooks/`. **Caveat:** o pre-commit é contornável com `git commit --no-verify`
+> e hooks de cliente podem ser desabilitados — nenhum mecanismo é 100%. Em camadas, mudam o
+> modo de falha de "o agente esqueceu" para "alguém precisou contornar ativamente".
 
 ---
 

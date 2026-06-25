@@ -789,7 +789,7 @@ blockers: Uncertain which ORM to use — Prisma vs TypeORM. Awaiting tech lead d
 next_action: Run llc-step-6.md after Gate 6 approved. If Prisma chosen, use schema.prisma.
 ```
 
-**Where the schema is documented:** In addition to this section, the full schema is in `AGENTS_TEMPLATE.md` §Handoff Protocol and in the `initialize_session.py` / `finalize_session.py` scripts.
+**Where the schema is documented:** In addition to this section, the full schema is in `AGENTS_TEMPLATE.en.md` §Handoff Protocol and in the `initialize_session.py` / `finalize_session.py` scripts.
 
 ---
 
@@ -918,10 +918,10 @@ Alternative implementations in other languages (Node.js, Go, Rust) are welcome �
 | `initialize_session.py` | Start of every session | Creates session file, loads `context_seed` |
 | `finalize_session.py` | End of every session | Generates `context_seed`, promotes learnings, updates TASKS.md |
 | `promote-learning-points.py` | Auto in finalize | Promotes learnings to `memory/` |
-| `validate-tags.py` | Pre-commit hook | Validates XML tags, context_seed schema, index.json |
+| `validate-tags.py` | Pre-commit hook / standalone | Validates XML tags, context_seed schema, index.json + **session coverage** (`--coverage`: a commit with code requires a recorded ACE session) |
 | `impact-analyzer.py` | Before refactoring | Propagates impact via dependency graph |
 | `code-health.py` | Each wave / QA checkpoint | Monitors Moved Code, Copy/Paste, Legacy Touch |
-| `pre-commit.sh` | Git pre-commit | Orchestrates ACE validation + impact analysis |
+| `pre-commit.sh` | Git pre-commit | Orchestrates session coverage + ACE validation + impact analysis |
 
 ---
 
@@ -1144,6 +1144,37 @@ llc status                           # Pipeline progress
 | Parallel sub-agents | Git worktrees + client | Worktrees isolate; client launches agents |
 | Specific tools | ACE scripts | `impact-analyzer.py`, `code-health.py` are fat code |
 | Live repository context | AGENTS.md + CLAUDE.md | Harness loads only the compressed index |
+
+### How do I guarantee sessions are recorded in `.ace`, regardless of which AI client I use?
+
+The `llc run --step N` flow (init → skill → agent → gate → finalize) is already tool-agnostic at
+**execution**: the harness detects `claude`/`opencode`/`codex`/`cursor` on the PATH or prints the
+prompt for manual mode. The fragile point isn't execution — it's **enforcement**: guaranteeing the
+agent goes through the flow instead of coding "directly". Coding outside the cycle leaves
+`.ace/index.json` with `sessions: []`: the work happened, but with no history proving incremental
+delivery.
+
+Recording only happens through the session lifecycle: `initialize_session.py` appends the entry
+(`in_progress`) and `finalize_session.py` completes it (`completed`). Completing tasks or generating
+scaffolding **does not** touch the index — `<task_completed>` goes to `TASKS.md`, not to `index.json`.
+
+The guarantee is layered (defense in depth):
+
+| Layer | Mechanism | Tool-agnostic? |
+|-------|-----------|:---:|
+| **Contract** | `AGENTS.md`/`CLAUDE.md` state "all work becomes a session" | ✅ (advisory) |
+| **Procedure** | the step's skill, auto-loaded by `llc run` | ✅ (advisory) |
+| **Guarantee** | `pre-commit.sh` + `validate-tags.py --coverage`: a commit with code but no session is **rejected** by git | ✅ (deterministic) |
+| **Per-client UX** | a client hook (e.g. Claude Code `PreToolUse`) blocks edits with no open session | ❌ (per-client) |
+
+The layer that actually guarantees it is the **git pre-commit hook** — git runs it no matter which
+agent made the commit. Install it: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (or
+`pre-commit install`). Per-client hook snippets in `docs/templates/hooks/`.
+
+> **Can it be bypassed?** Yes — `git commit --no-verify` (pre-commit) or disabling the client hook.
+> No mechanism is 100%; layered, they shift the failure mode from "the agent forgot" to "someone had
+> to actively bypass it". See
+> [`llc-pipeline-design.en.md` §8.7](llc-pipeline-design.en.md#87-guaranteed-session-registration-enforcement).
 
 ---
 

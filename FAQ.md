@@ -914,10 +914,10 @@ Implementacoes alternativas em outras linguagens (Node.js, Go, Rust) sao bem-vin
 | `initialize_session.py` | Início de toda sessão | Cria arquivo de sessão, carrega `context_seed` |
 | `finalize_session.py` | Fim de toda sessão | Gera `context_seed`, promove learning points, atualiza TASKS.md |
 | `promote-learning-points.py` | Automático no finalize | Promove aprendizados para `memory/` |
-| `validate-tags.py` | Pre-commit hook | Valida tags XML, schema do context_seed, index.json |
+| `validate-tags.py` | Pre-commit hook / standalone | Valida tags XML, schema do context_seed, index.json + **cobertura de sessão** (`--coverage`: commit com código exige sessão ACE registrada) |
 | `impact-analyzer.py` | Antes de refatorações | Propaga impacto via grafo de dependências |
 | `code-health.py` | A cada onda / checkpoint QA | Monitora Moved Code, Copy/Paste, Legacy Touch |
-| `pre-commit.sh` | Git pre-commit | Orquestra validação ACE + impacto |
+| `pre-commit.sh` | Git pre-commit | Orquestra cobertura de sessão + validação ACE + impacto |
 
 ---
 
@@ -1139,6 +1139,38 @@ llc status                           # Progresso do pipeline
 | Sub-agentes paralelos | Git worktrees + cliente | Worktrees isolam; cliente lanca agentes |
 | Ferramentas especificas | Scripts ACE | `impact-analyzer.py`, `code-health.py` sao fat code |
 | Contexto de repositorio vivo | AGENTS.md + CLAUDE.md | Harness carrega so o indice comprimido |
+
+### Como garantir que as sessões sejam registradas no `.ace`, independente do cliente de IA?
+
+O fluxo `llc run --step N` (init → skill → agente → gate → finalize) já é tool-agnostic na
+**execução**: o harness detecta `claude`/`opencode`/`codex`/`cursor` no PATH ou imprime o
+prompt para modo manual. O ponto frágil não é executar — é **enforcement**: garantir que o
+agente entre pelo fluxo em vez de codar "direto". Codar fora do ciclo deixa
+`.ace/index.json` com `sessions: []`: o trabalho existiu, mas sem histórico que prove a
+entrega incremental.
+
+O registro só acontece pelo ciclo de vida da sessão: `initialize_session.py` anexa a entrada
+(`in_progress`) e `finalize_session.py` a conclui (`completed`). Concluir tarefas ou gerar
+scaffolding **não** toca o índice — o `<task_completed>` vai para `TASKS.md`, não para o
+`index.json`.
+
+A garantia é em camadas (defense in depth):
+
+| Camada | Mecanismo | Tool-agnostic? |
+|--------|-----------|:---:|
+| **Contrato** | `AGENTS.md`/`CLAUDE.md` declaram "todo trabalho vira sessão" | ✅ (advisory) |
+| **Procedimento** | skill do step, auto-carregada pelo `llc run` | ✅ (advisory) |
+| **Garantia** | `pre-commit.sh` + `validate-tags.py --coverage`: commit com código sem sessão é **rejeitado** pelo git | ✅ (determinística) |
+| **UX por cliente** | hook do cliente (ex.: Claude Code `PreToolUse`) bloqueia edição sem sessão aberta | ❌ (por cliente) |
+
+A camada que realmente garante é o **pre-commit do git** — o git o executa não importa qual
+agente fez o commit. Instale: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ou
+`pre-commit install`). Snippets de hook por cliente em `docs/templates/hooks/`.
+
+> **Pode ser contornado?** Sim — `git commit --no-verify` (pre-commit) ou desabilitar o hook
+> do cliente. Nenhum mecanismo é 100%; em camadas, mudam o modo de falha de "o agente
+> esqueceu" para "alguém precisou contornar ativamente". Ver
+> [`llc-pipeline-design.md` §8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement).
 
 ---
 

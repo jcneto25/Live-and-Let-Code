@@ -2,11 +2,10 @@ repos:
   - repo: local
     hooks:
       - id: ace-validate
-        name: ACE — Validar histórico de sessões
-        description: Verifica integridade do index.json, context_seed, tags XML e consistência
+        name: ACE — Cobertura de sessão + integridade do histórico
+        description: Verifica cobertura de sessão (commit com código exige sessão ACE registrada), integridade do index.json, context_seed, tags XML e consistência
         entry: bash .ace/scripts/pre-commit.sh
         language: system
-        files: ^\.ace/.*$
         pass_filenames: false
-        always_run: false
+        always_run: true
         stages: [pre-commit]

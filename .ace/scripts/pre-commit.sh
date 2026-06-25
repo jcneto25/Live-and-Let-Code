@@ -12,6 +12,24 @@ ERRORS=0
 
 echo "🔍 Validando integridade ACE..."
 
+# 0. Cobertura de sessão (garantia de registro no .ace)
+#    Commit com código exige sessão ACE registrada — previne trabalho feito fora do
+#    ciclo init→finalize (ex.: onda de scaffolding executada "direto"). Tool-agnostic:
+#    o git roda este hook independente do cliente de IA que fez o commit.
+echo "🔒 Verificando cobertura de sessão ACE..."
+if python .ace/scripts/validate-tags.py --coverage; then
+  echo "✅ Cobertura de sessão OK"
+else
+  echo ""
+  echo "❌ Commit bloqueado: há código no commit sem sessão ACE correspondente."
+  echo "   Enrole o trabalho numa sessão antes de commitar:"
+  echo "     python .ace/scripts/initialize_session.py --step N --task \"...\""
+  echo "   ...ou use o harness (tool-agnostic):"
+  echo "     python .ace/scripts/llc.py run --step N"
+  echo "   Override emergencial: git commit --no-verify (NÃO recomendado)."
+  exit 1
+fi
+
 # 1. Verificar se index.json existe e é JSON válido
 if [ ! -f "$INDEX" ]; then
   echo "⚠️  $INDEX não encontrado — pulando validação (primeira execução?)"

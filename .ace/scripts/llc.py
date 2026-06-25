@@ -45,17 +45,18 @@ def cli():
 @click.option("--step", "-s", type=float, required=True, help="Step LLC (ex: 5, 0.5, 11)")
 @click.option("--prp", "-p", default=None, help="ID do PRP (ex: PRP-001)")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
+@click.option("--wave", "-w", type=int, default=1, show_default=True, help="Numero da onda de execucao (EXECUTION_WAVES.md)")
 @click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
 @click.option("--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)")
-def run(step, prp, task, no_worktree, auto_approve):
+def run(step, prp, task, wave, no_worktree, auto_approve):
     """Executa um step completo do pipeline LLC.
 
     Fluxo: init session -> load skill -> invoke agent -> gate check -> finalize session.
     """
-    print(f"\n🚀 LLC Run — Step {step}")
+    print(f"\n🚀 LLC Run — Step {step} (wave {wave})")
     print(f"{'='*60}")
 
-    sid = step_run(step, prp=prp, task=task, no_worktree=no_worktree)
+    sid = step_run(step, prp=prp, task=task, wave=wave, no_worktree=no_worktree)
 
     print()
     decision = gate_check(step, None, auto_approve=auto_approve)

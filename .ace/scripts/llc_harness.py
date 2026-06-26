@@ -49,7 +49,7 @@ def get_gate_checklist(step):
     return gate_num, gate.get("checklist", [])
 
 
-def gate_check(step, output=None, auto_approve=False):
+def gate_check(step, _output=None, auto_approve=False):
     """Exibe checklist do gate e aguarda decisao humana.
     Se auto_approve=True (CI/non-interactive), aprova automaticamente.
     Caso contrario, aguarda indefinidamente — timeout NAO auto-aprova."""
@@ -78,16 +78,14 @@ def gate_check(step, output=None, auto_approve=False):
     return "approved"
 
 from pathlib import Path
-from datetime import datetime
 
 # ── Early Commitment + Replay imports ──
 try:
     from llc_classify import classify_task
     from llc_replay import (
-        find_best_script, deterministic_replay, record_script,
+        find_best_script, deterministic_replay,
         log_replay_event, is_red_zone, check_target_files_stale,
         get_architecture_version, preflight_all_steps, extract_files_from_script,
-        load_cache, ReplayError
     )
     CLASSIFY_REPLAY_AVAILABLE = True
 except ImportError:
@@ -467,7 +465,7 @@ def step_run(step, prp=None, task=None, no_worktree=False):
     print(f"📄 Skill: {skill_file}")
     print(f"📦 Context seed: {len(sess.get('context_seed', '') or '')} chars")
 
-    output, code, context_seed = agent_invoke(prompt, task, client=None)
+    _output, code, _context_seed = agent_invoke(prompt, task, client=None)
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
     return sess["session_id"]

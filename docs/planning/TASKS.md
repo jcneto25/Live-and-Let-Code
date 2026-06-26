@@ -93,10 +93,10 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 
 | ID | Tarefa | Skill | Status | Prioridade | Dependências | Output |
 |----|--------|-------|--------|------------|--------------|--------|
-| FDN-001 | Visão Estratégica e Negócio | llc-step-0-5 | ⏳ | Crítico | Documentos de ingestão | `docs/business/specs/visao_estrategica_e_negocio.md` |
+| FDN-001 | Visão Estratégica e Negócio | llc-step-0-5 | ✅ | Crítico | Documentos de ingestão | `docs/business/specs/visao_estrategica_e_negocio.md` |
 | FDN-002 | Guia de Preenchimento da Visão | llc-step-0-5 | ✅ | Crítico | — | `docs/business/specs/guia_preenchimento_visao_estrategica.md` |
 | FDN-003 | Análise de Riscos | llc-step-0-5 | ✅ | Alto | FDN-001 | `docs/business/specs/analise_riscos.md` |
-| FDN-004 | 7 Especificações (Glossário, RF, RNF, RN, BPMN, Perfis, Integrações) | llc-step-1 | ⏳ | Crítico | FDN-001 | `docs/business/specs/*.md` |
+| FDN-004 | 7 Especificações (Glossário, RF, RNF, RN, BPMN, Perfis, Integrações) | llc-step-1 | ✅ | Crítico | FDN-001 | `docs/business/specs/*.md` |
 | FDN-005 | Perfis e Permissões (RBAC/ABAC) | llc-step-1 | ✅ | Crítico | FDN-001 | `docs/business/specs/perfis_permissoes.md` |
 | FDN-006 | PRD Executivo | llc-step-2 | ⏳ | Crítico | FDN-004, FDN-005 | `docs/prd/executive_PRD.md` |
 | FDN-007 | PRD Técnico Institucional | llc-step-2 | ⏳ | Crítico | FDN-004, FDN-005 | `docs/prd/PRD_tecnico_institucional.md` |

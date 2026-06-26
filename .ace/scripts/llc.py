@@ -29,6 +29,9 @@ from llc_harness import (
     gate_check, pipeline_run, step_run
 )
 from llc_steps import StepParamType
+from llc_wave import (
+    parse_execution_waves, parse_tasks, format_wave_list, run_wave
+)
 
 
 @click.group()
@@ -141,6 +144,47 @@ def status():
 
     result = subprocess.run(["git", "worktree", "list"], capture_output=True, text=True)
     print(f"\n🔀 Worktrees ativos:\n{result.stdout}")
+
+
+# ── Wave execution ──
+
+
+@cli.group()
+def wave():
+    """Comandos de execucao por ondas (EXECUTION_WAVES.md).
+
+    Le a estrutura de ondas e PRPs do arquivo de planejamento e
+    itera automaticamente, abrindo sessoes ACE por PRP ou agregadas.
+    """
+    pass
+
+
+@wave.command("list")
+def wave_list():
+    """Lista todas as ondas e seus PRPs."""
+    waves = parse_execution_waves()
+    prps = parse_tasks()
+    output = format_wave_list(waves, prps)
+    click.echo(output)
+
+
+@wave.command("run")
+@click.option("--wave", "-w", type=int, required=True, help="Numero da onda (ex: 1)")
+@click.option("--aggregate", "-a", is_flag=True, help="Sessao unica para toda a wave (padrao: uma sessao por PRP)")
+@click.option("--dry-run", "-n", is_flag=True, help="Apenas mostra o que seria executado, sem criar sessoes")
+@click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
+@click.option("--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)")
+def wave_run(wave, aggregate, dry_run, no_worktree, auto_approve):
+    """Executa uma onda: itera PRPs e abre sessoes ACE."""
+    success = run_wave(
+        wave_num=wave,
+        aggregate=aggregate,
+        dry_run=dry_run,
+        no_worktree=no_worktree,
+        auto_approve=auto_approve,
+    )
+    if not success:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

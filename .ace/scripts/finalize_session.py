@@ -97,7 +97,15 @@ def merge_and_cleanup_worktree(session_id: str, decision: str, dry_run: bool = F
     return True
 
 
+def _strip_comments(content: str) -> str:
+    """Remove comentários HTML (placeholders <!-- <tag> --> do template) para que
+    os extratores não capturem tags fantasmas de aprendizados/bloqueadores/gate/
+    tarefas/feedback que ainda não foram preenchidas."""
+    return re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+
+
 def extract_all_tags(content: str, tag: str) -> list[dict]:
+    content = _strip_comments(content)
     pattern = f'<{tag}([^>]*)>(.*?)</{tag}>'
     matches = re.findall(pattern, content, re.DOTALL)
     results = []
@@ -250,6 +258,7 @@ def update_index(session_id: str, status: str = "completed", dry_run: bool = Fal
 
 def extract_task_completions(content: str) -> list[dict]:
     """Extrai tarefas concluídas das tags <task_completed>."""
+    content = _strip_comments(content)
     pattern = r'<task_completed([^>]*)>(.*?)</task_completed>'
     matches = re.findall(pattern, content, re.DOTALL)
     results = []
@@ -268,6 +277,7 @@ def extract_task_completions(content: str) -> list[dict]:
 
 def extract_skill_feedback(content: str) -> list[dict]:
     """Extrai sugestões de melhoria de skills via <skill_feedback>."""
+    content = _strip_comments(content)
     pattern = r'<skill_feedback([^>]*)>(.*?)</skill_feedback>'
     matches = re.findall(pattern, content, re.DOTALL)
     results = []
@@ -506,8 +516,10 @@ def main():
     update_index(session_id, status="completed", dry_run=args.dry_run)
 
     gate_decision = None
-    for m in re.finditer(r'<gate_result[^>]*decision="([^"]*)"', content):
-        gate_decision = m.group(1)
+    for g in gates:
+        d = g["attrs"].get("decision")
+        if d:
+            gate_decision = d
 
     worktree_cleaned = False
     if gate_decision:

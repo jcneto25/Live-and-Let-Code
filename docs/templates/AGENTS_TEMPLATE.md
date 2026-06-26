@@ -324,3 +324,41 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 When anything fails, **STOP**. Think. Output your reasoning to {{DEVELOPER_NAME}}. Do not touch anything until you understand the actual cause, have articulated it, stated your expectations, and {{DEVELOPER_NAME}} has confirmed.
 
 *Slow is smooth. Smooth is fast.*
+
+---
+
+## RULE CC — Consistency Check: Never trust TASKS.md alone
+
+**The Problem:** TASKS.md marks a task ✅ → agent assumes "done" → creates UI with placeholder/static data, while the backend service is still a stub (`return []`, `TODO`, `NotImplementedError`). The result: broken UIs showing "Dados disponíveis após PRP-NNN".
+
+**The Rule:** Before creating any UI component that consumes backend data (dashboard cards, lists, detail views, charts):
+
+1. **Read the actual service file** referenced in `.ace/consistency-config.yaml` or `ARCHITECTURE.md §6.5`.
+2. **Verify it has real implementation**, not just:
+   - `return []` / `return {}` / `return nil`
+   - `throw NotImplementedError` / `throw new Error("pendente")`
+   - A file with ≤ 3 non-boilerplate lines
+3. **If the service is a stub**, do NOT create the UI. Instead:
+   - Add a comment/commit note: "Aguardando implementação do backend (PRP-NNN)"
+   - Or create the component showing a clear "Em breve" state, with a comment explaining the dependency
+
+**Automated Gate:**
+```bash
+# Run before declaring any PRP done:
+python .ace/scripts/consistency-check.py --strict
+```
+
+This script cross-references TASKS.md with actual service code. Any task marked ✅ whose service is still a stub is reported as a divergence.
+
+---
+
+## RULE DG — Dependency Graph: use the context_seed, not the YAML
+
+The `.ace/dependency-graph.yaml` maps which documentation artifacts depend on each other. **Do NOT read this file directly** — at session start, `initialize_session.py` injects the relevant subgraph into the `<dependencies>` block of the session's context.
+
+**Evidence of usage:** Every completed session must have a `<dependencies>` block in its content (validated by `validate-tags.py`). If it's missing, the session did not consult the dependency graph — this is flagged as an error.
+
+**What to do:**
+1. At session start, read the `<dependencies>` block in the `## Contexto` section. It lists documentation artifacts that your step affects.
+2. If you modify code that touches one of those artifacts, flag the corresponding doc for review in the `<context_seed>` `next_action` field.
+3. Do NOT re-read the YAML — the subgraph in the context is sufficient and avoids token waste (the full YAML is ~350 lines / ~8K tokens; the subgraph is 5-15 lines).

@@ -53,6 +53,12 @@ Uma sessão do Step 11 executa **um PRP** (ou uma onda de PRPs independentes). A
 - Cruze com `TASKS.md` para obter os **IDs das tarefas** (ex.: `FDN-001`, `SEC-001`) — você os usará nos `<task_completed>`.
 - Confirme com o humano: *"Vou implementar PRP-001 (ondas 1). Primeira ação: [X]. Prosseguir?"*
 
+> **Grafo de dependências:** O `<dependencies>` no context_seed da sessão já contém
+> o subgrafo relevante do `.ace/dependency-graph.yaml` para este step — NÃO leia
+> o YAML diretamente. O subgrafo lista os artefatos de documentação que podem
+> precisar de revisão após alterações de código. Consulte-o para saber quais docs
+> atualizar ao final do PRP.
+
 ### 2. Ciclo TDD (obrigatório — sem exceções)
 
 Para cada tarefa do PRP, siga Red → Green → Refactor:
@@ -119,7 +125,31 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 > a primeira evidência de que o arcabouço está íntegro é ele compilar e iniciar. O teste
 > unitário vem no PRP seguinte.
 
-### 5. Code Health
+> **Consistência documentação ↔ código:** Se o projeto tem mapeamento PRP→serviços
+> configurado (`.ace/consistency-config.yaml` ou seção 6.5 do `ARCHITECTURE.md`),
+> rode `consistency-check.py` para verificar se tarefas marcadas como ✅ no `TASKS.md`
+> têm implementação real (não são stub). Divergências devem ser registradas como
+> `<learning_point priority="high">` ou blocker antes de finalizar.
+
+### 5. Verificação de Consistência (TASKS.md × Código)
+
+Antes de encerrar o PRP, execute:
+```bash
+python .ace/scripts/consistency-check.py --strict
+```
+Este comando cruza as tarefas concluídas no `TASKS.md` com o código real dos serviços
+mapeados na seção 6.5 do `ARCHITECTURE.md`. Se uma tarefa está marcada como ✅ mas o
+serviço correspondente ainda é stub (`return []`, `TODO`, `NotImplementedError`), o
+script reporta a divergência.
+
+- Se passar (`exit 0`): documentação e código estão consistentes.
+- Se falhar (`exit 1`): registre como blocker e corrija antes de finalizar.
+
+> **Integração com ondas:** Quando executado via `llc wave run --wave N`, o
+> `consistency-check.py --strict` é chamado automaticamente no pós-onda junto com
+> o `pre-wave-check.sh`.
+
+### 6. Code Health
 
 Após cada onda de implementação, rode:
 ```bash
@@ -127,7 +157,7 @@ python .ace/scripts/code-health.py --since "30 days ago"
 ```
 Se houver regressão estrutural (Moved Code, Copy/Paste, Legacy Touch piorando), registre como `<learning_point priority="high">` antes de finalizar.
 
-### 6. Gere o `<context_seed>` (encerramento)
+### 7. Gere o `<context_seed>` (encerramento)
 
 Ao final do trabalho na sessão, produza o handoff ACE de 4 campos:
 

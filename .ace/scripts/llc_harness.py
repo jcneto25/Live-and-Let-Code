@@ -13,6 +13,7 @@ Nao substitui os scripts ACE — os invoca via subprocess.
 """
 
 import json
+import os
 import subprocess
 import sys
 import shutil
@@ -97,11 +98,22 @@ except ImportError:
 
 # ── Agent CLI detection ──
 
-AGENT_CLIENTS = ["claude", "opencode", "codex", "cursor"]
-
 def detect_agent_client():
-    """Detecta o primeiro cliente de IA CLI disponivel no PATH."""
-    for client in AGENT_CLIENTS:
+    """Detecta o cliente de IA CLI via ambiente ou PATH.
+
+    Ordem de precedência:
+    1. Variável LLC_AGENT_CLI (ex: LLC_AGENT_CLI=claude)
+    2. Primeiro CLI conhecido encontrado no PATH (fallback)
+
+    Nenhum hardcode de flags — todo cliente recebe o prompt via STDIN.
+    """
+    env_client = os.environ.get("LLC_AGENT_CLI", "").strip()
+    if env_client:
+        return env_client
+
+    # Fallback: procura CLIs conhecidos no PATH (sem flags — via stdin resolve)
+    KNOWN_CLIS = ["claude", "opencode", "codex", "cursor", "windsurf", "copilot"]
+    for client in KNOWN_CLIS:
         if shutil.which(client):
             return client
     return None
@@ -381,45 +393,56 @@ def agent_invoke(prompt, task_description=None, client=None):
 
 
 def _llm_invoke(prompt, client=None):
-    """Execucao LLM com streaming real e extracao de context_seed (G2, R3)."""
+    """Execucao LLM via pipe STDIN — funciona com qualquer terminal agentico.
+
+    Nao usa flags como --prompt porque cada CLI tem sua propria convencao.
+    O prompt e enviado via STDIN (communicate), que todos os CLIs aceitam.
+
+    Se LLC_AGENT_CLI estiver definida, usa esse binario.
+    Se nao, detecta o primeiro CLI disponivel no PATH.
+    Se nenhum CLI for encontrado, exibe o prompt em modo manual.
+
+    Retorna (output, exit_code, context_seed).
+    """
     if client is None:
         client = detect_agent_client()
 
     if client:
-        print(f"🤖 Invocando {client}...")
         import re
         import time
 
+        print(f"🤖 Invocando {client} (prompt via STDIN, {len(prompt)} chars)...")
+
         process = subprocess.Popen(
-            [client, "--prompt", prompt],
+            [client],
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1,
             cwd=Path.cwd()
         )
 
-        output_lines = []
-        start_time = time.time()
-        timeout = 600  # 10 min
-
+        output = ""
+        code = 1
         try:
-            for line in process.stdout:
-                print(line, end="")  # Streaming em tempo real
-                output_lines.append(line)
-
-                if time.time() - start_time > timeout:
-                    process.kill()
-                    print(f"\n⏰ Timeout ({timeout}s).")
-                    return "\n".join(output_lines), 124, None
-
-            process.wait(timeout=5)
+            output, _ = process.communicate(input=prompt, timeout=600)
+            code = process.returncode
+            # Print output after execution (modo batch — sem streaming real)
+            if output.strip():
+                print(output)
         except subprocess.TimeoutExpired:
             process.kill()
-            print(f"\n⏰ Timeout.")
-            return "\n".join(output_lines), 124, None
+            process.communicate()
+            print(f"\n⏰ Timeout (600s).")
+            return output or "", 124, None
+        except BrokenPipeError:
+            print(f"\n⚠️  Pipe quebrado — {client} pode nao aceitar STDIN.")
+            return output or "", 1, None
 
-        output = "\n".join(output_lines)
+        if code != 0 and not output.strip():
+            print(f"\n⚠️  {client} retornou exit code {code} sem output.")
+            print(f"   Configure LLC_AGENT_CLI ou execute em modo manual.\n")
+            return output, code, None
 
         # Extrai context_seed do output do agente (G2)
         seed_match = re.search(
@@ -434,18 +457,26 @@ def _llm_invoke(prompt, client=None):
                 f"next_action: {seed_match.group(4).strip()}"
             )
             print(f"✅ Context seed extraido ({len(context_seed)} chars)")
-            return output, process.returncode, context_seed
+            return output, code, context_seed
 
-        return output, process.returncode, None
-    else:
-        print("📋 Nenhum cliente CLI detectado. Modo manual:")
-        print("=" * 60)
-        print(prompt[:2000])
-        if len(prompt) > 2000:
-            print(f"... (truncado — {len(prompt)} chars totais)")
-        print("=" * 60)
-        print("\nCole o prompt acima no seu cliente de IA.")
-        return "", 0, None
+        return output, code, None
+
+    # Fallback: modo manual
+    print("📋 Nenhum cliente CLI configurado. Modo manual:")
+    print("=" * 60)
+    print(prompt[:3000])
+    if len(prompt) > 3000:
+        print(f"... (truncado — {len(prompt)} chars totais)")
+    print("=" * 60)
+    print("\nCole o prompt acima no seu terminal agentico e, ao finalizar,")
+    print("certifique-se de que o output contenha um context_seed com:")
+    print("  state: ...")
+    print("  pending: ...")
+    print("  blockers: ...")
+    print("  next_action: ...")
+    print(f"\n💡 Dica: defina LLC_AGENT_CLI=claude (ou opencode, codex, windsurf)")
+    print("   para envio automatico via STDIN.")
+    return "", 0, None
 
 # ── Pipeline orchestration ──
 

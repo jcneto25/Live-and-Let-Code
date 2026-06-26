@@ -49,7 +49,7 @@ class WaveInfo:
 
 class PrpInfo:
     """Informacao de um PRP."""
-    def __init__(self, prp_id: str, name: str = "", tasks: list[str] = None):
+    def __init__(self, prp_id: str, name: str = "", tasks: Optional[list[str]] = None):
         self.prp_id = prp_id
         self.name = name
         self.tasks = tasks or []
@@ -80,39 +80,6 @@ def _find_wave_headings(content: str) -> list[tuple[int, int, str, int]]:
                 name = ""
             results.append((i, i, name, num))
     return results
-
-
-def _find_tables_in_range(lines: list[str], start: int, end: int) -> list[list[str]]:
-    """Encontra tabelas markdown em um range de linhas e retorna primeira coluna de cada."""
-    tables = []
-    current_table: list[str] = None
-    separator_found = False
-
-    for i in range(start, min(end, len(lines))):
-        line = lines[i].strip()
-
-        if not line:
-            current_table = None
-            separator_found = False
-            continue
-
-        if line.startswith('|') and line.endswith('|'):
-            cells = [c.strip() for c in line.split('|')[1:-1]]
-            if not current_table:
-                current_table = []
-            # Detecta linha separadora (|---|)
-            if re.match(r'^[\s\|:\-]+$', line):
-                separator_found = True
-                continue
-            if not current_table:
-                current_table.append(cells)
-            elif separator_found:
-                current_table.append(cells)
-        else:
-            current_table = None
-            separator_found = False
-
-    return tables
 
 
 def parse_execution_waves(filepath: Path = EXECUTION_WAVES_FILE) -> list[WaveInfo]:
@@ -249,7 +216,7 @@ def parse_tasks(filepath: Path = TASKS_FILE) -> dict[str, PrpInfo]:
         tasks = _find_tasks_in_section(section)
         prps[prp_id] = PrpInfo(prp_id=prp_id, name=name, tasks=tasks)
 
-    # 2. Parse foundation tasks (seção 3, tables)
+    # 2. Parse foundation tasks (seção 3, tables) — usa set pra evitar duplicatas
     #    Mapeia tarefas FDN/SEC/DSG como PRP-FOUNDATION, PRP-SECURITY
     section_tables: list[tuple[str, str]] = [
         ("PRP-FOUNDATION", "Foundation"),
@@ -260,7 +227,9 @@ def parse_tasks(filepath: Path = TASKS_FILE) -> dict[str, PrpInfo]:
         if prp_id not in prps:
             prps[prp_id] = PrpInfo(prp_id=prp_id, name=name, tasks=[])
 
-    # Find section 3 tasks (FDN-*, DSG-*)
+    # Find section 3 tasks (FDN-*, DSG-*) — garante unicidade com set
+    fdn_tasks: set[str] = set()
+    sec_tasks: set[str] = set()
     for line in lines:
         line = line.strip()
         if not line.startswith('|'):
@@ -269,13 +238,21 @@ def parse_tasks(filepath: Path = TASKS_FILE) -> dict[str, PrpInfo]:
         if len(cells) >= 2:
             cell0 = cells[0]
             # Foundation tasks
-            if re.match(r'^FDN-\d+', cell0) and 'PRP-FOUNDATION' in prps:
-                prps['PRP-FOUNDATION'].tasks.append(cell0)
-            elif re.match(r'^DSG-\d+', cell0) and 'PRP-FOUNDATION' in prps:
-                prps['PRP-FOUNDATION'].tasks.append(cell0)
+            if re.match(r'^FDN-\d+', cell0):
+                fdn_tasks.add(cell0)
+            elif re.match(r'^DSG-\d+', cell0):
+                fdn_tasks.add(cell0)
             # Security tasks
-            elif re.match(r'^SEC-\d+', cell0) and 'PRP-SECURITY' in prps:
-                prps['PRP-SECURITY'].tasks.append(cell0)
+            elif re.match(r'^SEC-\d+', cell0):
+                sec_tasks.add(cell0)
+
+    # Mescla com tasks já encontradas via PRP headings (evita duplicata)
+    if 'PRP-FOUNDATION' in prps:
+        existing = set(prps['PRP-FOUNDATION'].tasks)
+        prps['PRP-FOUNDATION'].tasks = sorted(existing | fdn_tasks)
+    if 'PRP-SECURITY' in prps:
+        existing = set(prps['PRP-SECURITY'].tasks)
+        prps['PRP-SECURITY'].tasks = sorted(existing | sec_tasks)
 
     return prps
 
@@ -351,7 +328,7 @@ def _pre_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
         return False
 
 
-def _post_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
+def _post_wave_check(dry_run: bool = False, wave_num: int = 0):
     """Executa validacao pos-onda: build + bootstrap + health check.
 
     Retorna True se passou ou se o script nao existe.
@@ -379,12 +356,36 @@ def _post_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
 
     if result.returncode == 0:
         logger.info("✅ Post-Wave Check: todos os checks OK")
-        return True
     else:
         logger.warning(f"⚠️  Post-Wave Check: {result.returncode} check(s) falharam")
         logger.warning("   A onda foi concluida, mas ha problemas de build/bootstrap/health.")
         logger.warning("   Registre como blocker e corrija antes de iniciar a proxima onda.")
-        return False
+
+    # ── Verificação de consistência TASKS.md × código ──
+    consistency_script = Path(".ace") / "scripts" / "consistency-check.py"
+    if consistency_script.exists():
+        logger.info(f"\n{'─'*50}")
+        logger.info("📋 Verificando consistencia TASKS.md × codigo...")
+        result_cc = subprocess.run(
+            ["python3", str(consistency_script), "--strict"],
+            capture_output=True, text=True, cwd=Path.cwd()
+        )
+        if result_cc.stdout:
+            for line in result_cc.stdout.split('\n'):
+                if line.strip() and not line.startswith('='):
+                    logger.info(f"   {line.strip()}")
+        if result_cc.returncode != 0:
+            logger.warning("⚠️  Divergencias entre TASKS.md e codigo real encontradas.")
+            logger.warning("   Registre como blocker e corrija antes da proxima onda.")
+            if result_cc.stderr:
+                for line in result_cc.stderr.strip().split('\n'):
+                    logger.warning(f"   {line.strip()}")
+        else:
+            logger.info("✅ Consistencia OK — documentacao reflete o codigo.")
+    else:
+        logger.info("ℹ️  consistency-check.py nao encontrado — pulando verificacao de consistencia.")
+
+    return True
 
 
 # ── Execution ──

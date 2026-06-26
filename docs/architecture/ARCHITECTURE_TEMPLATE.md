@@ -459,6 +459,84 @@ async findAll(@Organization() orgId: string) {
 
 ---
 
+### 6.5 Mapeamento PRP → Serviços (Verificação de Consistência)
+
+> Esta seção é usada pelo `consistency-check.py` para verificar se cada PRP marcado como ✅
+> no TASKS.md tem a implementação de backend realmente pronta (não é stub).
+
+Para cada PRP que implementa um módulo de backend, liste os arquivos de serviço que ele deve
+implementar e inclua uma linha na tabela abaixo:
+
+```yaml
+# .ace/consistency-config.yaml
+# Mapeamento PRP → arquivos de serviço que cada PRP deve implementar.
+# Usado pelo consistency-check.py para cruzar TASKS.md com código real.
+# Formato: PRP-ID: [caminhos/relativos/ao/repo]
+prp_services:
+  PRP-001:
+    - src/auth/auth.service.ts
+    - src/users/users.service.ts
+  PRP-002:
+    - src/patients/patients.service.ts
+
+# Arquivos de UI/testes/mock que NÃO devem ser verificados como stub.
+# Expressões regulares (case-insensitive) contra a descrição da tarefa no TASKS.md.
+skip_task_patterns:
+  - "^Tela "
+  - "^Componente "
+  - "^Testes?[: ]"
+  - "^Seed[: ]"
+  - "^E2E[: ]"
+  - "^Mock[: ]"
+  - "Storybook"
+  - "migration"
+  - "config"
+
+# Padrões de stub por linguagem (arquivos que contêm estes padrões são
+# considerados stub — implementação vazia/não finalizada).
+stub_patterns:
+  any:
+    - "TODO"
+    - "FIXME"
+    - "// @ts-expect-error"
+    - "throw new Error('Not implemented')"
+    - "throw new NotImplementedException"
+    - "NotImplementedError"
+    - "not implemented"
+    - "unimplemented"
+    - "/* stub */"
+    - "// stub"
+    - "return Promise.resolve([])"
+    - "return Promise.resolve({})"
+    - "return Promise.reject"
+  typescript:
+    - "return \\[\\]"
+    - "return {}"
+    - "return null as any"
+  python:
+    - "raise NotImplementedError"
+    - "return \\[\\]"
+    - "pass"
+  go:
+    - "return nil, nil"
+    - "todo!()"
+    - "return \\[\\]int"
+```
+
+**Tabela de referência:**
+
+| PRP | Serviços | Status esperado | Quando implementar |
+|-----|----------|-----------------|-------------------|
+| PRP-001 | `src/auth/auth.service.ts`, `src/users/users.service.ts` | Não-stub | Onda 0 |
+| PRP-002 | `src/patients/patients.service.ts` | Não-stub | Onda 1 |
+| ... | ... | ... | ... |
+
+> **Nota para o agente:** Durante o Step 5 (Architecture), o agente deve popular esta seção
+> com o mapeamento real dos módulos definidos. Cada módulo do backend deve ter um PRP
+> correspondente no Execution Waves que implementa seus serviços.
+
+---
+
 ## 7. Padrões de Código e Qualidade
 
 ### 7.1 Estrutura do Monorepo

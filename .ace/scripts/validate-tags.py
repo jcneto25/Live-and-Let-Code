@@ -140,6 +140,48 @@ def validate_context_seed(content: str, file_path: Path, status: str) -> list:
     return errors
 
 
+def validate_dependency_context(content: str, file_path: Path, status: str) -> list:
+    """Verifica se sessões completed têm o bloco <dependencies> no contexto.
+
+    O bloco <dependencies> é injetado automaticamente pelo initialize_session.py
+    a partir do .ace/dependency-graph.yaml. Sua presença é a evidência de que
+    o agente consultou o grafo de dependências.
+
+    Sessões in_progress são toleradas (ainda estão em execução).
+    """
+    errors = []
+    if status != "completed":
+        return errors
+
+    # Procura pelo bloco <dependencies> em qualquer lugar do conteúdo
+    dep_match = re.search(r'<dependencies>(.*?)</dependencies>', content, re.DOTALL)
+    if not dep_match:
+        errors.append(ValidationError(str(file_path), 1,
+            "Sessão completed sem <dependencies>. O initialize_session.py deveria ter "
+            "inj-etado o subgrafo de dependências do dependency-graph.yaml. "
+            "Execute: python .ace/scripts/consistency-check.py para verificar "
+            "se o grafo existe."))
+        return errors
+
+    # Métricas do subgrafo — extrai checksum, artifacts e triggers
+    dep_block = dep_match.group(1).strip()
+    checksum_m = re.search(r'checksum:\s*sha256:(\w+)', dep_block)
+    artifacts_m = re.search(r'artifacts:\s*(\d+)', dep_block)
+    triggers_m = re.search(r'triggers:\s*(\d+)', dep_block)
+
+    n_artifacts = artifacts_m.group(1) if artifacts_m else "?"
+    n_triggers = triggers_m.group(1) if triggers_m else "?"
+    checksum = checksum_m.group(1) if checksum_m else "?"
+    char_count = len(dep_block)
+    token_est = char_count // 4
+
+    logger.info(f"📊 [{file_path.stem}] Subgrafo: {n_artifacts} artefatos, "
+                f"{n_triggers} triggers, ~{token_est} tokens, "
+                f"checksum: {checksum[:8]}")
+
+    return errors
+
+
 def validate_index_json() -> list:
     errors = []
     if not INDEX_FILE.exists():
@@ -253,10 +295,10 @@ def validate_session_coverage(strict: bool = False) -> list:
         suffix = "…" if len(uncovered) > 5 else ""
         msg = (f"{len(uncovered)} arquivo(s) de código no commit não aparecem em <file_delta> "
                f"de nenhuma sessão ({shown}{suffix}). Confirme que há uma sessão aberta cobrindo este trabalho.")
-        if strict:
-            errors.append(ValidationError(str(INDEX_FILE), 1, msg))
-        else:
-            logger.warning("⚠️  %s", msg)
+        # Sempre erro (não só strict) — o check grosso pega "zero sessões", este
+        # pega "sessão existe mas não cobre o código", prevenindo falso positivo
+        # de sessão de docs + código por fora.
+        errors.append(ValidationError(str(INDEX_FILE), 1, msg))
     return errors
 
 
@@ -318,6 +360,7 @@ def main():
         all_errors.extend(validate_required_attributes(content, session_file))
         all_errors.extend(validate_attribute_values(content, session_file))
         all_errors.extend(validate_context_seed(content, session_file, status))
+        all_errors.extend(validate_dependency_context(content, session_file, status))
 
     if not args.session:
         all_errors.extend(validate_session_coverage(strict=args.strict))

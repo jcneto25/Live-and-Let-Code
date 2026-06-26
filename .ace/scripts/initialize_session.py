@@ -103,7 +103,7 @@ def build_context_block(prev_session: Optional[SessionInfo], context_seed: Optio
 def render_template(session_id: str, llc_step: float, llc_step_id: str,
                     step_name: str, task_context: str, project: str, wave: int,
                     prev_session: Optional[SessionInfo],
-                    context_seed: Optional[str]) -> str:
+                    context_seed: Optional[str], status: str = "in_progress") -> str:
     if not TEMPLATE_FILE.exists():
         logger.error(f"Template não encontrado: {TEMPLATE_FILE}")
         sys.exit(1)
@@ -117,6 +117,7 @@ def render_template(session_id: str, llc_step: float, llc_step_id: str,
             .replace("{{session_id}}", session_id)
             .replace("{{llc_step}}", str(llc_step))
             .replace("{{llc_step_id}}", llc_step_id)
+            .replace("{{status}}", status)
             .replace("{{llc_step_name}}", step_name)
             .replace("{{project}}", project)
             .replace("{{wave}}", str(wave))
@@ -129,10 +130,10 @@ def render_template(session_id: str, llc_step: float, llc_step_id: str,
 def create_session_file(session_id: str, llc_step: float, llc_step_id: str,
                         step_name: str, task_context: str, project: str, wave: int,
                         prev_session: Optional[SessionInfo],
-                        context_seed: Optional[str]) -> Path:
+                        context_seed: Optional[str], status: str = "in_progress") -> Path:
     content = render_template(session_id, llc_step, llc_step_id, step_name,
                               task_context, project, wave,
-                              prev_session, context_seed)
+                              prev_session, context_seed, status)
     session_file = SESSIONS_DIR / f"{session_id}.md"
     session_file.parent.mkdir(parents=True, exist_ok=True)
     session_file.write_text(content, encoding='utf-8')

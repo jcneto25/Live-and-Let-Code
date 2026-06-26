@@ -7,6 +7,7 @@ project: "{{project}}"
 wave: {{wave}}
 task_context: "{{task_context}}"
 prev_session: "{{prev_session_id}}"
+status: "{{status}}"
 ---
 
 ## Contexto
@@ -48,6 +49,5 @@ next_action: [preencher no encerramento]
 </context_seed>
 
 ---
-status: completed
 duration_min: {{duration}}
 files_touched: []

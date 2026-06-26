@@ -256,6 +256,23 @@ def update_index(session_id: str, status: str = "completed", dry_run: bool = Fal
     logger.info(f"✅ index.json atualizado (status: {status})")
 
 
+def update_session_status(session_file: Path, status: str, dry_run: bool = False):
+    """Atualiza o campo `status:` (quoted) no frontmatter do arquivo de sessão.
+
+    Espelha no arquivo o mesmo status gravado no index.json, para que o
+    validate-tags.py leia um status preciso (e aplique o check de context_seed
+    só em sessões completed).
+    """
+    content = session_file.read_text(encoding='utf-8')
+    new_content, n = re.subn(r'(status:\s*)"[^"]*"', rf'\g<1>"{status}"', content, count=1)
+    if n == 0:
+        logger.warning(f"⚠️  Campo status (quoted) não encontrado no frontmatter de {session_file.name}")
+        return
+    if not dry_run:
+        session_file.write_text(new_content, encoding='utf-8')
+    logger.info(f"✅ status do arquivo da sessão atualizado: {status}")
+
+
 def extract_task_completions(content: str) -> list[dict]:
     """Extrai tarefas concluídas das tags <task_completed>."""
     content = _strip_comments(content)
@@ -510,6 +527,7 @@ def main():
     logger.info(f"📦 Context seed gerado ({len(context_seed)} chars)")
 
     write_context_seed(session_file, context_seed, dry_run=args.dry_run)
+    update_session_status(session_file, "completed", dry_run=args.dry_run)
     promote_learning_points(session_file, dry_run=args.dry_run)
     feedback_saved = save_skill_feedback(skill_feedback, session_id, dry_run=args.dry_run)
     tasks_updated = update_planning_docs(completed_tasks, dry_run=args.dry_run)

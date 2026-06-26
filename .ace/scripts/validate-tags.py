@@ -95,7 +95,7 @@ def validate_balanced_tags(content: str, file_path: Path) -> list:
 def validate_required_attributes(content: str, file_path: Path) -> list:
     errors = []
     for tag, attrs in REQUIRED_ATTRS.items():
-        for match in re.finditer(f'<{tag}([^>]*)>', content):
+        for match in re.finditer(f'<{tag}\\b([^>]*)>', content):
             attrs_str = match.group(1)
             line_num = content[:match.start()].count('\n') + 1
             for attr in attrs:
@@ -108,7 +108,7 @@ def validate_required_attributes(content: str, file_path: Path) -> list:
 def validate_attribute_values(content: str, file_path: Path) -> list:
     errors = []
     for tag, attr_validations in VALID_VALUES.items():
-        for match in re.finditer(f'<{tag}([^>]*)>', content):
+        for match in re.finditer(f'<{tag}\\b([^>]*)>', content):
             attrs_str = match.group(1)
             line_num = content[:match.start()].count('\n') + 1
             for attr, valid_values in attr_validations.items():

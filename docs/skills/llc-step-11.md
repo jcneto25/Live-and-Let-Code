@@ -63,6 +63,21 @@ Para cada tarefa do PRP, siga Red → Green → Refactor:
 
 > **REGRA DURA:** se você escrever implementação antes do teste, você violou o TDD. Apague a implementação, escreva o teste primeiro. Sem exceções (ver `AGENTS.md` §TDD Enforcement Protocol).
 
+> **TDD para scaffolding (Onda 0 / PRPs de fundação):** Quando o PRP não tem testes
+> unitários ainda (setup de projeto, configuração de build, Docker, CI), o ciclo
+> RED/GREEN equivalente é a **compilação**:
+> 1. 🔴 **RED:** escreva o arquivo de configuração (`tsconfig.json`, `package.json`,
+>    `Dockerfile`). Rode `tsc --noEmit` (ou equivalente) — **deve falhar** (dependência
+>    ausente, configuração incompleta). Mostre o erro.
+> 2. 🟢 **GREEN:** corrija o erro (instale a dependência, ajuste a config). Recompile —
+>    **deve passar**. Mostre o output limpo.
+> 3. 🔵 **REFACTOR:** ajuste nomes, organize imports, padronize versões — mantendo a
+>    compilação verde.
+>
+> O mesmo princípio vale para bootstrap: o RED é a aplicação não iniciar; o GREEN é
+> o log `"successfully started"`. O propósito do TDD é o mesmo — ter uma falha
+> observável antes de declarar sucesso — só muda o mecanismo de verificação.
+
 ### 3. Registre no ACE (durante a sessão)
 
 Cada alteração relevante é registrada no arquivo da sessão atual (`.ace/sessions/YYYY-MM-DD-NNN.md`), **append-only**:
@@ -92,9 +107,17 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 - [ ] Todas as tarefas do PRP com `<task_completed status="done">`
 - [ ] Todos os testes do PRP passando (unitários + integração onde aplicável)
 - [ ] Cobertura ≥ threshold do `TESTING_GUIDE.md`
+- [ ] **Projeto compila sem erros** (`tsc --noEmit`, `npm run build`, `go build`, etc.)
+- [ ] **Aplicação bootstrapa com sucesso** (`node dist/main.js`, `go run .`, etc. — até o log de "started")
+- [ ] **Health check responde** (`curl http://localhost:PORT/api/v1/health` ou equivalente)
 - [ ] `code-health.py` sem regressão (Moved Code / Copy-Paste / Legacy Touch estáveis)
 - [ ] Nenhum `<blocker resolved="false">` aberto
 - [ ] Sem segredos/credenciais no código (Issues reais → escalar, não commitar)
+
+> **Smoke test de scaffolding (Onda 0):** Para PRPs de fundação (setup, config, infra), os checks
+> de compilação + bootstrap + health substituem os testes unitários como critério de DoD —
+> a primeira evidência de que o arcabouço está íntegro é ele compilar e iniciar. O teste
+> unitário vem no PRP seguinte.
 
 ### 5. Code Health
 

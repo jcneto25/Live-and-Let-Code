@@ -1067,3 +1067,27 @@ Tarefas de seguranca sao fixas e executadas uma vez no inicio do Step 11, antes 
 |----|--------|--------|-----------|------------|
 | SEC-001 | Rodar auditoria de seguranca pre-execucao (SCA + SAST + secrets) | security_agent | ❌ Sequencial — antes de todos os PRPs | {X}h |
 | SEC-002 | Revisar PRs de auth/security durante execucao | security_agent | ✅ Paralelo — sob demanda | {X}h |
+
+---
+
+### Smoke Test de Validação por Onda
+
+> **Recomendação:** Adicione uma tarefa de validação (ex: `T-V00` para Onda 0, `T-V01` para Onda 1) ao **início de cada onda** no `TASKS.md`. Esta tarefa executa o `pre-wave-check.sh` e só é marcada como concluída quando compilação, bootstrap e health check passarem.
+
+| ID | Tarefa | Responsável | Estimativa | Quando executar |
+|----|--------|-------------|------------|----------------|
+| T-V00 | Verificar build, bootstrap e health check da Onda 0 | Tech Lead | 1h | Antes do primeiro PRP da onda |
+| T-V01 | Verificar build, bootstrap e health check da Onda 1 | Tech Lead | 1h | Antes do primeiro PRP da onda |
+
+**O que verificar (cada tarefa T-V{N}):**
+1. 🔧 **Compilação:** `tsc --noEmit` (ou `go build`, `cargo build`, etc.)
+2. 🚀 **Bootstrap:** A aplicação precisa iniciar sem erros
+3. ❤️ **Health check:** `curl /api/v1/health` precisa responder 200
+
+**Script automatizado:**
+```bash
+bash .ace/scripts/pre-wave-check.sh --build-only
+bash .ace/scripts/pre-wave-check.sh
+```
+
+> Este smoke test complementa o DoD do Step 11 (ver `llc-step-11.md §4`) e é executado automaticamente pelo `llc wave run --wave N` antes e depois de cada onda.

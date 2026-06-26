@@ -312,9 +312,9 @@ graph TD
     S10 --> G11{👤 Gate 11}
     G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
     S105 --> G115{👤 Gate 11.5}
-    G115 -->|approved| S11SEC[Step 11-Security: SCA + SAST + Secrets]
+    G115 -->|approved| S11SEC[Step 10.6: Security Audit (SCA + SAST + Secrets)]
     S11SEC --> GSEC{👤 Gate 11-SEC}
-    GSEC -->|approved| S12NULL[Step 12-Null-Safety: Data Contracts]
+    GSEC -->|approved| S12NULL[Step 10.7: Null Safety (Data Contracts)]
     GSEC -->|rejected| S11SEC
     S12NULL --> G12NULL{👤 Gate 12-NULL}
     G12NULL -->|approved| S11[Step 11: LLC Execution]
@@ -361,20 +361,20 @@ graph TD
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
 | 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
-| 11-SEC | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
-| 12-NULL | Null Safety (pre-code) | PRPs com secao `§7 (Data Model)` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
+| 10.6 | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
+| 10.7 | Null Safety (pre-code) | PRPs com secao `§7 (Data Model)` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
 
-> **📋 Sequenciamento:** 11-SEC e 12-NULL executam **ANTES** do Step 11 (gates pre-implementacao:
-> auditar codigo existente e validar contratos de dados). 11-OWASP executa **DEPOIS** do Step 11
-> (hardening pos-implementacao). O prefixo "11/12" indica associacao com a fase de execucao,
-> nao ordem sequencial.
+> **📋 Sequenciamento:** 10.6 (Security) e 10.7 (Null Safety) executam **ANTES** do Step 11 (gates pre-implementacao:
+> auditar codigo existente e validar contratos de dados). 11.1 (OWASP) executa **DEPOIS** do Step 11
+> (hardening pos-implementacao). Agora o NUMERO do step == a sequencia do pipeline — 10.6/10.7
+> precedem 11 por numero — entao a ressalva "prefixo 11/12 indica associacao, nao ordem" nao se aplica mais.
 
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
-| 11-OWASP | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
+| 11.1 | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
 
 > **Modelo de seguranca em 3 camadas:** A seguranca percorre todo o pipeline — nao e um gate unico.
-> **11-SEC** (pre-code) escaneia dependencias, codigo e secrets. **12-NULL** (pre-code) valida contratos de dados.
-> Ambos executam ANTES do Step 11 (Execucao). Apos os PRPs implementados, o **11-OWASP** (post-code) faz
+> **10.6 (Gate 11-SEC)** (pre-code) escaneia dependencias, codigo e secrets. **10.7 (Gate 12-NULL)** (pre-code) valida contratos de dados.
+> Ambos executam ANTES do Step 11 (Execucao). Apos os PRPs implementados, o **11.1 (Gate 11-OWASP)** (post-code) faz
 > hardening contra OWASP Top 10. Este fluxo e consistente com o FAQ e o SECURITY.md.
 
 ---
@@ -445,9 +445,9 @@ tags: [categoria, llc-pipeline]
 | `llc-step-9` | 9 | Gera documentação de testes (Guia, Baseline, Progresso) |
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
-| `llc-step-11-security` | 11-SEC | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
-| `llc-step-11-owasp-security` | 11-OWASP | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
-| `llc-step-12-null-safety` | 12-NULL | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
+| `llc-step-11-security` | 10.6 | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
+| `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
+| `llc-step-12-null-safety` | 10.7 | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
@@ -507,9 +507,9 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 10 | 9 | Estratégia de testes é adequada ao stack? Thresholds são realistas? |
 | 👤 11 | 10 | README permite onboarding em ≤ 10 min? DEPLOYMENT cobre rollback e monitoramento? |
 | 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
-| 👤 11-SEC | 11-SEC | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
-| 👤 11-OWASP | 11-OWASP | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
-| 👤 12-NULL | 12-NULL | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
+| 👤 11-SEC | 10.6 | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
+| 👤 11-OWASP | 11.1 | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
+| 👤 12-NULL | 10.7 | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 
@@ -634,7 +634,7 @@ Um **grafo de dependencias declarativo** (`.ace/dependency-graph.yaml`) mapeia c
 | **Matriz de dependencias de PRPs** | `docs/planning/DEPENDENCY_MATRIX.md` | Step 4 (gerado automaticamente) | PRP a PRP |
 | **Grafo de dependencias de artefatos** | `.ace/dependency-graph.yaml` | Mantido manualmente como artefato da metodologia | Artefato a artefato (Visao → Specs → PRDs → PRPs... ) |
 
-O `dependency-graph.yaml` e um **artefato estrutural da metodologia LLC** — mantido manualmente assim como o pipeline design e os templates. Ele evolui quando novos artefatos sao adicionados ao pipeline (ex: Step 10.5 User Guide, 11-Security). O `DEPENDENCY_MATRIX.md` e **gerado pelo Step 4** para cada projeto especifico, mapeando dependencias entre PRPs concretos.
+O `dependency-graph.yaml` e um **artefato estrutural da metodologia LLC** — mantido manualmente assim como o pipeline design e os templates. Ele evolui quando novos artefatos sao adicionados ao pipeline (ex: Step 10.5 User Guide, 10.6 Security). O `DEPENDENCY_MATRIX.md` e **gerado pelo Step 4** para cada projeto especifico, mapeando dependencias entre PRPs concretos.
 
 ### 9.2.1 Schema do dependency-graph.yaml
 
@@ -779,6 +779,7 @@ Quando um alerta é disparado, o pipeline recomenda:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.6.0 | 26/06/2026 | Equipe LLC | `normalize_step()` canônico + `llc_steps.REGISTRY` (fonte única de verdade para identidade de step). Renumerado para que o número do step == a sequência do pipeline: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execução segue 11). Adicionado campo canônico `llc_step_id` no frontmatter da sessão + `index.json` (ao lado do `llc_step` numérico); a CLI `--step` aceita ids/aliases (`security`, `owasp`, `null-safety`). Corrige #2/#3/#4 (steps textuais inalcançáveis, 10.5/10.6/10.7/11.1 inválidos, `skill_load` não-determinístico). |
 | 1.5.0 | 13/06/2026 | Equipe LLC | Adicionado Thin Harness (orquestrador CLI), Early Commitment + Deterministic Replay, steps de seguranca (11-Security, 11-OWASP, 12-Null-Safety), indice comprimido de documentacao, 15 human gates |
 | 1.4.0 | 12/06/2026 | Equipe LLC | Adicionado Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, git worktrees automaticos, prompt caching strategy |
 | 1.3.0 | 11/06/2026 | Equipe LLC | Adicionado Step 10.5 (User Guide) com skill `llc-user-guide`, gate 11.5, template USER_GUIDE_TEMPLATE.md e secao `user_docs` no PRP |

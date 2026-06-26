@@ -70,7 +70,7 @@ def validate_yaml_front_matter(content: str, file_path: Path) -> list:
         errors.append(ValidationError(str(file_path), 1, "Front matter YAML não fechado"))
         return errors
     yaml_content = content[3:end_match.start() + 3]
-    for field in ["session_id", "llc_step", "status"]:
+    for field in ["session_id", "llc_step", "llc_step_id", "status"]:
         if f"{field}:" not in yaml_content:
             errors.append(ValidationError(str(file_path), 1,
                           f"Campo obrigatório '{field}' não encontrado no front matter"))

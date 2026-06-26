@@ -92,7 +92,7 @@ Gerencia o histórico de sessões do pipeline LLC com **append-only delta increm
 
 6. Adicione ao `index.json`:
    ```json
-   {"session_id": "2026-06-09-001", "file": "2026-06-09-001.md", "status": "in_progress", "llc_step": 5, "tags": [], "timestamp": "2026-06-09T10:00:00Z"}
+   {"session_id": "2026-06-09-001", "file": "2026-06-09-001.md", "status": "in_progress", "llc_step": 5.0, "llc_step_id": "5", "tags": [], "timestamp": "2026-06-09T10:00:00Z"}
    ```
    **Modo de append seguro para index.json:**
    - Leia o JSON, modifique o array `sessions` em memória, reescreva o arquivo inteiro.
@@ -189,7 +189,7 @@ Exemplos por cliente:
 | **Codex** | `run_shell_command` com o comando acima |
 | **Cursor CLI** | Terminal integrado: mesmo comando |
 
-A saída JSON contém `session_id`, `file`, `context_seed`, `llc_step`. O agente DEVE internalizar o `context_seed` antes de qualquer ação.
+A saída JSON contém `session_id`, `file`, `context_seed`, `llc_step` (número) e `llc_step_id` (id canônico). O agente DEVE internalizar o `context_seed` antes de qualquer ação.
 
 ### Finalização (última ação de toda sessão)
 
@@ -311,6 +311,7 @@ Arquivo: `.ace/templates/session.template.md`
 ---
 session_id: "{{session_id}}"
 llc_step: {{llc_step}}
+llc_step_id: "{{llc_step_id}}"
 project: "{{project}}"
 prev_session: "{{prev_session_id}}"
 ---
@@ -371,7 +372,8 @@ files_touched: []
       "session_id": "string (YYYY-MM-DD-NNN)",
       "file": "string (YYYY-MM-DD-NNN.md)",
       "status": "in_progress | completed | abandoned",
-      "llc_step": "integer (0-10)",
+      "llc_step": "float (número do step)",
+      "llc_step_id": "string (id canônico, ex.: \"10.6\")",
       "tags": ["string"],
       "timestamp": "string (ISO 8601)"
     }

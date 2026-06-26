@@ -15,8 +15,8 @@ Uso:
     python .ace/scripts/initialize_session.py --step 0.1 --task "Conversao Docling" --json
 
 Worktree automático:
-    Por padrao, sessoes com --prp ou step >= 11 criam worktree isolado automaticamente.
-    Use --no-worktree para desativar.
+    Por padrao, sessoes com --prp ou steps auto_worktree (11 Execução, 11.1 OWASP)
+    criam worktree isolado automaticamente. Use --no-worktree para desativar.
     python .ace/scripts/initialize_session.py --step 11 --task "PRP-001" --prp PRP-001 --wave 1
     python .ace/scripts/initialize_session.py --step 11 --task "PRP-001" --prp PRP-001 --no-worktree
 """
@@ -27,10 +27,12 @@ import logging
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+from llc_steps import normalize_step, REGISTRY
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -40,23 +42,9 @@ INDEX_FILE = ACE_DIR / "index.json"
 SESSIONS_DIR = ACE_DIR / "sessions"
 TEMPLATE_FILE = ACE_DIR / "templates" / "session.template.md"
 
-LLC_STEPS = {
-    0: "Ingestão",
-    0.1: "Conversão (Docling)",
-    0.5: "Visão + Módulos",
-    1: "7 Especificações",
-    2: "PRDs",
-    3: "PRPs",
-    4: "Planejamento",
-    5: "Arquitetura",
-    6: "Tarefas",
-    7: "Design System",
-    8: "Setup + Mock Data",
-    9: "Documentação de Testes",
-    10: "Documentos do Projeto",
-    11: "Execução",
-}
-
+# Fonte de verdade: llc_steps.REGISTRY. LLC_STEPS/VALID_STEPS ficam como shim de
+# compat (assinatura antiga {numero: nome}) — agora incluem 10.5/10.6/10.7/11.1.
+LLC_STEPS = {spec.number: spec.name for spec in REGISTRY.values()}
 VALID_STEPS = frozenset(LLC_STEPS.keys())
 
 
@@ -66,8 +54,9 @@ class SessionInfo:
     file: str
     status: str
     llc_step: float
-    tags: list
-    timestamp: str
+    llc_step_id: str = ""
+    tags: list = field(default_factory=list)
+    timestamp: str = ""
 
 
 def extract_context_seed(session_file: Path) -> Optional[str]:
@@ -111,8 +100,8 @@ def build_context_block(prev_session: Optional[SessionInfo], context_seed: Optio
     return "Primeira sessão do projeto."
 
 
-def render_template(session_id: str, llc_step: float, step_name: str,
-                    task_context: str, project: str, wave: int,
+def render_template(session_id: str, llc_step: float, llc_step_id: str,
+                    step_name: str, task_context: str, project: str, wave: int,
                     prev_session: Optional[SessionInfo],
                     context_seed: Optional[str]) -> str:
     if not TEMPLATE_FILE.exists():
@@ -127,6 +116,7 @@ def render_template(session_id: str, llc_step: float, step_name: str,
     return (template
             .replace("{{session_id}}", session_id)
             .replace("{{llc_step}}", str(llc_step))
+            .replace("{{llc_step_id}}", llc_step_id)
             .replace("{{llc_step_name}}", step_name)
             .replace("{{project}}", project)
             .replace("{{wave}}", str(wave))
@@ -136,11 +126,11 @@ def render_template(session_id: str, llc_step: float, step_name: str,
             .replace("{{duration}}", "0"))
 
 
-def create_session_file(session_id: str, llc_step: float, step_name: str,
-                        task_context: str, project: str, wave: int,
+def create_session_file(session_id: str, llc_step: float, llc_step_id: str,
+                        step_name: str, task_context: str, project: str, wave: int,
                         prev_session: Optional[SessionInfo],
                         context_seed: Optional[str]) -> Path:
-    content = render_template(session_id, llc_step, step_name,
+    content = render_template(session_id, llc_step, llc_step_id, step_name,
                               task_context, project, wave,
                               prev_session, context_seed)
     session_file = SESSIONS_DIR / f"{session_id}.md"
@@ -150,7 +140,7 @@ def create_session_file(session_id: str, llc_step: float, step_name: str,
     return session_file
 
 
-def update_index(session_id: str, llc_step: float, tags: list):
+def update_index(session_id: str, llc_step: float, llc_step_id: str, tags: list):
     if INDEX_FILE.exists():
         try:
             index = json.loads(INDEX_FILE.read_text(encoding='utf-8'))
@@ -164,6 +154,7 @@ def update_index(session_id: str, llc_step: float, tags: list):
         "file": f"{session_id}.md",
         "status": "in_progress",
         "llc_step": llc_step,
+        "llc_step_id": llc_step_id,
         "tags": tags,
         "timestamp": datetime.now().isoformat()
     })
@@ -218,8 +209,8 @@ def cleanup_orphan_worktrees() -> int:
 
 def main():
     parser = argparse.ArgumentParser(description="Inicializa uma nova sessão ACE no LLC")
-    parser.add_argument("--step", type=float, required=True,
-                        help=f"Etapa LLC. Valores válidos: {sorted(VALID_STEPS)}")
+    parser.add_argument("--step", type=normalize_step, required=True,
+                        help=f"Etapa LLC (id/alias/número). Válidos: {sorted(REGISTRY)}")
     parser.add_argument("--step-name", type=str, default=None,
                         help="Nome do step (opcional; inferido do mapa se omitido)")
     parser.add_argument("--task", type=str, required=True, help="Contexto da tarefa")
@@ -227,14 +218,10 @@ def main():
     parser.add_argument("--wave", type=int, default=1, help="Número da onda")
     parser.add_argument("--prp", type=str, default=None, help="ID do PRP (ex: PRP-001)")
     parser.add_argument("--no-worktree", action="store_true",
-                        help="Desativa criacao automatica de git worktree (padrao: ativo para sessoes com --prp ou step >= 11)")
+                        help="Desativa criacao automatica de git worktree (padrao: ativo p/ sessoes com --prp ou steps auto_worktree: 11, 11.1)")
     parser.add_argument("--tags", type=str, nargs="*", default=[], help="Tags da sessão")
     parser.add_argument("--json", action="store_true", help="Output em JSON (para tool calls)")
     args = parser.parse_args()
-
-    if args.step not in VALID_STEPS:
-        logger.error(f"Step inválido: {args.step}. Valores válidos: {sorted(VALID_STEPS)}")
-        sys.exit(1)
 
     ACE_DIR.mkdir(exist_ok=True)
     SESSIONS_DIR.mkdir(exist_ok=True)
@@ -255,18 +242,19 @@ def main():
     else:
         logger.info("🆕 Primeira sessão do projeto")
 
-    step_name = args.step_name or LLC_STEPS.get(args.step, f"Etapa {args.step}")
+    step_name = args.step_name or args.step.name
 
     session_file = create_session_file(
-        session_id=session_id, llc_step=args.step, step_name=step_name,
-        task_context=args.task, project=args.project, wave=args.wave,
+        session_id=session_id, llc_step=args.step.number, llc_step_id=args.step.id,
+        step_name=step_name, task_context=args.task, project=args.project, wave=args.wave,
         prev_session=prev_session, context_seed=context_seed
     )
 
-    update_index(session_id=session_id, llc_step=args.step, tags=args.tags)
+    update_index(session_id=session_id, llc_step=args.step.number,
+                 llc_step_id=args.step.id, tags=args.tags)
 
     worktree_path = None
-    auto_worktree = (args.prp is not None or args.step >= 11) and not args.no_worktree
+    auto_worktree = (args.prp is not None or args.step.auto_worktree) and not args.no_worktree
     if auto_worktree:
         cleanup_orphan_worktrees()
         worktree_path = create_worktree(session_id, args.prp, args.wave)
@@ -280,7 +268,8 @@ def main():
         "file": str(session_file),
         "prev_session": prev_session.session_id if prev_session else None,
         "context_seed": context_seed,
-        "llc_step": args.step,
+        "llc_step": args.step.number,
+        "llc_step_id": args.step.id,
         "llc_step_name": step_name,
         "worktree": str(worktree_path) if worktree_path else None,
     }

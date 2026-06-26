@@ -26,6 +26,14 @@ import yaml
 GRAPH_FILE = Path(".ace/dependency-graph.yaml")
 
 
+def _skill_num(slug: str) -> float:
+    """Sort key para slugs 'llc-step-<n>'. Tolera slugs nao-numericos (aliases)."""
+    try:
+        return float(slug.replace("llc-step-", ""))
+    except ValueError:
+        return 9999.0
+
+
 def load_graph() -> dict:
     if not GRAPH_FILE.exists():
         print(json.dumps({"error": f"{GRAPH_FILE} não encontrado"}), file=sys.stderr)
@@ -154,7 +162,7 @@ def main():
                     if step_name in item.get("id", ""):
                         skills.add(f"llc-step-{step_num}")
             if skills:
-                output["suggested_skills"] = sorted(skills, key=lambda s: float(s.replace("llc-step-", "")))
+                output["suggested_skills"] = sorted(skills, key=_skill_num)
         print(json.dumps(output, indent=2, ensure_ascii=False))
     else:
         print(f"\n{'='*60}")
@@ -189,7 +197,7 @@ def main():
                         skills.add(f"llc-step-{num}")
             if skills:
                 print(f"\n💡 Skills sugeridas para re-execução:")
-                for s in sorted(skills, key=lambda x: float(x.replace("llc-step-", ""))):
+                for s in sorted(skills, key=_skill_num):
                     print(f"   → {s}")
 
         if report["total_artifacts_to_review"] == 0:

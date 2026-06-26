@@ -1,6 +1,7 @@
 ---
 session_id: "{{session_id}}"
 llc_step: {{llc_step}}
+llc_step_id: "{{llc_step_id}}"
 llc_step_name: "{{llc_step_name}}"
 project: "{{project}}"
 wave: {{wave}}

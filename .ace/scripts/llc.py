@@ -28,6 +28,7 @@ from llc_harness import (
     session_start, session_end, skill_load, agent_invoke,
     gate_check, pipeline_run, step_run
 )
+from llc_steps import StepParamType
 
 
 @click.group()
@@ -42,7 +43,7 @@ def cli():
 
 
 @cli.command()
-@click.option("--step", "-s", type=float, required=True, help="Step LLC (ex: 5, 0.5, 11)")
+@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero: 5, 0.5, security, 11.1)")
 @click.option("--prp", "-p", default=None, help="ID do PRP (ex: PRP-001)")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
 @click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
@@ -63,8 +64,8 @@ def run(step, prp, task, no_worktree, auto_approve):
 
 
 @cli.command()
-@click.option("--from", "-f", "from_step", type=float, default=0, help="Step inicial (default: 0)")
-@click.option("--to", "-t", "to_step", type=float, default=11, help="Step final (default: 11)")
+@click.option("--from", "-f", "from_step", type=StepParamType(), default="0.5", help="Step inicial (id; default: 0.5)")
+@click.option("--to", "-t", "to_step", type=StepParamType(), default="11.1", help="Step final (id; default: 11.1)")
 @click.option("--task", default=None, help="Descricao da tarefa (opcional)")
 def pipeline(from_step, to_step, task):
     """Executa o pipeline LLC completo, parando em cada gate."""
@@ -80,7 +81,7 @@ def session():
 
 
 @session.command("start")
-@click.option("--step", "-s", type=float, required=True, help="Step LLC")
+@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero)")
 @click.option("--prp", "-p", default=None, help="ID do PRP")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
 def session_start_cmd(step, prp, task):
@@ -108,7 +109,7 @@ def session_end_cmd(decision):
 
 
 @cli.command()
-@click.option("--step", "-s", type=float, required=True, help="Step LLC")
+@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero)")
 def gate(step):
     """Exibe o checklist do gate para revisao manual."""
     decision = gate_check(step, None)
@@ -129,7 +130,7 @@ def status():
         if sessions:
             last = sessions[-1]
             print(f"📍 Ultima sessao: {last.get('session_id')}")
-            print(f"   Step: {last.get('llc_step')}")
+            print(f"   Step: {last.get('llc_step_id') or last.get('llc_step')}")
             print(f"   Tags: {', '.join(last.get('tags', []))}")
             print(f"   Data: {last.get('timestamp')}")
         else:

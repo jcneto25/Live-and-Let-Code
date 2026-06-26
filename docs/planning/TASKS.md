@@ -176,7 +176,7 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 **Artefatos:**
 - `SECURITY.md`
 
-### 4.4 OWASP Hardening (Step 11-OWASP)
+### 4.4 OWASP Hardening (Step 11.1)
 
 | ID | Tarefa | Descrição | Status | Prioridade | Dependências |
 |----|--------|-----------|--------|------------|--------------|

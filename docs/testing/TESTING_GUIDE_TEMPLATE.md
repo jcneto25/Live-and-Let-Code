@@ -1482,7 +1482,7 @@ docs/testing/
 
 ## Artefatos de Seguranca Complementares
 
-Os resultados da auditoria de seguranca (Step 11-Security) complementam a documentacao de testes:
+Os resultados da auditoria de seguranca (Step 10.6) complementam a documentacao de testes:
 
 - `.ace/security/sca-report.json` — vulnerabilidades em dependencias (npm audit / pip-audit)
 - `.ace/security/sast-report.json` — analise estatica de codigo (Semgrep)

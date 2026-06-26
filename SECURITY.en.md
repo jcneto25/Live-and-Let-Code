@@ -17,7 +17,7 @@ This document defines the security policy for the **Live and Let Code (LLC)** me
 
 The LLC methodology enforces security at **every stage** of the development lifecycle — not as a final gate before deploy. Security is integrated into the pipeline's 14 steps through 3 complementary layers:
 
-### 3.1 Pre-Code Security (Step 11-Security)
+### 3.1 Pre-Code Security (Step 10.6)
 
 Executes automated tools **before** any PRP implementation begins:
 
@@ -31,7 +31,7 @@ Executes automated tools **before** any PRP implementation begins:
 **Report:** `docs/security/SECURITY_AUDIT_REPORT.md` (template, instantiated per project)
 **Gate:** 11-SEC — blocks PRP execution on critical findings or real secrets.
 
-### 3.2 Design-Time Security (Step 12-Null-Safety)
+### 3.2 Design-Time Security (Step 10.7)
 
 Validates data contracts **before** code is written. Prevents null pointer exceptions, missing input schemas, undefined payload limits, and missing HTML sanitization at the PRP design level.
 
@@ -39,7 +39,7 @@ Validates data contracts **before** code is written. Prevents null pointer excep
 **Report:** `docs/security/NULL_SAFETY_REPORT.md` (template, instantiated per project)
 **Gate:** Blocks implementation on fields without explicit nullability or endpoints without schema validation.
 
-### 3.3 Post-Code Security (Step 11-OWASP)
+### 3.3 Post-Code Security (Step 11.1)
 
 After PRPs are implemented, performs manual/AI verification against the **OWASP Top 10:2021** — controls that automated tools cannot detect (e.g., ownership verification, business logic flaws, password policy enforcement).
 

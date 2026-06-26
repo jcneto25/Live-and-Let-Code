@@ -68,11 +68,27 @@ def extract_context_seed(session_file: Path) -> Optional[str]:
 
 
 def get_next_session_id() -> str:
+    """Próximo ID de sessão livre (max+1, verificado contra o disco).
+
+    Usa max(numeros)+1 — não len+1 — para NÃO colidir quando uma sessão do meio
+    é deletada (len+1 reaproveitaria um número existente e sobrescreveria).
+    Mantenha em sincronia com validate-session-write.get_next_sequence.
+    """
     today = datetime.now().strftime("%Y-%m-%d")
     if not SESSIONS_DIR.exists():
         return f"{today}-001"
-    todays_sessions = list(SESSIONS_DIR.glob(f"{today}-*.md"))
-    return f"{today}-{len(todays_sessions) + 1:03d}"
+    pattern = re.compile(rf"^{re.escape(today)}-(\d{{3}})\.md$")
+    nums = []
+    for f in SESSIONS_DIR.glob(f"{today}-*.md"):
+        m = pattern.match(f.name)
+        if m:
+            nums.append(int(m.group(1)))
+    next_num = (max(nums) + 1) if nums else 1
+    candidate = f"{today}-{next_num:03d}"
+    while (SESSIONS_DIR / f"{candidate}.md").exists():  # guard contra race/criação manual
+        next_num += 1
+        candidate = f"{today}-{next_num:03d}"
+    return candidate
 
 
 def get_previous_session() -> Optional[SessionInfo]:
@@ -135,6 +151,12 @@ def create_session_file(session_id: str, llc_step: float, llc_step_id: str,
                               task_context, project, wave,
                               prev_session, context_seed, status)
     session_file = SESSIONS_DIR / f"{session_id}.md"
+    if session_file.exists():
+        raise RuntimeError(
+            f"OVERWRITE RECUSADO: {session_file} já existe. Histórico ACE é "
+            f"imutável — reexecute initialize_session.py (computa o próximo ID "
+            f"livre) ou rode validate-session-write.py --check-latest."
+        )
     session_file.parent.mkdir(parents=True, exist_ok=True)
     session_file.write_text(content, encoding='utf-8')
     logger.info(f"✅ Sessão criada: {session_file}")

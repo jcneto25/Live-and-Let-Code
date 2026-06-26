@@ -34,7 +34,26 @@ blockers: ...
 next_action: ..." --json
 ```
 
-**Durante a sessão,** appenda deltas ao arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` via escrita no final do arquivo. NUNCA reescreva arquivos de sessão existentes.
+**Durante a sessão,** appenda deltas ao arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` via escrita no final do arquivo.
+
+### ⚠️ Critical Safeguard: arquivos de sessão ACE são imutáveis
+
+**Arquivos em `.ace/sessions/` são imutáveis após a criação.** Sobrescrevê-los = perda irreversível de histórico ACE — zona 🔴, erro crítico.
+
+**Mutadores sancionados (os ÚNICOS permitidos sobre `.ace/sessions/`):**
+- **Criar:** `initialize_session.py` (e SOMENTE ele). Computa o próximo ID livre (`max+1`) e **recusa overwrite por construção** — levanta `RuntimeError` se o arquivo já existir.
+- **Encerrar:** `finalize_session.py` (atualiza `<context_seed>`, `status` e `tags` — mutação sancionada).
+
+**Regras obrigatórias:**
+1. **NUNCA** use `write_file`/`Edit` para criar ou modificar arquivos em `.ace/sessions/` diretamente.
+2. **NUNCA** sobrescreva um arquivo de sessão existente — sempre crie o próximo número da sequência.
+3. Se `initialize_session.py` estiver indisponível, obtenha o próximo nome com:
+   ```bash
+   python .ace/scripts/validate-session-write.py --check-latest
+   ```
+   e crie **apenas** um arquivo NOVO com esse nome validado (nunca um existente).
+
+> **Por que isto é determinístico (não só advisory):** o `initialize_session.py` foi endurecido para *falhar* em vez de sobrescrever. Mesmo que um agente tente, a ferramenta canônica recusa. O `validate-session-write.py` é o check pré-voo para a escrita manual de emergência.
 
 ---
 

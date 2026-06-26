@@ -15,6 +15,7 @@ Campos regenerados (a partir de cada .ace/sessions/*.md):
   - session_id  ← frontmatter `session_id`
   - file        ← nome do arquivo
   - llc_step    ← frontmatter `llc_step`
+  - llc_step_id ← frontmatter `llc_step_id` (fallback: deriva de llc_step)
   - status      ← inferido: "completed" se tem <context_seed>, senão "in_progress"
   - timestamp   ← frontmatter `created` ou derivado do session_id (YYYY-MM-DD)
   - tags        ← lista vazia (tags vivem no body, não no frontmatter)
@@ -31,6 +32,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+from llc_steps import canonical_id, UnknownStepError
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -95,6 +98,19 @@ def infer_timestamp(frontmatter: dict, session_id: str) -> str:
     return datetime.now().isoformat()
 
 
+def _extract_files_touched(content: str) -> list:
+    """Paths dos <file_delta> no corpo da sessão — popula `tags` no index
+    (consistente com finalize_session.update_index). Ignora comentários."""
+    clean = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+    paths = re.findall(r'<file_delta>(.*?)</file_delta>', clean, re.DOTALL)
+    seen: list[str] = []
+    for p in paths:
+        p = p.strip()
+        if p and p not in seen:
+            seen.append(p)
+    return seen
+
+
 def build_session_entry(path: Path) -> Optional[dict]:
     """Monta uma entrada de índice a partir de um arquivo de sessão."""
     fm = parse_frontmatter(path)
@@ -112,13 +128,22 @@ def build_session_entry(path: Path) -> Optional[dict]:
     except ValueError:
         llc_step = 0.0
 
+    # llc_step_id: prefere o campo do frontmatter; senão deriva do número.
+    llc_step_id = fm.get("llc_step_id")
+    if not llc_step_id:
+        try:
+            llc_step_id = canonical_id(llc_step)
+        except UnknownStepError:
+            llc_step_id = str(llc_step)
+
     content = path.read_text(encoding="utf-8")
     return {
         "session_id": session_id,
         "file": path.name,
         "status": infer_status(content),
         "llc_step": llc_step,
-        "tags": [],
+        "llc_step_id": llc_step_id,
+        "tags": _extract_files_touched(content),
         "timestamp": infer_timestamp(fm, session_id),
     }
 

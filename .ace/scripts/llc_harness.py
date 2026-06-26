@@ -18,6 +18,10 @@ import sys
 import shutil
 from pathlib import Path
 
+from llc_steps import (
+    canonical_id, normalize_step, pipeline_steps, REGISTRY, UnknownStepError,
+)
+
 ACE_DIR = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = ACE_DIR / "scripts"
 CONFIG_DIR = ACE_DIR / "config"
@@ -41,12 +45,12 @@ def _load_gates_config():
 
 
 def get_gate_checklist(step):
-    config = _load_gates_config()
-    gate_num = config.get("step_to_gate", {}).get(str(step))
-    if gate_num is None:
+    spec = normalize_step(step)
+    if spec.gate is None:
         return None, []
-    gate = config.get("gates", {}).get(str(gate_num), {})
-    return gate_num, gate.get("checklist", [])
+    config = _load_gates_config()
+    gate = config.get("gates", {}).get(spec.gate, {})
+    return spec.gate, gate.get("checklist", [])
 
 
 def gate_check(step, _output=None, auto_approve=False):
@@ -135,7 +139,11 @@ def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
     }
 
 def _step_from_index(session_id):
-    """Le o llc_step de uma sessao no index.json (ou None)."""
+    """Le o step (id canonico) de uma sessao no index.json (ou None).
+
+    Prefere `llc_step_id`; fallback p/ `llc_step` (legado). Normaliza quando
+    possivel; senao devolve o valor cru como string (usado so como display).
+    """
     index_file = ACE_DIR / "index.json"
     if not index_file.exists():
         return None
@@ -145,7 +153,13 @@ def _step_from_index(session_id):
         return None
     for s in idx.get("sessions", []):
         if s.get("session_id") == session_id:
-            return s.get("llc_step")
+            raw = s.get("llc_step_id") or s.get("llc_step")
+            if raw is None:
+                return None
+            try:
+                return canonical_id(raw)
+            except UnknownStepError:
+                return str(raw)
     return None
 
 
@@ -167,7 +181,12 @@ def _resolve_session(session_id):
                        if s.get("status") == "in_progress"]
         if in_progress:
             s = in_progress[-1]
-            return s.get("session_id"), s.get("llc_step")
+            raw = s.get("llc_step_id") or s.get("llc_step")
+            try:
+                step_id = canonical_id(raw) if raw is not None else None
+            except UnknownStepError:
+                step_id = str(raw) if raw is not None else None
+            return s.get("session_id"), step_id
 
     return None, None
 
@@ -257,16 +276,19 @@ def load_agents_conventions():
 
 
 def skill_load(step, context_seed=None, task=None):
-    """Carrega skill + convencoes minimal + context_seed. Retorna prompt montado."""
-    skill_file = SKILLS_DIR / f"llc-step-{step}.md"
+    """Carrega skill + convencoes minimal + context_seed. Retorna prompt montado.
+
+    Resolucao deterministica via llc_steps.REGISTRY (sem glob/ambiguidade):
+    cada StepSpec aponta para um skill_file exato. Step sem skill_file -> erro.
+    """
+    spec = normalize_step(step)
+    if not spec.skill_file:
+        print(f"❌ Step {spec.id} ({spec.name}) nao tem skill associada.")
+        sys.exit(1)
+    skill_file = SKILLS_DIR / f"{spec.skill_file}.md"
     if not skill_file.exists():
-        import glob
-        matches = list(SKILLS_DIR.glob(f"llc-step-{str(step).replace('.', '-')}*.md"))
-        if matches:
-            skill_file = matches[0]
-        else:
-            print(f"❌ Skill nao encontrada: {skill_file}")
-            sys.exit(1)
+        print(f"❌ Skill nao encontrada: {skill_file} (step {spec.id})")
+        sys.exit(1)
 
     conventions = load_agents_conventions()
     skill = skill_file.read_text(encoding='utf-8')
@@ -333,7 +355,7 @@ def agent_invoke(prompt, task_description=None, client=None):
             target_files = extract_files_from_script(script)
             if any(is_red_zone(Path(f)) for f in target_files):
                 print("🔴 Zona VERMELHA detectada. Gate humano necessario.")
-                if gate_check(11, script) != "approved":
+                if gate_check(canonical_id(11), script) != "approved":
                     log_replay_event("llm_fallback", None, reason="zone_red_rejected")
                     return _llm_invoke(prompt, client)
 
@@ -427,30 +449,30 @@ def _llm_invoke(prompt, client=None):
 
 # ── Pipeline orchestration ──
 
-def pipeline_run(from_step=0, to_step=11, task=None):
-    """Executa pipeline completo do step inicial ao final."""
-    steps = [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10.5, 11]
+def pipeline_run(from_step="0.5", to_step="11.1", task=None):
+    """Executa pipeline completo do step inicial ao final (ids canonicos).
+
+    A sequencia e a subselecao vem de llc_steps.pipeline_steps() (ordenada por
+    numero), entao inclui 10.6/10.7/11.1 nas posicoes corretas.
+    """
+    specs = pipeline_steps(from_id=from_step, to_id=to_step)
     started = False
 
-    for step in steps:
-        if step < from_step:
-            continue
-        if step > to_step:
-            break
+    for spec in specs:
         if not started:
             print(f"\n{'='*60}")
-            print(f"🚀 Iniciando pipeline LLC (Step {from_step} → {to_step})")
+            print(f"🚀 Iniciando pipeline LLC (Step {canonical_id(from_step)} → {canonical_id(to_step)})")
             print(f"{'='*60}")
             started = True
 
-        sid = step_run(step, task=task)
-        decision = gate_check(step, None)
-        session_end(sid, decision, None, step=step)
+        sid = step_run(spec.id, task=task)
+        decision = gate_check(spec.id, None)
+        session_end(sid, decision, None, step=spec.id)
 
         if decision == "rejected":
-            print(f"\n⛔ Gate {get_gate_checklist(step)[0]} REPROVADO. Pipeline pausado.")
+            print(f"\n⛔ Gate {get_gate_checklist(spec.id)[0]} REPROVADO. Pipeline pausado.")
             print("Corrija os problemas e reexecute a partir deste step:")
-            print(f"  llc run --step {step}")
+            print(f"  llc run --step {spec.id}")
             return False
 
     print(f"\n{'='*60}")

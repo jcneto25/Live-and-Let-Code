@@ -278,9 +278,9 @@ graph TD
     S10 --> G11{👤 Gate 11}
     G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
     S105 --> G115{👤 Gate 11.5}
-    G115 -->|approved| S11SEC[Step 11-Security: SCA + SAST + Secrets]
+    G115 -->|approved| S11SEC[Step 10.6: Security Audit (SCA + SAST + Secrets)]
     S11SEC --> GSEC{👤 Gate 11-SEC}
-    GSEC -->|approved| S12NULL[Step 12-Null-Safety: Data Contracts]
+    GSEC -->|approved| S12NULL[Step 10.7: Null Safety (Data Contracts)]
     GSEC -->|rejected| S11SEC
     S12NULL --> G12NULL{👤 Gate 12-NULL}
     G12NULL -->|approved| S11[Step 11: LLC Execution]
@@ -327,20 +327,21 @@ graph TD
 | 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | — | 👤 10 |
 | 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` + `CLAUDE.md` + `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Profiles + Workflows + Glossary | `USER_GUIDE.md`, `index.md`, `overview.md`, `profiles/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
-| 11-SEC | Security Audit (pre-code) | Setup + Dependencies installed (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
-| 12-NULL | Null Safety (pre-code) | PRPs with `§7 (Data Model)` section | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
+| 10.6 | Security Audit (pre-code) | Setup + Dependencies installed (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
+| 10.7 | Null Safety (pre-code) | PRPs with `§7 (Data Model)` section | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
 
-> **📋 Sequencing:** 11-SEC and 12-NULL run **BEFORE** Step 11 (pre-implementation gates:
-> audit existing code and validate data contracts). 11-OWASP runs **AFTER** Step 11
-> (post-implementation hardening). The "11/12" prefix indicates association with the
-> execution phase, not sequential order.
+> **📋 Sequencing:** 10.6 (Security) and 10.7 (Null Safety) run **BEFORE** Step 11
+> (pre-implementation gates: audit existing code and validate data contracts). 11.1 (OWASP)
+> runs **AFTER** Step 11 (post-implementation hardening). The step NUMBER now equals the
+> pipeline sequence — 10.6/10.7 precede 11 by number — so the old "11/12 prefix means
+> association, not order" caveat no longer applies.
 
 | 11 | Execution | All previous artifacts | Source code + user guide pages (`docs/user-guide/[module]/*.md`) | — | QA Checkpoints |
-| 11-OWASP | OWASP Hardening (post-code) | Implemented code (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Blocks on 1+ critical |
+| 11.1 | OWASP Hardening (post-code) | Implemented code (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Blocks on 1+ critical |
 
 > **Security 3-layer model:** Security runs throughout the pipeline — not as a single gate.
-> **11-SEC** (pre-code) scans dependencies, code, and secrets. **12-NULL** (pre-code) validates data contracts.
-> Both run BEFORE Step 11 (Execution). After PRPs are implemented, **11-OWASP** (post-code) hardens against
+> **10.6 (Gate 11-SEC)** (pre-code) scans dependencies, code, and secrets. **10.7 (Gate 12-NULL)** (pre-code) validates data contracts.
+> Both run BEFORE Step 11 (Execution). After PRPs are implemented, **11.1 (Gate 11-OWASP)** (post-code) hardens against
 > OWASP Top 10. This matches the FAQ's documented security flow.
 
 > **Note:** `CLAUDE.md` describes **what the project is** — stack, domain, architecture. `AGENTS.md` describes **how the developer works** — zones, TDD, handoff conventions. If your AI tool does not support `CLAUDE.md`, consolidate its content into `AGENTS.md`.
@@ -389,9 +390,9 @@ Self-contained PRPs enable parallel execution via git worktrees. `initialize_ses
 | `llc-step-9` | 9 | Testing documentation (Guide, Baseline, Progress) |
 | `llc-step-10` | 10 | README.md + DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | User manual skeleton from PRPs, profiles and workflows |
-| `llc-step-11-security` | 11-SEC | Pre-execution security audit: SCA (npm audit), SAST (Semgrep), secrets (Gitleaks) |
-| `llc-step-11-owasp-security` | 11-OWASP | Post-implementation OWASP Top 10:2021 hardening — manual/AI verification |
-| `llc-step-12-null-safety` | 12-NULL | Null safety validation for PRPs — nullability contracts, schemas, payload limits |
+| `llc-step-11-security` | 10.6 | Pre-execution security audit: SCA (npm audit), SAST (Semgrep), secrets (Gitleaks) |
+| `llc-step-11-owasp-security` | 11.1 | Post-implementation OWASP Top 10:2021 hardening — manual/AI verification |
+| `llc-step-12-null-safety` | 10.7 | Null safety validation for PRPs — nullability contracts, schemas, payload limits |
 | `llc-subflow-prototyping` | Subflow | 6-phase agentic prototyping for UI modules |
 | `llc-ace-context` | Transversal | ACE context protocol — append-only session history, anti-amnesia |
 | `llc-code-health` | 11 | Monitors structural code health (Moved Code, Copy/Paste, Legacy Touch) |
@@ -431,9 +432,9 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 | 👤 10 | 9 | Testing strategy fits the stack? Thresholds realistic? |
 | 👤 11 | 10 | README enables onboarding ≤ 10 min? DEPLOYMENT covers rollback and monitoring? |
 | 👤 11.5 | 10.5 | Structure covers all modules? Profiles have relevant pages? Index navigable? User-friendly language? |
-| 👤 11-SEC | 11-SEC | 0 critical vulnerabilities (CVSS ≥ 9.0)? Real secrets zeroed? Highs with recorded decision? |
-| 👤 11-OWASP | 11-OWASP | 0 OWASP 🔴 (critical) checks? All 🟡 (high) with documented fix plan? |
-| 👤 12-NULL | 12-NULL | 0 fields without nullability spec? 0 endpoints without input schema? |
+| 👤 11-SEC | 10.6 | 0 critical vulnerabilities (CVSS ≥ 9.0)? Real secrets zeroed? Highs with recorded decision? |
+| 👤 11-OWASP | 11.1 | 0 OWASP 🔴 (critical) checks? All 🟡 (high) with documented fix plan? |
+| 👤 12-NULL | 10.7 | 0 fields without nullability spec? 0 endpoints without input schema? |
 | 🔴 | Subflow F4 | Hi-Fi matches approved wireframe? Design System applied correctly? |
 | CP | Step 11 | QA score ≥ 7.0? Coverage ≥ thresholds? Security audit passed? |
 
@@ -564,7 +565,7 @@ A **declarative dependency graph** (`.ace/dependency-graph.yaml`) maps each LLC 
 | **PRP dependency matrix** | `docs/planning/DEPENDENCY_MATRIX.md` | Step 4 (auto-generated) | PRP to PRP |
 | **Artifact dependency graph** | `.ace/dependency-graph.yaml` | Manually maintained as methodology artifact | Artifact to artifact (Vision → Specs → PRDs → PRPs...) |
 
-The `dependency-graph.yaml` is a **structural artifact of the LLC methodology** — maintained manually, like the pipeline design and templates. It evolves when new artifacts are added to the pipeline (e.g., Step 10.5 User Guide, 11-Security). The `DEPENDENCY_MATRIX.md` is **generated by Step 4** for each specific project, mapping dependencies between concrete PRPs.
+The `dependency-graph.yaml` is a **structural artifact of the LLC methodology** — maintained manually, like the pipeline design and templates. It evolves when new artifacts are added to the pipeline (e.g., Step 10.5 User Guide, 10.6 Security). The `DEPENDENCY_MATRIX.md` is **generated by Step 4** for each specific project, mapping dependencies between concrete PRPs.
 
 ### 9.2.1 dependency-graph.yaml Schema
 
@@ -710,6 +711,7 @@ When alerts fire, apply corrective actions in order:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.6.0 | 06/26/2026 | LLC Team | Canonical `normalize_step()` + `llc_steps.REGISTRY` (single source of truth for step identity). Renumbered so step number == pipeline sequence: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execution stays 11). Added `llc_step_id` canonical field to session frontmatter + `index.json` (alongside numeric `llc_step`); CLI `--step` accepts ids/aliases (`security`, `owasp`, `null-safety`). Fixes #2/#3/#4 (textual steps unreachable, 10.5/10.6/10.7/11.1 invalid, non-deterministic `skill_load`). |
 | 1.5.0 | 06/13/2026 | LLC Team | Added Thin Harness (CLI orchestrator), Early Commitment + Deterministic Replay, security steps (11-Security, 11-OWASP, 12-Null-Safety), compressed documentation index, 15 human gates |
 | 1.4.0 | 06/12/2026 | LLC Team | Added Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, auto git worktrees, prompt caching strategy |
 | 1.3.0 | 06/11/2026 | LLC Team | Added Step 10.5 (User Guide) with `llc-user-guide` skill, gate 11.5, USER_GUIDE_TEMPLATE.md and `user_docs` section in PRP |

@@ -444,7 +444,7 @@ Agentes melhoram o retorno da atenção humana — não a substituem. Um engenhe
 
 ### Como o LLC implementa hardening de seguranca OWASP Top 10?
 
-O LLC dedica o **Step 11-OWASP** (`docs/skills/llc-step-11-owasp-security.md`) exclusivamente ao hardening OWASP Top 10:2021. Diferente do Step 11-Security — que executa ferramentas automatizadas (SCA, SAST, secrets scanning) **antes** da implementacao — o Step 11-OWASP executa verificacoes manuais/IA **depois** que o codigo esta escrito, inspecionando controles que ferramentas nao detectam.
+O LLC dedica o **Step 11.1** (`docs/skills/llc-step-11-owasp-security.md`) exclusivamente ao hardening OWASP Top 10:2021. Diferente do Step 10.6 — que executa ferramentas automatizadas (SCA, SAST, secrets scanning) **antes** da implementacao — o Step 11.1 executa verificacoes manuais/IA **depois** que o codigo esta escrito, inspecionando controles que ferramentas nao detectam.
 
 **As 10 categorias verificadas:**
 
@@ -470,7 +470,7 @@ O LLC dedica o **Step 11-OWASP** (`docs/skills/llc-step-11-owasp-security.md`) e
 | 🟢 Medio | Ex: header CSP ausente, sem lockout de conta | **Backlog de melhoria** — priorizado pelo PM |
 | ⚪ N/A | Sem codigo para verificar (fase de especificacao) | **Aprovado** — re-executar apos implementacao |
 
-**Diferenca do Step 11-Security (pre-implementacao):** O Step 11-Security encontra vulnerabilidades em dependencias (SCA), padroes de codigo inseguros (SAST) e secrets expostos — tudo automatizado. O Step 11-OWASP complementa com verificacoes que exigem raciocinio: "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha expira e e de uso unico?". Ferramentas nao respondem essas perguntas — o hardening OWASP sim.
+**Diferenca do Step 10.6 (pre-implementacao):** O Step 10.6 encontra vulnerabilidades em dependencias (SCA), padroes de codigo inseguros (SAST) e secrets expostos — tudo automatizado. O Step 11.1 complementa com verificacoes que exigem raciocinio: "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha expira e e de uso unico?". Ferramentas nao respondem essas perguntas — o hardening OWASP sim.
 
 **Relatorio:** `docs/security/OWASP_HARDENING_REPORT.md` (gerado pela skill, versionado no repo).
 
@@ -484,12 +484,12 @@ O LLC tem **3 skills de seguranca** que operam em momentos diferentes do pipelin
 |-------|------|---------------|----------------|------|
 | `llc-step-11-security` | Step 11 | **Pre-implementacao** (antes de codar) | SCA (dependencias), SAST (Semgrep), Secrets (Gitleaks) | Bloqueia em CVSS >= 9.0 ou secret real |
 | `llc-step-12-null-safety` | Step 12 | **Pre-implementacao** (antes de codar) | Nulabilidade nos PRPs: campos sem `?`/`Optional`, fallbacks ausentes, inconsistencias entre PRPs | Bloqueia em campos sem especificacao de nulabilidade |
-| `llc-step-11-owasp-security` | Step 11-OWASP | **Pos-implementacao** (depois de codar) | Hardening OWASP Top 10: access control, crypto, injection, design, misconfig, auth, logging, SSRF | Bloqueia em 1+ verificacao critica |
+| `llc-step-11-owasp-security` | Step 11.1 | **Pos-implementacao** (depois de codar) | Hardening OWASP Top 10: access control, crypto, injection, design, misconfig, auth, logging, SSRF | Bloqueia em 1+ verificacao critica |
 
 **Fluxo completo de seguranca:**
 
 ```
-Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
+Step 10.6 (pre-codigo)     Step 10.7 (pre-codigo)
         │                                    │
         ▼                                    ▼
    SCA + SAST + Secrets              Nulabilidade nos PRPs
@@ -502,7 +502,7 @@ Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
               Implementacao dos PRPs
                        │
                        ▼
-          Step 11-OWASP (pos-codigo)
+          Step 11.1 (pos-codigo)
                        │
                        ▼
               Hardening OWASP Top 10
@@ -513,17 +513,17 @@ Step 11-Security (pre-codigo)     Step 12-Null-Safety (pre-codigo)
 
 **Por que 3 skills separadas?**
 
-1. **Ferramentas automatizadas primeiro (Step 11-Security):** Antes de escrever uma linha de codigo, o pipeline verifica se as dependencias tem CVEs, se ha secrets expostos e se o codigo existente tem padroes inseguros. Isso evita que o time construa sobre uma base vulneravel.
+1. **Ferramentas automatizadas primeiro (Step 10.6):** Antes de escrever uma linha de codigo, o pipeline verifica se as dependencias tem CVEs, se ha secrets expostos e se o codigo existente tem padroes inseguros. Isso evita que o time construa sobre uma base vulneravel.
 
-2. **Design seguro antes de codar (Step 12-Null-Safety):** Campos sem especificacao de nulabilidade sao a principal causa de `NullPointerException` e `Cannot read properties of null` em producao. O Step 12 valida que todo campo nos PRPs declara explicitamente se pode ser nulo e, se puder, qual o fallback. Isso previne a classe mais comum de bugs em producao antes de eles serem escritos.
+2. **Design seguro antes de codar (Step 10.7):** Campos sem especificacao de nulabilidade sao a principal causa de `NullPointerException` e `Cannot read properties of null` em producao. O Step 12 valida que todo campo nos PRPs declara explicitamente se pode ser nulo e, se puder, qual o fallback. Isso previne a classe mais comum de bugs em producao antes de eles serem escritos.
 
-3. **Raciocinio manual/IA depois do codigo (Step 11-OWASP):** Ferramentas automatizadas nao respondem perguntas como "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha e de uso unico?". O Step 11-OWASP inspeciona o codigo implementado com as 10 categorias OWASP, exigindo evidencias arquivo:linha para cada verificacao.
+3. **Raciocinio manual/IA depois do codigo (Step 11.1):** Ferramentas automatizadas nao respondem perguntas como "este endpoint verifica se o usuario logado e o dono do recurso?" ou "este reset de senha e de uso unico?". O Step 11.1 inspeciona o codigo implementado com as 10 categorias OWASP, exigindo evidencias arquivo:linha para cada verificacao.
 
 **Relatorios gerados:** `docs/security/SECURITY_AUDIT_REPORT.md`, `docs/security/NULL_SAFETY_REPORT.md`, `docs/security/OWASP_HARDENING_REPORT.md`.
 
 **Tarefas:** `docs/planning/TASKS.md` §4 (SEC-001, SEC-002, SEC-003, SEC-004).
 
-**Exemplo real — Execucao completa no projeto SGI (Junho 2026):** As 3 skills foram executadas contra o repositorio LLC. Step 11-Security: Semgrep 340 regras em 147 arquivos → 0 findings; SCA N/A (sem dependencias); Gitleaks nao disponivel → verificacao manual limpa. Gate: APROVADO. Step 12-Null-Safety: 0 PRPs encontrados (fase de especificacao) → validacao do template `PRP_TEMPLATE.md` demonstrou boas praticas (`?` para opcionais, fallbacks documentados). Gate: APROVADO. Step 11-OWASP: auditoria manual dos 9 scripts `.py` (~85 KB) → A02 0 secrets, A03 28 `subprocess.run()` seguros, A08 `yaml.safe_load()`, A09 logs limpos, A10 0 network. Gate: APROVADO. Pipeline liberado para implementacao dos PRPs.
+**Exemplo real — Execucao completa no projeto SGI (Junho 2026):** As 3 skills foram executadas contra o repositorio LLC. Step 10.6: Semgrep 340 regras em 147 arquivos → 0 findings; SCA N/A (sem dependencias); Gitleaks nao disponivel → verificacao manual limpa. Gate: APROVADO. Step 10.7: 0 PRPs encontrados (fase de especificacao) → validacao do template `PRP_TEMPLATE.md` demonstrou boas praticas (`?` para opcionais, fallbacks documentados). Gate: APROVADO. Step 11.1: auditoria manual dos 9 scripts `.py` (~85 KB) → A02 0 secrets, A03 28 `subprocess.run()` seguros, A08 `yaml.safe_load()`, A09 logs limpos, A10 0 network. Gate: APROVADO. Pipeline liberado para implementacao dos PRPs.
 
 ---
 
@@ -641,7 +641,7 @@ No LLC, o scaffold opera em 3 camadas complementares:
 
 ### O pipeline LLC faz pentest automatizado?
 
-Nao. O **Step 11-Security** executa auditoria estatica de seguranca (SCA + SAST + secret scanning) com `npm audit` (ou `pip-audit`), Semgrep e Gitleaks. Essas ferramentas rodam localmente, sao open-source e nao exigem infraestrutura externa.
+Nao. O **Step 10.6** executa auditoria estatica de seguranca (SCA + SAST + secret scanning) com `npm audit` (ou `pip-audit`), Semgrep e Gitleaks. Essas ferramentas rodam localmente, sao open-source e nao exigem infraestrutura externa.
 
 Para pentest e DAST (analise dinamica de aplicacoes rodando), recomendamos integrar ferramentas complementares via CI/CD:
 

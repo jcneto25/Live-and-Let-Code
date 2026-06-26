@@ -129,6 +129,23 @@ def extract_blockers(content: str) -> list[dict]:
     return extract_all_tags(content, "blocker")
 
 
+def extract_files_touched(content: str) -> list[str]:
+    """Paths unicos dos <file_delta> no corpo da sessao (ordem de aparicao).
+
+    Base para popular `tags` no index.json — habilita queries do tipo
+    "quais sessoes tocaram o arquivo X" sem ler cada .md (o campo deixava
+    de ser vestigial).
+    """
+    clean = _strip_comments(content)
+    paths = re.findall(r'<file_delta>(.*?)</file_delta>', clean, re.DOTALL)
+    seen: list[str] = []
+    for p in paths:
+        p = p.strip()
+        if p and p not in seen:
+            seen.append(p)
+    return seen
+
+
 def build_context_seed(
     actions: list[dict],
     learnings: list[dict],
@@ -229,7 +246,8 @@ def promote_learning_points(session_file: Path, dry_run: bool = False):
         logger.info("ℹ️  Todos os learning_points já foram promovidos")
 
 
-def update_index(session_id: str, status: str = "completed", dry_run: bool = False):
+def update_index(session_id: str, status: str = "completed",
+                 files_touched: list = None, dry_run: bool = False):
     if not INDEX_FILE.exists():
         logger.error("❌ index.json não encontrado")
         return
@@ -244,6 +262,14 @@ def update_index(session_id: str, status: str = "completed", dry_run: bool = Fal
         if session["session_id"] == session_id:
             session["status"] = status
             session["completed_at"] = datetime.now().isoformat()
+            if files_touched:
+                # tags = union(--tags do init, files_touched do body) — deixa de ser vestigial
+                existing = session.get("tags", []) or []
+                merged = list(existing)
+                for f in files_touched:
+                    if f not in merged:
+                        merged.append(f)
+                session["tags"] = merged
             updated = True
             break
 
@@ -254,6 +280,23 @@ def update_index(session_id: str, status: str = "completed", dry_run: bool = Fal
     if not dry_run:
         INDEX_FILE.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding='utf-8')
     logger.info(f"✅ index.json atualizado (status: {status})")
+
+
+def update_session_status(session_file: Path, status: str, dry_run: bool = False):
+    """Atualiza o campo `status:` (quoted) no frontmatter do arquivo de sessão.
+
+    Espelha no arquivo o mesmo status gravado no index.json, para que o
+    validate-tags.py leia um status preciso (e aplique o check de context_seed
+    só em sessões completed).
+    """
+    content = session_file.read_text(encoding='utf-8')
+    new_content, n = re.subn(r'(status:\s*)"[^"]*"', rf'\g<1>"{status}"', content, count=1)
+    if n == 0:
+        logger.warning(f"⚠️  Campo status (quoted) não encontrado no frontmatter de {session_file.name}")
+        return
+    if not dry_run:
+        session_file.write_text(new_content, encoding='utf-8')
+    logger.info(f"✅ status do arquivo da sessão atualizado: {status}")
 
 
 def extract_task_completions(content: str) -> list[dict]:
@@ -504,16 +547,19 @@ def main():
 
     completed_tasks = extract_task_completions(content)
     skill_feedback = extract_skill_feedback(content)
-    logger.info(f"📋 {len(completed_tasks)} task_completed, {len(skill_feedback)} skill_feedback")
+    files_touched = extract_files_touched(content)
+    logger.info(f"📋 {len(completed_tasks)} task_completed, {len(skill_feedback)} skill_feedback, "
+                f"{len(files_touched)} arquivo(s) tocado(s)")
 
     context_seed = build_context_seed(actions, learnings, blockers, gate_present, args.context_seed)
     logger.info(f"📦 Context seed gerado ({len(context_seed)} chars)")
 
     write_context_seed(session_file, context_seed, dry_run=args.dry_run)
+    update_session_status(session_file, "completed", dry_run=args.dry_run)
     promote_learning_points(session_file, dry_run=args.dry_run)
     feedback_saved = save_skill_feedback(skill_feedback, session_id, dry_run=args.dry_run)
     tasks_updated = update_planning_docs(completed_tasks, dry_run=args.dry_run)
-    update_index(session_id, status="completed", dry_run=args.dry_run)
+    update_index(session_id, status="completed", files_touched=files_touched, dry_run=args.dry_run)
 
     gate_decision = None
     for g in gates:

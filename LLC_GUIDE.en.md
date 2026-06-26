@@ -155,10 +155,10 @@ Step 8   → Setup + Mock Data                   👤 Gate 9
 Step 9   → Testing Docs                        👤 Gate 10
 Step 10  → Project Docs + Steering Files       👤 Gate 11
 Step 10.5 → User Guide                         👤 Gate 11.5
-Step 11-Security → Audit (SCA+SAST+Secrets)    👤 Gate 11-SEC
-Step 12-Null-Safety → Data Contracts           👤 Gate 12-NULL
+Step 10.6 → Audit (SCA+SAST+Secrets)    👤 Gate 11-SEC
+Step 10.7 → Data Contracts           👤 Gate 12-NULL
 Step 11  → Execution (PRPs)                    QA Checkpoints
-Step 11-OWASP → Hardening (post-code)          👤 Gate 11-OWASP
+Step 11.1 → Hardening (post-code)          👤 Gate 11-OWASP
 ```
 
 ### ⚠️ Attention: Do you have existing documentation?
@@ -491,7 +491,7 @@ Execute the skill docs/skills/llc-user-guide.md
 
 ---
 
-### Step 11-Security: Security Audit 🆕
+### Step 10.6: Security Audit 🆕
 
 **You do:**
 
@@ -515,7 +515,7 @@ Execute the skill docs/skills/llc-step-11-security.md
 
 ---
 
-### Step 12-Null-Safety: Data Contract Validation 🆕
+### Step 10.7: Data Contract Validation 🆕
 
 **You do:**
 
@@ -580,7 +580,7 @@ The subflow has 6 phases:
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
 Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
-Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 11-Security ──👤──→ Step 12-Null-Safety ──👤──→
+Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→
 
 Step 11:
   ├── Non-UI PRPs → direct agent

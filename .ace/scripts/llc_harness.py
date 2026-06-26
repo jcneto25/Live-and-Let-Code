@@ -49,7 +49,7 @@ def get_gate_checklist(step):
     return gate_num, gate.get("checklist", [])
 
 
-def gate_check(step, output=None, auto_approve=False):
+def gate_check(step, _output=None, auto_approve=False):
     """Exibe checklist do gate e aguarda decisao humana.
     Se auto_approve=True (CI/non-interactive), aprova automaticamente.
     Caso contrario, aguarda indefinidamente — timeout NAO auto-aprova."""
@@ -78,16 +78,14 @@ def gate_check(step, output=None, auto_approve=False):
     return "approved"
 
 from pathlib import Path
-from datetime import datetime
 
 # ── Early Commitment + Replay imports ──
 try:
     from llc_classify import classify_task
     from llc_replay import (
-        find_best_script, deterministic_replay, record_script,
+        find_best_script, deterministic_replay,
         log_replay_event, is_red_zone, check_target_files_stale,
         get_architecture_version, preflight_all_steps, extract_files_from_script,
-        load_cache, ReplayError
     )
     CLASSIFY_REPLAY_AVAILABLE = True
 except ImportError:
@@ -136,18 +134,92 @@ def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
         "worktree_path": data.get("worktree"),
     }
 
-def session_end(session_id, gate_decision, context_seed_output):
-    """Finaliza sessao ACE: gate_result, merge/discard worktree, learning points."""
+def _step_from_index(session_id):
+    """Le o llc_step de uma sessao no index.json (ou None)."""
+    index_file = ACE_DIR / "index.json"
+    if not index_file.exists():
+        return None
+    try:
+        idx = json.loads(index_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    for s in idx.get("sessions", []):
+        if s.get("session_id") == session_id:
+            return s.get("llc_step")
+    return None
+
+
+def _resolve_session(session_id):
+    """Resolve o session_id valido + step: id informado existente, ou ultima in_progress.
+    Retorna (session_id, llc_step) ou (None, None). Cobre o modo manual ('manual'/None)."""
+    sessions_dir = ACE_DIR / "sessions"
+    index_file = ACE_DIR / "index.json"
+
+    if session_id and (sessions_dir / f"{session_id}.md").exists():
+        return session_id, _step_from_index(session_id)
+
+    if index_file.exists():
+        try:
+            idx = json.loads(index_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            idx = {"sessions": []}
+        in_progress = [s for s in idx.get("sessions", [])
+                       if s.get("status") == "in_progress"]
+        if in_progress:
+            s = in_progress[-1]
+            return s.get("session_id"), s.get("llc_step")
+
+    return None, None
+
+
+def _record_gate_result(session_id, step, decision):
+    """Registra <gate_result> na secao ## Gates do arquivo da sessao (idempotente).
+    finalize_session.py le essa tag para decidir merge/discard do worktree."""
+    session_file = ACE_DIR / "sessions" / f"{session_id}.md"
+    if not session_file.exists():
+        return
+    content = session_file.read_text(encoding="utf-8")
+    import re
+    # Idempotencia: so retornar se houver uma tag REAL — ignora o placeholder
+    # comentado do template (<!-- <gate_result ... -->), que tambem casa "<gate_result".
+    if "<gate_result" in re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL):
+        return
+    step_attr = f' step="{step}"' if step is not None else ""
+    tag = (f'<gate_result{step_attr} decision="{decision}" reviewer="harness">'
+           f'human gate</gate_result>')
+    placeholder = '<!-- <gate_result step="N" decision="approved" reviewer="...">...</gate_result> -->'
+    if placeholder in content:
+        content = content.replace(placeholder, tag)
+    elif "## Gates" in content:
+        content = content.replace("## Gates", f"## Gates\n\n{tag}", 1)
+    else:
+        content += f"\n\n## Gates\n\n{tag}\n"
+    session_file.write_text(content, encoding="utf-8")
+
+
+def session_end(session_id, gate_decision, context_seed_output, step=None):
+    """Finaliza sessao ACE: registra <gate_result>, finaliza via finalize_session.py
+    (que faz merge/discard do worktree + context_seed + atualiza o index)."""
     if not context_seed_output:
         context_seed_output = "state: step concluido\npending: nenhum\nblockers: nenhum\nnext_action: proximo step"
 
+    # Resolve a sessao real (id valido ou ultima in_progress) + step
+    real_id, resolved_step = _resolve_session(session_id)
+    eff_step = step if step is not None else resolved_step
+
+    # Registra o <gate_result> no arquivo da sessao — lido por finalize_session.py
+    if real_id and gate_decision:
+        _record_gate_result(real_id, eff_step, gate_decision)
+
+    # Finaliza via finalize_session.py com as flags REAIS (--session, --context-seed)
     cmd = [
         sys.executable, str(SCRIPTS_DIR / "finalize_session.py"),
-        "--session-id", session_id,
-        "--gate-decision", gate_decision,
         "--context-seed", context_seed_output,
-        "--json"
+        "--json",
     ]
+    if real_id:
+        cmd.extend(["--session", real_id])
+
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd())
     if result.returncode != 0:
         print(f"⚠️  Aviso ao finalizar sessao:\n{result.stderr}")
@@ -373,7 +445,7 @@ def pipeline_run(from_step=0, to_step=11, task=None):
 
         sid = step_run(step, task=task)
         decision = gate_check(step, None)
-        session_end(sid, decision, None)
+        session_end(sid, decision, None, step=step)
 
         if decision == "rejected":
             print(f"\n⛔ Gate {get_gate_checklist(step)[0]} REPROVADO. Pipeline pausado.")
@@ -393,7 +465,7 @@ def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
     print(f"📄 Skill: {skill_file}")
     print(f"📦 Context seed: {len(sess.get('context_seed', '') or '')} chars")
 
-    output, code, context_seed = agent_invoke(prompt, task, client=None)
+    _output, code, _context_seed = agent_invoke(prompt, task, client=None)
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
     return sess["session_id"]

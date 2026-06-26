@@ -60,7 +60,7 @@ def run(step, prp, task, wave, no_worktree, auto_approve):
 
     print()
     decision = gate_check(step, None, auto_approve=auto_approve)
-    session_end(sid, decision, None)
+    session_end(sid, decision, None, step=step)
 
 
 @cli.command()
@@ -132,7 +132,7 @@ def status():
             print(f"📍 Ultima sessao: {last.get('session_id')}")
             print(f"   Step: {last.get('llc_step')}")
             print(f"   Tags: {', '.join(last.get('tags', []))}")
-            print(f"   Data: {last.get('created')}")
+            print(f"   Data: {last.get('timestamp')}")
         else:
             print("📍 Nenhuma sessao registrada.")
     else:

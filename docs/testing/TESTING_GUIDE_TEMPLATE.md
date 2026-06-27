@@ -1424,7 +1424,134 @@ docs/testing/
 
 ---
 
-## 10. Troubleshooting
+## 10. E2E Spec — Template para Testes End-to-End
+
+> **⚠️ Criticidade:** E2E specs devem ser escritas para todo fluxo crítico do usuário
+> (login, CRUD principal, upload de arquivos, sincronização, relatórios). Sem a spec,
+> o teste E2E não pode ser implementado de forma confiável — é o equivalente ao
+> Component Spec (§6 do PRP) para frontend, mas no nível do fluxo completo.
+
+### 10.1 Estrutura de uma E2E Spec
+
+Cada E2E Scenario segue esta estrutura:
+
+```markdown
+### E2E-{ID}: {Nome do Cenário}
+
+**Fluxo:** {Nome do fluxo de usuário}
+**PRP relacionado:** PRP-{XXX}
+**Tipo:** {API / Web / Mobile}
+**Arquivo de teste:** `{caminho/para/o/arquivo}.e2e-spec.ts`
+
+**Pré-condições:**
+1. {Setup necessário — banco seed, autenticação, dados mock}
+2. {Ex: "Usuário logado com role ADMIN"}
+3. {Ex: "Paciente com ID X existe no banco"}
+
+**Dados de entrada:**
+```json
+{
+  "campo": "valor",
+  "multipart": true/false,  // se envolve upload de arquivo
+  "arquivo": "mock.pdf"     // caminho para fixture
+}
+```
+
+**Cenário (Gherkin):**
+```gherkin
+Dado que {contexto inicial}
+  E {contexto adicional}
+Quando {ação do usuário}
+  E {ação adicional}
+Então {resultado esperado 1}
+  E {resultado esperado 2}
+```
+
+**Asserções:**
+- [ ] Status HTTP: {200 / 201 / 204 / 302}
+- [ ] Body contém: {campos obrigatórios}
+- [ ] Banco: {registro criado/atualizado com valores X}
+- [ ] Side-effect: {email enviado, WebSocket notificado, arquivo salvo em S3}
+- [ ] Segurança: {requer role X, rejeita sem token, sanitiza input}
+
+**Limpeza (teardown):**
+- {Ex: "Deletar arquivo de teste do S3"}
+- {Ex: "Remover registro do banco"}
+- {Ex: "Resetar rate limit"}
+```
+
+### 10.2 Exemplo: Multipart / File Upload
+
+```markdown
+### E2E-FILE-001: Upload de evidência em auditoria
+
+**Fluxo:** Anexar documento comprobatório a um papel de trabalho
+**PRP relacionado:** PRP-042
+**Tipo:** API
+**Arquivo de teste:** `apps/api/test/auditorias/upload-evidence.e2e-spec.ts`
+
+**Pré-condições:**
+1. Usuário autenticado com role AUDITOR
+2. Auditoria com status EM_EXECUCAO existe (ID: audit-123)
+3. Arquivo fixture `mock-evidence.pdf` (1MB, PDF válido) em `test/fixtures/`
+
+**Dados de entrada:**
+```
+POST /api/v1/auditorias/audit-123/evidencias
+Content-Type: multipart/form-data
+Authorization: Bearer {token}
+
+file: @mock-evidence.pdf
+descricao: "Relatório de conformidade fiscal"
+```
+
+**Cenário (Gherkin):**
+```gherkin
+Dado que existe uma auditoria EM_EXECUCAO com ID audit-123
+  E que o usuário está autenticado como AUDITOR
+Quando o usuário envia um POST para /api/v1/auditorias/audit-123/evidencias
+  E anexa o arquivo mock-evidence.pdf (PDF, 1MB)
+  E informa descricao "Relatório de conformidade fiscal"
+Então o sistema retorna HTTP 201 Created
+  E o body contém "id", "filename", "url", "size", "mimeType"
+  E o arquivo está armazenado no S3 (bucket evidence-bucket)
+  E o registro de evidência existe no banco com status "ACTIVE"
+```
+
+**Asserções:**
+- [ ] Status HTTP: 201 Created
+- [ ] Body: `{ id: uuid, filename: "mock-evidence.pdf", url: string, size: 1048576, mimeType: "application/pdf" }`
+- [ ] Banco: tabela `evidencias` com registro vinculado à auditoria audit-123
+- [ ] Side-effect: arquivo físico presente no S3 (presigned URL válida)
+- [ ] Segurança: rejeita 401 sem token, rejeita 403 se role não é AUDITOR
+- [ ] Edge: rejeita 413 se arquivo > 10MB, rejeita 415 se tipo não permitido
+
+**Teardown:**
+- Deletar arquivo do S3
+- Remover registro da tabela `evidencias`
+```
+
+### 10.3 Checklist de E2E Spec (preencher por PRP)
+
+Para cada PRP com fluxo de usuário visível ou crítica de negócio:
+
+| # | Cenário | ID E2E | Arquivo de teste | Multipart? | Status |
+|---|---------|--------|------------------|------------|--------|
+| 1 | {Login + navegação} | E2E-AUTH-001 | `auth.flow.e2e-spec.ts` | Não | ⏳ |
+| 2 | {CRUD principal — criar} | E2E-CRUD-001 | `{modulo}.e2e-spec.ts` | Não | ⏳ |
+| 3 | {CRUD principal — editar} | E2E-CRUD-002 | `{modulo}.e2e-spec.ts` | Não | ⏳ |
+| 4 | {Upload de arquivo} | E2E-FILE-001 | `{modulo}.upload.e2e-spec.ts` | **Sim** | ⏳ |
+| 5 | {Exportar relatório} | E2E-RPT-001 | `relatorios.export.e2e-spec.ts` | Não | ⏳ |
+| 6 | {Sincronização offline} | E2E-SYNC-001 | `sync.flow.e2e-spec.ts` | Não | ⏳ |
+| 7 | {Fluxo de erro — rede} | E2E-ERR-001 | `{modulo}.e2e-spec.ts` | Não | ⏳ |
+
+> **Regra:** Todo PRP que expõe endpoint HTTP ou fluxo de usuário deve ter pelo menos
+> 1 cenário E2E cobrindo o fluxo feliz + 1 cenário cobrindo fluxo de erro.
+> PRPs com upload de arquivo (multipart) exigem cenário específico E2E-FILE.
+
+---
+
+## 11. Troubleshooting
 
 ### Problemas Comuns e Soluções
 

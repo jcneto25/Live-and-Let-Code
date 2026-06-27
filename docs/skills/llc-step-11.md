@@ -84,6 +84,25 @@ Para cada tarefa do PRP, siga Red → Green → Refactor:
 > o log `"successfully started"`. O propósito do TDD é o mesmo — ter uma falha
 > observável antes de declarar sucesso — só muda o mecanismo de verificação.
 
+> **TDD para Frontend (Componentes de UI):** Componentes de UI (telas, componentes,
+> hooks visuais) exigem especificar o contrato visual *antes* de codar — o TDD
+> genérico (teste → código) não é suficiente porque um componente tem múltiplos
+> estados que precisam ser previstos. O ciclo correto é:
+> 1. 📋 **SPEC:** escreva o Component Spec no PRP (§6) — props, estados (loading,
+>    empty, error, happy, edge cases), interações do usuário, requisitos de
+>    acessibilidade. **Não codifique nada ainda.**
+> 2. 🔴 **RED:** para cada estado declarado no Spec, escreva um teste. Rode os
+>    testes — **todos devem falhar** (o componente não existe). Mostre o output.
+> 3. 🟢 **GREEN:** implemente o componente estado por estado até que **todos os
+>    testes passem**. Mostre o output.
+> 4. 🔵 **REFACTOR:** adicione testes de acessibilidade (jest-axe, navegação por
+>    teclado, focus trap) e ajuste o componente. Mantenha os testes verdes.
+>
+> **REGRA:** se o Spec não declara todos os estados (loading, empty, error, happy,
+> edge cases), o componente não está pronto para ser implementado. Volte ao Spec
+> e complete-o. Cada estado da tabela do §6 do PRP deve ter um caso de teste
+> correspondente — validado no DoD.
+
 ### 3. Registre no ACE (durante a sessão)
 
 Cada alteração relevante é registrada no arquivo da sessão atual (`.ace/sessions/YYYY-MM-DD-NNN.md`), **append-only**:
@@ -116,6 +135,8 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 - [ ] **Projeto compila sem erros** (`tsc --noEmit`, `npm run build`, `go build`, etc.)
 - [ ] **Aplicação bootstrapa com sucesso** (`node dist/main.js`, `go run .`, etc. — até o log de "started")
 - [ ] **Health check responde** (`curl http://localhost:PORT/api/v1/health` ou equivalente)
+- [ ] **Para componentes de UI:** cada estado declarado no §6 Component Spec tem um caso de teste correspondente (loading, empty, error, happy, edge cases)
+- [ ] **Para componentes de UI:** testes de acessibilidade (jest-axe) sem violações
 - [ ] `code-health.py` sem regressão (Moved Code / Copy-Paste / Legacy Touch estáveis)
 - [ ] Nenhum `<blocker resolved="false">` aberto
 - [ ] Sem segredos/credenciais no código (Issues reais → escalar, não commitar)
@@ -180,6 +201,8 @@ Finalize pelo harness: `python .ace/scripts/llc.py session end --approve` (ou o 
 4. **Traceabilidade:** Todo arquivo tocado deve ter `<file_delta>` na sessão. É o que prova que a sessão **cobre** aquele código (validado pelo `pre-commit` / `validate-tags.py --coverage`).
 5. **`task_completed` honesto:** `status="done"` só quando concluído e testado. Use `partial` caso contrário — não inflacione progresso.
 6. **Idempotência/Zonas:** Código em `src/` é zona 🟡; decisions de schema/config/auth são 🔴 (exigem gate humano). Status aplicado pelo harness (Progress Reflection) é a exceção sancionada.
+7. **Component Spec antes de UI:** Para componentes de frontend, o Spec (§6 do PRP) deve ser escrito antes de qualquer código de UI. Violação = violação de TDD.
+8. **Estados vs Testes:** Cada estado na tabela do §6 (loading, empty, error, happy, edge) deve ter pelo menos um teste verificando a renderização correta. Se um estado não tem teste, o componente não está completo.
 
 ---
 

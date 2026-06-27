@@ -362,3 +362,35 @@ The `.ace/dependency-graph.yaml` maps which documentation artifacts depend on ea
 1. At session start, read the `<dependencies>` block in the `## Contexto` section. It lists documentation artifacts that your step affects.
 2. If you modify code that touches one of those artifacts, flag the corresponding doc for review in the `<context_seed>` `next_action` field.
 3. Do NOT re-read the YAML — the subgraph in the context is sufficient and avoids token waste (the full YAML is ~350 lines / ~8K tokens; the subgraph is 5-15 lines).
+
+---
+
+## RULE FTDD — Frontend Component TDD: Spec first, test every state
+
+**The Problem:** For UI components, the generic TDD cycle (RED → GREEN → REFACTOR) is insufficient because components have multiple visual states that must be explicitly specified before they can be tested. An agent can write a test that only covers the happy path and skip loading, empty, error, and edge cases.
+
+**The Rule:** Before implementing any UI component (screen, component, visual hook), follow this cycle:
+
+1. 📋 **SPEC:** Write the Component Spec in the PRP §6. Declare:
+   - Props interface (all fields, required vs optional, defaults)
+   - All states: `loading`, `empty`, `error`, `happy`, and any edge cases
+   - User interactions (clicks, keyboard, focus)
+   - Accessibility requirements (axe violations, keyboard nav, focus trap, screen reader)
+   - **Write no code yet.**
+
+2. 🔴 **RED:** For each state declared in the Spec, write a test:
+   - `loading` → test renders skeleton/spinner
+   - `empty` → test renders empty message + CTA
+   - `error` → test renders error message + retry
+   - `happy` → test renders data correctly
+   - `edge` → test renders the edge case UI
+   - Run all tests — **every test must fail** (component doesn't exist).
+
+3. 🟢 **GREEN:** Implement the component state by state. Make all tests pass.
+
+4. 🔵 **REFACTOR:** Add accessibility tests (jest-axe, keyboard navigation, focus trap). Fix violations. Keep all tests green.
+
+**Enforcement:**
+- The DoD in `llc-step-11.md` §4 checks: "each state declared in §6 Component Spec has a corresponding test case."
+- If a state in the Spec table has no test file in the "Teste" column, the component is not complete.
+- Violation of Spec-before-code = violation of TDD protocol (see RULE 0).

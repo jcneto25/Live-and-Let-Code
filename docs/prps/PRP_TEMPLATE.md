@@ -143,6 +143,15 @@
 ## 6. Component Spec (se aplicável — Frontend / Mobile)
 
 > **Se este PRP não tem UI, escreva "N/A — apenas backend changes."**
+>
+> ⚠️ **TDD para UI:** Este Spec deve ser escrito **antes** de qualquer código do componente.
+> Cada estado listado abaixo vira um caso de teste (RED). O componente é implementado
+> depois (GREEN). Ver `llc-step-11.md §2 — TDD para Frontend`.
+
+> **Checklist de TDD para UI (preencher antes de codar):**
+> - [ ] Spec escrito e todos os estados (loading, empty, error, happy, edge) declarados
+> - [ ] Para cada estado, há pelo menos um caso de teste planeado na coluna "Teste"
+> - [ ] Testes de acessibilidade (jest-axe, keyboard nav) previstos no REFACTOR
 
 ### 6.1 {Nome do Componente / Screen}
 
@@ -158,25 +167,30 @@ interface {Nome}Props {
 }
 ```
 
-**Estados:**
-| Estado | Trigger | UI |
-|--------|---------|-----|
-| `loading` | Inicialização / fetch | Skeleton / Spinner |
-| `empty` | Dados vazios | Mensagem + CTA |
-| `error` | Fetch falhou | Toast + Retry button |
-| `editing` | User clica "Editar" | Form com validação |
-| `saving` | Submit do form | Botão desabilitado + spinner |
-| `success` | Save OK | Toast + transição |
+**Estados (cada estado vira um caso de teste — RED phase):**
+| Estado | Trigger | UI esperada | Arquivo de teste |
+|--------|---------|-------------|------------------|
+| `loading` | Inicialização / fetch | Skeleton / Spinner | `{Nome}.test.tsx` |
+| `empty` | Dados vazios | Mensagem + CTA | `{Nome}.test.tsx` |
+| `error` | Fetch falhou | Toast + Retry button | `{Nome}.test.tsx` |
+| `happy` | Dados carregados | Renderização completa | `{Nome}.test.tsx` |
+| `edge: {caso}` | {trigger específico} | {UI esperada} | `{Nome}.test.tsx` |
 
 **Comportamento:**
 - {O que acontece quando o usuário clica em X}
 - {O que acontece em caso de erro de rede}
-- {Como validação de formulário funciona (Zod schema)}
+- {Como validação de formulário funciona}
+
+**Acessibilidade (REFACTOR phase):**
+- [ ] jest-axe: nenhuma violação de acessibilidade
+- [ ] Navegação por teclado: todos os elementos interativos são alcançáveis com Tab
+- [ ] Focus trap: modais e dialogs mantêm foco no ciclo correto
+- [ ] Screen reader: conteúdo dinâmico anuncia via `aria-live`
+- [ ] Contraste: atende WCAG 2.1 AA (ratio ≥ 4.5:1)
 
 **Design Reference:**
 - Figma: `{link ou nome do frame}`
 - Design System tokens: `{cores, tipografia, espaçamento}`
-- Acessibilidade: `{ARIA labels, focus trap, keyboard navigation}`
 
 ---
 

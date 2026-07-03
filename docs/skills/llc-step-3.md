@@ -75,6 +75,7 @@ Um PRP é um contrato completo para uma unidade de trabalho implementável. Ele 
 - **Database Changes:** Tabelas, campos, índices, migrações.
 - **Test Strategy:** Testes unitários, integração e E2E esperados.
 - **Dependências:** Quais PRPs devem ser concluídos antes deste.
+- **Cross-Cutting Concerns (CCC) — §13 do template:** AuthService, AuthGuard, interceptors, testes, audit logging, input validation, etc. (ver seção obrigatória no `PRP_TEMPLATE.md`).
 - **Riscos e Mitigações:** O que pode dar errado e como mitigar.
 - **Definition of Done:** Checklist de aceitação.
 

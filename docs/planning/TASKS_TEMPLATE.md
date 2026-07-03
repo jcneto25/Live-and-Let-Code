@@ -1059,6 +1059,25 @@ Este documento é o **backlog operacional** do projeto. Ele organiza todas as ta
 
 ---
 
+### Tarefas de Cross-Cutting Concerns (CCC) (Obrigatórias)
+
+Tarefas CCC são fixas e distribuidas por PRP que as implementa. Cada PRP com frontend DEVE ter tarefas de auth, cada PRP com backend DEVE ter tarefas de audit logging, etc. A matriz completa de cada CCC está na seção §13 de cada PRP.
+
+**Regra de alocação:** Identificar o PRP que primeiro declara cada CCC (tipicamente o PRP de setup/scaffolding) e alocar a tarefa lá. PRPs subsequentes apenas declaram dependência.
+
+| CCC | Tarefas necessárias | PRP alvo (exemplo) | Status |
+|-----|---------------------|-------------------|--------|
+| **AuthService** | `TASK-{NNN}` — Criar AuthService (login, logout, refresh, token storage) | PRP com login/frontend setup | ⏳ |
+| **AuthGuard** | `TASK-{NNN}` — Criar AuthGuard (rota protegida, redirect) | PRP com login/frontend setup | ⏳ |
+| **Token Refresh Interceptor** | `TASK-{NNN}` — Criar interceptor de refresh automático | PRP com login/frontend setup | ⏳ |
+| **Design Tokens Setup** | `TASK-{NNN}` — Instalar e configurar framework CSS (Tailwind/Bootstrap/etc.) | PRP de scaffolding frontend | ⏳ |
+| **Audit Logging** | `TASK-{NNN}` — Criar módulo global de audit logging | Primeiro PRP com backend | ⏳ |
+| **Error Handling** | `TASK-{NNN}` — Criar error handler padronizado (exception filter + responses) | Primeiro PRP com backend | ⏳ |
+
+**Verificação:** O `validate-tags.py --coverage` reporta como aviso se alguma CCC declarada em PRP não tem tarefa correspondente no TASKS.md.
+
+---
+
 ### Tarefas de Seguranca (Obrigatorias)
 
 Tarefas de seguranca sao fixas e executadas uma vez no inicio do Step 11, antes de qualquer PRP:
@@ -1083,6 +1102,7 @@ Tarefas de seguranca sao fixas e executadas uma vez no inicio do Step 11, antes 
 1. 🔧 **Compilação:** `tsc --noEmit` (ou `go build`, `cargo build`, etc.)
 2. 🚀 **Bootstrap:** A aplicação precisa iniciar sem erros
 3. ❤️ **Health check:** `curl /api/v1/health` precisa responder 200
+4. 📡 **Mocks:** `mocks/handlers/` existem e respondem a requisições mockadas (se aplicável)
 
 **Script automatizado:**
 ```bash

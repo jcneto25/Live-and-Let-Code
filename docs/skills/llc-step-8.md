@@ -149,6 +149,7 @@ mocks/
   - POST `/auth/login` — valida email/senha contra `users.json`, retorna token JWT mock + dados do usuário.
   - GET `/auth/me` — retorna usuário logado a partir do token.
   - POST `/auth/logout` — invalida token.
+- **⚠️ VERIFICAÇÃO OBRIGATÓRIA:** Para cada entidade com arquivo JSON em `mocks/data/`, DEVE existir um handler correspondente em `mocks/handlers/`. Se após criar os JSONs de dados você identificar que falta um handler, CRIE-O. A regra é: 1 JSON = 1 handler CRUD.
 - Simular erros realistas:
   - 400 — dados inválidos (campos obrigatórios faltando, formato inválido).
   - 401 — sem token ou token expirado.
@@ -158,9 +159,20 @@ mocks/
   - 429 — rate limit excedido (após 10 requisições em 1s).
   - 500 — erro interno do servidor (simular aleatoriamente em 2% das requisições).
 
+### 3.5 Teste de Fumaça nos Handlers (obrigatório)
+
+Antes de prosseguir para a documentação, execute um teste de fumaça para validar que os handlers funcionam:
+
+1. Para cada handler criado, verifique que o servidor MSW inicia sem erros (`msw` ou `browser.ts`/`server.ts`).
+2. Para cada entidade, verifique que uma requisição GET retorna dados do JSON correspondente (200).
+3. Verifique que o handler de auth retorna 401 para token inválido.
+4. Se o framework de testes estiver disponível, crie ao menos 1 teste de integração que valide o contrato do handler (mock → request → response esperado).
+
+**Regra:** Se o handler não responder a uma requisição mockada como esperado, corrija antes de prosseguir. Handlers quebrados invalidam a fundação mockada.
+
 ### 4. Atualize a Documentação de Planejamento
 
-Após concluir os passos 2 e 3, atualize os documentos para refletir o progresso:
+Após concluir os passos 2, 3 e 3.5, atualize os documentos para refletir o progresso:
 
 #### docs/planning/TASKS.md
 - Marque como concluídas `[x]` as tarefas de setup e scaffolding executadas.
@@ -195,6 +207,7 @@ Para cada PRP da Wave 1:
 4. **Cobertura de perfis:** Todo perfil definido em `perfis_permissoes.md` deve ter pelo menos um usuário mock.
 5. **Cobertura de estados:** Cada entidade deve ter registros em diferentes estados conforme BPMN.
 6. **Handlers completos:** Todo endpoint do núcleo deve ter tratamento de erros realistas.
+9. **Handler por entidade (1:1 com JSON):** Para cada arquivo JSON em `mocks/data/`, DEVE existir um handler CRUD correspondente em `mocks/handlers/`. Sem exceção. A lista de handlers deve ser validada contra a lista de JSONs antes de finalizar o passo.
 7. **Progresso refletido (Progress Reflection):** ao concluir cada tarefa de setup/scaffolding, emita `<task_completed id="<ID-do-TASKS.md>" prp="—" status="done|partial">` na sessão — o `finalize_session.py` reflete o status nas tabelas de TASKS.md/WAVES/PLAN. TASKS.md, PRPs e WAVES devem refletir o progresso real (ver *Progress Reflection Protocol* no AGENTS.md).
 8. **Idempotência:** Se o projeto já estiver inicializado, pergunte antes de sobrescrever. Se arquivos mock já existirem, pergunte se atualiza ou mantém.
 
@@ -214,3 +227,30 @@ Após concluir os passos 2, 3 e 4, **PARE** e apresente:
 8. **Próximos Passos:** "A fundação mockada está pronta. O próximo passo é o subfluxo de design e aprovação visual das telas antes da implementação dos componentes de UI."
 
 **Este passo termina aqui. A implementação de telas e componentes de UI será realizada em um subfluxo separado com aprovação visual prévia.**
+
+---
+
+### 👤 Gate 9 — Checklist de Validação
+
+Ao finalizar o Step 8, o operador humano deve validar:
+
+**Projeto:**
+- [ ] O projeto compila (`tsc --noEmit` ou equivalente) sem erros
+- [ ] O servidor de desenvolvimento inicia sem falhas
+- [ ] Lint e formatação passam
+
+**Mocks — Dados:**
+- [ ] `mocks/data/*.json` criados com dados realistas (≥ 5 registros por entidade)
+- [ ] `mocks/data/users.json` tem ao menos 1 usuário por perfil definido em `perfis_permissoes.md`
+- [ ] Dados cobrem múltiplos estados (rascunho, concluído, cancelado, etc.) conforme BPMN
+
+**Mocks — Handlers:**
+- [ ] `mocks/handlers/*.ts` existem para TODAS as entidades com dados mockados (1:1 com JSONs)
+- [ ] Handler de autenticação mockado (login/refresh/me/logout)
+- [ ] Handlers têm CRUD completo (GET list, GET by id, POST, PUT, DELETE)
+- [ ] Handlers simulam erros realistas (401, 403, 404, 500)
+- [ ] Teste de fumaça: handler responde a requisição mockada corretamente
+
+**Documentação:**
+- [ ] `TASKS.md`, PRPs e `EXECUTION_WAVES.md` atualizados com progresso
+- [ ] `mocks/README.md` documenta como usar a camada mock

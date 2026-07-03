@@ -274,6 +274,11 @@ interface {Nome}Props {
 > **Regra:** Todo PRP com endpoint HTTP ou fluxo de usuário: ≥ 1 fluxo feliz + ≥ 1 erro.
 > Se envolve upload de arquivo (multipart): +1 cenário de upload + 1 de limite excedido.
 
+> **📌 Alinhamento com CCC (§13):** Antes de finalizar esta seção, verifique a
+> seção 13 (Cross-Cutting Concerns). Todo CCC marcado como "implementa" deve ter
+> pelo menos um caso de teste correspondente nesta seção. Ex: se o CCC "AuthGuard"
+> está marcado como implementado, deve haver ao menos 1 teste de guarda no §9.1.
+
 ### 9.4 Factories e Mocks Compartilhados
 
 ```typescript
@@ -347,10 +352,53 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 13. Definition of Done (DoD) — Checklist Final
+## 13. Cross-Cutting Concerns (CCC)
+
+> **⚠️ REGRA: Preenchimento obrigatório para TODO PRP.** Liste aqui os requisitos
+> não-funcionais transversais que este PRP DEVE implementar. O objetivo é garantir que
+> artefatos compartilhados (auth, testes, logs, segurança) não fiquem de fora por
+> pertencerem a "nenhum PRP específico".
+>
+> **Como preencher:** Revise cada linha abaixo e marque se este PRP implementa, consome
+> ou é indiferente àquele CCC. Para cada CCC marcado como "implementa", deve haver
+> tarefa correspondente na seção §6 (Componentes/UX) ou §9 (Testes).
+>
+> **Fonte para verificação:** O Step 6 (Tasks) usa esta seção para garantir que as
+> tarefas transversais sejam geradas. O Step 11 (Execução) verifica se os CCCs foram
+> implementados antes de marcar o PRP como completo.
+
+### 13.1 Matriz de CCC
+
+| # | CCC | Este PRP implementa? | Este PRP consome? | Tarefa correspondente |
+|---|-----|:--------------------:|:-----------------:|-----------------------|
+| 1 | **AuthService** — serviço centralizado de autenticação | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 2 | **AuthGuard** — guarda de rota autenticada | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 3 | **Token Refresh Interceptor** — renovação automática de JWT | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 4 | **Testes unitários** de controllers e services (ver §9) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 5 | **Testes de integração** de endpoints HTTP (ver §9) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 6 | **Audit logging** para operações críticas (CREATE, UPDATE, DELETE) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 7 | **Input validation** (Zod, Pydantic, class-validator) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 8 | **Rate limiting** (endpoints expostos) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 9 | **Error handling padronizado** (tratamento de exceções, respostas de erro consistentes) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 10 | **Acessibilidade** (WCAG, axe-core, keyboard nav) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+
+### 13.2 Decisões de CCC
+
+| Decisão | Justificativa |
+|---------|---------------|
+| {Ex: Auth não será implementado neste PRP porque já existe no PRP-002} | {Ex: PRP-002 já implementa AuthService + AuthGuard + interceptor} |
+| {Ex: Rate limiting adiado para PRP-020} | {Ex: MVP sem exposição pública} |
+
+---
+
+## 14. Definition of Done (DoD) — Checklist Final
 
 > **Este PRP só pode ser marcado como ✅ Complete se TODOS os itens obrigatórios estiverem checkados.**
 > **Itens opcionais são marcados com [O].**
+
+### CCC
+- [ ] Cross-Cutting Concerns (seção 13) foram implementados ou têm justificativa registrada
+- [ ] Nenhum CCC marcado como "implementa" ficou sem tarefa correspondente
 
 ### Funcional
 - [ ] Todos os RF listados na seção 2 estão implementados e testados
@@ -380,7 +428,7 @@ export const mock{Dependency} = () => ({
 
 ---
 
-## 14. 📖 user_docs — Documentacao de Usuario
+## 15. 📖 user_docs — Documentacao de Usuario
 
 > Preenchimento obrigatorio se o PRP envolver interface de usuario ou fluxo
 > visivel ao usuario final. Deixar vazio para PRPs puramente internos (infra, CI/CD).

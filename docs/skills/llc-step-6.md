@@ -74,6 +74,52 @@ Para cada PRP, crie tarefas nos seguintes níveis:
 - Revisão de segurança
 - Verificação de Design System compliance
 
+#### Regra: Cobertura de Testes por PRP
+
+**Proporção obrigatória:** Para cada PRP, gerar tarefas de teste na proporção **1 tarefa de teste para cada 2 tarefas de implementação**.
+
+| Tarefas de implementação (backend + frontend) | Tarefas de teste mínimas |
+|:---------------------------------------------:|:------------------------:|
+| 1-2 | 1 |
+| 3-4 | 2 |
+| 5-6 | 3 |
+| 7+ | 4+ |
+
+**Regra de mínimo absoluto:** TODO PRP com controller/service/module DEVE ter pelo menos 1 tarefa de teste unitário e, se expuser endpoint HTTP, 1 tarefa de teste de integração.
+
+**Escopo:** As tarefas de teste devem ser distribuídas por ONDA — NÃO concentrar todas no primeiro PRP de cada onda. Se uma onda contém PRP-001, PRP-002 e PRP-003, cada um deve ter suas próprias tarefas de teste, mesmo que o primeiro já tenha cobertura.
+
+#### Regra: Cross-Cutting Concern (CCC) de Autenticação Frontend
+
+**Quando aplicar:** TODO PRP que incluir componentes de frontend (web ou mobile).
+
+**Tarefas obrigatórias a incluir no TASKS.md (se ainda não existirem em PRP anterior):**
+1. **AuthService** — Serviço centralizado de autenticação (login, logout, refresh, token storage)
+2. **AuthGuard** — Guarda de rota autenticada (redirect para login se não autenticado)
+3. **Interceptor de Refresh Token** — Interceptor que renova token expirado automaticamente e repete requisições falhas
+4. **Teste unitário de cada um** — AuthService.spec, AuthGuard.spec, interceptor.spec
+
+**Framework-agnóstico:** Angular (Guards/Interceptors), React (context + axios interceptors), Vue (router.beforeEach + axios), Svelte (stores + fetch wrapper), todas precisam destes 3 artefatos.
+
+**Regra de acoplamento:** Identificar o PRP que primeiro declara frontend com autenticação (tipicamente o PRP de login ou layout dashboard) e alocar as 4 tarefas CCC lá. PRPs subsequentes com frontend apenas declaram dependência destas tarefas.
+
+#### Regra: Setup de Design Tokens (Step 6 → Step 7 Handoff)
+
+**Problema que previne:** O Step 7 (Design System) define bibliotecas de estilo (Tailwind, Bootstrap, Chakra, Material UI, etc.) mas Step 6 (Tarefas) não converte isso em tarefa de setup — então ninguém instala ou configura a biblioteca.
+
+**Regra:** Durante a decomposição de PRPs em tarefas, verificar se `docs/architecture/ARCHITECTURE.md` declara uma estratégia CSS (framework de estilo). Se sim, incluir tarefa de instalação e configuração no setup:
+
+| Stack CSS | Tarefa de setup necessária |
+|-----------|---------------------------|
+| Tailwind CSS | Instalar `tailwindcss`, `postcss`, `autoprefixer` + gerar `tailwind.config.ts` + import `globals.css` |
+| Bootstrap | Instalar `bootstrap` + import SCSS + configurar tema |
+| Chakra UI | Instalar `@chakra-ui/react` + `ChakraProvider` no root layout |
+| Material UI | Instalar `@mui/material` + `ThemeProvider` com tokens do Design System |
+| Styled Components | Instalar `styled-components` + configurar tema via `ThemeProvider` |
+| Outro | Instalar pacote + configurar provider/tema conforme docs da lib |
+
+**Localizar no TASKS.md:** A tarefa de setup de tokens deve ficar no mesmo PRP de scaffolding do frontend (tipicamente o PRP que cria o layout base ou o primeiro PRP com UI da Wave 1).
+
 ### 4. Atribua Metadados a Cada Tarefa
 | Campo | Descrição |
 |-------|-----------|

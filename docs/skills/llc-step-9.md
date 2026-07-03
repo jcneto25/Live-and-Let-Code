@@ -73,7 +73,16 @@ Preencha o template com:
 - Template para teste de controller/rota.
 - Template para teste de componente frontend com MSW.
 - Template para teste de hook.
-- Template para teste E2E (Playwright/Cypress).
+- Template para teste E2E (Playwright/Cypress) — ver `TESTING_GUIDE.md §10 — E2E Spec Template`.
+
+#### E2E Specs (Obrigatório para PRPs com fluxos de usuário)
+- Para cada fluxo crítico (login, CRUD, upload, sync), gere um E2E Spec seguindo o template.
+- **Multipart/Upload:** PRPs com upload de arquivo EXIGEM cenário E2E-FILE específico cobrindo:
+  - Upload bem-sucedido (tamanho, tipo MIME, boundaries)
+  - Upload rejeitado por tamanho excedido (413)
+  - Upload rejeitado por tipo não permitido (415)
+  - Upload sem autenticação (401) / sem permissão (403)
+- A E2E Spec deve ser escrita no TESTING_GUIDE.md antes da implementação do PRP.
 
 #### Estratégia de Mocks
 - Quando mockar Prisma/ORM vs. usar banco real vs. teste de integração.

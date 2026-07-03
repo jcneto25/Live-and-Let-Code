@@ -260,10 +260,19 @@ interface {Nome}Props {
 
 ### 9.3 E2E Tests (Frontend / Mobile)
 
-| # | Fluxo do usuário | Ferramenta | Arquivo |
-|---|------------------|------------|---------|
-| 1 | {Login → Ação → Resultado esperado} | Playwright / Detox | `{fluxo}.spec.ts` |
-| 2 | {Ação offline → Sync → Verificação no web} | Detox | `{sync}.spec.ts` |
+> ⚠️ **Cada cenário E2E deve ter sua spec escrita antes da implementação.**
+> Use o template do `TESTING_GUIDE.md §10 — E2E Spec Template`.
+> PRPs com upload de arquivo (multipart) EXIGEM cenário E2E-FILE específico.
+
+| # | ID E2E | Fluxo do usuário | Multipart? | Ferramenta | Arquivo |
+|---|--------|------------------|:----------:|------------|---------|
+| 1 | E2E-{SIG}-001 | {Login → Ação → Resultado esperado} | Não | Playwright / Detox | `{fluxo}.spec.ts` |
+| 2 | E2E-{SIG}-002 | {Upload de arquivo → Validação → Confirmação} | **Sim** | Playwright / Detox | `{fluxo}.upload.spec.ts` |
+| 3 | E2E-{SIG}-003 | {Fluxo de erro — rede/timeout} | Não | Playwright / Detox | `{fluxo}.error.spec.ts` |
+| 4 | E2E-{SIG}-004 | {Ação offline → Sync → Verificação} | Não | Detox | `{sync}.spec.ts` |
+
+> **Regra:** Todo PRP com endpoint HTTP ou fluxo de usuário: ≥ 1 fluxo feliz + ≥ 1 erro.
+> Se envolve upload de arquivo (multipart): +1 cenário de upload + 1 de limite excedido.
 
 ### 9.4 Factories e Mocks Compartilhados
 

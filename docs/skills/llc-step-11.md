@@ -137,6 +137,8 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 - [ ] **Health check responde** (`curl http://localhost:PORT/api/v1/health` ou equivalente)
 - [ ] **Para componentes de UI:** cada estado declarado no §6 Component Spec tem um caso de teste correspondente (loading, empty, error, happy, edge cases)
 - [ ] **Para componentes de UI:** testes de acessibilidade (jest-axe) sem violações
+- [ ] **Para PRPs com fluxos de usuário:** testes E2E para fluxos críticos escritos e passando (consultar `TESTING_GUIDE.md §10 — E2E Spec Template`)
+- [ ] **Para PRPs com upload de arquivo:** cenário E2E multipart específico (tamanho, tipo, boundaries, erro 413/415)
 - [ ] `code-health.py` sem regressão (Moved Code / Copy-Paste / Legacy Touch estáveis)
 - [ ] Nenhum `<blocker resolved="false">` aberto
 - [ ] Sem segredos/credenciais no código (Issues reais → escalar, não commitar)

@@ -124,7 +124,7 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 > **Objetivo:** Auditoria de segurança e validação de null safety antes da execução dos PRPs.
 > **Gate:** Bloqueia implementação se vulnerabilidades críticas (CVSS ≥ 9.0) ou secrets reais forem encontrados.
 
-### 4.1 Security Audit (Step 11)
+### 4.1 Security Audit (Step 10.6)
 
 | ID | Tarefa | Descrição | Status | Prioridade | Dependências |
 |----|--------|-----------|--------|------------|--------------|
@@ -146,7 +146,7 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 - `.ace/security/secrets-report.json`
 - `docs/security/SECURITY_AUDIT_REPORT.md`
 
-### 4.2 Null Safety Validation (Step 12)
+### 4.2 Null Safety Validation (Step 10.7)
 
 | ID | Tarefa | Descrição | Status | Prioridade | Dependências |
 |----|--------|-----------|--------|------------|--------------|

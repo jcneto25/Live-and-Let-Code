@@ -463,6 +463,11 @@ async findAll(@Organization() orgId: string) {
 
 > Esta seção é usada pelo `consistency-check.py` para verificar se cada PRP marcado como ✅
 > no TASKS.md tem a implementação de backend realmente pronta (não é stub).
+>
+> **Nota:** `prp_verify.py` (Step 11.2) lê os PRPs diretamente como fonte da verdade para
+> o aceite mecânico de PRP — este mapeamento é **suplementar**, não necessário para o
+> ACEITE VERIFY. As colunas `Teste(s)` / `Arquivo(s) impl` da §2 do PRP são a fonte
+> primária.
 
 Para cada PRP que implementa um módulo de backend, liste os arquivos de serviço que ele deve
 implementar e inclua uma linha na tabela abaixo:

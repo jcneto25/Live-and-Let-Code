@@ -140,6 +140,7 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 - [ ] **Para PRPs com fluxos de usuário:** testes E2E para fluxos críticos escritos e passando (consultar `TESTING_GUIDE.md §10 — E2E Spec Template`)
 - [ ] **Para PRPs com upload de arquivo:** cenário E2E multipart específico (tamanho, tipo, boundaries, erro 413/415)
 - [ ] `code-health.py` sem regressão (Moved Code / Copy-Paste / Legacy Touch estáveis)
+- [ ] `prp_verify.py` passando (0 CRITICAL) — verificação mecânica de aceite (Step 11.2)
 - [ ] Nenhum `<blocker resolved="false">` aberto
 - [ ] Sem segredos/credenciais no código (Issues reais → escalar, não commitar)
 
@@ -171,6 +172,11 @@ script reporta a divergência.
 > **Integração com ondas:** Quando executado via `llc wave run --wave N`, o
 > `consistency-check.py --strict` é chamado automaticamente no pós-onda junto com
 > o `pre-wave-check.sh`.
+
+> **Aceite mecânico (Step 11.2):** Após a verificação de consistência, execute
+> `python .ace/scripts/prp_verify.py --prp {ID} --strict` para verificação mecânica
+> de aceite. O resultado bloqueia o merge se houver CRITICAL (implementado no
+> `session_end()` do harness).
 
 ### 6. Code Health
 

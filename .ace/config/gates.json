@@ -127,6 +127,15 @@
         "Linguagem adequada ao usuario final?"
       ]
     },
+    "11-VERIFY": {
+      "step": 11.2,
+      "label": "PRP Verify",
+      "checklist": [
+        "prp_verify.py --strict passou (0 CRITICAL)?",
+        "WARNs revisados com justificativa na secao 11?",
+        "LLC_PRP_NO_VERIFY nao esta ativo (sem bypass acidental)?"
+      ]
+    },
     "12-NULL": {
       "step": 12,
       "label": "Null Safety",

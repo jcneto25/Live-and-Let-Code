@@ -68,7 +68,7 @@ Um PRP é um contrato completo para uma unidade de trabalho implementável. Ele 
 
 ### 3. Preencha Cada PRP
 - **Contexto e Objetivo:** O que este PRP entrega e por quê.
-- **Requisitos Funcionais:** Formato Gherkin (Given/When/Then) para cada cenário.
+- **Requisitos Funcionais:** Formato Gherkin (Given/When/Then) para cada cenário. Preencha as colunas **Teste(s)** e **Arquivo(s) impl** com os caminhos relativos dos arquivos de teste e implementação de cada RF (obrigatório para verificação mecânica por `prp_verify.py` no Step 11.2).
 - **Requisitos Não Funcionais:** Performance, segurança, acessibilidade aplicáveis.
 - **API Contracts:** Endpoints, payloads, autenticação, rate limits.
 - **Componentes:** Props, estados (loading, empty, error, success), referência ao Design System.

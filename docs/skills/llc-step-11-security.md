@@ -27,6 +27,7 @@ tags: [security, audit, sast, sca, secrets, llc-pipeline]
 - [ ] Gitleaks instalado: `brew install gitleaks` ou `go install github.com/gitleaks/gitleaks/v8@latest`
 - [ ] `express-rate-limit` ou equivalente instalado (para rate limiting no login)
 - [ ] `zxcvbn` ou equivalente instalado (para validação de força de senha)
+- [ ] Escopo de scan = `apps/*/src/` (ARCHITECTURE.md §7.1). O harness `.ace/scripts/` NUNCA entra no escopo.
 
 ---
 
@@ -69,7 +70,7 @@ pip-audit --format json > .ace/security/sca-report.json
 #### Estágio 2: SAST — Static Code Analysis (Semgrep)
 
 ```bash
-semgrep --config=auto --json > .ace/security/sast-report.json
+semgrep --config=auto --json --include="apps/*/src/**" --exclude=".ace" --exclude="docs" --exclude="node_modules" --exclude="dist" apps/ > .ace/security/sast-report.json
 ```
 
 **Análise:**
@@ -79,11 +80,12 @@ semgrep --config=auto --json > .ace/security/sast-report.json
 - Triagem de falsos positivos:
   - Test files (`*.test.ts`, `*.spec.ts`, `__tests__/`) com padrões intencionais.
   - Mock data (`mocks/data/`) com dados sintéticos.
+  - Harness (`.ace/scripts/`, `.ace/config/`) — fora do escopo de aplicação.
 
 #### Estágio 3: Secrets — Credential Scanning (Gitleaks)
 
 ```bash
-gitleaks detect --source . --report-format json --report-path .ace/security/secrets-report.json
+gitleaks detect --source apps/ --no-git --report-format json --report-path .ace/security/secrets-report.json
 ```
 
 **Análise:**

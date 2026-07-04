@@ -1,7 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versao:** 1.5.0
-**Data:** 04 de Junho de 2026 (atualizado em 13/06/2026)
+**Versao:** 1.6.0
+**Data:** 04 de Junho de 2026 (atualizado em 03/07/2026)
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
 **Autor:** Equipe LLC  
@@ -195,6 +195,7 @@ project-root/
 │   │   ├── llc-user-guide.md
 │   │   ├── llc-step-11-security.md
 │   │   ├── llc-step-11-owasp-security.md
+│   │   ├── llc-step-11-2-prp-verify.md
 │   │   ├── llc-step-12-null-safety.md
 │   │   ├── llc-subflow-prototyping.md
 │   │   ├── llc-ace-context.md
@@ -332,7 +333,11 @@ graph TD
     F5 --> F6[F6: Validação]
     BACK --> QA[Checkpoints QA]
     F6 --> QA
-    QA --> DEPLOY[Deploy]
+    QA --> S112[Step 11.2: PRP Verify]
+    S112 --> V112{prp_verify --strict}
+    V112 -->|CRITICAL| REJ[merge bloqueado — corrija]
+    V112 -->|0 CRITICAL| DEPLOY[Deploy]
+    REJ --> S11
 ```
 
 ### 3.2 Tabela de Etapas
@@ -376,6 +381,7 @@ graph TD
 
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
 | 11.1 | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
+| **11.2** | **PRP Verify (aceite mecânico)** | **PRP concluído + §2 preenchida** | **Relatório de gaps RF-por-RF** | **—** | **🔴 Bloqueia merge em CRITICAL** |
 
 > **Modelo de seguranca em 3 camadas:** A seguranca percorre todo o pipeline — nao e um gate unico.
 > **10.6 (Gate 11-SEC)** (pre-code) escaneia dependencias, codigo e secrets. **10.7 (Gate 12-NULL)** (pre-code) valida contratos de dados.
@@ -452,6 +458,7 @@ tags: [categoria, llc-pipeline]
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
 | `llc-step-11-security` | 10.6 | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
 | `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
+| `llc-step-11-2-prp-verify` | **11.2** | **Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps** |
 | `llc-step-12-null-safety` | 10.7 | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
@@ -514,6 +521,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
 | 👤 11-SEC | 10.6 | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
 | 👤 11-OWASP | 11.1 | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
+| 🔴 11-VERIFY | **11.2** | **prp_verify --strict passou (0 CRITICAL)? WARNs revisados? Bypass nao ativo?** |
 | 👤 12-NULL | 10.7 | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
@@ -663,6 +671,14 @@ Cursor, opencode ou `git commit` puro), o que o torna a única garantia portáve
 > `docs/templates/hooks/`. **Caveat:** o pre-commit é contornável com `git commit --no-verify`
 > e hooks de cliente podem ser desabilitados — nenhum mecanismo é 100%. Em camadas, mudam o
 > modo de falha de "o agente esqueceu" para "alguém precisou contornar ativamente".
+
+> **Aceite determinístico de PRP (Step 11.2):** O `prp_verify.py` + o bloqueio em `session_end`
+> seguem o mesmo padrão de defesa em profundidade: a skill `llc-step-11-2-prp-verify` é o guia
+> **advisory**; o **enforcement determinístico** está no `session_end()` do harness, que executa
+> `prp_verify.py --strict` e força `--block-merge` em CRITICAL. O `LLC_PRP_NO_VERIFY=1` é o
+> equivalente ao `--no-verify` do git — muda o modo de falha de "o agente ignorou" para
+> "alguém contornou explicitamente". O `_post_wave_check()` estende a mesma verificação para
+> ondas completas.
 
 ---
 
@@ -828,6 +844,7 @@ Quando um alerta é disparado, o pipeline recomenda:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.7.0 | 03/07/2026 | Equipe LLC | Adicionado Step 11.2 (PRP Verify): `prp_verify.py` engine, skill `llc-step-11-2-prp-verify`, gate 11-VERIFY, bloqueio determinístico no `session_end()` + `_post_wave_check()`, colunas Teste(s)/Arquivo(s) impl no PRP_TEMPLATE.md §2, escopo de SAST/secrets restrito a `apps/*/src/` |
 | 1.6.0 | 26/06/2026 | Equipe LLC | `normalize_step()` canônico + `llc_steps.REGISTRY` (fonte única de verdade para identidade de step). Renumerado para que o número do step == a sequência do pipeline: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execução segue 11). Adicionado campo canônico `llc_step_id` no frontmatter da sessão + `index.json` (ao lado do `llc_step` numérico); a CLI `--step` aceita ids/aliases (`security`, `owasp`, `null-safety`). Corrige #2/#3/#4 (steps textuais inalcançáveis, 10.5/10.6/10.7/11.1 inválidos, `skill_load` não-determinístico). |
 | 1.5.0 | 13/06/2026 | Equipe LLC | Adicionado Thin Harness (orquestrador CLI), Early Commitment + Deterministic Replay, steps de seguranca (11-Security, 11-OWASP, 12-Null-Safety), indice comprimido de documentacao, 15 human gates |
 | 1.4.0 | 12/06/2026 | Equipe LLC | Adicionado Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, git worktrees automaticos, prompt caching strategy |

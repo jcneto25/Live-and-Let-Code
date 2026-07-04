@@ -83,6 +83,9 @@ REGISTRY: dict[str, StepSpec] = {
     # Pós-execução (hardening de código):
     "11.1": _spec("11.1", "OWASP Hardening",         "llc-step-11-owasp-security", "11-OWASP", True, True,
                   aliases=("11-owasp", "owasp", "11-owasp-security")),
+    # Pós-execução / pré-merge (aceite mecânico de PRP — advisory skill, enforcement no session_end):
+    "11.2": _spec("11.2", "PRP Verify",              "llc-step-11-2-prp-verify",  "11-VERIFY", False, False,
+                  aliases=("prp-verify", "verify")),
 }
 
 # Mapa reverso de aliases -> id canônico (construído uma vez na importação).

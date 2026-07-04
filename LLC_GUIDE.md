@@ -581,6 +581,30 @@ O subfluxo tem 6 fases:
 
 ---
 
+### Passo 11.2: PRP Verify (Aceite Mecânico de PRP)
+
+**Antes do merge, o PRP passa por verificação mecânica de aceite.** O `prp_verify.py`
+cruza cada RF declarado na §2 do PRP com os arquivos reais de teste e implementação.
+
+> **Enforcement mecânico:** O `session_end()` do harness bloqueia o merge em CRITICAL
+> (arquivo declarado ausente, stub, componente faltando). Bypass: `LLC_PRP_NO_VERIFY=1`
+> (logado — veja `llc-pipeline-design.md §8.7`).
+
+```
+Execute a skill docs/skills/llc-step-11-2-prp-verify.md
+```
+
+**A IA faz:**
+- Executa `python .ace/scripts/prp_verify.py --prp {ID} --strict --json`
+- Emite relatório RF-por-RF com evidências de implementação
+- Registra `<gate_result step="11.2">` com a decisão
+
+**Nota:** `_post_wave_check()` também bloqueia ondas com CRITICAL — a verificação
+ocorre tanto no nível de PRP individual (session_end) quanto no nível de onda
+(pós-onda).
+
+---
+
 ## Fluxo de Aprovação
 
 ```

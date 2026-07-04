@@ -38,11 +38,13 @@
 
 > **Formato obrigatório:** Gherkin (Dado/Quando/Então) para eliminar ambiguidade.
 
-| ID | Requisito | Critérios de Aceitação (Gherkin) | Prioridade | Status |
-|----|-----------|----------------------------------|------------|--------|
-| RF-{XXX}.1 | {Descrição clara, linguagem do usuário} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado mensurável} | Must | ⏳ |
-| RF-{XXX}.2 | {Descrição clara} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado} | Must | ⏳ |
-| RF-{XXX}.3 | {Descrição clara} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado} | Should | ⏳ |
+> **Colunas obrigatórias para verificação mecânica:** `Teste(s)` e `Arquivo(s) impl` são lidas por `prp_verify.py` (Step 11.2) para cruzar cada RF com arquivos reais. Preencha com caminhos relativos separados por vírgula.
+
+| ID | Requisito | Critérios de Aceitação (Gherkin) | Prioridade | Status | Teste(s) | Arquivo(s) impl |
+|----|-----------|----------------------------------|------------|--------|----------|-----------------|
+| RF-{XXX}.1 | {Descrição clara, linguagem do usuário} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado mensurável} | Must | ⏳ | `{service}.spec.ts` | `src/{module}/{service}.ts` |
+| RF-{XXX}.2 | {Descrição clara} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado} | Must | ⏳ | `{service}.spec.ts` | `src/{module}/{service}.ts` |
+| RF-{XXX}.3 | {Descrição clara} | **Dado** {contexto}, **Quando** {ação}, **Então** {resultado} | Should | ⏳ | `{service}.spec.ts` | `src/{module}/{service}.ts` |
 
 ---
 
@@ -401,7 +403,7 @@ export const mock{Dependency} = () => ({
 - [ ] Nenhum CCC marcado como "implementa" ficou sem tarefa correspondente
 
 ### Funcional
-- [ ] Todos os RF listados na seção 2 estão implementados e testados
+- [ ] Todos os RF listados na seção 2 estão implementados e testados (verificado mecanicamente por `prp_verify.py` — colunas Teste(s)/Arquivo(s) impl da §2 preenchidas)
 - [ ] API Contracts (seção 5) refletem exatamente o código entregue
 - [ ] Component Spec (seção 6) reflete exatamente o UI entregue
 - [ ] Data Model (seção 7) definido para todas as entidades deste PRP

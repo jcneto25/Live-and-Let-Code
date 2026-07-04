@@ -19,6 +19,7 @@ Uso:
 
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -328,10 +329,13 @@ def _pre_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
         return False
 
 
-def _post_wave_check(dry_run: bool = False, wave_num: int = 0):
-    """Executa validacao pos-onda: build + bootstrap + health check.
+def _post_wave_check(dry_run: bool = False, wave_num: int = 0,
+                     prp_ids: Optional[list[str]] = None):
+    """Executa validacao pos-onda: build + bootstrap + health check + aceite de PRP.
 
-    Retorna True se passou ou se o script nao existe.
+    Retorna True se passou; retorna False se prp_verify encontrar CRITICAL
+    (bloqueia a onda). build/bootstrap/health e consistency-check permanecem
+    advisory (warnings).
     """
     if not PRE_WAVE_CHECK_SCRIPT.exists():
         logger.info("ℹ️  pre-wave-check.sh nao encontrado — pulando validacao pos-onda.")
@@ -384,6 +388,35 @@ def _post_wave_check(dry_run: bool = False, wave_num: int = 0):
             logger.info("✅ Consistencia OK — documentacao reflete o codigo.")
     else:
         logger.info("ℹ️  consistency-check.py nao encontrado — pulando verificacao de consistencia.")
+
+    # ── Aceite mecânico de PRP (Step 11.2) — BLOQUEANTE em CRITICAL ──
+    # Diferente do build/consistency (advisory), o prp_verify bloqueia a onda.
+    if os.environ.get("LLC_PRP_NO_VERIFY") == "1":
+        logger.info("ℹ️  prp_verify bypassado via LLC_PRP_NO_VERIFY=1.")
+        return True
+
+    verify_script = Path(".ace") / "scripts" / "prp_verify.py"
+    if prp_ids and verify_script.exists():
+        logger.info(f"\n{'─'*50}")
+        logger.info("📋 Verificando aceite mecânico dos PRPs (prp_verify)...")
+        critical_found = False
+        for prp_id in prp_ids:
+            rv = subprocess.run(
+                ["python3", str(verify_script), "--prp", prp_id, "--strict", "--json"],
+                capture_output=True, text=True, cwd=Path.cwd()
+            )
+            if rv.returncode == 2:
+                critical_found = True
+                try:
+                    n = json.loads(rv.stdout).get("critical", "?")
+                except (json.JSONDecodeError, TypeError):
+                    n = "?"
+                logger.error(f"⛔ {prp_id}: prp_verify CRITICAL ({n} pendência(s) bloqueante(s))")
+        if critical_found:
+            logger.error("⛔ Onda BLOQUEADA — prp_verify encontrou CRITICAL.")
+            logger.error("   Corrija as pendências ou use bypass explícito: LLC_PRP_NO_VERIFY=1.")
+            return False
+        logger.info("✅ prp_verify limpo para todos os PRPs da onda.")
 
     return True
 
@@ -481,8 +514,10 @@ def run_wave(wave_num: int, aggregate: bool = False, dry_run: bool = False,
                     logger.info("   Wave pausada. Execute manualmente os PRPs restantes.")
                     return False
 
-    # Post-wave validation: build + bootstrap + health (integridade)
-    _post_wave_check(dry_run=dry_run, wave_num=wave_num)
+    # Post-wave validation: build + bootstrap + health (integridade) + aceite de PRP
+    if not _post_wave_check(dry_run=dry_run, wave_num=wave_num, prp_ids=prp_ids):
+        logger.error(f"⛔ Wave {wave_num} — pós-onda bloqueada (prp_verify CRITICAL).")
+        return False
 
     logger.info(f"✅ Wave {wave_num} concluida.")
     return True

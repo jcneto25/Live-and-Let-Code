@@ -327,7 +327,8 @@ def create_session_file(session_id: str, llc_step: float, llc_step_id: str,
     return session_file
 
 
-def update_index(session_id: str, llc_step: float, llc_step_id: str, tags: list):
+def update_index(session_id: str, llc_step: float, llc_step_id: str, tags: list,
+                 prp: str | None = None):
     if INDEX_FILE.exists():
         try:
             index = json.loads(INDEX_FILE.read_text(encoding='utf-8'))
@@ -336,7 +337,7 @@ def update_index(session_id: str, llc_step: float, llc_step_id: str, tags: list)
     else:
         index = {"project": "", "sessions": []}
 
-    index["sessions"].append({
+    record = {
         "session_id": session_id,
         "file": f"{session_id}.md",
         "status": "in_progress",
@@ -344,7 +345,10 @@ def update_index(session_id: str, llc_step: float, llc_step_id: str, tags: list)
         "llc_step_id": llc_step_id,
         "tags": tags,
         "timestamp": datetime.now().isoformat()
-    })
+    }
+    if prp:
+        record["prp"] = prp
+    index["sessions"].append(record)
 
     INDEX_FILE.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding='utf-8')
     logger.info("✅ index.json atualizado")
@@ -452,7 +456,7 @@ def main():
     )
 
     update_index(session_id=session_id, llc_step=args.step.number,
-                 llc_step_id=args.step.id, tags=args.tags)
+                 llc_step_id=args.step.id, tags=args.tags, prp=args.prp)
 
     worktree_path = None
     auto_worktree = (args.prp is not None or args.step.auto_worktree) and not args.no_worktree

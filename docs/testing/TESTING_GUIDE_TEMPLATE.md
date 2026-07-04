@@ -1389,6 +1389,16 @@ jobs:
 | **Acessibilidade** | 0 violações axe críticas | PR bloqueado |
 | **Vulnerabilidades** | 0 críticas | PR bloqueado |
 
+### 8.3 Métricas por PRP
+
+> **Contagens de teste reportadas por PRP devem referir-se exclusivamente aos arquivos
+> da §9 daquele PRP — não ao conjunto total do projeto.** Isso evita o mascaramento
+> de falsos positivos ("217/217 testes" de PRPs anteriores cobrindo um stub).
+>
+> O `prp_verify.py` (Step 11.2 do LLC) cruza cada RF com seus arquivos de teste e
+> implementação declarados na §2 do PRP — se um teste usa `expect(x).toBeDefined()`
+> apenas, é classificado como WARN (teatro de testes).
+
 ---
 
 ## 9. Documentação e Templates

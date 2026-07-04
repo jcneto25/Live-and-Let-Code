@@ -507,6 +507,9 @@ def main():
     parser.add_argument("--commit", action="store_true", help="Faz git commit automático")
     parser.add_argument("--dry-run", action="store_true", help="Simula sem gravar alterações em arquivos")
     parser.add_argument("--json", action="store_true", help="Output em JSON")
+    parser.add_argument("--block-merge", action="store_true",
+                        help="Força gate_decision='rejected' (override de qualquer <gate_result>). "
+                             "Usado pelo harness quando prp_verify encontra CRITICAL — impede o merge.")
     args = parser.parse_args()
 
     if args.session:
@@ -566,6 +569,13 @@ def main():
         d = g["attrs"].get("decision")
         if d:
             gate_decision = d
+
+    # Override determinístico do harness: prp_verify CRITICAL bloqueia o merge
+    # independentemente das <gate_result> tags (que podem ter sido pré-escritas
+    # pelo agente como "approved" — _record_gate_result é idempotente).
+    if args.block_merge:
+        logger.info("⛔ --block-merge ativo: merge bloqueado (prp_verify CRITICAL)")
+        gate_decision = "rejected"
 
     worktree_cleaned = False
     if gate_decision:

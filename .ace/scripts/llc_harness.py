@@ -175,6 +175,83 @@ def _step_from_index(session_id):
     return None
 
 
+def _prp_from_index(session_id):
+    """Le o PRP de uma sessao no index.json (ou None).
+
+    Prefere o campo `prp` persistido pelo init (pos-v1.6); fallback para o nome
+    do branch do worktree (`prp-{id}/wave-{n}`) em sessoes legadas."""
+    index_file = ACE_DIR / "index.json"
+    if index_file.exists():
+        try:
+            idx = json.loads(index_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            idx = {"sessions": []}
+        for s in idx.get("sessions", []):
+            if s.get("session_id") == session_id:
+                prp = s.get("prp")
+                if prp:
+                    return prp
+
+    # Fallback: branch do worktree
+    import re as _re
+    wt = ACE_DIR / "worktrees" / session_id
+    if wt.exists():
+        try:
+            r = subprocess.run(
+                ["git", "-C", str(wt), "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True, text=True, check=True)
+            m = _re.search(r"prp-(PRP-\d+)", r.stdout)
+            if m:
+                return m.group(1)
+        except (subprocess.CalledProcessError, OSError):
+            pass
+    return None
+
+
+def _run_prp_verify(prp_id):
+    """Roda prp_verify.py --strict para o PRP. Retorna True se houver CRITICAL (exit 2)."""
+    script = SCRIPTS_DIR / "prp_verify.py"
+    if not script.exists():
+        return False
+    result = subprocess.run(
+        [sys.executable, str(script), "--prp", prp_id, "--strict", "--json"],
+        capture_output=True, text=True, cwd=Path.cwd())
+    if result.returncode == 2:
+        try:
+            data = json.loads(result.stdout)
+            print(f"⛔ prp_verify CRITICAL em {prp_id}: "
+                  f"{data.get('critical', 0)} pendência(s) bloqueante(s)")
+        except (json.JSONDecodeError, TypeError):
+            print(f"⛔ prp_verify CRITICAL em {prp_id}")
+        return True
+    return False
+
+
+def _maybe_block_on_prp_verify(session_id, eff_step):
+    """Gate deterministico de aceite de PRP (Step 11.2). Retorna True se o merge
+    deve ser bloqueado.
+
+    Roda prp_verify.py --strict apenas para sessoes de execucao (step 11) com um
+    PRP associado. Bypass explicito via LLC_PRP_NO_VERIFY=1 (logado). Espelha o
+    enforcement de §8.7 (defense in depth): a skill llc-prp-verify e advisory;
+    este e o check deterministico que impede o merge."""
+    if os.environ.get("LLC_PRP_NO_VERIFY") == "1":
+        print("⚠️  prp_verify BYPASSADO via LLC_PRP_NO_VERIFY=1 (override explicito)")
+        return False
+    if not session_id or eff_step is None:
+        return False
+    try:
+        is_exec = canonical_id(eff_step) == "11"
+    except UnknownStepError:
+        return False
+    if not is_exec:
+        return False
+    prp_id = _prp_from_index(session_id)
+    if not prp_id:
+        return False
+    return _run_prp_verify(prp_id)
+
+
 def _resolve_session(session_id):
     """Resolve o session_id valido + step: id informado existente, ou ultima in_progress.
     Retorna (session_id, llc_step) ou (None, None). Cobre o modo manual ('manual'/None)."""
@@ -238,6 +315,14 @@ def session_end(session_id, gate_decision, context_seed_output, step=None):
     real_id, resolved_step = _resolve_session(session_id)
     eff_step = step if step is not None else resolved_step
 
+    # Gate deterministico de aceite de PRP (Step 11.2) — bloqueia o merge em CRITICAL.
+    if _maybe_block_on_prp_verify(real_id, eff_step):
+        block_merge = True
+        if gate_decision != "rejected":
+            gate_decision = "rejected"
+    else:
+        block_merge = False
+
     # Registra o <gate_result> no arquivo da sessao — lido por finalize_session.py
     if real_id and gate_decision:
         _record_gate_result(real_id, eff_step, gate_decision)
@@ -250,6 +335,8 @@ def session_end(session_id, gate_decision, context_seed_output, step=None):
     ]
     if real_id:
         cmd.extend(["--session", real_id])
+    if block_merge:
+        cmd.append("--block-merge")
 
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd())
     if result.returncode != 0:

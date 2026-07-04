@@ -39,7 +39,7 @@ Esta skill complementa o Step 11-Security (pré-implementação: SCA + SAST + se
 - `docs/architecture/ARCHITECTURE.md` — stack, frameworks, autenticação, autorização.
 - `docs/security/SECURITY_AUDIT_REPORT.md` — resultados do scan pré-implementação.
 - `docs/business/specs/perfis_permissoes.md` — matriz RBAC/ABAC, regras de segregação.
-- Código fonte do projeto — rotas, controllers, middlewares, configurações.
+- Código fonte do projeto em `apps/*/src/` — o harness `.ace/scripts/` está fora do escopo.
 
 ### 2. Execute o Hardening (10 Categorias OWASP)
 

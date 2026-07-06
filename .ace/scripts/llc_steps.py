@@ -38,54 +38,108 @@ class UnknownStepError(ValueError):
 
 @dataclass(frozen=True)
 class StepSpec:
-    id: str                 # id canônico = string numérica de sequência, ex. "10.6"
-    number: float           # projeção numérica (== float do id)
-    name: str               # nome humano (mantém convenção PT do LLC_STEPS antigo)
-    skill_file: str | None  # stem do arquivo de skill (sem .md), ex. "llc-step-11-security"
-    gate: str | None        # chave em gates.json `gates`, ex. "11-SEC" (ou None)
-    in_pipeline: bool       # entra na sequência automática do pipeline_run
-    auto_worktree: bool     # cria git worktree isolado por padrão
+    id: str  # id canônico = string numérica de sequência, ex. "10.6"
+    number: float  # projeção numérica (== float do id)
+    name: str  # nome humano (mantém convenção PT do LLC_STEPS antigo)
+    skill_file: (
+        str | None
+    )  # stem do arquivo de skill (sem .md), ex. "llc-step-11-security"
+    gate: str | None  # chave em gates.json `gates`, ex. "11-SEC" (ou None)
+    in_pipeline: bool  # entra na sequência automática do pipeline_run
+    auto_worktree: bool  # cria git worktree isolado por padrão
     aliases: tuple[str, ...] = field(default_factory=tuple)
 
 
-def _spec(id_: str, name: str, skill_file: str | None, gate: str | None,
-          in_pipeline: bool, auto_worktree: bool, aliases=()) -> StepSpec:
-    return StepSpec(id=id_, number=float(id_), name=name, skill_file=skill_file,
-                    gate=gate, in_pipeline=in_pipeline, auto_worktree=auto_worktree,
-                    aliases=tuple(aliases))
+def _spec(
+    id_: str,
+    name: str,
+    skill_file: str | None,
+    gate: str | None,
+    in_pipeline: bool,
+    auto_worktree: bool,
+    aliases=(),
+) -> StepSpec:
+    return StepSpec(
+        id=id_,
+        number=float(id_),
+        name=name,
+        skill_file=skill_file,
+        gate=gate,
+        in_pipeline=in_pipeline,
+        auto_worktree=auto_worktree,
+        aliases=tuple(aliases),
+    )
 
 
 # Ordem das entradas == ordem do pipeline (apenas p/ legibilidade; a ordenação
 # real usa `number`).
 REGISTRY: dict[str, StepSpec] = {
-    "0":    _spec("0",    "Ingestão",                None,                     None,      False, False),
-    "0.1":  _spec("0.1",  "Conversão (Docling)",     "llc-step-0-1",           None,      False, False),
-    "0.5":  _spec("0.5",  "Visão + Módulos",         "llc-step-0-5",           "1",       True,  False),
-    "1":    _spec("1",    "7 Especificações",        "llc-step-1",             "2",       True,  False),
-    "2":    _spec("2",    "PRDs",                    "llc-step-2",             "3",       True,  False),
-    "3":    _spec("3",    "PRPs",                    "llc-step-3",             "4",       True,  False),
-    "4":    _spec("4",    "Planejamento",            "llc-step-4",             "5",       True,  False),
-    "5":    _spec("5",    "Arquitetura",             "llc-step-5",             "6",       True,  False),
-    "6":    _spec("6",    "Tarefas",                 "llc-step-6",             "7",       True,  False),
-    "7":    _spec("7",    "Design System",           "llc-step-7",             "8",       True,  False),
-    "8":    _spec("8",    "Setup + Mock Data",       "llc-step-8",             "9",       True,  False),
-    "9":    _spec("9",    "Documentação de Testes",  "llc-step-9",             "10",      True,  False),
-    "10":   _spec("10",   "Documentos do Projeto",   "llc-step-10",            "11",      True,  False),
-    "10.5": _spec("10.5", "User Guide",              "llc-user-guide",         "11.5",    True,  False),
+    "0": _spec("0", "Ingestão", None, None, False, False),
+    "0.1": _spec("0.1", "Conversão (Docling)", "llc-step-0-1", None, False, False),
+    "0.5": _spec("0.5", "Visão + Módulos", "llc-step-0-5", "1", True, False),
+    "1": _spec("1", "7 Especificações", "llc-step-1", "2", True, False),
+    "2": _spec("2", "PRDs", "llc-step-2", "3", True, False),
+    "3": _spec("3", "PRPs", "llc-step-3", "4", True, False),
+    "4": _spec("4", "Planejamento", "llc-step-4", "5", True, False),
+    "5": _spec("5", "Arquitetura", "llc-step-5", "6", True, False),
+    "6": _spec("6", "Tarefas", "llc-step-6", "7", True, False),
+    "7": _spec("7", "Design System", "llc-step-7", "8", True, False),
+    "8": _spec("8", "Setup + Mock Data", "llc-step-8", "9", True, False),
+    "9": _spec("9", "Documentação de Testes", "llc-step-9", "10", True, False),
+    "10": _spec("10", "Documentos do Projeto", "llc-step-10", "11", True, False),
+    "10.5": _spec("10.5", "User Guide", "llc-user-guide", "11.5", True, False),
     # Pós-docs / pré-execução (renumerados p/ preceder a execução por número):
-    "10.6": _spec("10.6", "Security Audit",          "llc-step-11-security",   "11-SEC",  True,  False,
-                  aliases=("11-security", "security", "11-sec")),
-    "10.7": _spec("10.7", "Null Safety",             "llc-step-12-null-safety","12-NULL", True,  False,
-                  aliases=("12-null", "null-safety", "12-null-safety", "null")),
+    "10.6": _spec(
+        "10.6",
+        "Security Audit",
+        "llc-step-11-security",
+        "11-SEC",
+        True,
+        False,
+        aliases=("11-security", "security", "11-sec"),
+    ),
+    "10.7": _spec(
+        "10.7",
+        "Null Safety",
+        "llc-step-12-null-safety",
+        "12-NULL",
+        True,
+        False,
+        aliases=("12-null", "null-safety", "12-null-safety", "null"),
+    ),
+    "10.8": _spec(
+        "10.8",
+        "Test Coverage Gate",
+        "llc-step-10-8-test-coverage",
+        "10.8",
+        True,
+        False,
+        aliases=("test-coverage", "test", "10-8-test-coverage"),
+    ),
     # Execução (escreve código) — gate é o QA Checkpoint, sem checklist 👤 em gates.json:
-    "11":   _spec("11",   "Execução",                "llc-step-11",            None,      True,  True,
-                  aliases=("execution",)),
+    "11": _spec(
+        "11", "Execução", "llc-step-11", None, True, True, aliases=("execution",)
+    ),
     # Pós-execução (hardening de código):
-    "11.1": _spec("11.1", "OWASP Hardening",         "llc-step-11-owasp-security", "11-OWASP", True, True,
-                  aliases=("11-owasp", "owasp", "11-owasp-security")),
+    "11.1": _spec(
+        "11.1",
+        "OWASP Hardening",
+        "llc-step-11-owasp-security",
+        "11-OWASP",
+        True,
+        True,
+        aliases=("11-owasp", "owasp", "11-owasp-security"),
+    ),
     # Pós-execução / pré-merge (aceite mecânico de PRP — advisory skill, enforcement no session_end):
-    "11.2": _spec("11.2", "PRP Verify",              "llc-step-11-2-prp-verify",  "11-VERIFY", False, False,
-                  aliases=("prp-verify", "verify")),
+    "11.2": _spec(
+        "11.2",
+        "PRP Verify",
+        "llc-step-11-2-prp-verify",
+        "11-VERIFY",
+        False,
+        False,
+        aliases=("prp-verify", "verify"),
+    ),
 }
 
 # Mapa reverso de aliases -> id canônico (construído uma vez na importação).
@@ -167,6 +221,7 @@ except ImportError:  # pragma: no cover
     click = None
 
 if click is not None:
+
     class StepParamType(click.ParamType):
         name = "step"
 
@@ -186,18 +241,33 @@ if click is not None:
 if __name__ == "__main__":
     import json
     import sys
+
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
             try:
                 s = normalize_step(arg)
-                print(f"{arg!r:>22} -> id={s.id:<5} num={s.number:<5} "
-                      f"skill={s.skill_file} gate={s.gate}")
+                print(
+                    f"{arg!r:>22} -> id={s.id:<5} num={s.number:<5} "
+                    f"skill={s.skill_file} gate={s.gate}"
+                )
             except UnknownStepError as e:
                 print(f"{arg!r:>22} -> ERRO: {e}")
     else:
-        print(json.dumps(
-            {s.id: {"number": s.number, "name": s.name, "skill_file": s.skill_file,
-                    "gate": s.gate, "in_pipeline": s.in_pipeline,
-                    "auto_worktree": s.auto_worktree, "aliases": list(s.aliases)}
-             for s in sorted(REGISTRY.values(), key=lambda x: x.number)},
-            indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    s.id: {
+                        "number": s.number,
+                        "name": s.name,
+                        "skill_file": s.skill_file,
+                        "gate": s.gate,
+                        "in_pipeline": s.in_pipeline,
+                        "auto_worktree": s.auto_worktree,
+                        "aliases": list(s.aliases),
+                    }
+                    for s in sorted(REGISTRY.values(), key=lambda x: x.number)
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )

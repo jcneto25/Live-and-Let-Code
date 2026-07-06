@@ -1,0 +1,103 @@
+# Consistency Config para Live and Let Code (LLC)
+#
+# Este arquivo mapeia PRPs/IDs de tarefa para arquivos que devem ter implementação real.
+# O script consistency-check.py espera a chave "prp_services" (não "task_artifacts").
+#
+# NOTA: O TASKS.md atual usa IDs FDN-XXX, DSG-XXX, SEC-XXX (não PRP-XXX).
+# O script extrai PRPs buscando padrão "PRP-\d{3}" no TASKS.md.
+# Como Step 3 (PRPs) ainda não foi executado, não há PRPs reais ainda.
+# Mapeamos aqui as tarefas de fundação/segurança para seus artefatos esperados.
+#
+# Uso:
+#   python .ace/scripts/consistency-check.py
+#   python .ace/scripts/consistency-check.py --strict
+#   python .ace/scripts/consistency-check.py --update-config  # extrai do ARCHITECTURE.md seção 6.5
+
+# Mapeamento de "PRP" (ou ID de tarefa equivalente) → lista de arquivos que devem existir/ter conteúdo
+# Como não há PRPs reais ainda (Step 3 pendente), usamos os IDs de fundação/segurança como chaves.
+# O script só verifica itens que têm tarefas ✅ no TASKS.md associados à mesma chave.
+prp_services:
+  # --- Fundação (FDN-*) - Tarefas já concluídas no TASKS.md ---
+  # Estas tarefas estão marcadas ✅ e produzem arquivos de especificação/documentação
+  FDN-001:
+    - docs/guia_preenchimento_template_visao_estrategica_negocio.md
+  FDN-002:
+    - docs/guia_preenchimento_template_visao_estrategica_negocio.md
+  FDN-003:
+    - docs/business/specs/analise_riscos.md
+  FDN-004:
+    - docs/business/specs/glossario.md
+    - docs/business/specs/requisitos_funcionais.md
+    - docs/business/specs/requisitos_nao_funcionais.md
+    - docs/business/specs/regras_negocio.md
+    - docs/business/specs/workflows_bpmn.md
+    - docs/business/specs/perfis_permissoes.md
+    - docs/business/specs/catalogo_integracoes.md
+  FDN-005:
+    - docs/business/specs/perfis_permissoes.md
+  FDN-013:
+    - docs/planning/TASKS.md
+
+  # --- Segurança (SEC-*) - Tarefas já concluídas ---
+  SEC-001:
+    - docs/security/SECURITY_AUDIT_REPORT.md
+  SEC-002:
+    - docs/security/NULL_SAFETY_REPORT.md
+  SEC-003:
+    - SECURITY.md
+  SEC-004:
+    - docs/security/OWASP_HARDENING_REPORT.md
+    - docs/skills/llc-step-11-owasp-security.md
+
+  # --- Scripts ACE (.ace/scripts/) - Implementação da metodologia LLC ---
+  # Estes "serviços" são os próprios scripts Python que implementam o pipeline
+  ACE-SCRIPTS:
+    - .ace/scripts/llc.py
+    - .ace/scripts/llc_harness.py
+    - .ace/scripts/llc_steps.py
+    - .ace/scripts/llc_wave.py
+    - .ace/scripts/consistency-check.py
+    - .ace/scripts/dependency-graph-generator.py
+    - .ace/scripts/impact-analyzer.py
+    - .ace/scripts/code-health.py
+    - .ace/scripts/prp_verify.py
+    - .ace/scripts/initialize_session.py
+    - .ace/scripts/finalize_session.py
+
+# Padrões de tarefas a IGNORAR na verificação (não exigem implementação de serviço/código)
+# O script usa case-insensitive matching na descrição da tarefa
+skip_task_patterns:
+  - "FDN-" # Tarefasdas tarefas de fundação (documentação/specs)
+  - "DSG-" # Design System (design tokens, componentes)
+  - "SEC-" # Segurança (relatórios, políticas)
+  - "Tela" # Frontend UI screens
+  - "Componente" # Frontend components
+  - "Testes" # Testes (não implementação de serviço)
+  - "E2E" # Testes end-to-end
+  - "Seed" # Seed data
+  - "Docs" # Documentação geral
+  - "Documenta" # Documentação (português)
+  - "Template" # Templates
+  - "Guia" # Guias
+  - "Manual" # Manuais
+
+# Padrões customizados de STUB por linguagem (complementam os defaults do script)
+# Apenas Python é relevante para este projeto (metodologia LLC)
+stub_patterns:
+  python:
+    - "return \\[\\]" # return []
+    - "return \\{\\}" # return {}
+    - "raise NotImplementedError" # raise NotImplementedError
+    - "pass  # TODO" # pass # TODO
+    - "pass  # FIXME" # pass # FIXME
+    - "TODO:" # TODO:
+    - "FIXME:" # FIXME:
+    - "raise Exception\\(.*pendente.*\\)" # raise Exception(...pendente...)
+    - "raise Exception\\(.*not implemented.*\\)" # raise Exception(...not implemented...)
+    - "^\\s*def \\w+\\(.*\\):\\s*\\n\\s*pass\\s*$" # def foo(): pass (single line)
+
+# Configuração adicional (opcional)
+validation:
+  strict_mode: false
+  check_file_exists: true
+  min_significant_lines: 5

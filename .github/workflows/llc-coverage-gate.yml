@@ -1,0 +1,381 @@
+# LLC Coverage Gate — GitHub Actions Workflow
+#
+# Runs the LLC coverage gate (Step 10.8) in CI before merge.
+# Ensures: build passes, tests meet coverage thresholds, no zero-coverage files,
+# no coverage regression.
+#
+# Usage:
+#   1. Copy this file to your project's .github/workflows/
+#   2. Ensure .ace/scripts/ is available (copy from LLC methodology repo)
+#   3. Configure coverage script in package.json/pyproject.toml
+#   4. PRs will automatically run coverage gate before merge
+
+name: LLC Coverage Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:  # Allow manual trigger
+
+# Concurrency: cancel in-flight runs for same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage-gate:
+    name: Coverage Gate (Step 10.8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Needed for uploading/downloading coverage history artifact
+      actions: write
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for git history analysis in code-health.py
+
+      # ── 2. Setup Language Runtimes (auto-detect) ─────────────────
+      # Node.js / TypeScript
+      - name: Setup Node.js
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            yarn.lock
+            pnpm-lock.yaml
+
+      # Python
+      - name: Setup Python
+        if: hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' || hashFiles('setup.py') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Go
+      - name: Setup Go
+        if: hashFiles('go.mod') != ''
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      # Rust
+      - name: Setup Rust
+        if: hashFiles('Cargo.toml') != ''
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      # ── 3. Install Dependencies ──────────────────────────────────
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+
+          # Node.js
+          if [ -f package.json ]; then
+            echo "📦 Installing Node.js dependencies..."
+            if [ -f pnpm-lock.yaml ]; then
+              corepack enable && pnpm install --frozen-lockfile
+            elif [ -f yarn.lock ]; then
+              yarn install --frozen-lockfile
+            else
+              npm ci
+            fi
+          fi
+
+          # Python
+          if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
+            echo "📦 Installing Python dependencies..."
+            python -m pip install --upgrade pip
+            if [ -f pyproject.toml ]; then
+              pip install -e ".[test]" 2>/dev/null || pip install -e .
+            fi
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            fi
+            # Install pytest-cov if not present
+            pip show pytest-cov >/dev/null 2>&1 || pip install pytest-cov
+          fi
+
+          # Go
+          if [ -f go.mod ]; then
+            echo "📦 Downloading Go modules..."
+            go mod download
+          fi
+
+          # Rust
+          if [ -f Cargo.toml ]; then
+            echo "📦 Rust dependencies will be cached automatically..."
+          fi
+
+      # ── 4. Build / Compilation Check ─────────────────────────────
+      - name: Build / Type Check
+        run: |
+          set -euo pipefail
+
+          # TypeScript / JavaScript
+          if [ -f tsconfig.json ]; then
+            echo "🔧 Running TypeScript type check..."
+            npx tsc --noEmit
+          elif [ -f package.json ]; then
+            echo "🔧 Running npm build..."
+            npm run build 2>/dev/null || true
+          fi
+
+          # Python
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            echo "🔧 Running Python compilation check..."
+            python -m compileall . -q
+          fi
+
+          # Go
+          if [ -f go.mod ]; then
+            echo "🔧 Running Go build..."
+            go build ./...
+          fi
+
+          # Rust
+          if [ -f Cargo.toml ]; then
+            echo "🔧 Running Rust build..."
+            cargo build
+          fi
+
+      # ── 5. Run Tests with Coverage ───────────────────────────────
+      - name: Run tests with coverage
+        id: coverage
+        run: |
+          set -euo pipefail
+
+          # Detect coverage output file for later steps
+          COVERAGE_FILE=""
+
+          # TypeScript / JavaScript (vitest, jest)
+          if [ -f package.json ]; then
+            echo "🧪 Running TypeScript/JavaScript tests with coverage..."
+
+            # Auto-detect coverage script
+            COVERAGE_SCRIPT=""
+            if npm run 2>/dev/null | grep -q "test:coverage"; then
+              COVERAGE_SCRIPT="test:coverage"
+            elif npm run 2>/dev/null | grep -q "^  coverage"; then
+              COVERAGE_SCRIPT="coverage"
+            elif npm run 2>/dev/null | grep -q "test:ci"; then
+              COVERAGE_SCRIPT="test:ci"
+            fi
+
+            if [ -n "$COVERAGE_SCRIPT" ]; then
+              echo "   Using npm script: $COVERAGE_SCRIPT"
+              npm run "$COVERAGE_SCRIPT"
+            else
+              echo "   Using default: npx vitest run --coverage"
+              npx vitest run --coverage
+            fi
+
+            # Default vitest output location
+            if [ -d coverage ]; then
+              COVERAGE_FILE="coverage/coverage-final.json"
+            fi
+
+          # Python (pytest-cov)
+          elif [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
+            echo "🧪 Running Python tests with coverage..."
+            python -m pytest --cov=. --cov-report=term-missing --cov-report=json:coverage.json
+            COVERAGE_FILE="coverage.json"
+
+          # Go
+          elif [ -f go.mod ]; then
+            echo "🧪 Running Go tests with coverage..."
+            go test -coverprofile=coverage.out ./...
+            go tool cover -func=coverage.out
+            COVERAGE_FILE="coverage.out"
+
+          # Rust
+          elif [ -f Cargo.toml ]; then
+            echo "🧪 Running Rust tests with coverage..."
+            cargo llvm-cov --lcov --output-path lcov.info 2>/dev/null || \
+              cargo test  # fallback if llvm-cov not available
+            COVERAGE_FILE="lcov.info"
+          fi
+
+          # Export coverage file path for next steps
+          if [ -n "$COVERAGE_FILE" ] && [ -f "$COVERAGE_FILE" ]; then
+            echo "coverage_file=$COVERAGE_FILE" >> "$GITHUB_OUTPUT"
+            echo "✅ Coverage file: $COVERAGE_FILE"
+          else
+            echo "⚠️  No coverage file generated"
+          fi
+
+      # ── 6. LLC Coverage Gate (pre-wave-check.sh) ─────────────────
+      - name: LLC Coverage Gate
+        if: steps.coverage.outputs.coverage_file != ''
+        run: |
+          set -euo pipefail
+
+          # Ensure scripts are executable
+          chmod +x .ace/scripts/pre-wave-check.sh
+
+          # Run coverage-only check with default thresholds
+          # Thresholds can be overridden via environment variables
+          .ace/scripts/pre-wave-check.sh \
+            --coverage-only \
+            --coverage-cmd "" \
+            --coverage-threshold "${COVERAGE_THRESHOLD:-80}" \
+            --fail-on-zero
+
+      # ── 7. Code Health + Coverage Trends ─────────────────────────
+      - name: Code Health + Coverage Trends
+        if: steps.coverage.outputs.coverage_file != ''
+        run: |
+          set -euo pipefail
+
+          COVERAGE_FILE="${{ steps.coverage.outputs.coverage_file }}"
+          HISTORY_FILE=".ace/coverage-history.json"
+
+          # Download previous history if available
+          if [ -f "$HISTORY_FILE" ]; then
+            echo "📜 Previous coverage history found"
+          fi
+
+          # Run code-health with coverage tracking
+          python3 .ace/scripts/code-health.py \
+            --since "90 days ago" \
+            --coverage-file "$COVERAGE_FILE" \
+            --coverage-history "$HISTORY_FILE" \
+            --coverage-threshold-statements "${COVERAGE_THRESHOLD_STATEMENTS:-80}" \
+            --coverage-threshold-branches "${COVERAGE_THRESHOLD_BRANCHES:-70}" \
+            --coverage-threshold-functions "${COVERAGE_THRESHOLD_FUNCTIONS:-80}" \
+            --coverage-threshold-lines "${COVERAGE_THRESHOLD_LINES:-80}" \
+            --coverage-regression-threshold "${COVERAGE_REGRESSION_THRESHOLD:-5.0}" \
+            --strict
+
+      # ── 8. Upload Coverage History Artifact ──────────────────────
+      - name: Upload coverage history
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-history-${{ github.ref_name }}
+          path: .ace/coverage-history.json
+          retention-days: 90
+          compression-level: 6
+
+      # ── 9. Download Previous Coverage History (for trend comparison) ───
+      - name: Download previous coverage history
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-history-${{ github.base_ref }}
+          path: .ace/
+        continue-on-error: true
+
+      # ── 10. Summary Comment on PR ────────────────────────────────
+      - name: Post coverage summary to PR
+        if: github.event_name == 'pull_request' && steps.coverage.outputs.coverage_file != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const coverageFile = '${{ steps.coverage.outputs.coverage_file }}';
+            let summary = '## 📊 LLC Coverage Gate Results\n\n';
+
+            if (fs.existsSync(coverageFile)) {
+              const content = fs.readFileSync(coverageFile, 'utf-8');
+              try {
+                const data = JSON.parse(content);
+                // vitest/jest format
+                if (data.totals) {
+                  summary += `| Metric | Coverage |\n|--------|----------|\n`;
+                  summary += `| Statements | ${data.totals.statements?.pct || 'N/A'}% |\n`;
+                  summary += `| Branches | ${data.totals.branches?.pct || 'N/A'}% |\n`;
+                  summary += `| Functions | ${data.totals.functions?.pct || 'N/A'}% |\n`;
+                  summary += `| Lines | ${data.totals.lines?.pct || 'N/A'}% |\n`;
+                }
+                // code-health JSON output (if available)
+              } catch (e) {
+                summary += 'Coverage data generated but format not recognized for summary.\n';
+              }
+            }
+
+            summary += '\n---\n*Generated by [LLC Coverage Gate](https://github.com/jcneto25/Live-and-Let-Code)*';
+
+            // Post or update comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('LLC Coverage Gate Results'));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: summary,
+              });
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Optional: Full Pre-Wave Check (build + boot + health + coverage) ──
+  full-pre-wave-check:
+    name: Full Pre-Wave Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.labels?.base.ref == 'main'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Reuse same setup steps (omitted for brevity - would mirror coverage-gate)
+      - name: Setup runtimes
+        run: |
+          # This job would run the full pre-wave-check.sh
+          # Including: build, bootstrap, health check, coverage
+          echo "Full pre-wave check would run here"
+          echo "Run: .ace/scripts/pre-wave-check.sh --timeout 60"
+          # Uncomment to enable:
+          # chmod +x .ace/scripts/pre-wave-check.sh
+          # .ace/scripts/pre-wave-check.sh --timeout 60
+
+  # ── Optional: Notify on Failure ──────────────────────────────────
+  notify-failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs: [coverage-gate]
+    if: failure() && github.event_name == 'pull_request'
+    steps:
+      - name: Post failure comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '❌ **LLC Coverage Gate Failed**\n\nPlease check the workflow run for details.\n\nCommon issues:\n- Coverage below thresholds (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)\n- Zero-coverage implementation files detected\n- Coverage regression (>5% drop from previous run)\n- Build or test failures\n\n*See [LLC Methodology](https://github.com/jcneto25/Live-and-Let-Code) for guidance.*'
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

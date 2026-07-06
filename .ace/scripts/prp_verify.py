@@ -35,7 +35,7 @@ import importlib.util
 import json
 import re
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 PRP_DIR = Path("docs/prps")
@@ -46,11 +46,21 @@ WARN = "WARN"
 
 # Raízes onde procurar arquivos declarados (bounded — nunca node_modules/.ace).
 SEARCH_ROOTS = ["apps", "src", "packages", "."]
-EXCLUDE_PARTS = {"node_modules", ".ace", "dist", ".git", "build", ".next",
-                 "coverage", ".turbo", "target"}
+EXCLUDE_PARTS = {
+    "node_modules",
+    ".ace",
+    "dist",
+    ".git",
+    "build",
+    ".next",
+    "coverage",
+    ".turbo",
+    "target",
+}
 
 
 # ── Carrega consistency-check.py (nome com hífen → importlib) ──
+
 
 def _load_consistency_check():
     cc_path = Path(__file__).resolve().parent / "consistency-check.py"
@@ -66,8 +76,11 @@ _CC = _load_consistency_check()
 detect_language = _CC.detect_language if _CC else (lambda p: "any")
 is_stub_file = _CC.is_stub_file if _CC else (lambda p, c: False)
 STUB_PATTERNS = _CC.STUB_PATTERNS if _CC else {}
-read_config = _CC.read_config if _CC else (lambda: {
-    "prp_services": {}, "skip_task_patterns": [], "stub_patterns": {}})
+read_config = (
+    _CC.read_config
+    if _CC
+    else (lambda: {"prp_services": {}, "skip_task_patterns": [], "stub_patterns": {}})
+)
 
 
 def is_stub_by_pattern(file_path: str, config: dict) -> bool:
@@ -83,7 +96,9 @@ def is_stub_by_pattern(file_path: str, config: dict) -> bool:
     content = full.read_bytes()
     lang = detect_language(file_path)
     patterns: list[str] = []
-    patterns.extend(config.get("stub_patterns", {}).get("any", STUB_PATTERNS.get("any", [])))
+    patterns.extend(
+        config.get("stub_patterns", {}).get("any", STUB_PATTERNS.get("any", []))
+    )
     patterns.extend(config.get("stub_patterns", {}).get(lang, []))
     patterns.extend(STUB_PATTERNS.get(lang, []))
     for pat in patterns:
@@ -117,12 +132,199 @@ STUB_TEST_PATTERNS: dict[str, list[str]] = {
 }
 
 
+# ── Cobertura de teste (P0: project-wide coverage enforcement) ──
+
+DEFAULT_COVERAGE_THRESHOLDS = {
+    "statements": 80,
+    "branches": 70,
+    "functions": 80,
+    "lines": 80,
+}
+
+
+def check_project_coverage(
+    thresholds: dict = None, strict: bool = False
+) -> tuple[int, list]:
+    """Verifica cobertura de teste em nível de projeto.
+
+    Retorna (exit_code, findings_list).
+    - exit_code: 0 = OK, 1 = WARN (cobertura abaixo do threshold), 2 = CRITICAL (arquivos sem teste)
+    - findings: lista de dicionários com detalhes
+    """
+    if thresholds is None:
+        thresholds = DEFAULT_COVERAGE_THRESHOLDS
+
+    import json
+    import subprocess
+    from pathlib import Path
+
+    findings = []
+    exit_code = 0
+
+    # Tenta executar cobertura com vitest/jest
+    coverage_file = Path("coverage/coverage-final.json")
+    if not coverage_file.exists():
+        # Tenta gerar cobertura
+        try:
+            result = subprocess.run(
+                [
+                    "npx",
+                    "vitest",
+                    "run",
+                    "--coverage",
+                    "--reporter=json",
+                    "--outputFile=coverage/coverage-final.json",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            if result.returncode != 0:
+                # Tenta com jest
+                result = subprocess.run(
+                    [
+                        "npx",
+                        "jest",
+                        "--coverage",
+                        "--coverageReporters=json",
+                        "--outputFile=coverage/coverage-final.json",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+    if not coverage_file.exists():
+        findings.append(
+            {
+                "severity": "WARN",
+                "code": "coverage_not_generated",
+                "message": "Relatório de cobertura não encontrado. Execute testes com --coverage primeiro.",
+                "file": "coverage/coverage-final.json",
+            }
+        )
+        return (1 if strict else 0, findings)
+
+    try:
+        data = json.loads(coverage_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        findings.append(
+            {
+                "severity": "WARN",
+                "code": "coverage_parse_error",
+                "message": f"Erro ao ler relatório de cobertura: {e}",
+                "file": str(coverage_file),
+            }
+        )
+        return (1 if strict else 0, findings)
+
+    # Analisa cobertura por arquivo
+    uncovered_files = []
+    low_coverage_files = []
+    total_statements = 0
+    covered_statements = 0
+
+    for file_path, file_data in data.items():
+        # Ignora arquivos de teste e node_modules
+        if any(
+            part in file_path
+            for part in [
+                "node_modules",
+                ".test.",
+                ".spec.",
+                "_test.",
+                "__tests__",
+                "__mocks__",
+            ]
+        ):
+            continue
+
+        # Ignora arquivos de configuração e tipos
+        if file_path.endswith((".d.ts", ".config.ts", ".config.js", ".json", ".md")):
+            continue
+
+        stmt = file_data.get("s", {})
+        if not stmt:
+            continue
+
+        file_total = len(stmt)
+        file_covered = sum(1 for v in stmt.values() if v > 0)
+        file_pct = (file_covered / file_total * 100) if file_total > 0 else 100
+
+        total_statements += file_total
+        covered_statements += file_covered
+
+        # Arquivo com 0% de cobertura = sem testes
+        if file_covered == 0 and file_total > 0:
+            uncovered_files.append(file_path)
+        # Arquivo com cobertura baixa
+        elif file_pct < thresholds.get("statements", 80):
+            low_coverage_files.append((file_path, file_pct))
+
+    # Cobertura global
+    global_pct = (
+        (covered_statements / total_statements * 100) if total_statements > 0 else 100
+    )
+
+    # CRITICAL: arquivos de implementação sem NENHUM teste
+    if uncovered_files:
+        for f in uncovered_files:
+            findings.append(
+                {
+                    "severity": "CRITICAL",
+                    "code": "file_uncovered",
+                    "message": f"Arquivo de implementação sem cobertura: {f}",
+                    "file": f,
+                }
+            )
+        exit_code = 2
+
+    # WARN: arquivos com cobertura baixa
+    for f, pct in low_coverage_files:
+        findings.append(
+            {
+                "severity": "WARN",
+                "code": "file_low_coverage",
+                "message": f"Arquivo com cobertura baixa ({pct:.1f}%): {f}",
+                "file": f,
+            }
+        )
+    if low_coverage_files and exit_code < 1:
+        exit_code = 1
+
+    # WARN: cobertura global abaixo do threshold
+    if global_pct < thresholds.get("statements", 80):
+        findings.append(
+            {
+                "severity": "WARN",
+                "code": "global_coverage_low",
+                "message": f"Cobertura global de statements: {global_pct:.1f}% (threshold: {thresholds.get('statements', 80)}%)",
+                "file": "global",
+            }
+        )
+        if exit_code < 1:
+            exit_code = 1
+
+    findings.append(
+        {
+            "severity": "OK" if exit_code == 0 else "INFO",
+            "code": "coverage_summary",
+            "message": f"Cobertura global: {global_pct:.1f}% ({covered_statements}/{total_statements} statements), {len(uncovered_files)} arquivos sem teste, {len(low_coverage_files)} com cobertura baixa",
+            "file": "global",
+        }
+    )
+
+    return (exit_code, findings)
+
+
 @dataclass
 class Finding:
     severity: str
     code: str
     message: str
-    rf: str = ""           # RF-XXX.N quando aplicável
+    rf: str = ""  # RF-XXX.N quando aplicável
     file: str = ""
 
 
@@ -150,6 +352,7 @@ class VerifyResult:
 
 # ── Resolução de caminhos ──
 
+
 def _is_excluded(p: Path) -> bool:
     return any(part in EXCLUDE_PARTS for part in p.parts)
 
@@ -162,7 +365,7 @@ def resolve_path(declared: str) -> Path | None:
     com `{` (ex: `{service}.spec.ts`) não resolvem → None."""
     if not declared:
         return None
-    p = declared.strip().strip('`').strip().strip('"').strip("'")
+    p = declared.strip().strip("`").strip().strip('"').strip("'")
     if not p or "{" in p:
         return None
 
@@ -188,19 +391,20 @@ def resolve_path(declared: str) -> Path | None:
 
 # ── Extração de seções do PRP ──
 
+
 def _get_section(content: str, num: str) -> str:
     """Retorna o texto da seção `## num.` até o próximo `## ` header."""
     lines = content.split("\n")
     start = None
     for i, line in enumerate(lines):
-        if re.match(rf'^##\s+{re.escape(num)}(?:\.|\s|\b)', line):
+        if re.match(rf"^##\s+{re.escape(num)}(?:\.|\s|\b)", line):
             start = i
             break
     if start is None:
         return ""
     out = []
-    for line in lines[start + 1:]:
-        if re.match(r'^##\s+', line):
+    for line in lines[start + 1 :]:
+        if re.match(r"^##\s+", line):
             break
         out.append(line)
     return "\n".join(out)
@@ -217,8 +421,11 @@ def _first_table(lines: list[str], start: int = 0):
         line = lines[i].rstrip()
         if line.startswith("|") and line.endswith("|"):
             header_cells = [c.strip() for c in line.split("|")[1:-1]]
-            if (i + 1 < n and re.match(r'^\s*\|[\s:|-]+\|\s*$', lines[i + 1])
-                    and "-" in lines[i + 1]):
+            if (
+                i + 1 < n
+                and re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[i + 1])
+                and "-" in lines[i + 1]
+            ):
                 header_map = {c.lower(): idx for idx, c in enumerate(header_cells)}
                 data = []
                 j = i + 2
@@ -249,10 +456,10 @@ def _split_paths(cell: str) -> list[str]:
     """Divide uma célula de caminhos separados por vírgula, removendo backticks."""
     if not cell:
         return []
-    parts = re.split(r'[,\n]', cell)
+    parts = re.split(r"[,\n]", cell)
     out = []
     for p in parts:
-        p = p.strip().strip('`').strip()
+        p = p.strip().strip("`").strip()
         if p and p.lower() not in ("—", "-", "n/a"):
             out.append(p)
     return out
@@ -260,11 +467,11 @@ def _split_paths(cell: str) -> list[str]:
 
 # ── Parsers por seção ──
 
-RF_ID_RE = re.compile(r'RF-\d{3}\.\d+')
+RF_ID_RE = re.compile(r"RF-\d{3}\.\d+")
 ENDPOINT_RE = re.compile(
-    r'^###\s+\d+\.\d+\s+Endpoint:\s+(GET|POST|PUT|PATCH|DELETE)\s+(\S+)',
-    re.MULTILINE)
-LOCALIZACAO_RE = re.compile(r'\*\*Localização:\*\*\s*`([^`]+)`')
+    r"^###\s+\d+\.\d+\s+Endpoint:\s+(GET|POST|PUT|PATCH|DELETE)\s+(\S+)", re.MULTILINE
+)
+LOCALIZACAO_RE = re.compile(r"\*\*Localização:\*\*\s*`([^`]+)`")
 
 
 def parse_rf_table(section2: str):
@@ -277,8 +484,14 @@ def parse_rf_table(section2: str):
             continue
         # Detecta colunas de rastreabilidade (tolerante a "Teste(s)"/"Testes"/"Impl")
         test_key = next((k for k in header_map if k.startswith("teste")), None)
-        impl_key = next((k for k in header_map
-                         if "impl" in k or "arquivo" in k and "teste" not in k), None)
+        impl_key = next(
+            (
+                k
+                for k in header_map
+                if "impl" in k or "arquivo" in k and "teste" not in k
+            ),
+            None,
+        )
         has_trace = bool(test_key or impl_key)
         rows = []
         for cells in data:
@@ -297,14 +510,18 @@ def parse_rf_table(section2: str):
 
 def parse_endpoints(section5: str) -> list[tuple[str, str]]:
     """Parser da §5. Retorna [(method, route), ...]. [] se N/A."""
-    if re.search(r'N/A\s*[—-]', section5, re.IGNORECASE) and not ENDPOINT_RE.search(section5):
+    if re.search(r"N/A\s*[—-]", section5, re.IGNORECASE) and not ENDPOINT_RE.search(
+        section5
+    ):
         return []
     return [(m.group(1), m.group(2)) for m in ENDPOINT_RE.finditer(section5)]
 
 
 def parse_components(section6: str):
     """Parser da §6. Retorna [(localizacao_path, [state_test_files]), ...]."""
-    if re.search(r'N/A\s*[—-]', section6, re.IGNORECASE) and not LOCALIZACAO_RE.search(section6):
+    if re.search(r"N/A\s*[—-]", section6, re.IGNORECASE) and not LOCALIZACAO_RE.search(
+        section6
+    ):
         return []
     comps = []
     # Cada componente: bloco entre Localização e a próxima Localização (ou fim).
@@ -318,7 +535,9 @@ def parse_components(section6: str):
         for header_map, data in _all_tables(block):
             if "estado" not in header_map and "arquivo de teste" not in header_map:
                 continue
-            file_key = next((k for k in header_map if "arquivo" in k and "teste" in k), None)
+            file_key = next(
+                (k for k in header_map if "arquivo" in k and "teste" in k), None
+            )
             if file_key is None:
                 continue
             for cells in data:
@@ -347,6 +566,7 @@ def parse_test_files(section9: str) -> list[str]:
 
 # ── Detecção de stub-TEST ──
 
+
 def is_stub_test_file(path: Path) -> tuple[bool, str]:
     """Heurística conservadora de teatro de testes.
 
@@ -364,11 +584,11 @@ def is_stub_test_file(path: Path) -> tuple[bool, str]:
 
     # Conta blocos de teste
     if lang in ("typescript", "javascript"):
-        test_blocks = len(re.findall(r'\b(?:it|test)\s*\(', content))
-        real_asserts = len(re.findall(r'\bexpect\s*\(', content))
+        test_blocks = len(re.findall(r"\b(?:it|test)\s*\(", content))
+        real_asserts = len(re.findall(r"\bexpect\s*\(", content))
     elif lang == "python":
-        test_blocks = len(re.findall(r'\bdef\s+test_\w+', content))
-        real_asserts = len(re.findall(r'\bassert\s+', content))
+        test_blocks = len(re.findall(r"\bdef\s+test_\w+", content))
+        real_asserts = len(re.findall(r"\bassert\s+", content))
     else:
         return False, ""  # não medimos outras langs por ora
 
@@ -381,12 +601,15 @@ def is_stub_test_file(path: Path) -> tuple[bool, str]:
     real_asserts_real = max(0, real_asserts - trivial)
 
     if trivial > 0 and real_asserts_real == 0:
-        return True, (f"{test_blocks} bloco(s) de teste, {trivial} asserção(ões) trivial(is) "
-                      f"(toBeDefined/toEqual([])/...) e nenhuma asserção real")
+        return True, (
+            f"{test_blocks} bloco(s) de teste, {trivial} asserção(ões) trivial(is) "
+            f"(toBeDefined/toEqual([])/...) e nenhuma asserção real"
+        )
     return False, ""
 
 
 # ── Checkers ──
+
 
 def check_rf_evidence(rows, has_trace, section9_files, result):
     """CRITICAL se arquivo declarado ausente/stub; WARN se RF sem evidência ou teste fora do §9."""
@@ -394,44 +617,77 @@ def check_rf_evidence(rows, has_trace, section9_files, result):
         return
     if not has_trace:
         for r in rows:
-            result.findings.append(Finding(
-                WARN, "rf_legacy_no_traceability",
-                f"{r['id']}: PRP legado sem colunas de rastreabilidade (Teste(s)/Arquivo(s) impl) "
-                f"— verifique manualmente a implementação", rf=r["id"]))
+            result.findings.append(
+                Finding(
+                    WARN,
+                    "rf_legacy_no_traceability",
+                    f"{r['id']}: PRP legado sem colunas de rastreabilidade (Teste(s)/Arquivo(s) impl) "
+                    f"— verifique manualmente a implementação",
+                    rf=r["id"],
+                )
+            )
         return
 
     section9_set = set(section9_files)
     for r in rows:
         declared = r["testes"] + r["impl"]
         if not declared:
-            result.findings.append(Finding(
-                WARN, "rf_no_evidence",
-                f"{r['id']}: sem arquivos de teste/impl declarados — não verificável mecanicamente",
-                rf=r["id"]))
+            result.findings.append(
+                Finding(
+                    WARN,
+                    "rf_no_evidence",
+                    f"{r['id']}: sem arquivos de teste/impl declarados — não verificável mecanicamente",
+                    rf=r["id"],
+                )
+            )
             continue
         for decl in declared:
             resolved = resolve_path(decl)
             if resolved is None:
-                result.findings.append(Finding(
-                    CRITICAL, "rf_file_missing",
-                    f"{r['id']}: arquivo declarado ausente: {decl}", rf=r["id"], file=decl))
+                result.findings.append(
+                    Finding(
+                        CRITICAL,
+                        "rf_file_missing",
+                        f"{r['id']}: arquivo declarado ausente: {decl}",
+                        rf=r["id"],
+                        file=decl,
+                    )
+                )
             else:
                 # stub de impl (não de teste) ⇒ CRITICAL (padrão positivo apenas)
-                if not _looks_like_test(decl) and is_stub_by_pattern(str(resolved), read_config()):
-                    result.findings.append(Finding(
-                        CRITICAL, "rf_file_stub",
-                        f"{r['id']}: arquivo declarado é stub: {decl}", rf=r["id"], file=decl))
+                if not _looks_like_test(decl) and is_stub_by_pattern(
+                    str(resolved), read_config()
+                ):
+                    result.findings.append(
+                        Finding(
+                            CRITICAL,
+                            "rf_file_stub",
+                            f"{r['id']}: arquivo declarado é stub: {decl}",
+                            rf=r["id"],
+                            file=decl,
+                        )
+                    )
         for tp in r["testes"]:
             if tp not in section9_set and resolve_path(tp):
-                result.findings.append(Finding(
-                    WARN, "rf_test_not_in_section9",
-                    f"{r['id']}: teste {tp} não está listado na §9 do PRP", rf=r["id"], file=tp))
+                result.findings.append(
+                    Finding(
+                        WARN,
+                        "rf_test_not_in_section9",
+                        f"{r['id']}: teste {tp} não está listado na §9 do PRP",
+                        rf=r["id"],
+                        file=tp,
+                    )
+                )
 
 
 def _looks_like_test(path: str) -> bool:
     name = Path(path).name.lower()
-    return (".spec." in name or ".test." in name or name.startswith("test_")
-            or "_test." in name)
+    return (
+        ".spec." in name
+        or ".test." in name
+        or name.startswith("test_")
+        or "_test." in name
+    )
 
 
 def check_tests(section9_files, result):
@@ -439,15 +695,25 @@ def check_tests(section9_files, result):
     for decl in section9_files:
         resolved = resolve_path(decl)
         if resolved is None:
-            result.findings.append(Finding(
-                CRITICAL, "test_file_missing",
-                f"arquivo de teste da §9 ausente: {decl}", file=decl))
+            result.findings.append(
+                Finding(
+                    CRITICAL,
+                    "test_file_missing",
+                    f"arquivo de teste da §9 ausente: {decl}",
+                    file=decl,
+                )
+            )
             continue
         is_stub, reason = is_stub_test_file(resolved)
         if is_stub:
-            result.findings.append(Finding(
-                WARN, "stub_test",
-                f"possível teatro de testes em {decl}: {reason}", file=decl))
+            result.findings.append(
+                Finding(
+                    WARN,
+                    "stub_test",
+                    f"possível teatro de testes em {decl}: {reason}",
+                    file=decl,
+                )
+            )
 
 
 def check_components(comps, result):
@@ -455,15 +721,24 @@ def check_components(comps, result):
     for path, state_tests in comps:
         resolved = resolve_path(path)
         if resolved is None:
-            result.findings.append(Finding(
-                CRITICAL, "component_missing",
-                f"componente declarado (Localização) ausente: {path}", file=path))
+            result.findings.append(
+                Finding(
+                    CRITICAL,
+                    "component_missing",
+                    f"componente declarado (Localização) ausente: {path}",
+                    file=path,
+                )
+            )
         for st in state_tests:
             if resolve_path(st) is None:
-                result.findings.append(Finding(
-                    CRITICAL, "component_state_test_missing",
-                    f"teste de estado do componente ausente: {st} (Localização: {path})",
-                    file=st))
+                result.findings.append(
+                    Finding(
+                        CRITICAL,
+                        "component_state_test_missing",
+                        f"teste de estado do componente ausente: {st} (Localização: {path})",
+                        file=st,
+                    )
+                )
 
 
 def check_endpoints(endpoints, result):
@@ -476,10 +751,14 @@ def check_endpoints(endpoints, result):
     for method, route in endpoints:
         if _route_found(route, haystack):
             continue
-        result.findings.append(Finding(
-            WARN, "endpoint_not_found",
-            f"endpoint declarado não localizado no código (pré-calibração): "
-            f"{method} {route}"))
+        result.findings.append(
+            Finding(
+                WARN,
+                "endpoint_not_found",
+                f"endpoint declarado não localizado no código (pré-calibração): "
+                f"{method} {route}",
+            )
+        )
 
 
 def _collect_code_text() -> str:
@@ -505,7 +784,7 @@ def _collect_code_text() -> str:
 
 def _route_found(route: str, haystack: str) -> bool:
     """Normaliza parâmetros de rota e procura o prefixo no código."""
-    norm = re.sub(r':\w+|{\w+}|\[\w+\]', '', route).rstrip('/')
+    norm = re.sub(r":\w+|{\w+}|\[\w+\]", "", route).rstrip("/")
     if not norm:
         return True
     # procura o path (ou sufixo dele) como literal
@@ -513,6 +792,7 @@ def _route_found(route: str, haystack: str) -> bool:
 
 
 # ── Orquestração por PRP ──
+
 
 def verify_prp(prp_path: Path) -> VerifyResult:
     result = VerifyResult(prp=prp_path.stem)
@@ -533,6 +813,18 @@ def verify_prp(prp_path: Path) -> VerifyResult:
     check_components(comps, result)
     check_endpoints(endpoints, result)
 
+    # P0: Project-wide test coverage check
+    coverage_exit, coverage_findings = check_project_coverage()
+    for cf in coverage_findings:
+        result.findings.append(
+            Finding(
+                severity=cf["severity"],
+                code=cf["code"],
+                message=cf["message"],
+                file=cf.get("file", ""),
+            )
+        )
+
     return result
 
 
@@ -541,7 +833,7 @@ def discover_prps() -> list[Path]:
         return []
     out = []
     for p in sorted(PRP_DIR.glob("PRP-*.md")):
-        if re.match(r'PRP-\d', p.name):
+        if re.match(r"PRP-\d", p.name):
             out.append(p)
     return out
 
@@ -553,20 +845,23 @@ def resolve_prp_path(prp_id: str) -> Path | None:
         return cand
     # PRP-001 → docs/prps/PRP-001*.md
     hits = sorted(PRP_DIR.glob(f"{prp_id}*.md"))
-    hits = [h for h in hits if re.match(r'PRP-\d', h.name)]
+    hits = [h for h in hits if re.match(r"PRP-\d", h.name)]
     return hits[0] if hits else None
 
 
 # ── CLI ──
 
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Verificação mecânica de aceite de PRP (Step 11.2 do LLC)")
+        description="Verificação mecânica de aceite de PRP (Step 11.2 do LLC)"
+    )
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--prp", help="ID do PRP (ex: PRP-001) ou caminho")
     g.add_argument("--all", action="store_true", help="Verifica todos os PRP-*.md")
-    parser.add_argument("--strict", action="store_true",
-                        help="Exit 2 se houver CRITICAL")
+    parser.add_argument(
+        "--strict", action="store_true", help="Exit 2 se houver CRITICAL"
+    )
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     args = parser.parse_args()
 
@@ -575,7 +870,11 @@ def main():
         if not prps:
             msg = "Nenhum PRP encontrado em docs/prps/ (apenas PRP_TEMPLATE.md)."
             if args.json:
-                print(json.dumps({"prps": [], "critical": 0, "warn": 0}, ensure_ascii=False))
+                print(
+                    json.dumps(
+                        {"prps": [], "critical": 0, "warn": 0}, ensure_ascii=False
+                    )
+                )
             else:
                 print(f"ℹ️  {msg}")
             return 0
@@ -591,11 +890,17 @@ def main():
     total_warn = sum(r.warns for r in results)
 
     if args.json:
-        print(json.dumps({
-            "prps": [r.to_dict() for r in results],
-            "critical": total_critical,
-            "warn": total_warn,
-        }, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {
+                    "prps": [r.to_dict() for r in results],
+                    "critical": total_critical,
+                    "warn": total_warn,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
     else:
         for r in results:
             print(f"\n{'=' * 60}")
@@ -610,8 +915,10 @@ def main():
                 print(f"  {glyph} {f.severity} {f.code}{rf}{fl}")
                 print(f"      {f.message}")
         print(f"\n{'=' * 60}")
-        print(f"Total: {total_critical} CRITICAL, {total_warn} WARN "
-              f"({len(results)} PRP(s))")
+        print(
+            f"Total: {total_critical} CRITICAL, {total_warn} WARN "
+            f"({len(results)} PRP(s))"
+        )
         print(f"{'=' * 60}")
 
     if args.strict and total_critical > 0:

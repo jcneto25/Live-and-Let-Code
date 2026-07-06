@@ -157,6 +157,7 @@ Step 10  → Project Docs + Steering Files       👤 Gate 11
 Step 10.5 → User Guide                         👤 Gate 11.5
 Step 10.6 → Audit (SCA+SAST+Secrets)    👤 Gate 11-SEC
 Step 10.7 → Data Contracts           👤 Gate 12-NULL
+Step 10.8 → Test Coverage                👤 Gate 10-COVERAGE
 Step 11  → Execution (PRPs)                    QA Checkpoints
 Step 11.1 → Hardening (post-code)          👤 Gate 11-OWASP
 ```
@@ -540,6 +541,32 @@ Execute the skill docs/skills/llc-step-12-null-safety.md
 
 ---
 
+### Step 10.8: Test Coverage Gate 🆕
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-10-8-test-coverage.md
+```
+
+**The AI does:**
+- Runs `python .ace/scripts/llc.py gate run --gate test-coverage`
+- Checks global coverage: statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%
+- Checks **zero implementation files with 0% coverage** (CRITICAL)
+- Checks critical paths (auth, payments, data mutations) ≥ 90%
+- Detects coverage regression > 5% vs. previous baseline
+- Generates report in `docs/testing/COVERAGE_REPORT.md` in standard format
+
+**You validate:** 👤 Gate 10-COVERAGE
+- 0 implementation files with 0% coverage?
+- Global thresholds met (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)?
+- Critical paths ≥ 90%?
+- No regression > 5% vs. baseline?
+
+**Only advance when approved.**
+
+---
+
 ### Step 11: Execution
 
 **Now development begins.** You have two tracks:
@@ -558,6 +585,8 @@ For each module or PRP involving screens, run:
 ```
 Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001
 ```
+
+> **⚡ API-first enforcement:** Before starting F5 (Code), the harness runs automatic backend contract verification via `_verify_backend_contracts()` in `llc_wave.py`. If endpoints declared in the PRP don't exist or are stubs (`return []`), the wave **blocks** — the frontend doesn't advance on non-existent contracts. This prevents the pattern: "TASKS.md marks ✅ → agent assumes ready → creates UI with placeholder → service is still `return []`".
 
 The subflow has 6 phases:
 
@@ -591,6 +620,34 @@ Step 11:
 
 ---
 
+### Step 11.2: PRP Verify (Mechanical Acceptance of PRP)
+
+**Before merging, the PRP undergoes mechanical acceptance verification.** The `prp_verify.py`
+cross-references each FR declared in §2 of the PRP with the actual test and implementation files.
+
+> **Mechanical enforcement:** The harness `session_end()` blocks the merge on CRITICAL
+> (declared file missing, stub, component missing). Bypass: `LLC_PRP_NO_VERIFY=1`
+> (logged — see `llc-pipeline-design.en.md §8.7`).
+>
+> **New:** `prp_verify.py` now runs `check_project_coverage()` — checks project-wide
+> coverage (not just the PRP). Thresholds: statements ≥ 80%, branches ≥ 70%,
+> functions ≥ 80%, lines ≥ 80%; **0 files with 0% coverage**; critical paths ≥ 90%.
+
+```
+Execute the skill docs/skills/llc-step-11-2-prp-verify.md
+```
+
+**The AI does:**
+- Runs `python .ace/scripts/prp_verify.py --prp {ID} --strict --json`
+- Emits FR-by-FR report with implementation evidence
+- Records `<gate_result step="11.2">` with the decision
+
+**Note:** `_post_wave_check()` also blocks waves with CRITICAL — verification
+happens at both individual PRP level (session_end) and wave level
+(post-wave). Project-wide coverage check runs as part of `prp_verify.py --all`.
+
+---
+
 ## Practical Tips
 
 ### If a skill fails
@@ -617,10 +674,18 @@ Or directly via script:
 python .ace/scripts/code-health.py --since "30 days ago"
 ```
 
-The script monitors 4 metrics:
+The script monitors structural metrics + test coverage:
+
+**Structural metrics:**
 - **% Moved Code:** rate of code reorganized into modules (alert if < 10%)
 - **Copy/Paste vs Moved:** duplication exceeding reuse (alert if copy > moved)
 - **% Legacy Touch:** old code being refactored (alert if < 20%)
+
+**Test coverage (new):**
+- **Global statements ≥ 80%**, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%
+- **CRITICAL:** 0 implementation files with 0% coverage
+- **Critical paths** (auth, payments, data mutations) ≥ 90%
+- **Coverage regression:** drop > 5% = critical alert
 
 If critical alerts fire, schedule a cross-PRP refactoring wave.
 
@@ -655,6 +720,9 @@ Beyond the main steps, LLC includes tools that operate between stages. See [`llc
 | Jump to a specific step | `Execute the skill docs/skills/llc-step-N.md` ensuring previous gates are approved |
 | Prototype a module | `Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Guarantee every wave becomes an `.ace` session | Install the pre-commit hook: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (see [§8.7](llc-pipeline-design.en.md#87-guaranteed-session-registration-enforcement)) |
+| Verify test coverage (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
+| Run pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
+| View code health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
 | See the full design | Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) |
 | See the directory structure | Read [`llc-pipeline-design.en.md` §2](llc-pipeline-design.en.md#2-directory-architecture) |
 | Understand a term | Read [`llc-pipeline-design.en.md` §7](llc-pipeline-design.en.md#7-glossary) |

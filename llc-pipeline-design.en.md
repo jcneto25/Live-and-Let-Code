@@ -368,6 +368,14 @@ Self-contained PRPs enable parallel execution via git worktrees. `initialize_ses
 
 **Disable isolation:** `--no-worktree` on `initialize_session.py` for sessions where parallelism is not needed (Steps 0-10).
 
+**⚡ API-first enforcement (new):** Before executing UI PRPs (frontend), `llc_wave.py`
+runs `_verify_backend_contracts()` to validate that all endpoints declared in the PRP
+exist in the implemented backend and are not stubs (`return []`). If verification fails,
+the wave **blocks** — preventing the frontend from being built on non-existent contracts.
+This prevents the recurring pattern: "TASKS.md marks task ✅ → agent assumes "ready" →
+creates UI with placeholder → service remains `return []`". The check is integrated
+into `run_wave()` and runs automatically for PRPs identified as UI via `_is_ui_prp()`.
+
 ---
 
 ## 4. Skills Catalog
@@ -435,6 +443,7 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 | 👤 11-SEC | 10.6 | 0 critical vulnerabilities (CVSS ≥ 9.0)? Real secrets zeroed? Highs with recorded decision? |
 | 👤 11-OWASP | 11.1 | 0 OWASP 🔴 (critical) checks? All 🟡 (high) with documented fix plan? |
 | 👤 12-NULL | 10.7 | 0 fields without nullability spec? 0 endpoints without input schema? |
+| 👤 10-COVERAGE | 10.8 | 0 implementation files with 0% coverage? Global thresholds met (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Critical paths ≥ 90%? No regression > 5%? |
 | 🔴 | Subflow F4 | Hi-Fi matches approved wireframe? Design System applied correctly? |
 | CP | Step 11 | QA score ≥ 7.0? Coverage ≥ thresholds? Security audit passed? |
 
@@ -656,7 +665,9 @@ AI agents maximize short-term productivity at the cost of structural code health
 
 ### 10.2 The Solution
 
-`code-health.py` (`.ace/scripts/code-health.py`) monitors 4 structural metrics derived from git history:
+`code-health.py` (`.ace/scripts/code-health.py`) monitors **structural metrics + test coverage** derived from git history:
+
+**Structural metrics:**
 
 | Metric | Threshold | Severity | How it's calculated |
 |--------|-----------|----------|---------------------|
@@ -665,22 +676,36 @@ AI agents maximize short-term productivity at the cost of structural code health
 | **% Legacy Touch** | ≥ 20% of commits | 🟡 High | Lines changed in files whose commit is older than 30 days / total lines changed |
 | **Structural Consistency** | — | ✅ Healthy | — |
 
+**Test coverage metrics (new):**
+
+| Metric | Threshold | Severity | How it's calculated |
+|--------|-----------|----------|---------------------|
+| **Global Statements** | ≥ 80% | 🔴 Critical | `coverage.summary.json` / `jest --coverage` / `pytest --cov` |
+| **Global Branches** | ≥ 70% | 🔴 Critical | Same as above |
+| **Global Functions** | ≥ 80% | 🔴 Critical | Same as above |
+| **Global Lines** | ≥ 80% | 🔴 Critical | Same as above |
+| **Zero-coverage files** | 0 implementation files | 🔴 Critical | Files with 0% coverage in `src/`, `lib/`, `app/` |
+| **Critical paths** | ≥ 90% | 🔴 Critical | Auth, payments, data mutation modules |
+| **Coverage regression** | ≤ 5% drop | 🔴 Critical | vs. previous baseline stored in `.ace/coverage_history.json` |
+
 **How metrics are computed** (from `.ace/scripts/code-health.py`, parsing
 `git log --since=<period> --numstat --no-merges`):
 
 - **% Moved Code** — lines in git-detected renames (paths matching `{old => new}`) over total churn (added + moved + modified + deleted). This is a *minimum* estimate: refactors performed as delete+add without a rename are not counted, so the true moved fraction is higher than reported.
 - **Copy/Paste vs Moved** — heuristic, enabled only with ≥10 commits: flags pairs of *different* files sharing the same filename stem that each received >30 added lines within a 4-commit window. It matches filenames, not content similarity.
 - **% Legacy Touch** — share of changed lines whose *commit* is older than a fixed 30-day cutoff (independent of `--since`) over total lines changed in the period. Signals whether older commits in the window are refactoring existing code versus only adding new lines.
+- **Test coverage** — parses coverage reports (LCOV, Cobertura, Jest JSON, pytest-cov JSON), stores history in `.ace/coverage_history.json`, detects zero-coverage implementation files, critical path coverage, and regression >5% vs baseline.
 
 ### 10.3 Integration
 
-`code-health.py` integrates at three levels:
+`code-health.py` integrates at four levels:
 
 | Level | Trigger | Behavior |
 |-------|---------|----------|
 | **QA Checkpoint (Step 11)** | 1 🔴 Critical OR 2+ 🟡 High below threshold | Blocking |
+| **Gate 10-COVERAGE (Step 10.8)** | Pre-execution coverage check | Blocking if 0% files, thresholds not met, or regression > 5% |
 | **Pre-commit hook** | Any metric below threshold | Warning |
-| **Manual execution** | On demand | `python .ace/scripts/code-health.py --since "30 days ago"` |
+| **Manual execution** | On demand | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
 
 ### 10.4 Corrective Actions
 

@@ -25,13 +25,77 @@ except ImportError:
     sys.exit(1)
 
 from llc_harness import (
-    session_start, session_end, skill_load, agent_invoke,
-    gate_check, pipeline_run, step_run
+    agent_invoke,
+    gate_check,
+    pipeline_run,
+    session_end,
+    session_start,
+    skill_load,
+    step_run,
 )
 from llc_steps import StepParamType
-from llc_wave import (
-    parse_execution_waves, parse_tasks, format_wave_list, run_wave
-)
+from llc_wave import format_wave_list, parse_execution_waves, parse_tasks, run_wave
+
+# ── Mapeamento de aliases para IDs de gates ──
+GATE_ALIASES = {
+    "security": "11-SEC",
+    "null-safety": "12-NULL",
+    "owasp": "11-OWASP",
+    "verify": "11.2",
+    "test-coverage": "10.8",
+}
+
+# ── Tabela de gates e suas validações ──
+GATE_CHECKLIST = {
+    "11-SEC": {
+        "name": "Security Audit (pre-code)",
+        "checks": [
+            "0 vulnerabilidades criticas (CVSS ≥ 9.0)",
+            "Nenhum secret real exposto",
+            "Vulnerabilidades altas revisadas e decisao registrada",
+        ],
+        "output_files": [
+            ".ace/security/*.json",
+            "docs/security/SECURITY_AUDIT_REPORT.md",
+        ],
+    },
+    "12-NULL": {
+        "name": "Null Safety (Data Contracts)",
+        "checks": [
+            "0 campos sem especificacao de nulabilidade",
+            "0 endpoints sem schema de validacao",
+            "Payload limits declarados nos PRPs",
+        ],
+        "output_files": ["docs/security/NULL_SAFETY_REPORT.md"],
+    },
+    "11-OWASP": {
+        "name": "OWASP Hardening (post-code)",
+        "checks": [
+            "0 verificacoes OWASP 🔴 (criticas)",
+            "Todas 🟡 (altas) com plano de correcao documentado",
+        ],
+        "output_files": ["docs/security/OWASP_HARDENING_REPORT.md"],
+    },
+    "11.2": {
+        "name": "PRP Verify (aceite mecanico)",
+        "checks": [
+            "prp_verify --strict passou (0 CRITICAL)",
+            "WARNs revisados",
+            "Bypass LLC_PRP_NO_VERIFY nao ativo",
+        ],
+        "output_files": [],
+    },
+    "10.8": {
+        "name": "Test Coverage Gate (pre-execution)",
+        "checks": [
+            "Cobertura global de statements ≥ 80%",
+            "0 arquivos de implementação sem cobertura (CRITICAL)",
+            "Cobertura de branches ≥ 70%, functions ≥ 80%, lines ≥ 80%",
+            "Caminhos críticos (auth, payments, data mutations) ≥ 90%",
+        ],
+        "output_files": ["docs/testing/COVERAGE_REPORT.md"],
+    },
+}
 
 
 @click.group()
@@ -46,19 +110,36 @@ def cli():
 
 
 @cli.command()
-@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero: 5, 0.5, security, 11.1)")
+@click.option(
+    "--step",
+    "-s",
+    type=StepParamType(),
+    required=True,
+    help="Step LLC (id/alias/numero: 5, 0.5, security, 11.1)",
+)
 @click.option("--prp", "-p", default=None, help="ID do PRP (ex: PRP-001)")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
-@click.option("--wave", "-w", type=int, default=1, show_default=True, help="Numero da onda de execucao (EXECUTION_WAVES.md)")
-@click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
-@click.option("--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)")
+@click.option(
+    "--wave",
+    "-w",
+    type=int,
+    default=1,
+    show_default=True,
+    help="Numero da onda de execucao (EXECUTION_WAVES.md)",
+)
+@click.option(
+    "--no-worktree", is_flag=True, help="Desativa isolamento via git worktree"
+)
+@click.option(
+    "--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)"
+)
 def run(step, prp, task, wave, no_worktree, auto_approve):
     """Executa um step completo do pipeline LLC.
 
     Fluxo: init session -> load skill -> invoke agent -> gate check -> finalize session.
     """
     print(f"\n🚀 LLC Run — Step {step} (wave {wave})")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     sid = step_run(step, prp=prp, task=task, wave=wave, no_worktree=no_worktree)
 
@@ -68,11 +149,43 @@ def run(step, prp, task, wave, no_worktree, auto_approve):
 
 
 @cli.command()
-@click.option("--from", "-f", "from_step", type=StepParamType(), default="0.5", help="Step inicial (id; default: 0.5)")
-@click.option("--to", "-t", "to_step", type=StepParamType(), default="11.1", help="Step final (id; default: 11.1)")
+@click.option(
+    "--from",
+    "-f",
+    "from_step",
+    type=StepParamType(),
+    default="0.5",
+    help="Step inicial (id; default: 0.5)",
+)
+@click.option(
+    "--to",
+    "-t",
+    "to_step",
+    type=StepParamType(),
+    default="11.1",
+    help="Step final (id; default: 11.1)",
+)
 @click.option("--task", default=None, help="Descricao da tarefa (opcional)")
-def pipeline(from_step, to_step, task):
+@click.option(
+    "--quickstart",
+    "-q",
+    is_flag=True,
+    help="Modo quickstart: 3 gates principais (1, 4, 11)",
+)
+def pipeline(from_step, to_step, task, quickstart):
     """Executa o pipeline LLC completo, parando em cada gate."""
+    if quickstart:
+        # Modo quickstart: apenas 3 gates principais
+        from_step = "0.5"
+        to_step = "11"
+        print("\n🚀 LLC Pipeline Quickstart")
+        print(f"{'=' * 60}")
+        print("Gates incluídos: 1 (Visão), 4 (PRPs), 11 (Execução)")
+        print("Pule para o modo completo com: llc pipeline --from 0 --to 11.1")
+    else:
+        print(f"\n🚀 LLC Pipeline — Step {from_step} até {to_step}")
+        print(f"{'=' * 60}")
+
     success = pipeline_run(from_step=from_step, to_step=to_step, task=task)
     if not success:
         sys.exit(1)
@@ -85,7 +198,13 @@ def session():
 
 
 @session.command("start")
-@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero)")
+@click.option(
+    "--step",
+    "-s",
+    type=StepParamType(),
+    required=True,
+    help="Step LLC (id/alias/numero)",
+)
 @click.option("--prp", "-p", default=None, help="ID do PRP")
 @click.option("--task", "-t", default=None, help="Descricao da tarefa")
 def session_start_cmd(step, prp, task):
@@ -108,12 +227,20 @@ def session_end_cmd(decision):
         decision = input("Decisao do gate? [A]provar [R]ejeitar: ").strip().lower()
         decision = "approved" if decision in ("a", "approve") else "rejected"
 
-    context_seed = input("Cole o context_seed gerado pelo agente (ou Enter para pular): ").strip()
+    context_seed = input(
+        "Cole o context_seed gerado pelo agente (ou Enter para pular): "
+    ).strip()
     session_end("manual", decision, context_seed or None)
 
 
 @cli.command()
-@click.option("--step", "-s", type=StepParamType(), required=True, help="Step LLC (id/alias/numero)")
+@click.option(
+    "--step",
+    "-s",
+    type=StepParamType(),
+    required=True,
+    help="Step LLC (id/alias/numero)",
+)
 def gate(step):
     """Exibe o checklist do gate para revisao manual."""
     decision = gate_check(step, None)
@@ -123,8 +250,8 @@ def gate(step):
 @cli.command()
 def status():
     """Exibe o progresso do pipeline e worktrees ativos."""
-    import subprocess
     import json
+    import subprocess
     from pathlib import Path
 
     index_file = Path(".ace/index.json")
@@ -144,6 +271,115 @@ def status():
 
     result = subprocess.run(["git", "worktree", "list"], capture_output=True, text=True)
     print(f"\n🔀 Worktrees ativos:\n{result.stdout}")
+
+
+# ── Gate commands ──
+
+
+def _get_gate_id(gate_name: str) -> str:
+    """Converte nome/alias para ID do gate."""
+    return GATE_ALIASES.get(gate_name, gate_name)
+
+
+def _show_gate_checklist(gate_id: str):
+    """Exibe checklist do gate."""
+    if gate_id not in GATE_CHECKLIST:
+        click.echo(f"Gate {gate_id} não encontrado.")
+        return
+
+    gate = GATE_CHECKLIST[gate_id]
+    click.echo(f"\n📋 Gate: {gate['name']} ({gate_id})")
+    click.echo(f"{'=' * 50}")
+    click.echo("\nChecklist de Validação:")
+    for i, check in enumerate(gate["checks"], 1):
+        click.echo(f"  {i}. {check}")
+
+    if gate["output_files"]:
+        click.echo("\nArquivos gerados:")
+        for f in gate["output_files"]:
+            click.echo(f"  • {f}")
+
+
+@cli.group()
+def gate():
+    """Comandos de gate (validacao humana)."""
+    pass
+
+
+@click.command()
+def gate_checklist(gate_id: str = None):
+    """Exibe checklist de validacao de gates."""
+    if gate_id:
+        gate_id = _get_gate_id(gate_id)
+        _show_gate_checklist(gate_id)
+    else:
+        click.echo("\nGates Disponiveis no Pipeline LLC")
+        click.echo("=" * 50)
+        for alias, gid in GATE_ALIASES.items():
+            gate = GATE_CHECKLIST[gid]
+            click.echo(f"\n  {gid} ({alias})")
+            click.echo(f"    {gate['name']}")
+        # Mostra gates sem alias
+        for gid in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "11.5"]:
+            if gid not in [v for v in GATE_ALIASES.values()]:
+                click.echo(f"\n  Gate {gid}")
+
+
+gate.add_command(gate_checklist)
+
+
+@gate.command("run")
+@click.option(
+    "--gate",
+    "-g",
+    required=True,
+    help="ID ou alias do gate (ex: security, null-safety, owasp, 11-SEC, 12-NULL)",
+)
+@click.option(
+    "--prp",
+    "-p",
+    default=None,
+    help="ID do PRP (opcional, para gates específicos de PRP)",
+)
+@click.option(
+    "--dry-run", "-n", is_flag=True, help="Apenas mostra o que seria verificado"
+)
+def gate_run(gate, prp, dry_run):
+    """Executa validação de um gate específico."""
+    gate_id = _get_gate_id(gate)
+
+    if dry_run:
+        click.echo(f"\n[Dry-run] Gate {gate_id} seria executado")
+        _show_gate_checklist(gate_id)
+        return
+
+    click.echo(f"\n🔍 Validando Gate {gate_id}")
+    click.echo(f"{'=' * 50}")
+
+    # Executa o gate check
+    decision = gate_check(gate_id, prp)
+
+    if decision == "approved":
+        click.echo(f"\n✅ Gate {gate_id}: APROVADO")
+    else:
+        click.echo(f"\n❌ Gate {gate_id}: REJEITADO")
+        click.echo(f"   Motivo: {decision}")
+
+
+@gate.command("list")
+def gate_list():
+    """Lista todos os gates disponíveis."""
+    click.echo("\n📋 Gates Disponíveis no Pipeline LLC")
+    click.echo(f"{'=' * 50}")
+
+    for alias, gid in sorted(GATE_ALIASES.items()):
+        gate = GATE_CHECKLIST[gid]
+        click.echo(f"\n  🟡 {gid} (alias: {alias})")
+        click.echo(f"    {gate['name']}")
+
+    click.echo("\n" + "─" * 50)
+    click.echo("\nGates de aprovação manual (steps 0.5 a 11.5):")
+    click.echo("  Use 'llc run --step N' seguido de aprovação manual")
 
 
 # ── Wave execution ──
@@ -170,10 +406,24 @@ def wave_list():
 
 @wave.command("run")
 @click.option("--wave", "-w", type=int, required=True, help="Numero da onda (ex: 1)")
-@click.option("--aggregate", "-a", is_flag=True, help="Sessao unica para toda a wave (padrao: uma sessao por PRP)")
-@click.option("--dry-run", "-n", is_flag=True, help="Apenas mostra o que seria executado, sem criar sessoes")
-@click.option("--no-worktree", is_flag=True, help="Desativa isolamento via git worktree")
-@click.option("--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)")
+@click.option(
+    "--aggregate",
+    "-a",
+    is_flag=True,
+    help="Sessao unica para toda a wave (padrao: uma sessao por PRP)",
+)
+@click.option(
+    "--dry-run",
+    "-n",
+    is_flag=True,
+    help="Apenas mostra o que seria executado, sem criar sessoes",
+)
+@click.option(
+    "--no-worktree", is_flag=True, help="Desativa isolamento via git worktree"
+)
+@click.option(
+    "--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)"
+)
 def wave_run(wave, aggregate, dry_run, no_worktree, auto_approve):
     """Executa uma onda: itera PRPs e abre sessoes ACE."""
     success = run_wave(

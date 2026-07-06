@@ -1,22 +1,27 @@
 #!/bin/bash
-# pre-wave-check.sh — Valida compilação, bootstrap e health check do projeto
+# pre-wave-check.sh — Valida compilação, bootstrap, health check e cobertura de testes
 #
-# Executa 3 verificações:
-#   1. BUILD:   tsc --noEmit, npm run build, go build, etc.
-#   2. BOOT:    Inicia a aplicação e verifica se sobe
-#   3. HEALTH:  Verifica se o endpoint de health responde
+# Executa 4 verificações:
+#   1. BUILD:    tsc --noEmit, npm run build, go build, etc.
+#   2. BOOT:     Inicia a aplicação e verifica se sobe
+#   3. HEALTH:   Verifica se o endpoint de health responde
+#   4. COVERAGE: Verifica cobertura de testes (thresholds e regressão)
 #
 # Uso:
-#   .ace/scripts/pre-wave-check.sh                    # todas as verificações
-#   .ace/scripts/pre-wave-check.sh --build-only        # só compilação
-#   .ace/scripts/pre-wave-check.sh --boot-only         # só bootstrap
-#   .ace/scripts/pre-wave-check.sh --health-only       # só health check
-#   .ace/scripts/pre-wave-check.sh --setup-cmd "..."   # comando de setup (npm install)
-#   .ace/scripts/pre-wave-check.sh --build-cmd "..."   # comando de build customizado
-#   .ace/scripts/pre-wave-check.sh --boot-cmd "..."    # comando de bootstrap customizado
-#   .ace/scripts/pre-wave-check.sh --health-url "..."  # URL de health customizada
-#   .ace/scripts/pre-wave-check.sh --health-port N     # porta do health check
-#   .ace/scripts/pre-wave-check.sh --timeout N         # timeout em segundos (padrão: 15)
+#   .ace/scripts/pre-wave-check.sh                         # todas as verificações
+#   .ace/scripts/pre-wave-check.sh --build-only             # só compilação
+#   .ace/scripts/pre-wave-check.sh --boot-only              # só bootstrap
+#   .ace/scripts/pre-wave-check.sh --health-only            # só health check
+#   .ace/scripts/pre-wave-check.sh --coverage-only          # só cobertura
+#   .ace/scripts/pre-wave-check.sh --setup-cmd "..."        # comando de setup (npm install)
+#   .ace/scripts/pre-wave-check.sh --build-cmd "..."        # comando de build customizado
+#   .ace/scripts/pre-wave-check.sh --boot-cmd "..."         # comando de bootstrap customizado
+#   .ace/scripts/pre-wave-check.sh --health-url "..."       # URL de health customizada
+#   .ace/scripts/pre-wave-check.sh --health-port N          # porta do health check
+#   .ace/scripts/pre-wave-check.sh --coverage-cmd "..."     # comando de cobertura customizado
+#   .ace/scripts/pre-wave-check.sh --coverage-threshold N   # threshold de statements (padrão: 80)
+#   .ace/scripts/pre-wave-check.sh --fail-on-zero           # falha se houver arquivos com 0% cobertura
+#   .ace/scripts/pre-wave-check.sh --timeout N              # timeout em segundos (padrão: 15)
 #
 # Exit code:
 #   0 — todas as verificações passaram
@@ -33,11 +38,15 @@ cd "$PROJECT_DIR"
 BUILD_ONLY=false
 BOOT_ONLY=false
 HEALTH_ONLY=false
+COVERAGE_ONLY=false
 CUSTOM_BUILD=""
 CUSTOM_BOOT=""
 CUSTOM_HEALTH_URL=""
 CUSTOM_HEALTH_PORT=""
 CUSTOM_SETUP=""
+CUSTOM_COVERAGE_CMD=""
+COVERAGE_THRESHOLD=80
+COVERAGE_FAIL_ON_ZERO=true
 TIMEOUT=15
 PASS=0
 FAIL=0
@@ -53,7 +62,11 @@ while [[ $# -gt 0 ]]; do
         --health-url)    CUSTOM_HEALTH_URL="$2"; shift ;;
         --health-port)   CUSTOM_HEALTH_PORT="$2"; shift ;;
         --timeout)       TIMEOUT="$2"; shift ;;
-        *) echo "❌ Opção desconhecida: $1"; exit 1 ;;
+                --coverage-only) COVERAGE_ONLY=true ;;
+                --coverage-cmd)  CUSTOM_COVERAGE_CMD="$2"; shift ;;
+                --coverage-threshold) COVERAGE_THRESHOLD="$2"; shift ;;
+                --no-coverage-fail-on-zero) COVERAGE_FAIL_ON_ZERO=false ;;
+                *) echo "❌ Opção desconhecida: $1"; exit 1 ;;
     esac
     shift
 done
@@ -353,6 +366,121 @@ check_health() {
     FAIL=$((FAIL + 1))
 }
 
+detect_coverage_cmd() {
+    local stack
+    stack=$(detect_stack)
+    case "$stack" in
+        typescript|node)
+            if [[ -f "package.json" ]]; then
+                # Tenta detectar script de coverage no package.json
+                python3 << 'PYEOF'
+import json, sys
+d=json.load(open('package.json'))
+scripts=d.get('scripts',{})
+for k in ['test:coverage','coverage','test:ci']:
+    if k in scripts:
+        print(scripts[k])
+        sys.exit(0)
+# fallback para vitest/jest
+for k in scripts:
+    if 'coverage' in scripts[k]:
+        print(scripts[k])
+        sys.exit(0)
+PYEOF
+            else
+                echo "npx vitest run --coverage"
+            fi
+            ;;
+        go)
+            echo "go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out"
+            ;;
+        python)
+            echo "python -m pytest --cov=. --cov-report=term-missing"
+            ;;
+        rust)
+            echo "cargo llvm-cov --lcov --output-path lcov.info"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+check_coverage() {
+    echo ""
+    echo "📊 [4/4] Cobertura de Testes"
+    echo "────────────────────────────────────"
+
+    local cmd
+    if [[ -n "$CUSTOM_COVERAGE_CMD" ]]; then
+        cmd="$CUSTOM_COVERAGE_CMD"
+    else
+        cmd=$(detect_coverage_cmd)
+    fi
+
+    if [[ -z "$cmd" ]]; then
+        echo "   ⚠️  Não foi possível detectar comando de cobertura para este stack."
+        echo "   Use --coverage-cmd para especificar manualmente."
+        return
+    fi
+
+    echo "   Comando: $cmd"
+    echo "   Threshold: ${COVERAGE_THRESHOLD}% statements"
+
+    # Executa comando de cobertura e captura saída
+    local output
+    output=$(eval "$cmd" 2>&1)
+    local exit_code=$?
+
+    echo "$output"
+
+    if [[ $exit_code -ne 0 ]]; then
+        echo "   ❌ Comando de cobertura falhou (exit code: $exit_code)"
+        FAIL=$((FAIL + 1))
+        return
+    fi
+
+    # Extrai percentual de statements da saída (suporta vitest, jest, pytest, go test)
+    local statements_pct
+    statements_pct=$(echo "$output" | grep -Eo '(Statements|stmts|Statements\s*:|lines?\s*:?)\s*[0-9.]+' | head -1 | grep -Eo '[0-9.]+' | head -1)
+
+    if [[ -z "$statements_pct" ]]; then
+        # Tenta padrão alternativo (ex: go tool cover)
+        statements_pct=$(echo "$output" | grep -Eo 'ok\s+\S+\s+[0-9.]+' | head -1 | grep -Eo '[0-9.]+' | head -1)
+    fi
+
+    if [[ -z "$statements_pct" ]]; then
+        echo "   ⚠️  Não foi possível extrair cobertura de statements da saída."
+        echo "   Verifique se o comando de cobertura está correto."
+        return
+    fi
+
+    echo "   📈 Statements: ${statements_pct}%"
+
+    # Verifica threshold
+    if (( $(echo "$statements_pct < $COVERAGE_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
+        echo "   ❌ Cobertura (${statements_pct}%) abaixo do threshold (${COVERAGE_THRESHOLD}%)"
+        FAIL=$((FAIL + 1))
+    else
+        echo "   ✅ Cobertura OK (${statements_pct}% >= ${COVERAGE_THRESHOLD}%)"
+        PASS=$((PASS + 1))
+    fi
+
+    # Verifica arquivos com 0% cobertura (critical check)
+    if [[ "$COVERAGE_FAIL_ON_ZERO" == "true" ]]; then
+        local zero_files
+        zero_files=$(echo "$output" | grep -E '^\s*[^|]*\|\s*0\.?0*%\s*\|' | wc -l)
+        if [[ $zero_files -gt 0 ]]; then
+            echo "   ❌ CRÍTICO: ${zero_files} arquivo(s) com 0% de cobertura"
+            echo "$output" | grep -E '^\s*[^|]*\|\s*0\.?0*%\s*\|'
+            FAIL=$((FAIL + 1))
+        else
+            echo "   ✅ Nenhum arquivo com 0% de cobertura"
+            PASS=$((PASS + 1))
+        fi
+    fi
+}
+
 cleanup() {
     if [[ -f /tmp/.llc-boot-pid ]]; then
         local pid
@@ -380,16 +508,19 @@ if [[ -n "$CUSTOM_SETUP" ]]; then
     eval "$CUSTOM_SETUP" 2>&1
 fi
 
-if [[ "$BUILD_ONLY" == false && "$BOOT_ONLY" == false && "$HEALTH_ONLY" == false ]]; then
+if [[ "$BUILD_ONLY" == false && "$BOOT_ONLY" == false && "$HEALTH_ONLY" == false && "$COVERAGE_ONLY" == false ]]; then
     check_build
     check_boot
     check_health
+    check_coverage
 elif [[ "$BUILD_ONLY" == true ]]; then
     check_build
 elif [[ "$BOOT_ONLY" == true ]]; then
     check_boot
 elif [[ "$HEALTH_ONLY" == true ]]; then
     check_health
+elif [[ "$COVERAGE_ONLY" == true ]]; then
+    check_coverage
 fi
 
 cleanup

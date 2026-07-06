@@ -527,6 +527,35 @@ Step 10.6 (pre-codigo)     Step 10.7 (pre-codigo)
 
 ---
 
+### Como o LLC previne gaps de cobertura de testes (ex: 89.5% em 2 arquivos, 73 arquivos com 0%)?
+
+O LLC implementa **4 camadas de defesa** contra o padrão recorrente:
+"TASKS.md marca tarefa ✅ → agente assume pronto → cria UI com placeholder → service continua sendo `return []`".
+
+| Camada | Mecanismo | O que previne |
+|--------|-----------|---------------|
+| **1. API-first enforcement (Step 11, `llc_wave.py`)** | `_verify_backend_contracts()` roda antes de F5 (código frontend). Se endpoints do PRP não existem ou são stubs, a onda **bloqueia**. | Frontend construído sobre contratos inexistentes |
+| **2. Test Coverage Gate (Step 10.8, Gate 10-COVERAGE)** | Executa `llc.py gate run --gate test-coverage` **antes** da execução dos PRPs. Thresholds: statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%; **0 arquivos implementação com 0% cobertura**; caminhos críticos (auth, pagamentos, mutações) ≥ 90%. | Projeto avança com cobertura falsa (apenas 2 arquivos testados, 73 stubs) |
+| **3. Pre-wave-check** | `pre-wave-check.sh` roda build + boot + health + coverage como pré-condição de cada onda. Falha se cobertura global abaixo dos thresholds ou regressão > 5%. | Ondas iniciam sem verificar saúde do código |
+| **4. Code Health + PRP Verify** | `code-health.py` monitora cobertura + histórico (regressão) + zero-coverage files. `prp_verify.py --all` cruza RFs do PRP com arquivos reais + verifica cobertura do projeto inteiro. | Divergência entre TASKS.md (✅) e código real (stub) |
+
+**Fluxo integrado:**
+```
+Step 10.8 (Gate 10-COVERAGE) → APROVADO
+      ↓
+Step 11: Wave execution
+      ↓
+  pre-wave-check.sh (build+boot+health+coverage) → APROVADO
+      ↓
+  run_wave() → _verify_backend_contracts() (API-first) → APROVADO
+      ↓
+  session_end() → prp_verify.py (RFs + cobertura projeto) → APROVADO
+```
+
+**Resultado:** Impossível chegar ao caso reportado ("89.5% statements mas apenas 2 arquivos testados, 73 arquivos .ts com 0% cobertura"). O Gate 10-COVERAGE falharia em **CRITICAL** (73 arquivos com 0% cobertura), o `pre-wave-check.sh` bloquearia a onda, e o `prp_verify.py` detectaria que PRPs marcados como ✅ têm services que são stubs.
+
+---
+
 ## Ferramentas e Integrações
 
 ### Quais ferramentas são necessárias para utilizar o workflow LLC?

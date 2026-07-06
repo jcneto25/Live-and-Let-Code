@@ -144,6 +144,16 @@
         "0 endpoints sem schema de validacao?",
         "Payload limits declarados nos PRPs?"
       ]
+    },
+    "10.8": {
+      "step": 10.8,
+      "label": "Test Coverage Gate",
+      "checklist": [
+        "Cobertura global de statements >= 80%?",
+        "0 arquivos de implementacao sem cobertura (CRITICAL)?",
+        "Cobertura de branches >= 70%, functions >= 80%, lines >= 80%?",
+        "Caminhos criticos (auth, payments, data mutations) >= 90%?"
+      ]
     }
   }
 }

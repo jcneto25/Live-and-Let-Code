@@ -410,6 +410,14 @@ PRPs auto-contidos permitem execucao paralela via git worktrees. O `initialize_s
 
 **Desativar isolamento:** `--no-worktree` no `initialize_session.py` para sessoes onde paralelismo nao e necessario (Steps 0-10).
 
+**⚡ API-first enforcement (novo):** Antes de executar PRPs com UI (frontend), o `llc_wave.py`
+executa `_verify_backend_contracts()` que valida se todos os endpoints declarados no PRP
+existem no backend implementado e não são stubs (`return []`). Se a verificação falhar, a
+onda **bloqueia** — impedindo que o frontend seja construído sobre contratos inexistentes.
+Isso previne o padrão recorrente: "TASKS.md marca tarefa ✅ → agente assume "pronto" →
+cria UI com placeholder → service continua sendo `return []`". A verificação é integrada
+no `run_wave()` e roda automaticamente para PRPs identificados como UI via `_is_ui_prp()`.
+
 ---
 
 ## 4. Catálogo de Skills
@@ -523,6 +531,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 11-OWASP | 11.1 | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
 | 🔴 11-VERIFY | **11.2** | **prp_verify --strict passou (0 CRITICAL)? WARNs revisados? Bypass nao ativo?** |
 | 👤 12-NULL | 10.7 | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
+| 👤 10-COVERAGE | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 
@@ -791,7 +800,9 @@ Agentes de IA independentes, operando em PRPs paralelos, tendem a maximizar prod
 
 ### 10.2 A Solução
 
-O script `code-health.py` analisa o histórico do git e monitora 4 métricas estruturais:
+O script `code-health.py` analisa o histórico do git e monitora métricas estruturais + cobertura de testes:
+
+**Métricas estruturais:**
 
 | Métrica | Threshold de Alerta | Severidade | Como e calculada |
 |---------|---------------------|------------|------------------|
@@ -800,18 +811,35 @@ O script `code-health.py` analisa o histórico do git e monitora 4 métricas est
 | % Legacy Code Touch | < 20% dos commits tocam código > 30 dias | 🟡 Alto | Linhas alteradas em arquivos cujo commit e anterior a 30 dias / total de linhas alteradas |
 | Consistência estrutural | Todos os thresholds OK | ✅ Saudável | — |
 
+**Cobertura de testes (novo):**
+
+| Métrica | Threshold | Severidade | Como e calculada |
+|---------|-----------|------------|------------------|
+| Statements / Functions / Lines | ≥ 80% | 🔴 Crítico | `coverage.lcov` / `jest --coverage` / `pytest --cov` — parse multi-formato |
+| Branches | ≥ 70% | 🔴 Crítico | Mesmo parser acima |
+| **Arquivos com 0% cobertura** | **0 arquivos** | 🔴 **Crítico** | Detecta implementações sem nenhum teste |
+| Caminhos críticos (auth, pagamentos, mutações) | ≥ 90% | 🔴 Crítico | Filtra arquivos por padrões configuráveis (`*auth*`, `*payment*`, `*mutation*` etc.) |
+| Regressão de cobertura | > 5% queda | 🔴 Crítico | Compara com baseline armazenado em `.ace/coverage-history.json` |
+
 **Como as métricas são calculadas** (a partir de `.ace/scripts/code-health.py`,
 parseando `git log --since=<período> --numstat --no-merges`):
 
 - **% Moved Code** — linhas em renames detectados pelo git (paths no formato `{old => new}`) sobre o churn total (added + moved + modified + deleted). É uma estimativa *mínima*: refactors feitos como delete+add sem rename não são contabilizados, então a fração real de código movido é maior que a reportada.
 - **Copy/Paste vs Moved** — heurística, habilitada apenas com ≥10 commits: sinaliza pares de arquivos *diferentes* com o mesmo filename stem que receberam >30 linhas adicionadas cada dentro de uma janela de 4 commits. Casa nomes de arquivo, não similaridade de conteúdo.
 - **% Legacy Touch** — fração de linhas alteradas cujo *commit* é mais antigo que um cutoff fixo de 30 dias (independente de `--since`) sobre o total de linhas alteradas no período. Indica se commits mais antigos na janela estão refatorando código existente vs. apenas adicionando linhas novas.
+- **Cobertura de testes** — parser multi-formato (LCOV, Cobertura XML, JSON summary) que detecta automaticamente o stack (Jest, Vitest, pytest, Go test, cargo llvm-cov). Mantém histórico em `.ace/coverage-history.json` para detecção de regressão.
 
 ### 10.3 Integracao
 
 - **Checkpoint QA (Step 11):** Bloqueia se:
   - 🔴 1 metrica Critica abaixo do threshold (Moved Code < 10%), OU
   - 🟡 2+ metricas Altas abaixo do threshold simultaneamente
+  - 🔴 Cobertura: 1+ arquivo com 0% cobertura OU thresholds globais nao atingidos OU regressão > 5%
+- **Gate 10-COVERAGE (Step 10.8):** Executa antes da execução dos PRPs:
+  - `python .ace/scripts/llc.py gate run --gate test-coverage`
+  - Verifica cobertura global do projeto (não apenas PRP atual)
+  - Falha se qualquer arquivo de implementação tem 0% cobertura
+  - Gera `docs/testing/COVERAGE_REPORT.md`
 - **Pre-commit hook:** Alerta informativo a cada commit para qualquer metrica abaixo do threshold
 - **Execucao manual:** `python .ace/scripts/code-health.py --json`
 

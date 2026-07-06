@@ -528,6 +528,35 @@ Step 10.6 (pre-code)       Step 10.7 (pre-code)
 
 ---
 
+### How does LLC prevent test coverage gaps (e.g., 89.5% on 2 files, 73 files at 0%)?
+
+LLC implements **4 layers of defense** against the recurring pattern:
+"TASKS.md marks task ✅ → agent assumes ready → creates UI with placeholder → service remains `return []`".
+
+| Layer | Mechanism | What it prevents |
+|-------|-----------|------------------|
+| **1. API-first enforcement (Step 11, `llc_wave.py`)** | `_verify_backend_contracts()` runs before F5 (frontend code). If PRP endpoints don't exist or are stubs, the wave **blocks**. | Frontend built on non-existent contracts |
+| **2. Test Coverage Gate (Step 10.8, Gate 10-COVERAGE)** | Runs `llc.py gate run --gate test-coverage` **before** PRP execution. Thresholds: statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%; **0 implementation files with 0% coverage**; critical paths (auth, payments, mutations) ≥ 90%. | Project advances with fake coverage (only 2 files tested, 73 stubs) |
+| **3. Pre-wave-check** | `pre-wave-check.sh` runs build + boot + health + coverage as wave pre-condition. Fails if global coverage below thresholds or regression > 5%. | Waves start without verifying code health |
+| **4. Code Health + PRP Verify** | `code-health.py` monitors coverage + history (regression) + zero-coverage files. `prp_verify.py --all` crosses PRP FRs with real files + checks project-wide coverage. | Divergence between TASKS.md (✅) and actual code (stub) |
+
+**Integrated flow:**
+```
+Step 10.8 (Gate 10-COVERAGE) → PASSED
+      ↓
+Step 11: Wave execution
+      ↓
+  pre-wave-check.sh (build+boot+health+coverage) → PASSED
+      ↓
+  run_wave() → _verify_backend_contracts() (API-first) → PASSED
+      ↓
+  session_end() → prp_verify.py (FRs + project coverage) → PASSED
+```
+
+**Result:** Impossible to reach the reported case ("89.5% statements but only 2 files tested, 73 .ts files at 0% coverage"). Gate 10-COVERAGE would fail on **CRITICAL** (73 files with 0% coverage), `pre-wave-check.sh` would block the wave, and `prp_verify.py` would detect that ✅-marked PRPs have stub services.
+
+---
+
 ## Tools & Integrations
 
 ### What tools are needed to use the LLC workflow?

@@ -41,17 +41,27 @@ pip install click
 python .ace/scripts/llc.py pipeline --from 0
 ```
 
+**New: Test Coverage Gate**
+
+```bash
+# Verify test coverage before execution (Gate 10-COVERAGE)
+python .ace/scripts/llc.py gate run --gate test-coverage
+
+# Run pre-wave check (build + boot + health + coverage)
+bash .ace/scripts/pre-wave-check.sh
+```
+
 ### Pipeline
 
 ```
 Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 7 Specs ─👤─→ PRDs ─👤─→ PRPs
 ─👤─→ Planning ─👤─→ Architecture ─👤─→ Tasks ─👤─→ Design System ─👤─→ Setup + Mock
-─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Execution
+─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Coverage Gate (10.8) ─👤─→ Execution
 ```
 
-> 🔒 **Security gates** wrap every execution wave — SCA/SAST/secrets audit (pre-code), OWASP hardening + null-safety (post-code). See the [Execution Guide](LLC_GUIDE.en.md).
+> 🔒 **Security gates** wrap every execution wave — SCA/SAST/secrets audit (pre-code), OWASP hardening + null-safety (post-code), **Test Coverage Gate (10.8)**. See the [Execution Guide](LLC_GUIDE.en.md).
 >
-> 🔒 **Gates de segurança** envolvem cada onda de execução — auditoria SCA/SAST/secrets (pré-código), hardening OWASP + null-safety (pós-código). Veja o [Guia de Execução](LLC_GUIDE.md).
+> 🔒 **Gates de segurança** envolvem cada onda de execução — auditoria SCA/SAST/secrets (pré-código), hardening OWASP + null-safety (pós-código), **Test Coverage Gate (10.8)**. Veja o [Guia de Execução](LLC_GUIDE.md).
 
 ---
 

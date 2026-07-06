@@ -14,13 +14,17 @@ Nao substitui os scripts ACE — os invoca via subprocess.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 from llc_steps import (
-    canonical_id, normalize_step, pipeline_steps, REGISTRY, UnknownStepError,
+    REGISTRY,
+    UnknownStepError,
+    canonical_id,
+    normalize_step,
+    pipeline_steps,
 )
 
 ACE_DIR = Path(__file__).resolve().parent.parent
@@ -39,7 +43,7 @@ def _load_gates_config():
     global _gates_config
     if _gates_config is None:
         if GATES_FILE.exists():
-            _gates_config = json.loads(GATES_FILE.read_text(encoding='utf-8'))
+            _gates_config = json.loads(GATES_FILE.read_text(encoding="utf-8"))
         else:
             _gates_config = {"gates": {}, "step_to_gate": {}}
     return _gates_config
@@ -82,21 +86,29 @@ def gate_check(step, _output=None, auto_approve=False):
         return "rejected"
     return "approved"
 
+
 from pathlib import Path
 
 # ── Early Commitment + Replay imports ──
 try:
     from llc_classify import classify_task
     from llc_replay import (
-        find_best_script, deterministic_replay,
-        log_replay_event, is_red_zone, check_target_files_stale,
-        get_architecture_version, preflight_all_steps, extract_files_from_script,
+        check_target_files_stale,
+        deterministic_replay,
+        extract_files_from_script,
+        find_best_script,
+        get_architecture_version,
+        is_red_zone,
+        log_replay_event,
+        preflight_all_steps,
     )
+
     CLASSIFY_REPLAY_AVAILABLE = True
 except ImportError:
     CLASSIFY_REPLAY_AVAILABLE = False
 
 # ── Agent CLI detection ──
+
 
 def detect_agent_client():
     """Detecta o cliente de IA CLI via ambiente ou PATH.
@@ -118,16 +130,22 @@ def detect_agent_client():
             return client
     return None
 
+
 # ── Session management ──
+
 
 def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
     """Inicializa sessao ACE. Retorna dict com session_id, context_seed, worktree_path."""
     cmd = [
-        sys.executable, str(SCRIPTS_DIR / "initialize_session.py"),
-        "--step", str(step),
-        "--task", task or f"Step {step}",
-        "--wave", str(wave),
-        "--json"
+        sys.executable,
+        str(SCRIPTS_DIR / "initialize_session.py"),
+        "--step",
+        str(step),
+        "--task",
+        task or f"Step {step}",
+        "--wave",
+        str(wave),
+        "--json",
     ]
     if prp:
         cmd.extend(["--prp", prp])
@@ -149,6 +167,7 @@ def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
         "context_seed": data.get("context_seed"),
         "worktree_path": data.get("worktree"),
     }
+
 
 def _step_from_index(session_id):
     """Le o step (id canonico) de uma sessao no index.json (ou None).
@@ -194,12 +213,16 @@ def _prp_from_index(session_id):
 
     # Fallback: branch do worktree
     import re as _re
+
     wt = ACE_DIR / "worktrees" / session_id
     if wt.exists():
         try:
             r = subprocess.run(
                 ["git", "-C", str(wt), "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True, text=True, check=True)
+                capture_output=True,
+                text=True,
+                check=True,
+            )
             m = _re.search(r"prp-(PRP-\d+)", r.stdout)
             if m:
                 return m.group(1)
@@ -215,12 +238,17 @@ def _run_prp_verify(prp_id):
         return False
     result = subprocess.run(
         [sys.executable, str(script), "--prp", prp_id, "--strict", "--json"],
-        capture_output=True, text=True, cwd=Path.cwd())
+        capture_output=True,
+        text=True,
+        cwd=Path.cwd(),
+    )
     if result.returncode == 2:
         try:
             data = json.loads(result.stdout)
-            print(f"⛔ prp_verify CRITICAL em {prp_id}: "
-                  f"{data.get('critical', 0)} pendência(s) bloqueante(s)")
+            print(
+                f"⛔ prp_verify CRITICAL em {prp_id}: "
+                f"{data.get('critical', 0)} pendência(s) bloqueante(s)"
+            )
         except (json.JSONDecodeError, TypeError):
             print(f"⛔ prp_verify CRITICAL em {prp_id}")
         return True
@@ -266,8 +294,9 @@ def _resolve_session(session_id):
             idx = json.loads(index_file.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             idx = {"sessions": []}
-        in_progress = [s for s in idx.get("sessions", [])
-                       if s.get("status") == "in_progress"]
+        in_progress = [
+            s for s in idx.get("sessions", []) if s.get("status") == "in_progress"
+        ]
         if in_progress:
             s = in_progress[-1]
             raw = s.get("llc_step_id") or s.get("llc_step")
@@ -288,13 +317,16 @@ def _record_gate_result(session_id, step, decision):
         return
     content = session_file.read_text(encoding="utf-8")
     import re
+
     # Idempotencia: so retornar se houver uma tag REAL — ignora o placeholder
     # comentado do template (<!-- <gate_result ... -->), que tambem casa "<gate_result".
     if "<gate_result" in re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL):
         return
     step_attr = f' step="{step}"' if step is not None else ""
-    tag = (f'<gate_result{step_attr} decision="{decision}" reviewer="harness">'
-           f'human gate</gate_result>')
+    tag = (
+        f'<gate_result{step_attr} decision="{decision}" reviewer="harness">'
+        f"human gate</gate_result>"
+    )
     placeholder = '<!-- <gate_result step="N" decision="approved" reviewer="...">...</gate_result> -->'
     if placeholder in content:
         content = content.replace(placeholder, tag)
@@ -329,8 +361,10 @@ def session_end(session_id, gate_decision, context_seed_output, step=None):
 
     # Finaliza via finalize_session.py com as flags REAIS (--session, --context-seed)
     cmd = [
-        sys.executable, str(SCRIPTS_DIR / "finalize_session.py"),
-        "--context-seed", context_seed_output,
+        sys.executable,
+        str(SCRIPTS_DIR / "finalize_session.py"),
+        "--context-seed",
+        context_seed_output,
         "--json",
     ]
     if real_id:
@@ -347,7 +381,9 @@ def session_end(session_id, gate_decision, context_seed_output, step=None):
 
     return data
 
+
 # ── Skill loading (R4: progressive disclosure) ──
+
 
 def load_agents_conventions():
     """Carrega apenas o Document Index do AGENTS.md, nao o arquivo inteiro (R4).
@@ -355,12 +391,14 @@ def load_agents_conventions():
     if not AGENTS_FILE.exists():
         return ""
 
-    content = AGENTS_FILE.read_text(encoding='utf-8')
+    content = AGENTS_FILE.read_text(encoding="utf-8")
     # Extrai apenas a secao Documentation Index (compacta, ~400 tokens)
     import re
+
     match = re.search(
-        r'### Documentation Index \(Compressed\)(.*?)(?=\n## |\n---\n## |\Z)',
-        content, re.DOTALL
+        r"### Documentation Index \(Compressed\)(.*?)(?=\n## |\n---\n## |\Z)",
+        content,
+        re.DOTALL,
     )
     if match:
         index_section = match.group(0)
@@ -370,8 +408,12 @@ def load_agents_conventions():
             + "\n\n---\n# TASK\n---\n\n"
         )
     # Fallback: carrega so as primeiras 50 linhas (cabecalho + zonas)
-    lines = content.split('\n')[:50]
-    return "---\n# CONVENTIONS (header only)\n---\n\n" + '\n'.join(lines) + "\n\n---\n# TASK\n---\n\n"
+    lines = content.split("\n")[:50]
+    return (
+        "---\n# CONVENTIONS (header only)\n---\n\n"
+        + "\n".join(lines)
+        + "\n\n---\n# TASK\n---\n\n"
+    )
 
 
 def skill_load(step, context_seed=None, task=None):
@@ -390,7 +432,7 @@ def skill_load(step, context_seed=None, task=None):
         sys.exit(1)
 
     conventions = load_agents_conventions()
-    skill = skill_file.read_text(encoding='utf-8')
+    skill = skill_file.read_text(encoding="utf-8")
 
     prompt = conventions + skill
 
@@ -401,7 +443,9 @@ def skill_load(step, context_seed=None, task=None):
         prompt += f"\n\n---\n# TASK\n---\n\n{task}"
 
     prompt += "\n\n---\n# FINALIZACAO\n---\n\n"
-    prompt += "Ao concluir este step, gere um context_seed no formato ACE de 4 campos:\n"
+    prompt += (
+        "Ao concluir este step, gere um context_seed no formato ACE de 4 campos:\n"
+    )
     prompt += "state: [acoes concluidas, arquivos alterados]\n"
     prompt += "pending: [tarefas incompletas]\n"
     prompt += "blockers: [impedimentos ativos]\n"
@@ -409,7 +453,9 @@ def skill_load(step, context_seed=None, task=None):
 
     return str(skill_file), prompt
 
+
 # ── Agent invocation ──
+
 
 def agent_invoke(prompt, task_description=None, client=None):
     """Invoca cliente CLI com Early Commitment + Replay."""
@@ -421,21 +467,29 @@ def agent_invoke(prompt, task_description=None, client=None):
     if task_description:
         classification = classify_task(task_description, client)
         if classification:
-            log_replay_event("classify", None,
-                             type=classification["type"],
-                             confidence=classification["confidence"])
-            print(f"🏷️  Classificado: {classification['type']} "
-                  f"(confianca: {classification['confidence']:.0%})")
+            log_replay_event(
+                "classify",
+                None,
+                type=classification["type"],
+                confidence=classification["confidence"],
+            )
+            print(
+                f"🏷️  Classificado: {classification['type']} "
+                f"(confianca: {classification['confidence']:.0%})"
+            )
 
     if classification:
         # 2. Buscar script no cache
         script = find_best_script(classification["type"], task_description)
 
         if script:
-            log_replay_event("replay_hit", script["id"],
-                             type=classification["type"],
-                             usage_count=script.get("usage_count", 0),
-                             match_score="computed")
+            log_replay_event(
+                "replay_hit",
+                script["id"],
+                type=classification["type"],
+                usage_count=script.get("usage_count", 0),
+                match_score="computed",
+            )
 
             # 2a. Stale cache check (R3)
             if check_target_files_stale(script.get("target_files", [])):
@@ -464,18 +518,24 @@ def agent_invoke(prompt, task_description=None, client=None):
                 return _llm_invoke(prompt, client)
 
             # 3. REPLAY (R5: rollback integrado)
-            print(f"⚡ Replay: {classification['type']} "
-                  f"(script {script['id']}, {script.get('usage_count', 0)} usos)")
+            print(
+                f"⚡ Replay: {classification['type']} "
+                f"(script {script['id']}, {script.get('usage_count', 0)} usos)"
+            )
             return deterministic_replay(
                 script, {}, gate_check, _llm_invoke, prompt, client
             )
         else:
-            log_replay_event("replay_miss", None,
-                             type=classification["type"], reason="no_cache")
+            log_replay_event(
+                "replay_miss", None, type=classification["type"], reason="no_cache"
+            )
 
     # 4. Fallback: execucao normal via LLM
-    log_replay_event("llm_fallback", None,
-                     reason="no_classify" if not classification else "cache_miss")
+    log_replay_event(
+        "llm_fallback",
+        None,
+        reason="no_classify" if not classification else "cache_miss",
+    )
     return _llm_invoke(prompt, client)
 
 
@@ -506,7 +566,7 @@ def _llm_invoke(prompt, client=None):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            cwd=Path.cwd()
+            cwd=Path.cwd(),
         )
 
         output = ""
@@ -533,8 +593,9 @@ def _llm_invoke(prompt, client=None):
 
         # Extrai context_seed do output do agente (G2)
         seed_match = re.search(
-            r'state:\s*(.*?)\n\s*pending:\s*(.*?)\n\s*blockers:\s*(.*?)\n\s*next_action:\s*(.*?)(?:\n|$)',
-            output, re.DOTALL | re.IGNORECASE
+            r"state:\s*(.*?)\n\s*pending:\s*(.*?)\n\s*blockers:\s*(.*?)\n\s*next_action:\s*(.*?)(?:\n|$)",
+            output,
+            re.DOTALL | re.IGNORECASE,
         )
         if seed_match:
             context_seed = (
@@ -565,22 +626,28 @@ def _llm_invoke(prompt, client=None):
     print("   para envio automatico via STDIN.")
     return "", 0, None
 
+
 # ── Pipeline orchestration ──
+
 
 def pipeline_run(from_step="0.5", to_step="11.1", task=None):
     """Executa pipeline completo do step inicial ao final (ids canonicos).
 
     A sequencia e a subselecao vem de llc_steps.pipeline_steps() (ordenada por
     numero), entao inclui 10.6/10.7/11.1 nas posicoes corretas.
+
+    Inclui verificacao de consistencia automatica apos cada step.
     """
     specs = pipeline_steps(from_id=from_step, to_id=to_step)
     started = False
 
     for spec in specs:
         if not started:
-            print(f"\n{'='*60}")
-            print(f"🚀 Iniciando pipeline LLC (Step {canonical_id(from_step)} → {canonical_id(to_step)})")
-            print(f"{'='*60}")
+            print(f"\n{'=' * 60}")
+            print(
+                f"🚀 Iniciando pipeline LLC (Step {canonical_id(from_step)} → {canonical_id(to_step)})"
+            )
+            print(f"{'=' * 60}")
             started = True
 
         sid = step_run(spec.id, task=task)
@@ -588,15 +655,39 @@ def pipeline_run(from_step="0.5", to_step="11.1", task=None):
         session_end(sid, decision, None, step=spec.id)
 
         if decision == "rejected":
-            print(f"\n⛔ Gate {get_gate_checklist(spec.id)[0]} REPROVADO. Pipeline pausado.")
+            print(
+                f"\n⛔ Gate {get_gate_checklist(spec.id)[0]} REPROVADO. Pipeline pausado."
+            )
             print("Corrija os problemas e reexecute a partir deste step:")
             print(f"  llc run --step {spec.id}")
             return False
 
-    print(f"\n{'='*60}")
+        # Verificacao de consistencia apos cada step (exceto steps muito iniciais)
+        if spec.id not in ["0", "0.1", "0.5", "1"]:
+            print(f"\n📋 Verificando consistencia apos step {spec.id}...")
+            try:
+                import subprocess
+
+                result = subprocess.run(
+                    ["python3", ".ace/scripts/consistency-check.py"],
+                    capture_output=True,
+                    text=True,
+                    cwd=Path.cwd(),
+                )
+                if result.stdout:
+                    for line in result.stdout.split("\n"):
+                        if line.strip() and not line.startswith("="):
+                            print(f"   {line.strip()}")
+                if result.stderr and "ERRO" in result.stderr:
+                    print(f"   ⚠️  Aviso: {result.stderr.strip()}")
+            except Exception as e:
+                print(f"   ℹ️  consistency-check não executado: {e}")
+
+    print(f"\n{'=' * 60}")
     print("✅ Pipeline concluido com sucesso!")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     return True
+
 
 def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
     """Executa um step e retorna session_id."""

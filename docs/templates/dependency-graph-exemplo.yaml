@@ -1,0 +1,326 @@
+# dependency-graph-exemplo.yaml
+# Exemplo funcional do Grafo de Dependências LLC
+# Gerado após o Step 4 (Planejamento)
+
+version: "1.2.0"
+generated_by: "llc-step-4"
+last_updated: "2026-07-04"
+
+artifacts:
+
+  # ── VISÃO ESTRATÉGICA (Step 0.5) ──
+  visao_estrategica:
+    path: "docs/business/specs/visao_estrategica_e_negocio.md"
+    depends_on:
+      - ingestion_converted
+    triggers_update:
+      - glossario
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - perfis_permissoes
+      - catalogo_integracoes
+      - prd_executivo
+      - prd_tecnico
+      - architecture
+      - design_system
+      - module_specs
+
+  module_specs:
+    path_pattern: "docs/business/specs/MOD-*.md"
+    depends_on:
+      - ingestion_converted
+      - visao_estrategica
+    triggers_update:
+      - requisitos_funcionais
+      - workflows_bpmn
+      - prd_tecnico
+      - prps
+      - tasks
+      - test_guide
+
+  # ── ESPECIFICAÇÕES (Step 1) ──
+  glossario:
+    path: "docs/business/specs/glossario.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+    triggers_update:
+      - requisitos_funcionais
+      - regras_negocio
+      - prd_executivo
+      - prd_tecnico
+
+  requisitos_funcionais:
+    path: "docs/business/specs/requisitos_funcionais.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+      - glossario
+    triggers_update:
+      - prd_tecnico
+      - prps
+      - tasks
+      - test_guide
+
+  requisitos_nao_funcionais:
+    path: "docs/business/specs/requisitos_nao_funcionais.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - architecture
+      - test_guide
+
+  regras_negocio:
+    path: "docs/business/specs/regras_negocio.md"
+    depends_on:
+      - visao_estrategica
+      - glossario
+    triggers_update:
+      - prd_tecnico
+      - prps
+
+  workflows_bpmn:
+    path: "docs/business/specs/workflows_bpmn.md"
+    depends_on:
+      - module_specs
+    triggers_update:
+      - prd_tecnico
+      - prps
+      - design_system
+
+  perfis_permissoes:
+    path: "docs/business/specs/perfis_permissoes.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - design_system
+      - deployment
+
+  catalogo_integracoes:
+    path: "docs/business/specs/catalogo_integracoes.md"
+    depends_on:
+      - visao_estrategica
+    triggers_update:
+      - prd_tecnico
+      - architecture
+      - deployment
+
+  # ── PRDs (Step 2) ──
+  prd_executivo:
+    path: "docs/prd/executive_PRD.md"
+    depends_on:
+      - visao_estrategica
+      - glossario
+      - requisitos_funcionais
+      - regras_negocio
+    triggers_update:
+      - readme
+      - plan
+
+  prd_tecnico:
+    path: "docs/prd/PRD_tecnico_institucional.md"
+    depends_on:
+      - visao_estrategica
+      - module_specs
+      - glossario
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - perfis_permissoes
+      - catalogo_integracoes
+    triggers_update:
+      - prps
+      - architecture
+      - design_system
+
+  # ── PRPs (Step 3) ──
+  prps:
+    path_pattern: "docs/prps/PRP-*.md"
+    depends_on:
+      - module_specs
+      - requisitos_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - prd_tecnico
+    triggers_update:
+      - dependency_matrix
+      - plan
+      - execution_waves
+      - tasks
+
+  # ── PLANEJAMENTO (Step 4) ──
+  dependency_matrix:
+    path: "docs/planning/DEPENDENCY_MATRIX.md"
+    depends_on:
+      - prps
+    triggers_update:
+      - execution_waves
+      - plan
+
+  plan:
+    path: "docs/planning/PLAN.md"
+    depends_on:
+      - prps
+      - dependency_matrix
+      - prd_executivo
+    triggers_update:
+      - tasks
+      - readme
+
+  execution_waves:
+    path: "docs/planning/EXECUTION_WAVES.md"
+    depends_on:
+      - prps
+      - dependency_matrix
+    triggers_update:
+      - tasks
+
+  # ── ARQUITETURA (Step 5) ──
+  architecture:
+    path: "docs/architecture/ARCHITECTURE.md"
+    depends_on:
+      - visao_estrategica
+      - requisitos_nao_funcionais
+      - catalogo_integracoes
+      - prd_tecnico
+    triggers_update:
+      - tasks
+      - test_guide
+      - deployment
+
+  # ── TASKS (Step 6) ──
+  tasks:
+    path: "docs/planning/TASKS.md"
+    depends_on:
+      - module_specs
+      - requisitos_funcionais
+      - prps
+      - plan
+      - execution_waves
+      - architecture
+    triggers_update: []
+
+  # ── DESIGN SYSTEM (Step 7) ──
+  design_system:
+    path: "docs/design/DESIGN_SYSTEM.md"
+    depends_on:
+      - visao_estrategica
+      - workflows_bpmn
+      - perfis_permissoes
+      - prd_tecnico
+    triggers_update: []
+
+  # ── SETUP + MOCK (Step 8) ──
+  mock_data:
+    path_pattern: "mocks/**/*"
+    depends_on:
+      - architecture
+      - design_system
+      - prd_tecnico
+    triggers_update:
+      - test_guide
+
+  # ── TESTING (Step 9) ──
+  test_guide:
+    path: "docs/testing/TESTING_GUIDE.md"
+    depends_on:
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - architecture
+      - mock_data
+    triggers_update: []
+
+  coverage_baseline:
+    path: "docs/testing/COVERAGE_BASELINE.md"
+    depends_on:
+      - test_guide
+    triggers_update: []
+
+  coverage_progress:
+    path: "docs/testing/COVERAGE_PROGRESS.md"
+    depends_on:
+      - test_guide
+      - coverage_baseline
+    triggers_update: []
+
+  # ── PROJECT DOCS (Step 10) ──
+  readme:
+    path: "README.md"
+    depends_on:
+      - prd_executivo
+      - plan
+    triggers_update: []
+
+  deployment:
+    path: "docs/DEPLOYMENT.md"
+    depends_on:
+      - architecture
+      - perfis_permissoes
+      - catalogo_integracoes
+    triggers_update: []
+
+  # ── USER GUIDE (Step 10.5) ──
+  user_guide_skeleton:
+    path: "docs/user-guide/USER_GUIDE.md"
+    depends_on:
+      - prps
+      - perfis_permissoes
+      - workflows_bpmn
+      - glossario
+      - visao_estrategica
+    triggers_update: []
+
+  user_guide_index:
+    path: "docs/user-guide/index.md"
+    depends_on:
+      - user_guide_skeleton
+    triggers_update: []
+
+  user_guide_overview:
+    path: "docs/user-guide/visao-geral.md"
+    depends_on:
+      - visao_estrategica
+      - workflows_bpmn
+      - glossario
+    triggers_update: []
+
+  user_guide_profiles:
+    path: "docs/user-guide/perfis/index.md"
+    depends_on:
+      - perfis_permissoes
+      - prps
+    triggers_update: []
+
+  # ── SECURITY GATES ──
+  security_audit_report:
+    path: "docs/security/SECURITY_AUDIT_REPORT.md"
+    depends_on:
+      - architecture
+      - mock_data
+    triggers_update: []
+
+  null_safety_report:
+    path: "docs/security/NULL_SAFETY_REPORT.md"
+    depends_on:
+      - prps
+      - architecture
+    triggers_update: []
+
+  owasp_hardening_report:
+    path: "docs/security/OWASP_HARDENING_REPORT.md"
+    depends_on:
+      - prps
+      - architecture
+    triggers_update: []
+
+  # ── PRP VERIFY (Step 11.2) ──
+  prp_verify_reports:
+    path_pattern: ".ace/reports/prp-verify-*.json"
+    depends_on:
+      - prps
+    triggers_update: []

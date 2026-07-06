@@ -1,8 +1,36 @@
-# Guia de Execucao — Live and Let Code (LLC)
+## Guia de Execucao — Live and Let Code (LLC)
 
 **Versao:** 1.5.0
 **Publico:** Desenvolvedores, Product Owners, Tech Leads
 **Pre-requisito:** Leitura do [`llc-pipeline-design.md`](llc-pipeline-design.md) (visao geral da metodologia)
+
+---
+
+## 🚀 Modo Quickstart (Para iniciantes)
+
+Para começar rapidamente, use o modo **quickstart** do pipeline:
+
+```bash
+# Instalar dependencias
+pip install click
+
+# Executar pipeline quickstart (3 gates principais)
+python .ace/scripts/llc.py pipeline --quickstart --from 0
+
+# Ver status
+python .ace/scripts/llc.py status
+```
+
+**Modo quickstart inclui:**
+- Gate 1: Visao + Modulos
+- Gate 4: PRPs
+- Gate 11: Execucao (PRPs sem UI)
+
+Para projetos com UI, use o modo completo:
+
+```bash
+python .ace/scripts/llc.py pipeline --from 0 --to 11.1
+```
 
 ---
 
@@ -158,6 +186,7 @@ Step 10  → Project Docs + Steering Files      👤 Gate 11
 Step 10.5 → Manual do Usuario                 👤 Gate 11.5
 Step 10.6 → Auditoria (SCA+SAST+Secrets) 👤 Gate 11-SEC
 Step 10.7 → Contratos de Dados      👤 Gate 12-NULL
+Step 10.8 → Cobertura de Testes               👤 Gate 10-COVERAGE
 Step 11  → Execucao (PRPs)                    QA Checkpoints
 Step 11.1 → Hardening (post-code)         👤 Gate 11-OWASP
 ```
@@ -541,6 +570,32 @@ Execute a skill docs/skills/llc-step-12-null-safety.md
 
 ---
 
+### Passo 10.8: Cobertura de Testes (Test Coverage Gate) 🆕
+
+**Voce faz:**
+
+```
+Execute a skill docs/skills/llc-step-10-8-test-coverage.md
+```
+
+**A IA faz:**
+- Executa `python .ace/scripts/llc.py gate run --gate test-coverage`
+- Verifica cobertura global: statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%
+- Verifica **zero arquivos de implementação com 0% de cobertura** (CRITICAL)
+- Verifica caminhos críticos (auth, pagamentos, mutações de dados) ≥ 90%
+- Detecta regressão de cobertura > 5% vs. baseline anterior
+- Gera relatório em `docs/testing/COVERAGE_REPORT.md` no formato padrão
+
+**Voce valida:** 👤 Gate 10-COVERAGE
+- 0 arquivos de implementação com 0% cobertura?
+- Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)?
+- Caminhos críticos ≥ 90%?
+- Sem regressão > 5% vs. baseline?
+
+**So avance quando aprovar.**
+
+---
+
 ### Passo 11: Execucao
 
 **Agora comeca o desenvolvimento.** Voce tem duas trilhas:
@@ -568,6 +623,8 @@ Para cada módulo ou PRP que envolva telas, execute:
 Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001
 ```
 
+> **⚡ API-first enforcement:** Antes de iniciar F5 (Código), o harness executa verificação automática de contratos de backend via `_verify_backend_contracts()` em `llc_wave.py`. Se endpoints declarados no PRP não existirem ou forem stubs (`return []`), a onda **bloqueia** — o frontend não avança sobre contratos inexistentes. Isso previne o padrão: "TASKS.md marca ✅ → agente assume pronto → cria UI com placeholder → service ainda é `return []`".
+
 O subfluxo tem 6 fases:
 
 | Fase | O que acontece | Você faz |
@@ -589,6 +646,10 @@ cruza cada RF declarado na §2 do PRP com os arquivos reais de teste e implement
 > **Enforcement mecânico:** O `session_end()` do harness bloqueia o merge em CRITICAL
 > (arquivo declarado ausente, stub, componente faltando). Bypass: `LLC_PRP_NO_VERIFY=1`
 > (logado — veja `llc-pipeline-design.md §8.7`).
+>
+> **Novo:** `prp_verify.py` agora executa `check_project_coverage()` — verifica cobertura
+> global do projeto (não só do PRP). Thresholds: statements ≥ 80%, branches ≥ 70%,
+> functions ≥ 80%, lines ≥ 80%; **0 arquivos com 0% cobertura**; caminhos críticos ≥ 90%.
 
 ```
 Execute a skill docs/skills/llc-step-11-2-prp-verify.md
@@ -601,7 +662,7 @@ Execute a skill docs/skills/llc-step-11-2-prp-verify.md
 
 **Nota:** `_post_wave_check()` também bloqueia ondas com CRITICAL — a verificação
 ocorre tanto no nível de PRP individual (session_end) quanto no nível de onda
-(pós-onda).
+(pós-onda). A verificação de cobertura do projeto inteiro roda como parte do `prp_verify.py --all`.
 
 ---
 
@@ -651,10 +712,18 @@ Ou diretamente via script:
 python .ace/scripts/code-health.py --since "30 days ago"
 ```
 
-O script analisa 4 métricas:
+O script analisa métricas estruturais + cobertura de testes:
+
+**Métricas estruturais:**
 - **% Moved Code:** taxa de código reorganizado em módulos (alerta se < 10%)
 - **Copy/Paste vs Moved:** duplicação superando reuso (alerta se copy > moved)
 - **% Legacy Touch:** código antigo sendo refatorado (alerta se < 20%)
+
+**Cobertura de testes (novo):**
+- **Global statements ≥ 80%**, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%
+- **CRÍTICO:** 0 arquivos de implementação com 0% cobertura
+- **Caminhos críticos** (auth, pagamentos, mutações de dados) ≥ 90%
+- **Regressão de cobertura:** queda > 5% = alerta crítico
 
 Se alertas críticos forem disparados, agende uma onda de refatoração cross-PRP.
 
@@ -690,6 +759,9 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Gerar manual do usuario | `Execute a skill docs/skills/llc-user-guide.md` |
 | Garantir que toda onda vire sessão no `.ace` | Instale o pre-commit: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ver [§8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement)) |
+| Verificar cobertura de testes (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
+| Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
+| Ver código health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |
 | Entender um termo | Leia [`llc-pipeline-design.md` §8](llc-pipeline-design.md#8-glossário-llc) |

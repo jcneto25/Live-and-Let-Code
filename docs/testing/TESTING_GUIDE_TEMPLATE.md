@@ -1383,8 +1383,9 @@ jobs:
 |------|-----------|----------------|
 | **Lint** | 0 erros | PR bloqueado |
 | **Type Check** | 0 erros | PR bloqueado |
-| **Unit Coverage** | ≥ 80% linhas | Warning (não bloqueia MVP) |
-| **Unit Coverage** | ≥ 80% linhas | PR bloqueado (pós-MVP) |
+| **Unit Coverage (PRP-level)** | ≥ 80% linhas | Warning (não bloqueia MVP) |
+| **Unit Coverage (PRP-level)** | ≥ 80% linhas | PR bloqueado (pós-MVP) |
+| **Test Coverage Gate (Step 10.8)** | ≥ 80% global, 0% arquivos sem cobertura | Pipeline bloqueado pré-execução |
 | **E2E Críticos** | 100% passando | PR bloqueado |
 | **Acessibilidade** | 0 violações axe críticas | PR bloqueado |
 | **Vulnerabilidades** | 0 críticas | PR bloqueado |
@@ -1398,6 +1399,13 @@ jobs:
 > O `prp_verify.py` (Step 11.2 do LLC) cruza cada RF com seus arquivos de teste e
 > implementação declarados na §2 do PRP — se um teste usa `expect(x).toBeDefined()`
 > apenas, é classificado como WARN (teatro de testes).
+>
+> **O Test Coverage Gate (Step 10.8)** executa **antes** da execução dos PRPs e verifica
+> a cobertura **global do projeto**, não apenas arquivos declarados no PRP. Ele falha
+> se houver qualquer arquivo de implementação com 0% de cobertura ou se a cobertura
+> global estiver abaixo de 80% statements / 70% branches / 80% functions / 80% lines.
+> Isso previne o problema de cobertura "mascarada" onde PRPs individuais passam
+> mas o projeto como um todo tem arquivos não testados.
 
 ---
 

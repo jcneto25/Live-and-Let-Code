@@ -1,0 +1,71 @@
+[
+  {
+    "timestamp": "2026-07-05T15:52:09.876757",
+    "statements": {
+      "total": 7,
+      "covered": 5,
+      "pct": 71.4
+    },
+    "branches": {
+      "total": 2,
+      "covered": 1,
+      "pct": 50.0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 3,
+      "pct": 60.0
+    },
+    "lines": {
+      "total": 7,
+      "covered": 5,
+      "pct": 71.4
+    }
+  },
+  {
+    "timestamp": "2026-07-05T15:52:59.202892",
+    "statements": {
+      "total": 10,
+      "covered": 7,
+      "pct": 70.0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 2,
+      "pct": 100.0
+    },
+    "functions": {
+      "total": 7,
+      "covered": 5,
+      "pct": 71.4
+    },
+    "lines": {
+      "total": 10,
+      "covered": 7,
+      "pct": 70.0
+    }
+  },
+  {
+    "timestamp": "2026-07-05T15:53:28.948808",
+    "statements": {
+      "total": 10,
+      "covered": 7,
+      "pct": 70.0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 2,
+      "pct": 100.0
+    },
+    "functions": {
+      "total": 7,
+      "covered": 5,
+      "pct": 71.4
+    },
+    "lines": {
+      "total": 10,
+      "covered": 7,
+      "pct": 70.0
+    }
+  }
+]

@@ -106,17 +106,21 @@ STUB_PATTERNS: dict[str, list[str]] = {
 def detect_language(file_path: str) -> str:
     """Detecta linguagem baseada na extensão do arquivo."""
     ext_map = {
-        ".ts": "typescript", ".tsx": "typescript",
-        ".js": "javascript", ".jsx": "javascript",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
         ".py": "python",
         ".go": "go",
         ".rs": "rust",
         ".rb": "ruby",
         ".java": "java",
         ".php": "php",
-        ".ex": "elixir", ".exs": "elixir",
+        ".ex": "elixir",
+        ".exs": "elixir",
         ".cs": "csharp",
-        ".kt": "kotlin", ".kts": "kotlin",
+        ".kt": "kotlin",
+        ".kts": "kotlin",
     }
     ext = Path(file_path).suffix.lower()
     return ext_map.get(ext, "any")
@@ -132,7 +136,9 @@ def read_config() -> dict:
     if not CONFIG_FILE.exists():
         return default
     if yaml is None:
-        print("ERRO: PyYAML não instalado. Execute: pip install pyyaml", file=sys.stderr)
+        print(
+            "ERRO: PyYAML não instalado. Execute: pip install pyyaml", file=sys.stderr
+        )
         sys.exit(2)
     try:
         data = yaml.safe_load(CONFIG_FILE.read_text(encoding="utf-8"))
@@ -156,21 +162,22 @@ def extract_completed_prps(tasks_file: Path, config: dict) -> dict[str, list[dic
         return {}
 
     content = tasks_file.read_text(encoding="utf-8")
-    skip_patterns = [re.compile(p, re.IGNORECASE) for p in config.get("skip_task_patterns", [])]
+    skip_patterns = [
+        re.compile(p, re.IGNORECASE) for p in config.get("skip_task_patterns", [])
+    ]
     result: dict[str, list[dict]] = {}
     current_prp = "transversal"
 
-    # Procura por IDs de PRP no formato PRP-NNN e referências a PRP-NNN
+    # Procura por IDs de PRP (PRP-NNN) e tarefas de fundação/segurança (FDN/DSG/SEC-NNN)
     for line in content.split("\n"):
-        prp_match = re.search(r"(PRP-\d{3})", line)
+        # Suporta PRP-XXX, FDN-XXX, DSG-XXX, SEC-XXX
+        prp_match = re.search(r"(PRP-\d{3}|FDN-\d{3}|DSG-\d{3}|SEC-\d{3})", line)
         if prp_match:
             current_prp = prp_match.group(1)
             result.setdefault(current_prp, [])
 
         # Tarefa marcada como concluída: procura por ✅ em linhas de task
-        task_id_match = re.match(
-            r"\|\s*([\w-]+)\s*\|([^|]*)\|.*\|\s*✅\s*\|", line
-        )
+        task_id_match = re.match(r"\|\s*([\w-]+)\s*\|([^|]*)\|.*\|\s*✅\s*\|", line)
         if task_id_match:
             task_id = task_id_match.group(1)
             task_desc = task_id_match.group(2).strip()
@@ -190,55 +197,72 @@ def is_stub_file(file_path: str, config: dict) -> bool:
 
     Critérios (qualquer um caracteriza como stub):
     1. Arquivo não existe
-    2. Arquivo tem poucas linhas significativas (≤ 3)
-    3. Arquivo contém padrões de stub detectados
+    2. Arquivo tem poucas linhas significativas (≤ 3) - apenas para arquivos de implementação
+    3. Arquivo contém padrões de stub detectados - apenas para arquivos de implementação
     """
     full_path = Path.cwd() / file_path
 
     if not full_path.exists():
         return True  # não existe = stub (não implementado)
 
+    # Verifica se é arquivo de implementação (código) vs documentação
+    impl_extensions = config.get("validation", {}).get(
+        "impl_extensions", [".py", ".ts", ".js", ".go", ".rs", ".java", ".cs"]
+    )
+    is_impl_file = any(file_path.endswith(ext) for ext in impl_extensions)
+
     content = full_path.read_bytes()
 
-    # Critério 2: poucas linhas significativas
-    lines = content.split(b"\n")
-    significant = [
-        l for l in lines
-        if l.strip()
-        and not l.strip().startswith(b"import ")
-        and not l.strip().startswith(b"from ")
-        and not l.strip().startswith(b"use ")
-        and not l.strip().startswith(b"package ")
-        and not l.strip().startswith(b"# ")
-        and not l.strip().startswith(b"// ")
-        and not l.strip().startswith(b"/*")
-        and not l.strip().startswith(b"*")
-        and not l.strip().startswith(b"@")
-        and not l.strip().startswith(b"}")
-        and not l.strip().startswith(b"```")
-    ]
-    if len(significant) <= 3:
-        return True
+    # Critério 2: poucas linhas significativas (apenas para arquivos de implementação)
+    if is_impl_file:
+        lines = content.split(b"\n")
+        significant = [
+            l
+            for l in lines
+            if l.strip()
+            and not l.strip().startswith(b"import ")
+            and not l.strip().startswith(b"from ")
+            and not l.strip().startswith(b"use ")
+            and not l.strip().startswith(b"package ")
+            and not l.strip().startswith(b"# ")
+            and not l.strip().startswith(b"// ")
+            and not l.strip().startswith(b"/*")
+            and not l.strip().startswith(b"*")
+            and not l.strip().startswith(b"@")
+            and not l.strip().startswith(b"}")
+            and not l.strip().startswith(b"```")
+        ]
+        if len(significant) <= 3:
+            return True
 
-    # Critério 3: padrões de stub
-    lang = detect_language(file_path)
-    patterns: list[str] = []
+    # Critério 3: padrões de stub (apenas para arquivos de implementação)
+    if is_impl_file:
+        lang = detect_language(file_path)
+        patterns: list[str] = []
 
-    # Padrões universais
-    patterns.extend(config.get("stub_patterns", {}).get("any", STUB_PATTERNS.get("any", [])))
+        # Padrões universais
+        patterns.extend(
+            config.get("stub_patterns", {}).get("any", STUB_PATTERNS.get("any", []))
+        )
 
-    # Padrões por linguagem do config
-    patterns.extend(config.get("stub_patterns", {}).get(lang, []))
+        # Padrões por linguagem do config
+        patterns.extend(config.get("stub_patterns", {}).get(lang, []))
 
-    # Padrões por linguagem dos defaults
-    patterns.extend(STUB_PATTERNS.get(lang, []))
+        # Padrões por linguagem dos defaults
+        patterns.extend(STUB_PATTERNS.get(lang, []))
 
-    for pattern in patterns:
-        try:
-            if re.search(pattern.encode(), content, re.MULTILINE):
-                return True
-        except re.error:
-            continue  # ignora padrão inválido
+        for pattern in patterns:
+            try:
+                if re.search(pattern.encode(), content, re.MULTILINE):
+                    return True
+            except re.error:
+                continue  # ignora padrão inválido
+
+    # Para arquivos de documentação: apenas verifica se tem conteúdo mínimo
+    if not is_impl_file:
+        # Arquivo de doc vazio ou quase vazio (menos de 10 bytes)
+        if len(content.strip()) < 10:
+            return True
 
     return False
 
@@ -260,16 +284,15 @@ def architecture_to_config(arch_file: Path) -> dict:
     #   prp_services:
     #     ...
     #   ```
-    yaml_match = re.search(
-        r"```yaml\n(.*?)```",
-        content, re.DOTALL
-    )
+    yaml_match = re.search(r"```yaml\n(.*?)```", content, re.DOTALL)
     if not yaml_match:
         print(f"⚠️  Nenhum bloco yaml encontrado em {arch_file} (seção 6.5)")
         return {}
 
     if yaml is None:
-        print("ERRO: PyYAML não instalado. Execute: pip install pyyaml", file=sys.stderr)
+        print(
+            "ERRO: PyYAML não instalado. Execute: pip install pyyaml", file=sys.stderr
+        )
         sys.exit(2)
 
     try:
@@ -285,10 +308,14 @@ def main():
         description="Verifica consistência entre TASKS.md e código implementado"
     )
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--strict", action="store_true",
-                        help="Exit code 1 se houver divergência")
-    parser.add_argument("--update-config", action="store_true",
-                        help="Gera .ace/consistency-config.yaml a partir do ARCHITECTURE.md")
+    parser.add_argument(
+        "--strict", action="store_true", help="Exit code 1 se houver divergência"
+    )
+    parser.add_argument(
+        "--update-config",
+        action="store_true",
+        help="Gera .ace/consistency-config.yaml a partir do ARCHITECTURE.md",
+    )
     args = parser.parse_args()
 
     repo_root = Path.cwd()
@@ -303,7 +330,9 @@ def main():
             sys.exit(0)
 
         CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        CONFIG_FILE.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
+        CONFIG_FILE.write_text(
+            yaml.dump(data, default_flow_style=False, allow_unicode=True)
+        )
         print(f"✅ Configuração gerada em {CONFIG_FILE}")
         print(f"   Revise e ajuste os caminhos e padrões antes de usar.")
         sys.exit(0)
@@ -322,15 +351,17 @@ def main():
             config["stub_patterns"] = data.get("stub_patterns", {})
 
     if not config.get("prp_services"):
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print("📋 VERIFICAÇÃO DE CONSISTÊNCIA")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"\n⚠️  Nenhum mapeamento PRP→serviços encontrado.")
         print(f"\n   Para configurar:")
         print(f"   1. Popule a seção 6.5 no ARCHITECTURE.md com o mapeamento")
-        print(f"   2. Execute: python .ace/scripts/consistency-check.py --update-config")
+        print(
+            f"   2. Execute: python .ace/scripts/consistency-check.py --update-config"
+        )
         print(f"   3. Revise o arquivo gerado em {CONFIG_FILE}")
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         sys.exit(0)
 
     completed = extract_completed_prps(repo_root / TASKS_FILE, config)
@@ -349,17 +380,19 @@ def main():
             if is_stub_file(service_path, config):
                 stats["services_stub"] += 1
                 stats["divergences"] += 1
-                issues.append({
-                    "prp": prp,
-                    "service": service_path,
-                    "tasks_completed": [t["id"] for t in prp_tasks],
-                    "severity": "divergence",
-                    "message": (
-                        f"{prp}: {service_path} é stub, mas TASKS.md marca "
-                        f"{', '.join(t['id'] for t in prp_tasks)} como ✅ — "
-                        f"ou a tarefa não está completa ou o service precisa ser implementado."
-                    ),
-                })
+                issues.append(
+                    {
+                        "prp": prp,
+                        "service": service_path,
+                        "tasks_completed": [t["id"] for t in prp_tasks],
+                        "severity": "divergence",
+                        "message": (
+                            f"{prp}: {service_path} é stub, mas TASKS.md marca "
+                            f"{', '.join(t['id'] for t in prp_tasks)} como ✅ — "
+                            f"ou a tarefa não está completa ou o service precisa ser implementado."
+                        ),
+                    }
+                )
             else:
                 stats["services_ok"] += 1
 
@@ -371,9 +404,9 @@ def main():
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("📋 VERIFICAÇÃO DE CONSISTÊNCIA — TASKS.md vs Código")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"PRPs com tarefas concluídas analisados: {stats['prps_analyzed']}")
         print(f"Services implementados: {stats['services_ok']}")
         print(f"Services stub: {stats['services_stub']}")
@@ -384,12 +417,12 @@ def main():
             for issue in issues:
                 print(f"")
                 print(f"  [{issue['prp']}] {issue['service']}")
-                for t in issue['tasks_completed']:
+                for t in issue["tasks_completed"]:
                     print(f"         Tarefa marcada {t} como ✅ mas código é stub")
         else:
             print(f"\n✅ Nenhuma divergência — documentação reflete o código.")
 
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
     if args.strict and issues:
         sys.exit(1)

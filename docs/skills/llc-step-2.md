@@ -25,6 +25,24 @@ tags: [prd, specification, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 2** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-2.md`:
+     ```markdown
+     # Skip Note: Step 2 — PRDs
+     **Decisão:** Step pulado — PRDs executivo e técnico inalterados.
+     **Gate 3:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 2 pulado via Smart Skip. PRDs existentes reaproveitados. Gate 3 auto-aprovado."
+3. Se **Step 2** estiver listado como "executar": gere PRDs v2 com seção "O que mudou desde v1" no final do documento.
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-2` do pipeline LLC. Seu objetivo é sintetizar as 8 especificações em dois PRDs com públicos distintos.

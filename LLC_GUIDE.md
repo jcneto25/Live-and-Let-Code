@@ -1,6 +1,6 @@
 ## Guia de Execucao — Live and Let Code (LLC)
 
-**Versao:** 1.5.0
+**Versao:** 1.6.0
 **Publico:** Desenvolvedores, Product Owners, Tech Leads
 **Pre-requisito:** Leitura do [`llc-pipeline-design.md`](llc-pipeline-design.md) (visao geral da metodologia)
 
@@ -167,9 +167,10 @@ Snippets prontos (Claude Code `PreToolUse` + `SessionStart`) em
 
 ## Passo a Passo
 
-### 📋 Visao Geral do Pipeline (14 principais + 5 auxiliares)
+### 📋 Visao Geral do Pipeline (14 principais + 5 auxiliares + 2 delta)
 
 ```
+Greenfield / Documentos novos:
 Step 0   → Ingestao de documentos
 Step 0.1 → Conversao para Markdown (Docling)
 Step 0.5 → Visao Estrategica + Modulos       👤 Gate 1
@@ -184,11 +185,16 @@ Step 8   → Setup + Mock Data                  👤 Gate 9
 Step 9   → Testing Docs                       👤 Gate 10
 Step 10  → Project Docs + Steering Files      👤 Gate 11
 Step 10.5 → Manual do Usuario                 👤 Gate 11.5
-Step 10.6 → Auditoria (SCA+SAST+Secrets) 👤 Gate 11-SEC
-Step 10.7 → Contratos de Dados      👤 Gate 12-NULL
+Step 10.6 → Auditoria (SCA+SAST+Secrets)  👤 Gate 11-SEC
+Step 10.7 → Contratos de Dados            👤 Gate 12-NULL
 Step 10.8 → Cobertura de Testes               👤 Gate 10-COVERAGE
 Step 11  → Execucao (PRPs)                    QA Checkpoints
 Step 11.1 → Hardening (post-code)         👤 Gate 11-OWASP
+
+Fluxo Delta (mudancas em sistema existente):
+Step Δ.0 → Delta Impact Analysis              👤 Gate Δ.0
+Step Δ.1 → Grill Me de Mudanca                👤 Gate Δ.1
+Steps 0.5-11 → Smart Skip (pula inalterados)  👤 Gates auto-aprovados
 ```
 
 ### ⚠️ Atencao: Voce tem documentacao previa?
@@ -666,6 +672,92 @@ ocorre tanto no nível de PRP individual (session_end) quanto no nível de onda
 
 ---
 
+---
+
+## 🔄 Modo Delta: Mudancas em Sistema Existente
+
+**Quando usar:** Quando o sistema ja passou pelo pipeline completo ao menos uma vez e novos documentos de mudança chegam.
+
+### Visao Geral
+
+O fluxo delta substitui os Steps 0-0.1 por uma **analise de impacto** focada no que muda, e introduz **Smart Skip** para reaproveitar artefatos inalterados:
+
+```
+Novos documentos em ingestion/
+    ↓
+[Thin Harness] llc delta start --iteration v2
+    ↓
+Step Δ.0 → impact-analyzer.py --classify → DELTA_REPORT.md (major/minor)
+    ↓ 👤 Gate Δ.0
+Step Δ.1 → Grill Me de Mudança (8 perguntas focadas no delta)
+    ↓ 👤 Gate Δ.1
+[Thin Harness] llc pipeline --delta --iteration v2
+    ↓ Smart Skip
+Steps inalterados → ⏭️ Skip Note + Gate auto-aprovado
+Steps afetados     → ✅ Execução normal (modo diff/addendum)
+    ↓
+PRP-A (amendment) para mudancas em PRPs existentes
+PRP-N (new) para funcionalidades totalmente novas
+    ↓
+Execucao, verificacao e deploy
+```
+
+### Comandos do Thin Harness para Modo Delta
+
+```bash
+# 1. Iniciar analise de impacto
+llc delta start --iteration v2
+
+# 2. Ver o plano delta
+llc delta plan
+
+# 3. Executar pipeline com smart skip
+llc pipeline --delta --iteration v2
+
+# 4. Executar step unico com smart skip
+llc run --step 3 --delta
+
+# 5. Modo CI/CD (auto-aprova todos os gates)
+llc pipeline --delta --iteration v2 --auto-approve
+```
+
+### Classificacao Major vs Minor
+
+A classificacao e feita automaticamente pelo `impact-analyzer.py --classify`:
+
+**MAJOR** se afeta: arquitetura, design system, perfis/permissoes, migrations/schema, config de infraestrutura, ou 3+ PRPs.
+
+**MINOR** se afeta apenas: 1-2 PRPs (codigo apenas), novos RFs sem alterar existentes, hotfix, cosmetico.
+
+### Smart Skip (Steps Condicionais)
+
+Os seguintes steps sao automaticamente pulados se o DELTA_REPORT.md indicar que nao sao afetados:
+
+| Step | Pular quando | Gate |
+|------|-------------|------|
+| 0.5 (Visao) | Escopo/visao inalterados | ✅ Auto-aprovado |
+| 1 (Specs) | Nenhum spec afetado | ✅ Auto-aprovado |
+| 2 (PRDs) | PRDs inalterados | ✅ Auto-aprovado |
+| 5 (Arquitetura) | Stack/ADRs inalterados | ✅ Auto-aprovado |
+| 7 (Design System) | Tokens/componentes inalterados | ✅ Auto-aprovado |
+| 8 (Setup + Mock) | Modelo de dados inalterado | ✅ Auto-aprovado |
+| 9 (Testing Docs) | Estrategia de testes mantida | ✅ Auto-aprovado |
+| 10.5 (User Guide) | UI inalterada | ✅ Auto-aprovado |
+
+Steps **sempre executados** (mesmo em modo delta): 10 (Project Docs), 10.6-10.8 (Seguranca), 11 (Execucao), 11.1 (OWASP), 11.2 (PRP Verify).
+
+### PRP de Alteracao (PRP-A)
+
+Para mudancas em funcionalidades existentes, o Step 3 (modo delta) gera **PRP-A** (Amendment) em vez de PRPs inteiramente novos. O template esta em `docs/templates/PRP_AMENDMENT_TEMPLATE.md` e inclui:
+
+- Referencia ao PRP original
+- Resumo do delta (RFs novos, alterados, removidos)
+- Contratos de API em diff (antes vs depois, com indicador de breaking change)
+- Arquivos a modificar vs criar vs remover
+- Garantia de nao regressao (testes inalterados continuam passando)
+
+---
+
 ## Fluxo de Aprovação
 
 ```
@@ -755,6 +847,10 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Quero... | Comando |
 |----------|---------|
 | Iniciar o pipeline | `Execute a skill docs/skills/llc-step-0-1.md` (conversão) |
+| Iniciar fluxo delta | `llc delta start --iteration v2` |
+| Ver plano delta | `llc delta plan` |
+| Executar pipeline delta | `llc pipeline --delta --iteration v2` |
+| Executar step com smart skip | `llc run --step 3 --delta` |
 | Pular para um passo específico | `Execute a skill docs/skills/llc-step-N.md` certificando-se de que os gates anteriores foram aprovados |
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Gerar manual do usuario | `Execute a skill docs/skills/llc-user-guide.md` |

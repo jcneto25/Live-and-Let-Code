@@ -28,6 +28,24 @@ Antes de iniciar, use a ferramenta `list_directory` ou `read_file` para verifica
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 0.5** estiver listado como "skip":
+   - Gere um skip note em `docs/delta/skip-notes/step-0-5.md`:
+     ```markdown
+     # Skip Note: Step 0.5 — Visão Estratégica + Módulos
+     **Decisão:** Step pulado — visão e módulos inalterados nesta iteração.
+     **Gate 1:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 0.5 pulado via Smart Skip. Visão e módulos existentes reaproveitados. Gate 1 auto-aprovado."
+   - **Não prossiga para o próximo step.**
+3. Se **Step 0.5** estiver listado como "executar" (ou DELTA_REPORT.md não existir): prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está operando no modo de execução da skill `llc-step-0-5` do pipeline Live and Let Code (LLC). Seu objetivo é analisar a documentação de negócio e gerar artefatos de Visão Estratégica e Especificação de Módulos usando as ferramentas de arquivo disponíveis.

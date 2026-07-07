@@ -1,7 +1,7 @@
 ---
 name: llc-step-11
-description: Pipeline LLC Step 11 — Execução dos PRPs. Implementa uma feature por PRP usando TDD estrito, registra deltas via ACE (<action>/<file_delta>), emite <task_completed> e gera <context_seed>. É a skill do step numérico 11 (execução), distinta de 11-security (gate pré-execução) e 11-owasp (hardening pós-código).
-version: 1.0.0
+description: Pipeline LLC Step 11 — Execução dos PRPs e PRP-A (amendment). Implementa features usando TDD estrito, suporta alteração de código existente com garantia de não regressão, registra deltas via ACE e gera <context_seed>.
+version: 1.1.0
 tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 ---
 
@@ -48,16 +48,52 @@ Esta skill **não** faz auditoria de segurança (isso é pré-gate) nem hardenin
 
 Uma sessão do Step 11 executa **um PRP** (ou uma onda de PRPs independentes). Antes de codar:
 
-- Identifique o PRP alvo (ex.: `PRP-001`) a partir de `EXECUTION_WAVES.md`.
+- Identifique o PRP alvo (ex.: `PRP-001` ou `PRP-A-001`) a partir de `EXECUTION_WAVES.md`.
 - Leia o PRP: **DoD**, **lista de tarefas**, **especificação de testes**, **§7 Data Model** (contratos já validados no Step 12).
 - Cruze com `TASKS.md` para obter os **IDs das tarefas** (ex.: `FDN-001`, `SEC-001`) — você os usará nos `<task_completed>`.
+- **Se for PRP-A (amendment):** Leia também o PRP original (ex: PRP-007) — você precisa entender o código existente antes de modificá-lo.
 - Confirme com o humano: *"Vou implementar PRP-001 (ondas 1). Primeira ação: [X]. Prosseguir?"*
 
 > **Grafo de dependências:** O `<dependencies>` no context_seed da sessão já contém
 > o subgrafo relevante do `.ace/dependency-graph.yaml` para este step — NÃO leia
 > o YAML diretamente. O subgrafo lista os artefatos de documentação que podem
-> precisar de revisão após alterações de código. Consulte-o para saber quais docs
+> precisar de revisão após alterações de código. Consulte-o para quais docs
 > atualizar ao final do PRP.
+
+### 1.1 Modo PRP-A (Amendment) — Execução de Alterações
+
+**Identifique se o PRP é uma alteração:** O cabeçalho do PRP contém `Tipo: Amendment` e `PRP Original: PRP-YYY`.
+
+**Fluxo específico para PRP-A:**
+
+1. **Leia o PRP-A e o PRP original** — entenda o que existe hoje antes de modificar.
+2. **Leia a seção §7 (Arquivos a Modificar vs Criar vs Remover)** — este é seu roteiro de operações.
+3. **Leia o código existente** antes de escrever qualquer alteração. Use `read_file` para carregar cada arquivo listado em §7.
+   - Entenda a estrutura atual: funções, tipos, testes existentes.
+   - Identifique pontos de extensão: onde o novo código se encaixa.
+4. **Confirme com o humano** antes de iniciar: *"PRP-A-001 altera PRP-007. Vou modificar `{arquivo1}` (adicionar campo `{campo}`), criar `{arquivo2}` (novo serviço) e remover `{arquivo3}` (legado). Prosseguir?"*
+
+**Regras de TDD para PRP-A:**
+
+O ciclo TDD padrão (RED → GREEN → REFACTOR) se aplica, mas com adaptações:
+
+| Operação | TDD |
+|----------|-----|
+| **Modificar** código existente | 🔴 **RED:** Atualize o teste existente para refletir o novo comportamento (ou escreva novo teste para o novo comportamento). O teste deve falhar com o código atual. 🟢 **GREEN:** Implemente a mudança. O teste atualizado + todos os outros testes devem passar. |
+| **Criar** novo arquivo | 🔴 **RED:** Escreva o teste para a nova funcionalidade. 🟢 **GREEN:** Implemente o novo código. |
+| **Remover** arquivo legado | 🔴 **RED:** Verifique se nenhum teste referencia o código a ser removido. 🟢 **GREEN:** Remova o arquivo. Rode a suite — todos os testes devem continuar passando. |
+| **Migração** de dados | 🔴 **RED:** Escreva teste de migração (up e down). 🟢 **GREEN:** Implemente o script de migração. |
+
+**Garantia de não regressão:**
+
+Após cada operação no PRP-A, execute a suite de testes completa (não apenas os testes alterados):
+
+```bash
+# Para PRP-A, execute a suite completa, não apenas os testes do PRP
+npm test  # ou equivalente no stack
+```
+
+Isso garante que a alteração não quebrou funcionalidades existentes. **Se qualquer teste do PRP original que não está na lista "a atualizar" do §8.1 falhar, a alteração está incompleta — corrija antes de prosseguir.**
 
 ### 2. Ciclo TDD (obrigatório — sem exceções)
 
@@ -131,6 +167,7 @@ Antes de declarar o PRP pronto, confira **todos** os critérios do DoD:
 
 - [ ] Todas as tarefas do PRP com `<task_completed status="done">`
 - [ ] Todos os testes do PRP passando (unitários + integração onde aplicável)
+- [ ] **Se PRP-A:** Testes do PRP original não alterados continuam passando (suite completa executada)
 - [ ] Cobertura ≥ threshold do `TESTING_GUIDE.md`
 - [ ] **Projeto compila sem erros** (`tsc --noEmit`, `npm run build`, `go build`, etc.)
 - [ ] **Aplicação bootstrapa com sucesso** (`node dist/main.js`, `go run .`, etc. — até o log de "started")
@@ -197,6 +234,18 @@ blockers: nenhum ativo.
 next_action: executar PRP-002 na próxima onda; ao fim de todos os PRPs, rodar llc-step-11-owasp-security.
 ```
 
+**Para PRP-A (amendment), inclua o estado da alteração:**
+```
+state: PRP-A-001 concluído. PRP-007 alterado: campo status expandido (2→4 valores).
+       Arquivos modificados: src/users/user.service.ts, src/users/user.service.spec.ts.
+       Arquivos criados: src/users/user-v2.types.ts.
+       Migração: 20260707_expand_status_enum executada (up/down testados).
+       Suite completa: 45/45 testes passando (0 regressão).
+pending: PRP-N-001 (aguarda merge do PRP-A-001).
+blockers: nenhum ativo.
+next_action: executar PRP-N-001 na próxima onda.
+```
+
 Finalize pelo harness: `python .ace/scripts/llc.py session end --approve` (ou o harness fecha automaticamente ao fim do `llc run`).
 
 ---
@@ -211,6 +260,9 @@ Finalize pelo harness: `python .ace/scripts/llc.py session end --approve` (ou o 
 6. **Idempotência/Zonas:** Código em `src/` é zona 🟡; decisions de schema/config/auth são 🔴 (exigem gate humano). Status aplicado pelo harness (Progress Reflection) é a exceção sancionada.
 7. **Component Spec antes de UI:** Para componentes de frontend, o Spec (§6 do PRP) deve ser escrito antes de qualquer código de UI. Violação = violação de TDD.
 8. **Estados vs Testes:** Cada estado na tabela do §6 (loading, empty, error, happy, edge) deve ter pelo menos um teste verificando a renderização correta. Se um estado não tem teste, o componente não está completo.
+9. **PRP-A — não regressão é prioridade:** Para PRPs de alteração, a suite completa de testes (não apenas os testes alterados) deve passar. Se um teste existente quebrar, a alteração está incompleta — corrija ou registre como blocker.
+10. **PRP-A — leia antes de modificar:** Nunca modifique código existente sem antes lê-lo completamente. Use `read_file` para carregar cada arquivo listado em §7 do PRP-A antes de fazer qualquer alteração. Violação = risco de quebra silenciosa.
+11. **PRP-A — migrações são 🔴:** Scripts de migração de dados (ALTER TABLE, backfill, remoção de colunas) exigem validação humana explícita antes de executar em staging. Registre como blocker até aprovação.
 
 ---
 
@@ -227,4 +279,5 @@ Finalize pelo harness: `python .ace/scripts/llc.py session end --approve` (ou o 
 
 - **PRP parcial/pendente:** continue na próxima sessão com `llc run --step 11 --prp <PRP> --wave <N>`.
 - **Todos os PRPs da onda concluídos:** avance para a próxima onda em `EXECUTION_WAVES.md`.
-- **Todos os PRPs implementados:** execute a skill `llc-step-11-owasp-security` (hardening pós-código, Gate 11-OWASP) antes de considerar o Step 11 concluído.
+- **PRP-A concluído:** Atualize o PRP original com a referência ao PRP-A (nota no topo) e registre o status no DELTA_REPORT.md.
+- **Todos os PRPs (incluindo PRP-A e PRP-N) implementados:** execute a skill `llc-step-11-owasp-security` (hardening pós-código, Gate 11-OWASP) antes de considerar o Step 11 concluído.

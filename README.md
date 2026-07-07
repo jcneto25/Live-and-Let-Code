@@ -8,7 +8,7 @@
 
 ### 🇧🇷 Português
 
-Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **14 etapas principais + 5 auxiliares** com **gates de validação humana** em cada fase. **21 skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
+Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **14 etapas principais + 5 auxiliares + 2 de análise de mudança (Δ)** com **gates de validação humana** em cada fase. **23 skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
 
 📘 **[Guia de Execução (PT-BR)](LLC_GUIDE.md)** — passo a passo completo  
 📄 **[Especificação do Pipeline](llc-pipeline-design.md)** — design document
@@ -17,7 +17,7 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 ### 🇺🇸 English
 
-Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **14 main + 5 auxiliary steps** with **human validation gates** at every phase. **21 tool-agnostic skills** executable by any terminal AI client.
+Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **14 main + 5 auxiliary + 2 change analysis (Δ) steps** with **human validation gates** at every phase. **23 tool-agnostic skills** executable by any terminal AI client.
 
 📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — full step-by-step guide  
 📄 **[Pipeline Specification](llc-pipeline-design.en.md)** — design document
@@ -54,14 +54,21 @@ bash .ace/scripts/pre-wave-check.sh
 ### Pipeline
 
 ```
+Greenfield:
 Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 7 Specs ─👤─→ PRDs ─👤─→ PRPs
 ─👤─→ Planning ─👤─→ Architecture ─👤─→ Tasks ─👤─→ Design System ─👤─→ Setup + Mock
-─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Coverage Gate (10.8) ─👤─→ Execution
+─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Security Gates ─👤─→ Execution
+
+Change (Delta):
+New Documents ─👤─→ Δ.0 Impact Analysis ─👤─→ Δ.1 Grill Me ─👤─→ Smart Skip Pipeline
+(cada step condicional decide: executar diff ou skip com reaproveitamento)
 ```
 
 > 🔒 **Security gates** wrap every execution wave — SCA/SAST/secrets audit (pre-code), OWASP hardening + null-safety (post-code), **Test Coverage Gate (10.8)**. See the [Execution Guide](LLC_GUIDE.en.md).
 >
 > 🔒 **Gates de segurança** envolvem cada onda de execução — auditoria SCA/SAST/secrets (pré-código), hardening OWASP + null-safety (pós-código), **Test Coverage Gate (10.8)**. Veja o [Guia de Execução](LLC_GUIDE.md).
+>
+> 🔄 **Fluxo Delta:** Para mudanças em sistemas existentes, o LLC oferece 2 steps de análise de impacto (Δ.0 + Δ.1) + Smart Skip que pula steps inalterados. Consulte o [FAQ](FAQ.md#-fluxo-delta-mudanças-em-sistemas-existentes).
 
 ---
 

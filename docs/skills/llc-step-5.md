@@ -28,6 +28,24 @@ tags: [architecture, stack, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 5** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-5.md`:
+     ```markdown
+     # Skip Note: Step 5 — Arquitetura
+     **Decisão:** Step pulado — stack, ADRs e decisões arquiteturais inalterados.
+     **Gate 6:** ✅ Auto-aprovado (reaproveitando aprovação anterior de {data})
+     ```
+   - **PARE** e informe: "Step 5 pulado via Smart Skip. ARCHITECTURE.md existente reaproveitado. Gate 6 auto-aprovado."
+3. Se **Step 5** estiver listado como "executar": gere ARCHITECTURE.md v2, incluindo chancela de ADRs alterados e seção "O que mudou desde v1".
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é definir a arquitetura completa do sistema, incluindo stack tecnológico, diagramas C4, ADRs, segurança e estratégia de deploy.

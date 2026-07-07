@@ -26,6 +26,26 @@ tags: [specification, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 1** estiver listado como "skip":
+   - Gere um skip note em `docs/delta/skip-notes/step-1.md`:
+     ```markdown
+     # Skip Note: Step 1 — 7 Especificações
+     **Decisão:** Step pulado — nenhum spec (glossário, RFs, RNFs, regras,
+     workflows, perfis, integrações) é afetado nesta iteração.
+     **Gate 2:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 1 pulado via Smart Skip. 7 specs existentes reaproveitados. Gate 2 auto-aprovado."
+   - **Não prossiga para o próximo step.**
+3. Se **Step 1** estiver listado como "executar" (modo diff): opere em modo **delta** — gere apenas addenda/alterações nos specs afetados, não reescreva do zero. Specs não listados no DELTA_REPORT.md §2.2 como "to_review" devem permanecer inalterados.
+4. Se DELTA_REPORT.md não existir: prossiga no modo padrão (greenfield).
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-1` do pipeline LLC. Seu objetivo é gerar 8 documentos de especificação detalhada a partir da Visão Estratégica e Módulos validados no passo anterior.

@@ -32,6 +32,24 @@ tags: [mvp, mock, foundation, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 8** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-8.md`:
+     ```markdown
+     # Skip Note: Step 8 — Setup + Mock Data
+     **Decisão:** Step pulado — modelo de dados e mocks existentes permanecem válidos.
+     **Gate 9:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 8 pulado via Smart Skip. Mocks e setup existentes reaproveitados. Gate 9 auto-aprovado."
+3. Se **Step 8** estiver listado como "executar": o projeto já existe (não é greenfield). Adicione/atualize mocks para novas entidades ou campos conforme DELTA_REPORT.md §3. Não refaça o setup do zero.
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-8` do pipeline LLC. Seu objetivo NESTE PASSO é **apenas** configurar o projeto e implementar a camada de dados mockados. A implementação de telas e componentes de UI será tratada em um passo subsequente com aprovação visual prévia.

@@ -29,6 +29,24 @@ tags: [testing, quality, coverage, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 9** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-9.md`:
+     ```markdown
+     # Skip Note: Step 9 — Testing Docs
+     **Decisão:** Step pulado — estratégia de testes e thresholds inalterados.
+     **Gate 10:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 9 pulado via Smart Skip. TESTING_GUIDE.md, COVERAGE_BASELINE.md e COVERAGE_PROGRESS.md existentes reaproveitados. Gate 10 auto-aprovado."
+3. Se **Step 9** estiver listado como "executar": gere versões atualizadas, mantendo thresholds e estratégias anteriores como base. Adicione apenas o necessário para cobrir novas funcionalidades.
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-9` do pipeline LLC. Seu objetivo é gerar a documentação de testes do projeto, estabelecendo padrões, baseline de cobertura e metas de progresso.

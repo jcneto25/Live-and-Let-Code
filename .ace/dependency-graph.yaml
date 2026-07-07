@@ -7,9 +7,9 @@
 #
 # Mantido manualmente como artefato da metodologia LLC. Evolui quando novos artefatos são adicionados ao pipeline.
 
-version: "1.2.0"
+version: "1.3.0"
 generated_by: "llc-step-4"
-last_updated: "2026-06-25"
+last_updated: "2026-07-07"
 
 artifacts:
 
@@ -27,6 +27,38 @@ artifacts:
     triggers_update:
       - visao_estrategica
       - module_specs
+      - delta_report
+
+  # ── STEP Δ.0 (Delta Impact Analysis) ──
+  delta_report:
+    path: "docs/planning/DELTA_REPORT.md"
+    depends_on:
+      - ingestion_converted
+    triggers_update:
+      - visao_estrategica
+      - module_specs
+      - glossario
+      - requisitos_funcionais
+      - requisitos_nao_funcionais
+      - regras_negocio
+      - workflows_bpmn
+      - perfis_permissoes
+      - catalogo_integracoes
+      - prd_executivo
+      - prd_tecnico
+      - prps
+      - dependency_matrix
+      - plan
+      - execution_waves
+      - architecture
+      - tasks
+      - design_system
+      - mock_data
+      - test_guide
+      - readme
+      - deployment
+      - user_guide_skeleton
+      - security_audit_report
 
   # ── STEP 0.5 ──
   visao_estrategica:
@@ -348,3 +380,42 @@ artifacts:
       - prps
       - architecture
     triggers_update: []
+
+  # ── CÓDIGO-FONTE (Step 11) ──
+  source_code:
+    path_pattern: "src/**/*"
+    depends_on:
+      - prps
+      - architecture
+      - design_system
+    triggers_update:
+      - test_guide
+      - deployment
+      - user_guide_pages
+
+  test_files:
+    path_pattern: "**/*.{test,spec}.{ts,tsx,js,jsx,py,go}"
+    depends_on:
+      - source_code
+      - test_guide
+    triggers_update:
+      - coverage_baseline
+      - coverage_progress
+
+  config_files:
+    path_pattern: "**/{Dockerfile,docker-compose*.yml,.github/**/*,.gitlab-ci.yml,nginx.conf,.env.example,tsconfig.json}"
+    depends_on:
+      - architecture
+      - deployment
+    triggers_update:
+      - deployment
+      - tasks
+
+  migration_files:
+    path_pattern: "**/prisma/migrations/**/*"
+    depends_on:
+      - prps
+      - architecture
+    triggers_update:
+      - deployment
+      - test_guide

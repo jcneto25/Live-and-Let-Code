@@ -26,6 +26,24 @@ tags: [design-system, ui, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 7** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-7.md`:
+     ```markdown
+     # Skip Note: Step 7 — Design System
+     **Decisão:** Step pulado — tokens, componentes e padrões visuais inalterados.
+     **Gate 8:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 7 pulado via Smart Skip. DESIGN_SYSTEM.md existente reaproveitado. Gate 8 auto-aprovado."
+3. Se **Step 7** estiver listado como "executar": gere DESIGN_SYSTEM.md v2, adicionando apenas novos tokens/componentes. Componentes existentes inalterados devem ser copiados do original.
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUÇÃO
 
 Você está executando a skill `llc-step-7` do pipeline LLC. Seu objetivo é gerar um Design System completo e pronto para implementação, preenchendo o template `Design_System_Master.md` com decisões concretas baseadas na identidade do projeto e stack definido.

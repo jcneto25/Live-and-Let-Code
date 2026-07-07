@@ -29,6 +29,24 @@ tags: [documentacao, user-guide, manual-usuario, llc-pipeline]
 
 ---
 
+## 🔄 Modo Delta — Smart Skip Check
+
+**Se `docs/planning/DELTA_REPORT.md` existir e estiver aprovado (Gate Δ.0):**
+
+1. Leia a seção §5.2 (Steps a Pular) do DELTA_REPORT.md.
+2. Se **Step 10.5** estiver listado como "skip":
+   - Gere skip note em `docs/delta/skip-notes/step-10-5.md`:
+     ```markdown
+     # Skip Note: Step 10.5 — Manual do Usuário
+     **Decisão:** Step pulado — UI inalterada, manual do usuário existente permanece válido.
+     **Gate 11.5:** ✅ Auto-aprovado (reaproveitando aprovação anterior)
+     ```
+   - **PARE** e informe: "Step 10.5 pulado via Smart Skip. User guide existente reaproveitado. Gate 11.5 auto-aprovado."
+3. Se **Step 10.5** estiver listado como "executar": gere esqueleto atualizado, preservando páginas existentes inalteradas e adicionando novas conforme DELTA_REPORT.md.
+4. Se DELTA_REPORT.md não existir: prossiga normalmente.
+
+---
+
 ## 🎯 PROMPT DE EXECUCAO
 
 Voce esta executando a skill `llc-user-guide` do pipeline LLC. Seu objetivo e gerar o **esqueleto do manual do usuario** em `docs/user-guide/`, que sera preenchido incrementalmente durante a execucao dos PRPs (Step 11).

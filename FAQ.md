@@ -1,6 +1,6 @@
 # FAQ — Live and Let Code (LLC)
 
-**Versao:** 1.5.0 — Junho 2026
+**Versao:** 1.6.0 — Julho 2026
 
 ---
 
@@ -189,7 +189,19 @@ O Agentic Planning responde "o que fazer e em qual ordem". O Context-Engineered 
 - **PRPs independentes rodam em paralelo** (worktrees separados); PRPs dependentes aguardam a conclusão dos bloqueantes
 - O `<context_seed>` de 4 campos garante que o agente retome exatamente de onde parou, sem recarregar histórico
 
-### O que é decomposição em PRPs (equivalente a "sharding de épicos")?
+### Como o LLC suporta mudancas em sistemas existentes (fluxo delta)?
+
+O LLC foi originalmente desenhado para greenfield (sistemas novos). A partir da v1.6.0, o **fluxo delta** permite aplicar a metodologia a sistemas existentes que recebem novos documentos de mudanca. O fluxo tem tres diferencas fundamentais:
+
+1. **Analise de impacto primeiro (Step Δ.0):** Em vez de gerar specs do zero, o `impact-analyzer.py --classify` e executado para mapear o que muda (Δ) entre a versao atual e os novos documentos. O resultado e um `DELTA_REPORT.md` com classificacao major/minor e um plano de execucao.
+
+2. **Grill Me de Mudanca (Step Δ.1):** As 8 perguntas sao focadas no delta — o que muda em termos de funcionalidades existentes, contratos de API, perfis, modelo de dados, regras de negocio. Nao pergunta sobre o sistema como um todo.
+
+3. **Smart Skip:** Steps cujos artefatos nao sao afetados sao automaticamente pulados, gerando um **Skip Note** que documenta a decisao. O gate e auto-aprovado com referencia a aprovacao anterior. Isso economiza tokens e tempo sem sacrificar rastreabilidade.
+
+**PRP-A (Amendment):** Para mudancas em PRPs existentes, o Step 3 (modo delta) gera PRP-A em vez de PRPs novos. O template inclui secao de diff (antes vs depois) e garantia de nao regressao.
+
+### O que e decomposição em PRPs (equivalente a "sharding de épicos")?
 
 É o processo de quebrar um PRD abrangente em unidades de desenvolvimento focadas e auto-contidas. No LLC, a cadeia de decomposição é:
 
@@ -691,7 +703,7 @@ Essas ferramentas podem ser adicionadas ao pipeline CI/CD definido no `docs/DEPL
 
 ### Quantas etapas tem o LLC?
 
-14 etapas principais + 5 auxiliares (19 no total), 21 skills (incluindo 1 subfluxo composto de prototipagem). O pipeline vai da ingestao de conhecimento de negocio ao deploy:
+14 etapas principais + 5 auxiliares + 2 delta (21 no total), 23 skills (incluindo 1 subfluxo composto de prototipagem + 2 delta + 1 smart-skip). O pipeline vai da ingestao de conhecimento de negocio ao deploy, com suporte a mudancas em sistemas existentes via fluxo delta:
 
 > **Principais (14):** Steps numerados sequenciais — 0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.
 > **Auxiliares (5):** 0-GF (alternativa greenfield), 10.5 (manual do usuario), 11-SEC (auditoria pre-code),

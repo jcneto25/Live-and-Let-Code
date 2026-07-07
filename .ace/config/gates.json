@@ -154,6 +154,26 @@
         "Cobertura de branches >= 70%, functions >= 80%, lines >= 80%?",
         "Caminhos criticos (auth, payments, data mutations) >= 90%?"
       ]
+    },
+    "Δ.0": {
+      "step": 0.2,
+      "label": "Delta Impact Analysis",
+      "checklist": [
+        "Classificacao (major/minor) esta correta?",
+        "Artefatos 'unchanged' realmente nao precisam de revisao?",
+        "PRPs afetados estao corretamente identificados?",
+        "Plano de steps (executar vs pular) esta adequado?",
+        "Ha riscos nao identificados no relatorio?"
+      ]
+    },
+    "Δ.1": {
+      "step": 0.3,
+      "label": "Delta Grill Me",
+      "checklist": [
+        "Respostas do usuario foram registradas fielmente?",
+        "Ambiguidades residuais documentadas como [NAO RESPONDIDO]?",
+        "Correcoes no DELTA_REPORT.md aplicadas se necessario?"
+      ]
     }
   }
 }

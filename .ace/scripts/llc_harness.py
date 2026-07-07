@@ -19,6 +19,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from llc_delta import (
+    delta_report_exists,
+    generate_skip_note,
+    get_skip_reason,
+    is_step_skipped,
+    parse_delta_report,
+)
 from llc_steps import (
     REGISTRY,
     UnknownStepError,
@@ -630,18 +637,97 @@ def _llm_invoke(prompt, client=None):
 # ── Pipeline orchestration ──
 
 
-def pipeline_run(from_step="0.5", to_step="11.1", task=None):
+def _run_delta_analysis(auto_approve=False, iteration=None):
+    """Executa a fase de analise delta (Δ.0 + Δ.1) antes do pipeline principal.
+
+    1. Executa Step Δ.0 (Delta Impact Analysis) — gera DELTA_REPORT.md
+    2. Gate Δ.0 — validacao humana
+    3. Executa Step Δ.1 (Delta Grill Me) — resolve ambiguidades
+    4. Gate Δ.1 — validacao humana
+    """
+    print(f"\n{'='*60}")
+    print("📊 FASE Δ — ANALISE DE IMPACTO (Modo Delta)")
+    print(f"{'='*60}")
+    if iteration:
+        print(f"Iteracao: {iteration}")
+
+    # Step Δ.0
+    sid = step_run("0.2", task="Delta Impact Analysis")
+    decision = gate_check("0.2", None, auto_approve=auto_approve)
+    session_end(sid, decision, None, step="0.2")
+    if decision == "rejected":
+        print("\n⛔ Gate Δ.0 REPROVADO. Pipeline pausado.")
+        return False
+
+    # Step Δ.1
+    sid = step_run("0.3", task="Delta Grill Me")
+    decision = gate_check("0.3", None, auto_approve=auto_approve)
+    session_end(sid, decision, None, step="0.3")
+    if decision == "rejected":
+        print("\n⛔ Gate Δ.1 REPROVADO. Pipeline pausado.")
+        return False
+
+    print("\n✅ Fase Δ concluida. Iniciando pipeline de execucao...")
+    return True
+
+
+def pipeline_run(from_step="0.5", to_step="11.1", task=None,
+                 delta=False, iteration=None, auto_approve=False):
     """Executa pipeline completo do step inicial ao final (ids canonicos).
 
     A sequencia e a subselecao vem de llc_steps.pipeline_steps() (ordenada por
     numero), entao inclui 10.6/10.7/11.1 nas posicoes corretas.
 
     Inclui verificacao de consistencia automatica apos cada step.
+
+    Modo delta (--delta):
+      - Executa fase Δ (Δ.0 + Δ.1) antes do pipeline principal
+      - Le DELTA_REPORT.md para determinar steps a pular
+      - Gera skip notes para steps nao executados
+      - Auto-aprova gates de steps skipados
     """
+    # ── Modo Delta ──
+    if delta:
+        # 1. Executa fase de analise delta (se DELTA_REPORT.md nao existe ainda)
+        if not delta_report_exists():
+            success = _run_delta_analysis(
+                auto_approve=auto_approve, iteration=iteration
+            )
+            if not success:
+                return False
+
+        # 2. Le o plano delta
+        delta_plan = parse_delta_report()
+        if delta_plan is None:
+            print("⚠️  DELTA_REPORT.md nao encontrado ou invalido.")
+            print("   Continuando sem modo delta (pipeline padrao).")
+            delta = False
+        else:
+            print(f"\n📋 Plano Delta: {delta_plan['change_type'].upper()}")
+            print(f"   Steps a executar: {len(delta_plan['execute_steps'])}")
+            print(f"   Steps a pular: {len(delta_plan['skip_steps'])}")
+
+            # Atualiza from_step/to_step com base no plano delta
+            if delta_plan["execute_steps"]:
+                # Usa os steps do plano delta em vez do range padrao
+                pass  # Delta steps sao tratados no loop abaixo
+
+    # ── Pipeline Padrao ──
     specs = pipeline_steps(from_id=from_step, to_id=to_step)
     started = False
 
     for spec in specs:
+        # ── Smart Skip (modo delta) ──
+        if delta and delta_plan and is_step_skipped(spec.id, delta_plan):
+            reason = get_skip_reason(spec.id, spec.name, delta_plan)
+            note_file = generate_skip_note(
+                spec.id, spec.name, reason or "Step nao afetado",
+                iteration=delta_plan.get("iteration"),
+            )
+            print(f"\n⏭️  Step {spec.id} ({spec.name}) — PULADO (Smart Skip)")
+            print(f"   Motivo: {reason or 'Step nao afetado'}")
+            print(f"   Skip note: {note_file}")
+            continue
         if not started:
             print(f"\n{'=' * 60}")
             print(

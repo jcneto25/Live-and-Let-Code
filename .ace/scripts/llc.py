@@ -133,11 +133,50 @@ def cli():
 @click.option(
     "--auto-approve", is_flag=True, help="Aprova gates automaticamente (CI/CD)"
 )
-def run(step, prp, task, wave, no_worktree, auto_approve):
+@click.option(
+    "--delta",
+    "-d",
+    is_flag=True,
+    help="Modo delta: ativa smart skip para este step",
+)
+@click.option(
+    "--iteration",
+    "-i",
+    default=None,
+    help="Identificador da iteracao (ex: v2)",
+)
+def run(step, prp, task, wave, no_worktree, auto_approve, delta, iteration):
     """Executa um step completo do pipeline LLC.
 
     Fluxo: init session -> load skill -> invoke agent -> gate check -> finalize session.
     """
+    # Smart Skip no modo delta
+    if delta:
+        from llc_delta import (
+            delta_report_exists,
+            generate_skip_note,
+            get_skip_reason,
+            is_step_skipped,
+            parse_delta_report,
+        )
+        if delta_report_exists():
+            plan = parse_delta_report()
+            if plan and is_step_skipped(step, plan):
+                reason = get_skip_reason(step, "", plan) or "Step nao afetado"
+                from llc_steps import normalize_step as _ns
+                try:
+                    name = _ns(step).name
+                except Exception:
+                    name = ""
+                nf = generate_skip_note(step, name, reason, iteration=iteration)
+                print(f"\n⏭️  Step {step} ({name}) — PULADO (Smart Skip)")
+                print(f"   Motivo: {reason}")
+                print(f"   Skip note: {nf}")
+                return
+        else:
+            print("ℹ️  Modo delta ativado mas DELTA_REPORT.md nao encontrado.")
+            print("   Execute 'llc pipeline --delta' primeiro.")
+
     print(f"\n🚀 LLC Run — Step {step} (wave {wave})")
     print(f"{'=' * 60}")
 
@@ -172,21 +211,43 @@ def run(step, prp, task, wave, no_worktree, auto_approve):
     is_flag=True,
     help="Modo quickstart: 3 gates principais (1, 4, 11)",
 )
-def pipeline(from_step, to_step, task, quickstart):
+@click.option(
+    "--delta",
+    "-d",
+    is_flag=True,
+    help="Modo delta: executa analise de impacto + smart skip",
+)
+@click.option(
+    "--iteration",
+    "-i",
+    default=None,
+    help="Identificador da iteracao (ex: v2, v3)",
+)
+@click.option(
+    "--auto-approve",
+    is_flag=True,
+    help="Aprova gates automaticamente (CI/CD)",
+)
+def pipeline(from_step, to_step, task, quickstart, delta, iteration, auto_approve):
     """Executa o pipeline LLC completo, parando em cada gate."""
     if quickstart:
-        # Modo quickstart: apenas 3 gates principais
         from_step = "0.5"
         to_step = "11"
         print("\n🚀 LLC Pipeline Quickstart")
         print(f"{'=' * 60}")
         print("Gates incluídos: 1 (Visão), 4 (PRPs), 11 (Execução)")
         print("Pule para o modo completo com: llc pipeline --from 0 --to 11.1")
+    elif delta:
+        print(f"\n🚀 LLC Pipeline — Modo Delta (Iteracao: {iteration or 'N/A'})")
+        print(f"{'=' * 60}")
     else:
-        print(f"\n🚀 LLC Pipeline — Step {from_step} até {to_step}")
+        print(f"\n🚀 LLC Pipeline — Step {from_step} ate {to_step}")
         print(f"{'=' * 60}")
 
-    success = pipeline_run(from_step=from_step, to_step=to_step, task=task)
+    success = pipeline_run(
+        from_step=from_step, to_step=to_step, task=task,
+        delta=delta, iteration=iteration, auto_approve=auto_approve,
+    )
     if not success:
         sys.exit(1)
 
@@ -435,6 +496,105 @@ def wave_run(wave, aggregate, dry_run, no_worktree, auto_approve):
     )
     if not success:
         sys.exit(1)
+
+
+# ── Delta commands ──
+
+
+@cli.group()
+def delta():
+    """Comandos do fluxo delta (mudancas em sistema existente).
+
+    Inicia a analise de impacto, executa smart skip e gerencia
+    a iteracao entre versoes do sistema.
+    """
+    pass
+
+
+@delta.command("start")
+@click.option(
+    "--iteration",
+    "-i",
+    required=True,
+    help="Identificador da iteracao (ex: v2)",
+)
+@click.option(
+    "--auto-approve",
+    is_flag=True,
+    help="Aprova gates automaticamente (CI/CD)",
+)
+def delta_start(iteration, auto_approve):
+    """Inicia o fluxo delta: Step Δ.0 (Impact Analysis) + Step Δ.1 (Grill Me).
+
+    1. Verifica se novos documentos existem em ingestion/
+    2. Executa Step Δ.0 (gera DELTA_REPORT.md)
+    3. Gate Δ.0 — validacao do relatorio de impacto
+    4. Executa Step Δ.1 (Grill Me de Mudanca)
+    5. Gate Δ.1 — validacao das respostas
+    """
+    print(f"\n{'='*60}")
+    print(f"📊 INICIANDO FLUXO DELTA — Iteracao {iteration}")
+    print(f"{'='*60}")
+
+    # Verifica ingestion
+    from llc_delta import delta_report_exists
+
+    from pathlib import Path as _P
+    ingestion = _P("docs/business/ingestion/converted")
+    if not ingestion.exists() or not list(ingestion.iterdir()):
+        print("⚠️  Nenhum documento em docs/business/ingestion/converted/")
+        print("   Coloque os novos documentos primeiro, ou execute:")
+        print("   llc run --step 0.1  (conversao Docling)")
+        return
+
+    if delta_report_exists():
+        print("ℹ️  DELTA_REPORT.md ja existe.")
+        from click import confirm as _cf
+        if not _cf("Deseja refazer a analise de impacto?"):
+            print("   Pulando fase Δ. Use 'llc pipeline --delta' para continuar.")
+            return
+
+    from llc_harness import _run_delta_analysis
+
+    success = _run_delta_analysis(
+        auto_approve=auto_approve, iteration=iteration
+    )
+    if success:
+        print(f"\n✅ Fluxo delta iniciado. Proximo passo:")
+        print(f"   llc pipeline --delta --iteration {iteration}")
+    else:
+        print("\n⛔ Fluxo delta interrompido. Corrija e tente novamente.")
+
+
+@delta.command("plan")
+def delta_plan():
+    """Exibe o plano de execucao delta atual (DELTA_REPORT.md)."""
+    from llc_delta import parse_delta_report
+
+    plan = parse_delta_report()
+    if plan is None:
+        print("❌ DELTA_REPORT.md nao encontrado.")
+        print("   Execute: llc delta start --iteration v2")
+        return
+
+    print(f"\n📋 Plano Delta ({plan['change_type'].upper()})")
+    print(f"{'='*60}")
+    if plan["iteration"]:
+        print(f"Iteracao: {plan['iteration']}")
+    print(f"\nSteps a executar ({len(plan['execute_steps'])}):")
+    for s in plan["execute_steps"]:
+        print(f"  ✅ {s}")
+    print(f"\nSteps a pular ({len(plan['skip_steps'])}):")
+    for s in plan["skip_steps"]:
+        print(f"  ⏭️  {s['step_id']} — {s['reason']}")
+    if plan["affected_prps"]:
+        print(f"\nPRPs afetados ({len(plan['affected_prps'])}):")
+        for p in plan["affected_prps"]:
+            print(f"  🔄 {p}")
+    if plan["new_prps"]:
+        print(f"\nNovos PRPs ({len(plan['new_prps'])}):")
+        for p in plan["new_prps"]:
+            print(f"  ✨ {p}")
 
 
 if __name__ == "__main__":

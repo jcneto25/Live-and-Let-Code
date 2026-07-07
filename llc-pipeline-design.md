@@ -1,7 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versao:** 1.6.0
-**Data:** 04 de Junho de 2026 (atualizado em 03/07/2026)
+**Versao:** 1.7.0
+**Data:** 07 de Julho de 2026
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
 **Autor:** Equipe LLC  
@@ -27,7 +27,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 Este documento especifica:
 
 - A arquitetura de diretórios do LLC (§2)
-- O pipeline completo com 14 etapas principais + 1 subfluxo (§3)
+- O pipeline completo com 14 etapas principais + 1 subfluxo + 2 etapas delta (§3)
 - O catálogo de skills (§4)
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)
@@ -318,14 +318,14 @@ graph TD
     S10 --> G11{👤 Gate 11}
     G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
     S105 --> G115{👤 Gate 11.5}
-    G115 -->|approved| S11SEC[Step 10.6: Security Audit (SCA + SAST + Secrets)]
+    G115 -->|approved| S11SEC["Step 10.6: Security Audit (SCA + SAST + Secrets)"]
     S11SEC --> GSEC{👤 Gate 11-SEC}
-    GSEC -->|approved| S12NULL[Step 10.7: Null Safety (Data Contracts)]
+    GSEC -->|approved| S12NULL["Step 10.7: Null Safety (Data Contracts)"]
     GSEC -->|rejected| S11SEC
     S12NULL --> G12NULL{👤 Gate 12-NULL}
     G12NULL -->|approved| S11[Step 11: LLC Execution]
     G12NULL -->|rejected| S12NULL
-    S11 --> BACK[PRPs sem UI → agente direto]
+    S11 --> BACK["PRPs sem UI → agente direto"]
     S11 --> UI[PRPs com UI → Subfluxo F1-F6]
     UI --> F4[F4: Hi-Fi]
     F4 --> CV{🔴 CHECKPOINT VISUAL}
@@ -338,6 +338,24 @@ graph TD
     V112 -->|CRITICAL| REJ[merge bloqueado — corrija]
     V112 -->|0 CRITICAL| DEPLOY[Deploy]
     REJ --> S11
+
+    subgraph FLUXO DELTA
+        DELTA_TRIGGER{Sistema existe?}
+        DELTA_TRIGGER -->|Sim + novos docs| D0[Step Δ.0: Delta Impact Analysis]
+        D0 --> GD0{👤 Gate Δ.0}
+        GD0 -->|approved| D1[Step Δ.1: Grill Me de Mudança]
+        GD0 -->|rejected| D0
+        D1 --> GD1{👤 Gate Δ.1}
+        GD1 -->|approved| SMART[Smart Skip: decide execução]
+        GD1 -->|rejected| D1
+        SMART -->|step inalterado| SKIP[⏭️ Skip Note + Gate auto-aprovado]
+        SMART -->|step afetado| EXEC[Executar step normalmente]
+        SKIP --> NEXT[Próximo step do pipeline]
+        EXEC --> NEXT
+        NEXT --> SMART
+    end
+
+    DEPLOY -.->|Nova iteração| DELTA_TRIGGER
 ```
 
 ### 3.2 Tabela de Etapas
@@ -468,6 +486,9 @@ tags: [categoria, llc-pipeline]
 | `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
 | `llc-step-11-2-prp-verify` | **11.2** | **Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps** |
 | `llc-step-12-null-safety` | 10.7 | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
+| `llc-step-delta-impact` | Δ.0 | [NOVO] Analisa o delta entre versão atual e novos documentos, gera DELTA_REPORT.md com classificação major/minor |
+| `llc-step-delta-grill` | Δ.1 | [NOVO] Grill Me de Mudança — até 8 perguntas focadas no delta entre versões |
+| `llc-smart-skip` | Transversal | [NOVO] Mecanismo de skip condicional para steps inalterados em iterações delta |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
@@ -531,6 +552,8 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 11-OWASP | 11.1 | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
 | 🔴 11-VERIFY | **11.2** | **prp_verify --strict passou (0 CRITICAL)? WARNs revisados? Bypass nao ativo?** |
 | 👤 12-NULL | 10.7 | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
+| 👤 **Δ.0** | **0.2** | **[NOVO] Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados?** |
+| 👤 **Δ.1** | **0.3** | **[NOVO] Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas?** |
 | 👤 10-COVERAGE | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
@@ -585,6 +608,8 @@ O histórico ACE da sessão rejeitada **nunca é deletado** — append-only, pre
 | 20 | Coverage Baseline | `docs/testing/COVERAGE_BASELINE_TEMPLATE.md` | IA (Step 9) | `docs/testing/COVERAGE_BASELINE.md` |
 | 21 | Coverage Progress | `docs/testing/COVERAGE_PROGRESS_TEMPLATE.md` | IA (Step 9) | `docs/testing/COVERAGE_PROGRESS.md` |
 | 22 | User Guide | `docs/USER_GUIDE_TEMPLATE.md` | IA (Step 10.5) | `docs/user-guide/USER_GUIDE.md` |
+| 23 | **PRP Amendment** | `docs/templates/PRP_AMENDMENT_TEMPLATE.md` | IA (Step 3, modo delta) | `docs/prps/PRP-A-*.md` |
+| 24 | **Delta Report** | `docs/templates/DELTA_REPORT_TEMPLATE.md` | IA (Step Δ.0) | `docs/planning/DELTA_REPORT.md` |
 
 ---
 

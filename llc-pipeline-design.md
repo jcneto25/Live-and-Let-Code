@@ -318,14 +318,14 @@ graph TD
     S10 --> G11{👤 Gate 11}
     G11 -->|approved| S105[Step 10.5: User Guide Skeleton]
     S105 --> G115{👤 Gate 11.5}
-    G115 -->|approved| S11SEC[Step 10.6: Security Audit (SCA + SAST + Secrets)]
+    G115 -->|approved| S11SEC["Step 10.6: Security Audit (SCA + SAST + Secrets)"]
     S11SEC --> GSEC{👤 Gate 11-SEC}
-    GSEC -->|approved| S12NULL[Step 10.7: Null Safety (Data Contracts)]
+    GSEC -->|approved| S12NULL["Step 10.7: Null Safety (Data Contracts)"]
     GSEC -->|rejected| S11SEC
     S12NULL --> G12NULL{👤 Gate 12-NULL}
     G12NULL -->|approved| S11[Step 11: LLC Execution]
     G12NULL -->|rejected| S12NULL
-    S11 --> BACK[PRPs sem UI → agente direto]
+    S11 --> BACK["PRPs sem UI → agente direto"]
     S11 --> UI[PRPs com UI → Subfluxo F1-F6]
     UI --> F4[F4: Hi-Fi]
     F4 --> CV{🔴 CHECKPOINT VISUAL}

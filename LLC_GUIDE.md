@@ -364,16 +364,27 @@ Execute a skill docs/skills/llc-step-4.md
 Execute a skill docs/skills/llc-step-5.md
 ```
 
-**A IA faz:** Gera `docs/architecture/ARCHITECTURE.md` com:
-- Stack tecnológico (frontend, backend, banco, infra)
-- Diagramas C4 (contexto, containers, componentes)
-- ADRs (decisões arquiteturais justificadas)
-- Estratégia de segurança e CI/CD
+**A IA faz:** Gera:
+- `docs/architecture/ARCHITECTURE.md` — documento principal com stack, C4, segurança, CI/CD
+- `docs/architecture/adr/ADR-*.md` — **ADRs em arquivos individuais** (template em `ADR_TEMPLATE.md`)
+- `.ace/arch-config.yaml` — configuração das fitness functions (módulos core e thresholds)
+
+**Seções expandidas do template ARCHITECTURE_TEMPLATE.md:**
+- **Stack tecnológico** com justificativas e alternativas descartadas
+- **Diagramas C4** (contexto, containers, componentes)
+- **ADRs em arquivos separados** (diff granular, referência individual em PRs)
+- **Camada de Domínio e Ports & Adapters** — estrutura intra-módulo (`domain/`, `application/`, `infrastructure/`), regras DIP, exemplo de código
+- **Casos de Uso** — one class per use case com `execute(dto)`
+- **Comunicação entre Módulos** — EventEmitter2 para monólito, matriz de eventos pub/sub
+- **Fitness Functions** — `.ace/arch-config.yaml` com módulos core e thresholds
+- **Estratégia de segurança e CI/CD**
 
 **Você valida:** 👤 Gate 6
 - O stack é viável no seu ambiente?
 - As decisões arquiteturais são justificadas?
 - Os RNFs de performance e segurança estão endereçados?
+- Os ADRs estão em arquivos separados e endereçam os 5 tópicos obrigatórios?
+- A configuração de fitness functions (.ace/arch-config.yaml) está correta?
 
 **Só avance quando aprovar.**
 
@@ -876,7 +887,8 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Verificar cobertura de testes (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
 | Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
 | Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
-| Ver código health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
+| Ver código health trends + fitness | `python .ace/scripts/code-health.py --since "30 days ago" --json --fitness` |
+| Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |
 | Entender um termo | Leia [`llc-pipeline-design.md` §8](llc-pipeline-design.md#8-glossário-llc) |

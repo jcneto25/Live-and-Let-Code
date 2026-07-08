@@ -48,7 +48,7 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 | **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6, 15 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6 + 2 delta, 15 human gates + checkpoint visual + Gate 11-ARCH, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
 | **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -493,9 +493,10 @@ tags: [categoria, llc-pipeline]
 | `llc-smart-skip` | Transversal | [NOVO] Mecanismo de skip condicional para steps inalterados em iterações delta |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
+| `llc-arch-fitness` | **11.3** | **[NOVO] Skill transversal do Gate 11-ARCH: executa fitness functions, classifica violações, registra dívida técnica** |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
 | `llc-impact-analyzer` | Transversal | Analisa impacto de alterações via git diff + grafo de dependências |
-| **fitness-functions.py** | **Pós-11** | **[NOVO] Verifica conformidade arquitetural: Dependency Rule, circular deps, DIP, use case size, module coverage** |
+| **fitness-functions.py** | **11.3** | **[NOVO] Script de fitness functions: Dependency Rule, circular deps, DIP, domain isolation, use case size, module coverage** |
 
 ---
 
@@ -558,6 +559,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 **Δ.0** | **0.2** | **[NOVO] Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados?** |
 | 👤 **Δ.1** | **0.3** | **[NOVO] Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas?** |
 | 👤 10-COVERAGE | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
+| 🔴 **11-ARCH** | **11.3** | **[NOVO] fitness-functions.py --all --strict passou (0 CRITICAL)? Core modules sem violação de Dependency Rule? Nenhuma dependência circular? Interface coverage ≥ threshold? Domínio não importa infra? WARNs registrados?** |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 
@@ -613,6 +615,7 @@ O histórico ACE da sessão rejeitada **nunca é deletado** — append-only, pre
 | 22 | User Guide | `docs/USER_GUIDE_TEMPLATE.md` | IA (Step 10.5) | `docs/user-guide/USER_GUIDE.md` |
 | 23 | **PRP Amendment** | `docs/templates/PRP_AMENDMENT_TEMPLATE.md` | IA (Step 3, modo delta) | `docs/prps/PRP-A-*.md` |
 | 24 | **Delta Report** | `docs/templates/DELTA_REPORT_TEMPLATE.md` | IA (Step Δ.0) | `docs/planning/DELTA_REPORT.md` |
+| 25 | **ADR** | `docs/architecture/ADR_TEMPLATE.md` | IA (Step 5) | `docs/architecture/adr/ADR-*.md` |
 
 ---
 
@@ -981,7 +984,7 @@ Quando uma fitness function falha:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.7.0 | 07/07/2026 | Equipe LLC | Adicionado fluxo delta (Δ.0 + Δ.1), Smart Skip, PRP-A, Thin Harness --delta/--iteration, fitness functions (6 checks, modo híbrido) |
+| 1.7.0 | 07/07/2026 | Equipe LLC | Fluxo delta completo (Δ.0 + Δ.1), Smart Skip, PRP-A, Thin Harness --delta/--iteration, fitness functions (6 checks, modo híbrido), ADRs em arquivos separados (ADR_TEMPLATE.md), ARCHITECTURE_TEMPLATE expandido (domínio, ports & adapters, eventos), PRP_TEMPLATE expandido (repository interfaces, use cases, domain entities), AGENTS_TEMPLATE v1.2 (6 regras arquiteturais), Gate 11-ARCH, code-health --fitness, llc-arch-fitness skill |
 | 1.7.0 | 03/07/2026 | Equipe LLC | Adicionado Step 11.2 (PRP Verify): `prp_verify.py` engine, skill `llc-step-11-2-prp-verify`, gate 11-VERIFY, bloqueio determinístico no `session_end()` + `_post_wave_check()`, colunas Teste(s)/Arquivo(s) impl no PRP_TEMPLATE.md §2, escopo de SAST/secrets restrito a `apps/*/src/` |
 | 1.6.0 | 26/06/2026 | Equipe LLC | `normalize_step()` canônico + `llc_steps.REGISTRY` (fonte única de verdade para identidade de step). Renumerado para que o número do step == a sequência do pipeline: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execução segue 11). Adicionado campo canônico `llc_step_id` no frontmatter da sessão + `index.json` (ao lado do `llc_step` numérico); a CLI `--step` aceita ids/aliases (`security`, `owasp`, `null-safety`). Corrige #2/#3/#4 (steps textuais inalcançáveis, 10.5/10.6/10.7/11.1 inválidos, `skill_load` não-determinístico). |
 | 1.5.0 | 13/06/2026 | Equipe LLC | Adicionado Thin Harness (orquestrador CLI), Early Commitment + Deterministic Replay, steps de seguranca (11-Security, 11-OWASP, 12-Null-Safety), indice comprimido de documentacao, 15 human gates |

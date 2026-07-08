@@ -105,6 +105,22 @@ echo ""
 echo "📊 Analisando impacto nos artefatos LLC..."
 python .ace/scripts/impact-analyzer.py --staged --json 2>/dev/null && echo "✅ Análise de impacto concluída" || echo "⚠️  Impact analyzer não executou (verifique PyYAML)"
 
+# 7. Fitness Functions — verificação arquitetural (alerta informativo — não bloqueia)
+echo ""
+echo "🏗️  Verificando conformidade arquitetural (fitness functions)..."
+if [ -f ".ace/scripts/fitness-functions.py" ]; then
+  python .ace/scripts/fitness-functions.py --all --json 2>/dev/null | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+total = data['summary']['total']
+passed = data['summary']['passed']
+blocked = data['summary']['blocked']
+print(f'   Fitness: {passed}/{total} checks passaram' + (' 🔴 BLOQUEIO' if blocked else ''))
+" 2>/dev/null || echo "⚠️  Fitness functions não executou (verifique dependências)"
+else
+  echo "⚠️  fitness-functions.py não encontrado — pulando"
+fi
+
 # Resultado final
 if [ "$ERRORS" -gt 0 ]; then
   echo ""

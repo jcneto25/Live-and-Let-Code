@@ -1,8 +1,8 @@
 ---
 name: llc-step-5
-description: Pipeline LLC Passo 5: Gera documento de Arquitetura (ARCHITECTURE.md) com stack, C4, ADRs, segurança e CI/CD.
-version: 1.0.0
-tags: [architecture, stack, llc-pipeline]
+description: Pipeline LLC Passo 5: Gera documento de Arquitetura (ARCHITECTURE.md) com stack, C4, ADRs, domínio, Ports & Adapters, use cases, fitness functions. ADRs em arquivos separados.
+version: 1.1.0
+tags: [architecture, stack, adr, fitness, llc-pipeline]
 ---
 
 # LLC Skill: Step 5 — Arquitetura
@@ -21,7 +21,8 @@ tags: [architecture, stack, llc-pipeline]
 
 - [ ] PRDs, specs e PRPs validados (Steps 1-3)
 - [ ] `docs/planning/PLAN.md` (validado no Step 4)
-- [ ] `docs/architecture/ARCHITECTURE_TEMPLATE.md`
+- [ ] `docs/architecture/ARCHITECTURE_TEMPLATE.md` (template expandido v1.1+)
+- [ ] `docs/architecture/ADR_TEMPLATE.md` (template de ADR individual)
 - [ ] `docs/business/specs/requisitos_nao_funcionais.md`
 - [ ] `docs/business/specs/catalogo_integracoes.md`
 - [ ] `docs/business/specs/perfis_permissoes.md`
@@ -72,8 +73,10 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 - **Level 3 (Componentes):** Exemplo de um fluxo principal.
 
 ### 4. Architecture Decision Records (ADRs)
-- Registre as decisões arquiteturais-chave no formato ADR.
-- Mínimo de 5 ADRs cobrindo: stack frontend, stack backend, banco de dados, estratégia de autenticação, estratégia de integração.
+- **Cada ADR é um arquivo separado** em `docs/architecture/adr/ADR-{NNN}-{nome}.md`.
+- Use o template `docs/architecture/ADR_TEMPLATE.md`.
+- Gere o índice de ADRs na §8 do ARCHITECTURE.md (tabela com links para cada arquivo).
+- Mínimo de 5 ADRs cobrindo: stack frontend, stack backend, banco de dados, estratégia de autenticação, comunicação entre módulos.
 
 ### 5. Segurança e Compliance
 - Medidas por camada (rede, aplicação, dados).
@@ -87,8 +90,28 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 - Estratégia de rollback.
 - Monitoramento e observabilidade.
 
-### 7. Salve
-- Salve o documento completo em: `docs/architecture/ARCHITECTURE.md`.
+### 7. Camada de Domínio e Ports & Adapters
+- Defina a estrutura de diretórios intra-módulo: `domain/`, `application/`, `infrastructure/`
+- Documente as regras da Dependency Rule: domínio não importa infra
+- Inclua exemplo de Repository Pattern com interface (`I{nome}Repository`) e implementação concreta
+- Inclua exemplo de Use Case com `execute(dto)`
+
+### 8. Comunicação entre Módulos
+- Defina o barramento de eventos: EventEmitter2 para monólito modular, RabbitMQ/Redis para microserviços
+- Documente a matriz de eventos por módulo (publisher → subscriber)
+
+### 9. Fitness Functions
+- Gere `.ace/arch-config.yaml` com `core_modules` e thresholds
+- Liste os módulos core (auth, usuarios, etc.) — estes terão enforcement block
+- Documente como executar as fitness functions antes do merge:
+  ```
+  python .ace/scripts/fitness-functions.py --all --strict
+  ```
+
+### 10. Saída
+- `docs/architecture/ARCHITECTURE.md` — documento principal (preencher template expandido)
+- `docs/architecture/adr/ADR-001-*.md` a `ADR-005-*.md` — ADRs individuais
+- `.ace/arch-config.yaml` — configuração das fitness functions
 
 ---
 
@@ -104,13 +127,15 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 
 ## 📤 SAÍDA ESPERADA E FINALIZAÇÃO
 
-Após gerar o documento, **PARE** e apresente:
+Após gerar os artefatos, **PARE** e apresente:
 
 1. **Stack Summary:** Tabela resumo das tecnologias escolhidas.
-2. **ADRs:** Lista dos ADRs gerados com títulos.
-3. **Diagramas:** Confirmação dos diagramas C4 gerados.
-4. **RNF Coverage:** Cada RNF dos specs foi endereçado?
-5. **Riscos Arquiteturais:** Tabela de riscos identificados.
-6. **Próximos Passos:** Perguntas para validação humana (foco em trade-offs e viabilidade).
+2. **ADRs:** Lista dos ADRs gerados como arquivos individuais (`docs/architecture/adr/ADR-*.md`).
+3. **Domain Layer:** Estrutura de domínio, use cases e interfaces definidas.
+4. **Fitness Config:** `.ace/arch-config.yaml` gerado com módulos core e thresholds.
+5. **Diagramas:** Confirmação dos diagramas C4 gerados.
+6. **RNF Coverage:** Cada RNF dos specs foi endereçado?
+7. **Riscos Arquiteturais:** Tabela de riscos identificados.
+8. **Próximos Passos:** Perguntas para validação humana (foco em trade-offs e viabilidade).
 
 **NÃO prossiga para o próximo passo. Aguarde validação humana.**

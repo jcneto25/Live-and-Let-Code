@@ -48,7 +48,7 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 | **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6, 15 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6 + 2 delta, 15 human gates + checkpoint visual + Gate 11-ARCH, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
 | **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -82,11 +82,11 @@ O harness e "thin" por design: nao implementa tool-calling, nao define regras, n
 | **Replay Stats** (`replay_stats.py`) | Dashboard de metricas: hit rate, success rate, tokens economizados | — |
 
 ```
-FAT SKILLS (Markdown)     ← docs/skills/ (21 arquivos)
+FAT SKILLS (Markdown)     ← docs/skills/ (27 arquivos)
      ↑
 THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 linhas)
      ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)
-FAT CODE (Python)         ← .ace/scripts/ (7 scripts ACE)
+FAT CODE (Python)         ← .ace/scripts/ (8 scripts ACE + fitness-functions.py)
      ↑
 CLIENTE DE IA             ← Claude Code, opencode, Codex, Cursor...
 ```
@@ -234,6 +234,7 @@ project-root/
 │   │   ├── validate-tags.py
 │   │   ├── impact-analyzer.py
 │   │   ├── code-health.py
+│   │   ├── fitness-functions.py                  # [1.7.0] Fitness Functions
 │   │   ├── llc.py                                # [1.5.0] Thin Harness CLI
 │   │   ├── llc_harness.py                        # [1.5.0] Harness orchestrator
 │   │   ├── llc_classify.py                       # [1.5.0] Early Commitment classifier
@@ -241,7 +242,8 @@ project-root/
 │   │   ├── replay_stats.py                       # [1.5.0] Replay metrics dashboard
 │   │   └── pre-commit.sh
 │   ├── config/                                    # [1.5.0] Config files
-│   │   └── gates.json
+│   │   ├── gates.json
+│   │   └── arch-config.yaml                       # [1.7.0] Fitness Functions config
 │   ├── cache/                                     # [1.5.0] Replay scripts cache
 │   │   └── {type}.json
 │   ├── logs/                                      # [1.5.0] Replay event logs
@@ -491,8 +493,10 @@ tags: [categoria, llc-pipeline]
 | `llc-smart-skip` | Transversal | [NOVO] Mecanismo de skip condicional para steps inalterados em iterações delta |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
+| `llc-arch-fitness` | **11.3** | **[NOVO] Skill transversal do Gate 11-ARCH: executa fitness functions, classifica violações, registra dívida técnica** |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
 | `llc-impact-analyzer` | Transversal | Analisa impacto de alterações via git diff + grafo de dependências |
+| **fitness-functions.py** | **11.3** | **[NOVO] Script de fitness functions: Dependency Rule, circular deps, DIP, domain isolation, use case size, module coverage** |
 
 ---
 
@@ -555,6 +559,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 **Δ.0** | **0.2** | **[NOVO] Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados?** |
 | 👤 **Δ.1** | **0.3** | **[NOVO] Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas?** |
 | 👤 10-COVERAGE | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
+| 🔴 **11-ARCH** | **11.3** | **[NOVO] fitness-functions.py --all --strict passou (0 CRITICAL)? Core modules sem violação de Dependency Rule? Nenhuma dependência circular? Interface coverage ≥ threshold? Domínio não importa infra? WARNs registrados?** |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 
@@ -610,6 +615,7 @@ O histórico ACE da sessão rejeitada **nunca é deletado** — append-only, pre
 | 22 | User Guide | `docs/USER_GUIDE_TEMPLATE.md` | IA (Step 10.5) | `docs/user-guide/USER_GUIDE.md` |
 | 23 | **PRP Amendment** | `docs/templates/PRP_AMENDMENT_TEMPLATE.md` | IA (Step 3, modo delta) | `docs/prps/PRP-A-*.md` |
 | 24 | **Delta Report** | `docs/templates/DELTA_REPORT_TEMPLATE.md` | IA (Step Δ.0) | `docs/planning/DELTA_REPORT.md` |
+| 25 | **ADR** | `docs/architecture/ADR_TEMPLATE.md` | IA (Step 5) | `docs/architecture/adr/ADR-*.md` |
 
 ---
 
@@ -878,7 +884,87 @@ Quando um alerta é disparado, o pipeline recomenda:
 
 ---
 
-## 11. Glossário LLC
+## 11. Fitness Functions — Conformidade Arquitetural
+
+### 11.1 O Problema
+
+Agentes de IA tendem a otimizar para entrega rapida, nao para pureza arquitetural. Sem verificacoes automatizadas, padroes como Dependency Rule (Martin), Ports & Adapters (Stemmler) e isolamento de camadas (Ingeno) sao frequentemente violados. O codigo "funciona", mas a arquitetura degrada silenciosamente.
+
+### 11.2 A Solução
+
+O LLC implementa **fitness functions** (Ingeno ch16) — verificacoes automatizadas que validam caracteristicas arquiteturais do codigo. O script `.ace/scripts/fitness-functions.py` executa 6 checks:
+
+| Check | Flag | O que verifica | Threshold | Enforcement |
+|-------|------|---------------|-----------|-------------|
+| **Dependency Rule** | `--check-deps` | Services nao importam diretamente Prisma/infra | Core: 0 violacoes | 🔴 block / 🟡 warn |
+| **Circular Dependencies** | `--check-circular` | Modulos NestJS sem ciclos de importacao | 0 violacoes | 🔴 block |
+| **Interface Coverage** | `--check-interfaces` | Todo service tem interface (DIP) | Core: 100% | 🔴 block / 🟡 warn |
+| **Domain Isolation** | `--check-domain` | `domain/` nao importa infra | Core: 0 violacoes | 🔴 block / 🟡 warn |
+| **Use Case Size** | `--check-usecase` | Services com ≤ 8 metodos publicos | > 8 = alerta | 🟡 warn |
+| **Module Coverage** | `--check-coverage` | Cobertura por modulo (lcov) | Core: ≥ 70%, geral: ≥ 60% | 🟡 warn / block se < 50% |
+
+### 11.3 Modo Híbrido
+
+O comportamento de cada check e definido em `.ace/arch-config.yaml`, gerado pelo Step 5 (Arquitetura):
+
+```yaml
+version: "1.0"
+core_modules:
+  - auth
+  - usuarios
+checks:
+  dependency_rule:
+    enabled: true
+    mode: hybrid       # block para core_modules, warn para demais
+    block_for: core_modules
+  circular_deps:
+    enabled: true
+    mode: block         # block para todos os modulos
+  interface_coverage:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules
+    threshold: 100
+```
+
+### 11.4 Uso
+
+```bash
+# Executar todos os checks
+python .ace/scripts/fitness-functions.py --all
+
+# Check especifico
+python .ace/scripts/fitness-functions.py --check-deps --check-circular
+
+# Modo estrito (exit code 1 se violacao)
+python .ace/scripts/fitness-functions.py --all --strict
+
+# JSON para CI/CD
+python .ace/scripts/fitness-functions.py --all --strict --json
+```
+
+### 11.5 Integração com o Pipeline
+
+| Onde | Quando | Acao |
+|------|--------|------|
+| **Pre-commit hook** | A cada commit | Alerta informativo |
+| **Gate 11-ARCH** | Antes do merge (pos-Step 11) | Bloqueia se core module violar Dependency Rule |
+| **CI/CD** | A cada PR | `--strict --json` — falha se houver violacao |
+| **Step 11 (onda)** | Apos cada PRP | Alerta + registra em divida tecnica |
+
+### 11.6 Ações Corretivas
+
+Quando uma fitness function falha:
+
+1. **Dependency Rule**: Extrair dependencia de infra para interface + implementacao separada
+2. **Circular Deps**: Extrair tipo compartilhado para modulo comum ou usar evento
+3. **Interface Coverage**: Criar `I{nome}.interface.ts` com as operacoes publicas
+4. **Domain Isolation**: Mover dependencia de infra para adapter e inverter a dependencia
+5. **Use Case Size**: Extrair metodos em classes `{Acao}UseCase` separadas
+
+---
+
+## 12. Glossário LLC
 
 | Termo | Definição |
 |-------|-----------|
@@ -890,13 +976,15 @@ Quando um alerta é disparado, o pipeline recomenda:
 | **Mock Data Layer** | Camada de dados falsos realistas (JSON + mock handlers, ex.: MSW para JS/TS) que simula o backend real durante o desenvolvimento do MVP. |
 | **CHECKPOINT VISUAL** | Gate específico do subfluxo de prototipagem: o protótipo hi-fi não avança para código sem aprovação visual humana. |
 | **Execution Wave** | Agrupamento de PRPs executados em paralelo dentro de um intervalo de tempo (1-2 semanas). |
+| **Fitness Function** | Verificação automatizada que valida características arquiteturais (Dependency Rule, DIP, isolamento, ciclos). |
 
 ---
 
-## 12. Controle de Versão
+## 13. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.7.0 | 07/07/2026 | Equipe LLC | Fluxo delta completo (Δ.0 + Δ.1), Smart Skip, PRP-A, Thin Harness --delta/--iteration, fitness functions (6 checks, modo híbrido), ADRs em arquivos separados (ADR_TEMPLATE.md), ARCHITECTURE_TEMPLATE expandido (domínio, ports & adapters, eventos), PRP_TEMPLATE expandido (repository interfaces, use cases, domain entities), AGENTS_TEMPLATE v1.2 (6 regras arquiteturais), Gate 11-ARCH, code-health --fitness, llc-arch-fitness skill |
 | 1.7.0 | 03/07/2026 | Equipe LLC | Adicionado Step 11.2 (PRP Verify): `prp_verify.py` engine, skill `llc-step-11-2-prp-verify`, gate 11-VERIFY, bloqueio determinístico no `session_end()` + `_post_wave_check()`, colunas Teste(s)/Arquivo(s) impl no PRP_TEMPLATE.md §2, escopo de SAST/secrets restrito a `apps/*/src/` |
 | 1.6.0 | 26/06/2026 | Equipe LLC | `normalize_step()` canônico + `llc_steps.REGISTRY` (fonte única de verdade para identidade de step). Renumerado para que o número do step == a sequência do pipeline: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execução segue 11). Adicionado campo canônico `llc_step_id` no frontmatter da sessão + `index.json` (ao lado do `llc_step` numérico); a CLI `--step` aceita ids/aliases (`security`, `owasp`, `null-safety`). Corrige #2/#3/#4 (steps textuais inalcançáveis, 10.5/10.6/10.7/11.1 inválidos, `skill_load` não-determinístico). |
 | 1.5.0 | 13/06/2026 | Equipe LLC | Adicionado Thin Harness (orquestrador CLI), Early Commitment + Deterministic Replay, steps de seguranca (11-Security, 11-OWASP, 12-Null-Safety), indice comprimido de documentacao, 15 human gates |

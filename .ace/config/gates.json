@@ -174,6 +174,18 @@
         "Ambiguidades residuais documentadas como [NAO RESPONDIDO]?",
         "Correcoes no DELTA_REPORT.md aplicadas se necessario?"
       ]
+    },
+    "11-ARCH": {
+      "step": 11.3,
+      "label": "Architecture Compliance (Fitness Functions)",
+      "checklist": [
+        "fitness-functions.py --all --strict passou (0 CRITICAL)?",
+        "Core modules sem violacao de Dependency Rule?",
+        "Nenhuma dependencia circular entre modulos?",
+        "Interface coverage ≥ threshold em core modules?",
+        "Dominio nao importa infraestrutura em core modules?",
+        "WARNs revisados e registrados em divida tecnica (se houver)?"
+      ]
     }
   }
 }

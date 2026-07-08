@@ -219,6 +219,110 @@ interface {Nome}Props {
 
 ---
 
+## 7.5 Repository Interfaces (DIP — Ports & Adapters)
+
+> **Regra:** Todo service deve depender de uma interface, não de implementação concreta (PrismaService).
+> Preencha esta seção listando as interfaces de repositório que este PRP cria ou implementa.
+> Core modules (auth, usuarios, auditorias) têm enforcement **block** via fitness functions.
+
+### 7.5.1 Interfaces Criadas
+
+| Interface | Métodos | Módulo | Obrigatória? |
+|-----------|---------|--------|:------------:|
+| `I{nome}Repository` | `findById, save, delete` | `auth` | 🔴 Sim |
+| `I{nome}Repository` | `findAll, findByOrg` | `usuarios` | 🔴 Sim |
+
+### 7.5.2 Implementações Concretas
+
+| Interface | Implementação | Persistência |
+|-----------|---------------|-------------|
+| `I{nome}Repository` | `Prisma{nome}Repository` | Prisma / PostgreSQL |
+| `I{nome}Repository` | `Mock{nome}Repository` | Memória (testes) |
+
+> **Exemplo:**
+> ```typescript
+> // Porta (application/ports/out/i-user-repository.ts)
+> export interface IUserRepository {
+>   findById(id: string): Promise<UserEntity | null>;
+>   save(user: UserEntity): Promise<void>;
+> }
+>
+> // Adaptador (infrastructure/persistence/prisma-user-repository.ts)
+> @Injectable()
+> export class PrismaUserRepository implements IUserRepository {
+>   constructor(private prisma: PrismaService) {}
+>   async findById(id: string): Promise<UserEntity | null> { /* ... */ }
+>   async save(user: UserEntity): Promise<void> { /* ... */ }
+> }
+> ```
+
+---
+
+## 7.6 Casos de Uso (Use Case Layer)
+
+> **Regra:** Cada operação de negócio mapeia para uma classe com `execute(dto)`.
+> Services com mais de 8 métodos públicos disparam alerta nas fitness functions (`--check-usecase`).
+
+### 7.6.1 Use Cases Deste PRP
+
+| Use Case | Entrada (DTO) | Saída | Efeito Colateral |
+|----------|---------------|-------|-----------------|
+| `Criar{nome}UseCase` | `Criar{nome}Dto` | `{nome}Entity` | Persiste no banco |
+| `Listar{nome}UseCase` | `Listar{nome}Dto` | `{nome}Entity[]` | — |
+| `Atualizar{nome}UseCase` | `Atualizar{nome}Dto` | `{nome}Entity` | Audit log |
+
+> **Exemplo:**
+> ```typescript
+> @Injectable()
+> export class CriarUsuarioUseCase {
+>   constructor(
+>     @Inject('IUserRepository')
+>     private readonly userRepo: IUserRepository,
+>   ) {}
+>
+>   async execute(dto: CriarUsuarioDto): Promise<UserEntity> {
+>     const entity = UserEntity.create(dto);
+>     return this.userRepo.save(entity);
+>   }
+> }
+> ```
+
+---
+
+## 7.7 Entidades de Domínio (Domain Layer)
+
+> **Regra:** Entidades em `domain/` NÃO importam infraestrutura (Prisma, TypeORM, database).
+> Violação em core modules bloqueia o merge (fitness function `--check-domain`).
+
+### 7.7.1 Entidades
+
+| Entidade | Atributos | Value Objects | Regras de Negócio |
+|----------|-----------|---------------|-------------------|
+| `{nome}Entity` | `id, nome, email, status` | `Email, Status` | Email deve ser único; status válido: ativo/inativo |
+| `{nome}Entity` | `id, descricao, valor` | `Moeda, Percentual` | Valor deve ser positivo |
+
+### 7.7.2 Estrutura de Diretório
+
+```
+src/{modulo}/
+├── domain/
+│   ├── entities/
+│   │   └── {entidade}.entity.ts     # Sem dependência de infra
+│   └── value-objects/
+│       └── {vo}.value-object.ts
+├── application/
+│   ├── ports/
+│   │   └── out/
+│   │       └── i-{entidade}-repository.ts
+│   └── use-cases/
+│       └── criar-{entidade}.usecase.ts
+└── infrastructure/
+    └── persistence/
+        └── prisma-{entidade}-repository.ts
+```
+
+---
+
 ## 8. Database Changes (se aplicável)
 
 > **Se este PRP não altera banco, escreva "N/A — apenas lógica/frontend."**
@@ -383,6 +487,9 @@ export const mock{Dependency} = () => ({
 | 8 | **Rate limiting** (endpoints expostos) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
 | 9 | **Error handling padronizado** (tratamento de exceções, respostas de erro consistentes) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
 | 10 | **Acessibilidade** (WCAG, axe-core, keyboard nav) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 11 | **Repository Interface (DIP)** — interface + implementação separadas | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 12 | **Barramento de Eventos** — eventos emitidos/consumidos (EventEmitter2) | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
+| 13 | **Use Case Layer** — classes com `execute(dto)` em vez de service CRUD | ☐ Sim / ☐ Não | ☐ Sim / ☐ Não | `TASK-{NNN}` |
 
 ### 13.2 Decisões de CCC
 
@@ -408,6 +515,15 @@ export const mock{Dependency} = () => ({
 - [ ] Component Spec (seção 6) reflete exatamente o UI entregue
 - [ ] Data Model (seção 7) definido para todas as entidades deste PRP
 - [ ] Database Changes (seção 8) estão aplicados e testados em staging
+
+### Arquitetura (Ports & Adapters / DIP)
+- [ ] Repository interfaces declaradas na seção 7.5 foram implementadas
+- [ ] DIP respeitado: services dependem de interfaces, não de PrismaService diretamente
+- [ ] Domain entities (seção 7.7) não importam infraestrutura
+- [ ] Use cases (seção 7.6) seguem `execute(dto)` pattern
+- [ ] Se este PRP se comunica com outro módulo, usou evento (não importou service diretamente)
+- [ ] `fitness-functions.py --all --strict` passou (0 CRITICAL)
+- [ ] `.ace/arch-config.yaml` reflete os módulos core corretos
 
 ### Técnico
 - [ ] Todos os testes da seção 9 estão escritos e passando

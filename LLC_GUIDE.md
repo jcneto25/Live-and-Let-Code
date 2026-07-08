@@ -364,16 +364,27 @@ Execute a skill docs/skills/llc-step-4.md
 Execute a skill docs/skills/llc-step-5.md
 ```
 
-**A IA faz:** Gera `docs/architecture/ARCHITECTURE.md` com:
-- Stack tecnológico (frontend, backend, banco, infra)
-- Diagramas C4 (contexto, containers, componentes)
-- ADRs (decisões arquiteturais justificadas)
-- Estratégia de segurança e CI/CD
+**A IA faz:** Gera:
+- `docs/architecture/ARCHITECTURE.md` — documento principal com stack, C4, segurança, CI/CD
+- `docs/architecture/adr/ADR-*.md` — **ADRs em arquivos individuais** (template em `ADR_TEMPLATE.md`)
+- `.ace/arch-config.yaml` — configuração das fitness functions (módulos core e thresholds)
+
+**Seções expandidas do template ARCHITECTURE_TEMPLATE.md:**
+- **Stack tecnológico** com justificativas e alternativas descartadas
+- **Diagramas C4** (contexto, containers, componentes)
+- **ADRs em arquivos separados** (diff granular, referência individual em PRs)
+- **Camada de Domínio e Ports & Adapters** — estrutura intra-módulo (`domain/`, `application/`, `infrastructure/`), regras DIP, exemplo de código
+- **Casos de Uso** — one class per use case com `execute(dto)`
+- **Comunicação entre Módulos** — EventEmitter2 para monólito, matriz de eventos pub/sub
+- **Fitness Functions** — `.ace/arch-config.yaml` com módulos core e thresholds
+- **Estratégia de segurança e CI/CD**
 
 **Você valida:** 👤 Gate 6
 - O stack é viável no seu ambiente?
 - As decisões arquiteturais são justificadas?
 - Os RNFs de performance e segurança estão endereçados?
+- Os ADRs estão em arquivos separados e endereçam os 5 tópicos obrigatórios?
+- A configuração de fitness functions (.ace/arch-config.yaml) está correta?
 
 **Só avance quando aprovar.**
 
@@ -819,13 +830,31 @@ O script analisa métricas estruturais + cobertura de testes:
 
 Se alertas críticos forem disparados, agende uma onda de refatoração cross-PRP.
 
+### Verificando Conformidade Arquitetural (Fitness Functions)
+
+A partir da v1.7.0, o LLC inclui **fitness functions** para validacao arquitetural automatizada:
+
+```bash
+# Executar todas as fitness functions
+python .ace/scripts/fitness-functions.py --all
+
+# Modo estrito (exit code 1 se houver violacao)
+python .ace/scripts/fitness-functions.py --all --strict
+
+# JSON para integracao com ferramentas
+python .ace/scripts/fitness-functions.py --all --json
+```
+
+As fitness functions verificam: Dependency Rule (Ports & Adapters), dependencias circulares, cobertura de interfaces (DIP), isolamento do dominio, tamanho de use cases e cobertura por modulo. O comportamento (block vs warn) e configurado em `.ace/arch-config.yaml`.
+
 ### Ferramentas Transversais do Pipeline
 
 Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Consulte o [`llc-pipeline-design.md`](llc-pipeline-design.md) para documentacao completa:
 
-| Ferramenta | Skill | Funcao | Pipeline Design |
-|-----------|-------|--------|:--------------:|
+| Ferramenta | Skill / Script | Funcao | Pipeline Design |
+|-----------|----------------|--------|:--------------:|
 | **Analisador de Impacto** | `llc-impact-analyzer` | Detecta quais artefatos downstream sao afetados por alteracoes. Use antes de refatorar. | [§9](llc-pipeline-design.md#9-rastreabilidade-e-analise-de-impacto) |
+| **Fitness Functions** | `fitness-functions.py` | [NOVO] Verifica conformidade arquitetural: Dependency Rule, DIP, modulos isolados. | [§11](llc-pipeline-design.md#11-fitness-functions---conformidade-arquitetural) |
 | **Code Health** | `llc-code-health` | Monitora metricas estruturais (Moved Code, Copy/Paste, Legacy Touch). Use a cada onda. | [§10](llc-pipeline-design.md#10-saude-estrutural-do-codigo-code-health) |
 | **ACE Context** | `llc-ace-context` | Protocolo de continuidade entre sessoes. Gerenciado automaticamente pelo harness. | [§8](llc-pipeline-design.md#8-ace--agentic-context-engineering) |
 
@@ -857,7 +886,9 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Garantir que toda onda vire sessão no `.ace` | Instale o pre-commit: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ver [§8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement)) |
 | Verificar cobertura de testes (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
 | Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
-| Ver código health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
+| Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
+| Ver código health trends + fitness | `python .ace/scripts/code-health.py --since "30 days ago" --json --fitness` |
+| Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |
 | Entender um termo | Leia [`llc-pipeline-design.md` §8](llc-pipeline-design.md#8-glossário-llc) |

@@ -158,6 +158,16 @@ REGISTRY: dict[str, StepSpec] = {
         False,
         aliases=("prp-verify", "verify"),
     ),
+    # Pós-execução / pré-merge (conformidade arquitetural — fitness functions):
+    "11.3": _spec(
+        "11.3",
+        "Architecture Fitness",
+        "llc-arch-fitness",
+        "11-ARCH",
+        False,
+        False,
+        aliases=("arch-fitness", "arch", "fitness"),
+    ),
 }
 
 # Mapa reverso de aliases -> id canônico (construído uma vez na importação).

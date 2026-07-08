@@ -112,7 +112,9 @@ Liste os drivers que **justificam** cada decisão técnica. Estes são os requis
 
 **Padrões obrigatórios:**
 - Módulos NestJS isolados por domínio (`auth/`, `patients/`, `goals/`)
-- Repository pattern com PrismaService
+- **Repository pattern com interfaces (Ports & Adapters):** Todo service depende de uma interface (`I{nome}Repository`), não do `PrismaService` diretamente. A implementação concreta (`Prisma{nome}Repository`) é injetada via módulo NestJS.
+- **Use Case layer:** Cada operação de negócio mapeia para uma classe com `execute(dto)`. Services CRUD com mais de 8 métodos públicos devem ser decompostos.
+- **Domínio puro:** Entidades e regras de negócio em `domain/` não importam infraestrutura (Prisma, TypeORM, database).
 - DTOs com `class-validator` para input validation
 - Guards para autorização (`@Roles()`, `@Organization()`)
 
@@ -549,6 +551,12 @@ stub_patterns:
 ```
 {projeto}/
 ├── apps/
+│   ├── architecture/           # Arquitetura e ADRs
+│   │   ├── ARCHITECTURE.md     # Documento principal
+│   │   └── adr/                # ADRs em arquivos individuais
+│   │       ├── ADR-001-stack-principal.md
+│   │       ├── ADR-002-banco-de-dados.md
+│   │       └── ...
 │   ├── api/                    # NestJS backend
 │   │   ├── src/
 │   │   │   ├── {modulo}/       # Um diretório por módulo
@@ -628,17 +636,31 @@ estrutura:
 
 ## 8. Decisões Arquiteturais (ADRs)
 
-> **Documente cada decisão importante.** Use o formato ADR (Architecture Decision Record).
+> **Cada ADR é um arquivo separado em `docs/architecture/adr/ADR-{NNN}.md`.**
+> Isso permite diff granular no git, referência individual em PRs, e revisão por autoridade competente.
+> Use o template em `docs/architecture/ADR_TEMPLATE.md`.
 
-| ID | Data | Decisão | Contexto | Consequências | Status |
-|----|------|---------|----------|---------------|--------|
-| ADR-001 | {Data} | WatermelonDB ao invés de Realm | Sync nativo, relações, performance | Curva de aprendizado, documentação menor | Aprovado |
-| ADR-002 | {Data} | PostgreSQL ao invés de MongoDB | Dados estruturados + JSONB, ACID | Menos flexível para schema evolution | Aprovado |
-| ADR-003 | {Data} | Auth0 primário, Supabase fallback | PRD especifica Auth0, mas custo pode ser alto | Dupla configuração inicial | Pendente |
-| ADR-004 | {Data} | REST ao invés de GraphQL | Time familiar, caching HTTP simples | Overfetching em alguns endpoints | Aprovado |
-| ADR-005 | {Data} | Monorepo Turborepo | Compartilhamento de types, CI unificado | Complexidade inicial, build cache | Aprovado |
+### Índice de ADRs
 
-> **💡 Melhoria:** O documento original não tem ADRs. Cada "ou" (Auth0 ou Supabase, WatermelonDB ou Realm) é uma decisão pendente que deve ser registrada com data e responsável.
+| ID | Data | Decisão | Status | Arquivo |
+|----|------|---------|--------|---------|
+| ADR-001 | {Data} | {Stack principal} | {Aprovado} | `adr/ADR-001-stack-principal.md` |
+| ADR-002 | {Data} | {Banco de dados} | {Aprovado} | `adr/ADR-002-banco-de-dados.md` |
+| ADR-003 | {Data} | {Autenticação} | {Aprovado} | `adr/ADR-003-autenticacao.md` |
+| ADR-004 | {Data} | {Comunicação entre módulos} | {Aprovado} | `adr/ADR-004-comunicacao-modulos.md` |
+| ADR-005 | {Data} | {Estratégia de deploy} | {Aprovado} | `adr/ADR-005-deploy.md` |
+
+### ADRs Obrigatórios (mínimo 5)
+
+| # | Tópico | Pergunta a responder |
+|---|--------|---------------------|
+| 1 | Stack Frontend | Qual framework e bibliotecas? Por que não as alternativas? |
+| 2 | Stack Backend | Qual runtime, framework e ORM? Por que não as alternativas? |
+| 3 | Banco de Dados | Relacional vs NoSQL? Qual SGBD e estratégia de migração? |
+| 4 | Autenticação | JWT, sessions, OAuth? Provedor de identidade? MFA? |
+| 5 | Comunicação entre Módulos | Síncrono (REST/gRPC) vs Assíncrono (eventos/fila)? Barramento de eventos? |
+| 6 | Deploy e CI/CD | Ambientes, pipeline, estratégia de rollback? |
+| 7 | Armazenamento de Arquivos | Onde e como armazenar uploads? CDN? |
 
 ---
 
@@ -721,7 +743,149 @@ estrutura:
 
 ---
 
-## 12. Anexos
+## 12. Comunicação entre Módulos e Eventos
+
+### 12.1 Princípios
+
+- Módulos do mesmo domínio podem se comunicar via **chamada síncrona direta** (injeção de service NestJS)
+- Módulos de **domínios diferentes** devem se comunicar via **eventos** (EventEmitter2 ou barramento de eventos)
+- Eventos são assíncronos por padrão. Se o fluxo exigir consistência imediata, use saga pattern
+
+### 12.2 Barramento de Eventos
+
+| Evento | Publisher | Subscriber(s) | Dados | Gatilho |
+|--------|-----------|---------------|-------|---------|
+| `{entidade}.created` | {Módulo A} | {Módulo B, Módulo C} | `{id, campos}` | CREATE |
+| `{entidade}.updated` | {Módulo A} | {Módulo B} | `{id, campos_alterados}` | UPDATE |
+| `{entidade}.deleted` | {Módulo A} | {Módulo C} | `{id}` | DELETE |
+
+### 12.3 Decisão: EventEmitter2 vs Mensageria Externa
+
+| Critério | EventEmitter2 (in-process) | RabbitMQ / Redis PubSub |
+|----------|---------------------------|------------------------|
+ | Latência | Imediata | ~1-5ms |
+| Persistência | Não (perde se reiniciar) | Sim (fila durável) |
+| Complexidade | Zero (biblioteca NestJS) | Infraestrutura adicional |
+| Indicado para | Módulos no mesmo processo | Microserviços / cross-process |
+
+**Decisão:** Para monólito modular, usar `EventEmitter2`. Se houver necessidade de fila persistente no futuro, migrar para Redis ou RabbitMQ mantendo a mesma interface de eventos.
+
+---
+
+## 13. Camada de Domínio e Ports & Adapters
+
+### 13.1 Estrutura de Diretórios Intra-Módulo
+
+```
+src/{modulo}/
+├── domain/                          # [NOVA] Regras de negócio PURAS
+│   ├── entities/
+│   │   └── {entidade}.entity.ts     # Sem dependência de infra
+│   ├── value-objects/
+│   │   └── {vo}.value-object.ts
+│   └── events/
+│       └── {evento}.event.ts        # Eventos de domínio
+├── application/                     # [NOVA] Casos de uso
+│   ├── use-cases/
+│   │   ├── criar-{entidade}.usecase.ts  # execute(dto)
+│   │   └── listar-{entidade}.usecase.ts
+│   └── ports/                       # Interfaces (Ports)
+│       ├── in/
+│       │   └── i{entidade} service.ts    # Porta de entrada
+│       └── out/
+│           └── i{entidade}-repository.ts # Porta de saída
+├── infrastructure/                  # Adaptadores (Adapters)
+│   ├── persistence/
+│   │   └── prisma-{entidade}-repository.ts  # Implementação concreta
+│   └── adapters/
+├── {modulo}.module.ts
+├── {modulo}.controller.ts          # Ou por use case
+├── dto/
+└── {modulo}.spec.ts
+```
+
+### 13.2 Regras da Dependency Rule
+
+1. **`domain/`** NÃO importa nada de `infrastructure/`, Prisma, TypeORM, ou database
+2. **`application/`** importa apenas `domain/` e interfaces de `ports/`
+3. **`infrastructure/`** implementa interfaces de `ports/` e importa `domain/`
+4. **Controllers** ficam na raiz do módulo (ou em `infrastructure/`) e chamam use cases
+
+### 13.3 Exemplo: Repository Pattern com DIP
+
+```typescript
+// application/ports/out/i-user-repository.ts (Porta de saída)
+export interface IUserRepository {
+  findById(id: string): Promise<UserEntity | null>;
+  save(user: UserEntity): Promise<void>;
+}
+
+// infrastructure/persistence/prisma-user-repository.ts (Adapter)
+@Injectable()
+export class PrismaUserRepository implements IUserRepository {
+  constructor(private prisma: PrismaService) {}
+  async findById(id: string): Promise<UserEntity | null> { /* ... */ }
+  async save(user: UserEntity): Promise<void> { /* ... */ }
+}
+
+// application/use-cases/criar-usuario.usecase.ts (Use case)
+@Injectable()
+export class CriarUsuarioUseCase {
+  constructor(
+    @Inject('IUserRepository')
+    private readonly userRepo: IUserRepository,
+  ) { }
+  async execute(dto: CriarUsuarioDto): Promise<UserEntity> {
+    const entity = UserEntity.create(dto);
+    return this.userRepo.save(entity);
+  }
+}
+```
+
+---
+
+## 14. Fitness Functions — Conformidade Arquitetural
+
+### 14.1 Script
+
+O projeto inclui `.ace/scripts/fitness-functions.py` que verifica automaticamente:
+
+| Check | O que verifica | Modo |
+|-------|---------------|------|
+| Dependency Rule | Services não importam Prisma/infra | Core: block. Periférico: warn |
+| Circular Dependencies | Módulos sem ciclos de importação | Block (todos) |
+| Interface Coverage | Todo service tem I{nome}Repository | Core: 100%. Periférico: ≥ 60% |
+| Domain Isolation | `domain/` não importa infra | Core: 0 violações |
+| Use Case Size | ≤ 8 métodos públicos | Warn |
+| Module Coverage | Cobertura mínima por módulo | Core ≥ 70%, geral ≥ 60% |
+
+### 14.2 Configuração
+
+Gerada automaticamente em `.ace/arch-config.yaml`:
+
+```yaml
+version: "1.0"
+core_modules:
+  - auth
+  - usuarios
+checks:
+  dependency_rule:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules
+```
+
+### 14.3 Gate 11-ARCH
+
+Antes do merge, execute:
+```bash
+python .ace/scripts/fitness-functions.py --all --strict
+```
+Violações em core modules bloqueiam o merge.
+
+---
+
+## 15. Anexos
 
 ### Anexo A: Diagrama de Fluxo de Dados (DFD)
 ```mermaid
@@ -736,14 +900,14 @@ graph LR
 
 ### Anexo B: Matriz de Comunicação entre Módulos
 
-| Módulo | Consome | Publica eventos | Síncrono/Assíncrono |
-|--------|---------|-----------------|---------------------|
-| auth | — | `user.created` | Síncrono (REST) |
-| patients | auth, audit | `patient.created` | Síncrono |
-| goals | patients, auth, audit | — | Síncrono |
-| sync | patients, goals, daily-logs, audit | `sync.completed` | Síncrono (REST) + Assíncrono (fila) |
-| analytics | patients, goals, feedbacks | — | Assíncrono (job) |
-| reports | patients, goals, analytics | — | Assíncrono (job) |
+| Módulo | Consome | Publica eventos | Síncrono/Assíncrono | Evento |
+|--------|---------|-----------------|---------------------|--------|
+| auth | — | `user.created`, `user.logged_in` | Síncrono (REST) | EventEmitter2 |
+| patients | auth, audit | `patient.created`, `patient.updated` | Síncrono (use case) + `patient.*` via evento | EventEmitter2 |
+| goals | patients, auth, audit | `goal.achieved`, `goal.updated` | Síncrono + evento | EventEmitter2 |
+| sync | patients, goals | `sync.completed` | Síncrono (REST) + Assíncrono (fila) | EventEmitter2 + Bull |
+| analytics | patients, goals | — | Assíncrono (evento) | EventEmitter2 |
+| reports | patients, goals, analytics | — | Assíncrono (job) | Bull queue |
 
 ### Anexo C: Inventário de APIs Externas
 

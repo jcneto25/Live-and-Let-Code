@@ -419,3 +419,18 @@ artifacts:
     triggers_update:
       - deployment
       - test_guide
+
+  # ── STEP 5 / F3 (Architecture Config + Fitness) ──
+  arch_config:
+    path: ".ace/arch-config.yaml"
+    depends_on:
+      - architecture
+    triggers_update:
+      - fitness_functions
+
+  fitness_functions:
+    path: ".ace/scripts/fitness-functions.py"
+    depends_on:
+      - arch_config
+    triggers_update:
+      - deployment

@@ -51,6 +51,27 @@ python .ace/scripts/llc.py gate run --gate test-coverage
 bash .ace/scripts/pre-wave-check.sh
 ```
 
+**New: Architecture Fitness Functions**
+
+```bash
+# Verify architectural compliance (Dependency Rule, circular deps, etc.)
+python .ace/scripts/fitness-functions.py --all
+
+# Strict mode (exit 1 on violations) for CI/CD
+python .ace/scripts/fitness-functions.py --all --strict
+
+# Include in code health report
+python .ace/scripts/code-health.py --since "30 days ago" --fitness
+```
+
+**New: ADRs in separate files**
+
+```bash
+# Step 5 generates ARCHITECTURE.md + individual ADR files
+python .ace/scripts/llc.py run --step 5 --task "Arquitetura do sistema"
+# ADRs available at: docs/architecture/adr/ADR-*.md
+```
+
 ### Pipeline
 
 ```

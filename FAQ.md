@@ -122,10 +122,10 @@ O pipeline LLC define papéis por etapa, não por pessoa. Cada papel é exercido
 |-------|-----------|-----------------|
 | **Analista de Negócio** | `llc-step-0-greenfield`, `llc-step-0-5` | Extrai conhecimento via entrevista ou documentos, gera visão estratégica e módulos |
 | **Especificador** | `llc-step-1`, `llc-step-2` | Gera specs, glossário e PRDs (executivo + técnico) com Grill Me |
-| **Arquiteto** | `llc-step-5` | Define stack, diagramas C4, ADRs, segurança e CI/CD |
+| **Arquiteto** | `llc-step-5`, `llc-arch-fitness` | Define stack, diagramas C4, ADRs em arquivos separados, Ports & Adapters, fitness functions (Gate 11-ARCH) |
 | **Designer UX/UI** | `llc-step-7`, Subfluxo F1-F4 | Design System, wireframes, protótipos hi-fi |
 | **Planejador** | `llc-step-3`, `llc-step-4` | Decompõe em PRPs, gera matriz de dependências e ondas de execução |
-| **Desenvolvedor** | `llc-step-8`, Step 11, Subfluxo F5 | Setup do projeto, mock data, implementação de PRPs |
+| **Desenvolvedor** | `llc-step-8`, Step 11, Subfluxo F5 | Setup do projeto, mock data, implementação de PRPs (com DIP, use cases, domain entities) |
 | **QA Engineer** | `llc-step-9`, `llc-code-health` | Estratégia de testes, thresholds, métricas de saúde estrutural |
 | **Tech Writer** | `llc-step-10` | README, DEPLOYMENT, CLAUDE.md, AGENTS.md |
 | **Orquestrador** | `llc-impact-analyzer`, `llc-ace-context` | Rastreabilidade, continuidade de contexto, análise de impacto cross-PRP |
@@ -258,7 +258,7 @@ O pipeline LLC gera 25+ artefatos versionados, organizados por etapa:
 | 2 | `executive_PRD.md`, `PRD_tecnico_institucional.md` | PRD executivo (stakeholders) e técnico (desenvolvedores) |
 | 3 | `PRP-*.md` | Contratos auto-contidos de implementação |
 | 4 | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | Planejamento: matriz de dependências, plano de entregas e ondas de execução |
-| 5 | `ARCHITECTURE.md` | Stack, diagramas C4, ADRs, segurança, CI/CD |
+| 5 | `ARCHITECTURE.md`, `adr/ADR-*.md`, `.ace/arch-config.yaml` | Stack, diagramas C4, ADRs em arquivos separados, segurança, CI/CD, fitness functions config |
 | 6 | `TASKS.md` | Tarefas concretas com agentes, estimativas e checkboxes |
 | 7 | `DESIGN_SYSTEM.md` | Tokens, componentes, padrões de interface e acessibilidade |
 | 8 | `mocks/` (data + handlers) | Dados mockados (JSON) + handlers MSW para MVP |
@@ -359,7 +359,7 @@ O LLC implementa 6 camadas de garantia de qualidade:
 |--------|---------------|
 | **1. Especificação antes do código** | Steps 0-GF a 3 geram specs, PRDs e PRPs detalhados com Grill Me — a IA não escreve uma linha de código antes que os requisitos estejam validados |
 | **2. Agentes especializados por fase** | Cada etapa tem um agente com contexto restrito: o arquiteto não implementa, o dev não define requisitos |
-| **3. Quality gates em cada transição** | 15 human gates + 1 checkpoint visual + QA gates — nenhum artefato avança sem validação |
+| **3. Quality gates em cada transição** | 15 human gates + 1 checkpoint visual + QA gates + Gate 11-ARCH (fitness functions) — nenhum artefato avança sem validação |
 | **4. TDD embutido nos PRPs** | Cada PRP define estratégia de testes (unitários, integração, E2E). O `code-health.py` monitora se agentes estão seguindo TDD |
 | **5. Revisão por pares (humanos e agentes)** | `<gate_result>` humano + `llc-impact-analyzer` automatizado + pre-commit hooks de validação |
 | **6. Rastreabilidade de requisitos a código** | Cadeia completa: Visão → Módulo → Spec → PRD → PRP → Tarefa → Commit. O `dependency-graph.yaml` + `impact-analyzer.py` garantem que mudanças propaguem corretamente |
@@ -416,6 +416,31 @@ Sessão N+1
   ↓ não repete erros da sessão anterior
 ```
 
+### O que sao fitness functions e como o LLC as implementa?
+
+Fitness functions (Ingeno, Software Architect's Handbook ch16) sao **verificacoes automatizadas** que validam caracteristicas arquiteturais do codigo. Diferente de testes unitarios (que validam comportamento), fitness functions validam estrutura: as dependencias estao corretas? As camadas estao isoladas? Ha ciclos entre modulos?
+
+O LLC implementa 6 fitness functions no script `.ace/scripts/fitness-functions.py`:
+
+| Fitness Function | O que verifica | Modo |
+|-----------------|----------------|------|
+| **Dependency Rule** (`--check-deps`) | Services nao importam diretamente Prisma/infra | 🔴 Block (core) / 🟡 Warn |
+| **Circular Dependencies** (`--check-circular`) | Nenhum modulo NestJS importa outro em ciclo | 🔴 Block (todos) |
+| **Interface Coverage** (`--check-interfaces`) | Todo `.service.ts` tem `I{nome}.interface.ts` | 🔴 Block (core) / 🟡 Warn |
+| **Domain Isolation** (`--check-domain`) | Arquivos em `domain/` nao importam infra | 🔴 Block (core) / 🟡 Warn |
+| **Use Case Size** (`--check-usecase`) | Services com >8 metodos publicos | 🟡 Warn |
+| **Module Coverage** (`--check-coverage`) | Cobertura minima por modulo (lcov) | 🟡 Warn |
+
+**Modo hibrido:** Modulos definidos como `core_modules` em `.ace/arch-config.yaml` seguem regras mais rigidas (block). Modulos perifericos geram apenas alertas (warn). O config e gerado pelo Step 5 (Arquitetura) e editavel pelo time.
+
+```bash
+# Executar todas as fitness functions
+python .ace/scripts/fitness-functions.py --all
+
+# Modo estrito para CI/CD (exit code 1 se violacao)
+python .ace/scripts/fitness-functions.py --all --strict --json
+```
+
 ### O que é o "problema dos 70%" e como o LLC ajuda a combatê-lo?
 
 O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um padrão no desenvolvimento com IA: a IA gera ~70% do código em minutos — boilerplate, CRUD, padrões conhecidos — mas os 30% restantes (arquitetura, segurança, edge cases, integração, tratamento de erros) exigem esforço desproporcional, frequentemente maior que fazer tudo do zero.
@@ -453,6 +478,28 @@ O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + fer
 | **Registrar decisões** | `<gate_result>` no ACE fecha o loop de accountability |
 
 Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA.
+
+### Como os ADRs sao gerados no LLC?
+
+A partir da v1.7.0, os ADRs (Architecture Decision Records) sao gerados como **arquivos individuais** em `docs/architecture/adr/ADR-{NNN}-{nome}.md`, em vez de ficarem embutidos no `ARCHITECTURE.md`. Isso traz tres vantagens:
+
+1. **Diff granular no git** — cada ADR tem seu proprio historico de alteracoes
+2. **Referencia individual** — PRs podem referenciar `ADR-003` diretamente
+3. **Revisao por autoridade** — ADR de seguranca pode ser revisado pelo security team sem arrastar todo o documento
+
+O Step 5 gera minimo 5 ADRs obrigatorios: stack frontend, backend, banco, autenticacao e comunicacao entre modulos. O template esta em `docs/architecture/ADR_TEMPLATE.md`.
+
+### O que mudou no template de PRP para suportar boas praticas arquiteturais?
+
+O PRP_TEMPLATE.md foi expandido com tres novas secoes obrigatorias:
+
+| Secao | Conteudo | Enforcement |
+|-------|----------|-------------|
+| **§7.5 Repository Interfaces** | Interfaces DIP que este PRP cria/implementa | 🔴 Core: fitness function bloqueia |
+| **§7.6 Casos de Uso** | Use cases com `execute(dto)` | 🟡 Alerta se >8 metodos |
+| **§7.7 Entidades de Dominio** | Entidades sem dependencia de infra | 🔴 Core: fitness function bloqueia |
+
+O DoD foi expandido com checklist de arquitetura: DIP respeitado, dominio isolado, eventos para cross-module, fitness functions passando.
 
 ### Como o LLC implementa hardening de seguranca OWASP Top 10?
 

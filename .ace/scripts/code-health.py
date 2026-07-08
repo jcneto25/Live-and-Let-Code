@@ -21,6 +21,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
 
 def run_git_log(since: str) -> list[dict]:
     """Extrai log do git com --numstat para análise de churn."""
@@ -611,6 +613,11 @@ def main():
     parser.add_argument(
         "--since", type=str, default="90 days ago", help="Período de análise"
     )
+    parser.add_argument(
+        "--fitness",
+        action="store_true",
+        help="Inclui verificacao de fitness functions (conformidade arquitetural)",
+    )
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     parser.add_argument(
         "--strict", action="store_true", help="Exit code 1 se thresholds violados"
@@ -721,6 +728,49 @@ def main():
     # Add trend alerts
     alerts.extend(trend_alerts)
 
+    # ── Fitness Functions (--fitness flag) ──
+    fitness_result = None
+    if args.fitness:
+        try:
+            fitness_script = SCRIPTS_DIR / "fitness-functions.py"
+            if fitness_script.exists():
+                proc = subprocess.run(
+                    [sys.executable, str(fitness_script), "--all", "--json"],
+                    capture_output=True, text=True, cwd=Path.cwd(),
+                )
+                if proc.returncode == 0 and proc.stdout.strip():
+                    fitness_data = json.loads(proc.stdout)
+                    fitness_result = fitness_data
+                    # Add fitness alerts to main alerts
+                    for name, check in fitness_data.get("results", {}).items():
+                        if check.get("blocked"):
+                            alerts.append({
+                                "severity": "critical",
+                                "metric": f"Fitness: {check['label']}",
+                                "value": f"{check['violations_count']} violacao(oes)",
+                                "threshold": "0",
+                                "message": check.get("description", ""),
+                                "action": "Corrigir violacoes em core modules antes do merge. Use fitness-functions.py para detalhes.",
+                            })
+                        elif not check.get("passed") and check.get("passed") is not None:
+                            alerts.append({
+                                "severity": "high",
+                                "metric": f"Fitness: {check['label']}",
+                                "value": f"{check['violations_count']} alerta(s)",
+                                "threshold": "0",
+                                "message": check.get("description", ""),
+                                "action": "Registrar em divida tecnica. Revisar na proxima iteracao.",
+                            })
+        except Exception as e:
+            alerts.append({
+                "severity": "warning",
+                "metric": "Fitness Functions",
+                "value": "erro",
+                "threshold": "—",
+                "message": f"Nao foi possivel executar fitness functions: {e}",
+                "action": "Verificar se PyYAML esta instalado e .ace/arch-config.yaml existe.",
+            })
+
     result = {
         "commits_analyzed": len(commits),
         "period": args.since,
@@ -730,6 +780,8 @@ def main():
     }
     if coverage:
         result["coverage"] = coverage
+    if fitness_result:
+        result["fitness"] = fitness_result
 
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -776,6 +828,21 @@ def main():
             zero_files = coverage.get("zero_coverage_files", [])
             if zero_files:
                 print(f"   ⚠️  Zero coverage files: {len(zero_files)}")
+
+        if fitness_result:
+            print(f"\n🏗️  Fitness Functions (Conformidade Arquitetural):")
+            for name, check in fitness_result.get("results", {}).items():
+                icon = "✅" if check.get("passed") else ("🔴" if check.get("blocked") else "🟡")
+                if check.get("passed") is None:
+                    icon = "⚠️"
+                print(f"   {icon} {check['label']}: ", end="")
+                if check.get("violations_count", 0) > 0:
+                    print(f"{check['violations_count']} violacao(oes)")
+                    for v in check.get("violations", []):
+                        sev = v.get("severity", "warn")
+                        print(f"      {'🔴' if sev == 'block' else '🟡'} {v.get('module', v.get('detail', ''))}")
+                else:
+                    print("OK")
 
         print(f"\n⚠️  Alertas:")
 

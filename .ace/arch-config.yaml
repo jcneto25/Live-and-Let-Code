@@ -1,0 +1,46 @@
+# Configuração de Fitness Functions para verificação arquitetural automatizada.
+# Gerado por: llc-step-5 (Arquitetura)
+# Documentação: docs/skills/llc-arch-fitness.md
+#
+# Modos de enforcement:
+#   block  → Bloqueia merge (exige correção)
+#   warn   → Apenas alerta (registra em dívida técnica)
+#   hybrid → block para core_modules, warn para demais
+
+version: "1.0"
+
+# Módulos que seguem regras mais rígidas (block em vez de warn)
+core_modules:
+  - auth
+  - usuarios
+
+checks:
+  dependency_rule:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules
+
+  circular_deps:
+    enabled: true
+    mode: block
+
+  interface_coverage:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules
+    threshold: 100
+
+  domain_isolation:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules
+
+  use_case_size:
+    enabled: true
+    mode: warn
+    max_methods: 8
+
+  module_coverage:
+    enabled: true
+    mode: warn
+    threshold: 60

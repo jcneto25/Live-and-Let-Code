@@ -1,5 +1,5 @@
 ---
-template_version: "1.1.0"
+template_version: "1.2.0"
 template_name: "AGENTS.md (LLC-Harmonized)"
 last_updated: "{{TODAY}}"
 project_name: "{{PROJECT_NAME}}"
@@ -217,6 +217,126 @@ python .ace/scripts/impact-analyzer.py --files "caminho/do/arquivo" --json --ski
 ```
 Isso reporta o impacto em cascata e sugere skills a re-executar.
 
+### Architectural Compliance Rules (DIP, Use Cases, Domain)
+
+**Contexto:** O projeto segue os principios de Clean Architecture (Martin), Ports & Adapters (Stemmler) e Fitness Functions (Ingeno). As regras abaixo sao verificadas automaticamente por `fitness-functions.py` e bloqueiam o merge se violadas em core modules.
+
+#### Regra A1 — 🔴 DIP Obrigatorio (Dependency Rule)
+
+Todo Service deve depender de uma **interface**, nunca de `PrismaService`, `TypeORM` ou qualquer implementacao concreta de infraestrutura.
+
+```typescript
+// ❌ ERRADO: depende diretamente de Prisma
+@Injectable()
+export class UserService {
+  constructor(private prisma: PrismaService) {}
+}
+
+// ✅ CERTO: depende de interface (DIP)
+@Injectable()
+export class CriarUsuarioUseCase {
+  constructor(
+    @Inject('IUserRepository')
+    private readonly userRepo: IUserRepository,
+  ) {}
+}
+```
+
+**Verificacao:** `python .ace/scripts/fitness-functions.py --check-deps`
+
+#### Regra A2 — 🔴 Dominio nao importa Infra (Domain Isolation)
+
+Arquivos em `src/*/domain/` NÃO podem importar nada de Prisma, TypeORM, database, ou qualquer modulo de infraestrutura.
+
+- `domain/entities/*` — apenas regras de negocio, sem dependencias externas
+- `domain/value-objects/*` — apenas dados imutaveis com validacao
+- Se precisar de persistencia, **defina uma interface** em `application/ports/out/` e implemente em `infrastructure/persistence/`
+
+**Verificacao:** `python .ace/scripts/fitness-functions.py --check-domain`
+
+#### Regra A3 — 🟡 Um Caso de Uso por Classe (Use Case Layer)
+
+Cada operacao de negocio mapeia para uma classe com `execute(dto)`:
+
+```typescript
+// ❌ ERRADO: service CRUD com 15 metodos publicos
+@Injectable()
+export class UserService {
+  async create(dto) { /* ... */ }
+  async findAll() { /* ... */ }
+  async findById(id) { /* ... */ }
+  async update(id, dto) { /* ... */ }
+  async delete(id) { /* ... */ }
+  // ... mais 10 metodos
+}
+
+// ✅ CERTO: um use case por classe
+@Injectable()
+export class CriarUsuarioUseCase {
+  constructor(@Inject('IUserRepository') private repo: IUserRepository) {}
+  async execute(dto: CriarUsuarioDto): Promise<UserEntity> { /* ... */ }
+}
+
+@Injectable()
+export class ListarUsuariosUseCase {
+  constructor(@Inject('IUserRepository') private repo: IUserRepository) {}
+  async execute(dto: ListarUsuariosDto): Promise<UserEntity[]> { /* ... */ }
+}
+```
+
+**Limite:** Services com mais de 8 metodos publicos disparam alerta.
+**Verificacao:** `python .ace/scripts/fitness-functions.py --check-usecase`
+
+#### Regra A4 — 🟡 Eventos para Comunicacao Cross-Module
+
+Se este PRP precisa se comunicar com outro modulo de dominio diferente, use **eventos** (EventEmitter2) em vez de importar o Service do outro modulo diretamente.
+
+```typescript
+// ❌ ERRADO: modulo de audit importa service de outro dominio
+import { UserService } from '../../users/users.service';
+
+// ✅ CERTO: emite evento e deixa o subscriber lidar
+this.eventEmitter.emit('user.created', { userId: id, email });
+```
+
+**Excecao:** Modulos do mesmo dominio podem se comunicar via injecao direta (ex: `UsuariosModule` → `AuthModule` para verificacao de permissoes).
+
+#### Regra A5 — 📋 Fitness Functions antes do Merge
+
+Antes de finalizar qualquer PRP em core module, execute:
+
+```bash
+python .ace/scripts/fitness-functions.py --all --strict
+```
+
+Se houver CRITICAL (violacao em core module), o merge **deve ser bloqueado**. Registre a correcao antes de prosseguir. Se for modulo periferico com WARN, registre em divida tecnica no §11 do PRP.
+
+#### Regra A6 — 📋 Structure Inside Module (Package by Component)
+
+Prefira esta estrutura intra-modulo:
+
+```
+src/{modulo}/
+├── domain/entities/           # Regras de negocio
+├── application/ports/out/     # Interfaces (DIP)
+├── application/use-cases/     # Casos de uso (execute)
+├── infrastructure/persistence/ # Implementacao concreta
+├── dto/                       # Input/Output DTOs
+├── {modulo}.controller.ts     # Rotas (finas — delegam para use cases)
+├── {modulo}.module.ts
+└── {modulo}.spec.ts
+```
+
+Em vez de:
+
+```
+src/{modulo}/                  # ❌ Package by Layer
+├── controller/
+├── service/
+├── repository/
+└── dto/
+```
+
 ### What Counts as Architectural (Always Escalate)
 You are not the architect. The following always qualify for escalation:
 - **Data layer:** New tables, schema changes, new indexes, changes to data access patterns
@@ -315,6 +435,11 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 - [ ] Security audit report reviewed? Check `docs/security/SECURITY_AUDIT_REPORT.md` — zero criticals, zero real secrets
 - [ ] Artefatos downstream impactados? Execute `python .ace/scripts/impact-analyzer.py --json`
 - [ ] Métricas de code health degradadas? Execute `python .ace/scripts/code-health.py --since "30 days ago"`
+- [ ] Fitness functions passed? Execute `python .ace/scripts/fitness-functions.py --all --strict`
+- [ ] DIP respeitado? Services dependem de interfaces, nao de PrismaService diretamente
+- [ ] Dominio isolado? `domain/` sem imports de infraestrutura
+- [ ] Use cases com `execute(dto)` em vez de services CRUD genéricos?
+- [ ] Eventos para comunicacao cross-module (quando aplicavel)?
 - [ ] `<task_completed>` emitidos para tarefas feitas? O status em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md` reflete o trabalho (aplicado pelo `finalize_session.py`)?
 - [ ] Gate LLC da etapa atual registrado? `<gate_result step="N" decision="approved">`
 

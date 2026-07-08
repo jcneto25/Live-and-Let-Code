@@ -416,6 +416,31 @@ Sessão N+1
   ↓ não repete erros da sessão anterior
 ```
 
+### O que sao fitness functions e como o LLC as implementa?
+
+Fitness functions (Ingeno, Software Architect's Handbook ch16) sao **verificacoes automatizadas** que validam caracteristicas arquiteturais do codigo. Diferente de testes unitarios (que validam comportamento), fitness functions validam estrutura: as dependencias estao corretas? As camadas estao isoladas? Ha ciclos entre modulos?
+
+O LLC implementa 6 fitness functions no script `.ace/scripts/fitness-functions.py`:
+
+| Fitness Function | O que verifica | Modo |
+|-----------------|----------------|------|
+| **Dependency Rule** (`--check-deps`) | Services nao importam diretamente Prisma/infra | 🔴 Block (core) / 🟡 Warn |
+| **Circular Dependencies** (`--check-circular`) | Nenhum modulo NestJS importa outro em ciclo | 🔴 Block (todos) |
+| **Interface Coverage** (`--check-interfaces`) | Todo `.service.ts` tem `I{nome}.interface.ts` | 🔴 Block (core) / 🟡 Warn |
+| **Domain Isolation** (`--check-domain`) | Arquivos em `domain/` nao importam infra | 🔴 Block (core) / 🟡 Warn |
+| **Use Case Size** (`--check-usecase`) | Services com >8 metodos publicos | 🟡 Warn |
+| **Module Coverage** (`--check-coverage`) | Cobertura minima por modulo (lcov) | 🟡 Warn |
+
+**Modo hibrido:** Modulos definidos como `core_modules` em `.ace/arch-config.yaml` seguem regras mais rigidas (block). Modulos perifericos geram apenas alertas (warn). O config e gerado pelo Step 5 (Arquitetura) e editavel pelo time.
+
+```bash
+# Executar todas as fitness functions
+python .ace/scripts/fitness-functions.py --all
+
+# Modo estrito para CI/CD (exit code 1 se violacao)
+python .ace/scripts/fitness-functions.py --all --strict --json
+```
+
 ### O que é o "problema dos 70%" e como o LLC ajuda a combatê-lo?
 
 O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um padrão no desenvolvimento com IA: a IA gera ~70% do código em minutos — boilerplate, CRUD, padrões conhecidos — mas os 30% restantes (arquitetura, segurança, edge cases, integração, tratamento de erros) exigem esforço desproporcional, frequentemente maior que fazer tudo do zero.

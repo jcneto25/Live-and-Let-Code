@@ -819,13 +819,31 @@ O script analisa métricas estruturais + cobertura de testes:
 
 Se alertas críticos forem disparados, agende uma onda de refatoração cross-PRP.
 
+### Verificando Conformidade Arquitetural (Fitness Functions)
+
+A partir da v1.7.0, o LLC inclui **fitness functions** para validacao arquitetural automatizada:
+
+```bash
+# Executar todas as fitness functions
+python .ace/scripts/fitness-functions.py --all
+
+# Modo estrito (exit code 1 se houver violacao)
+python .ace/scripts/fitness-functions.py --all --strict
+
+# JSON para integracao com ferramentas
+python .ace/scripts/fitness-functions.py --all --json
+```
+
+As fitness functions verificam: Dependency Rule (Ports & Adapters), dependencias circulares, cobertura de interfaces (DIP), isolamento do dominio, tamanho de use cases e cobertura por modulo. O comportamento (block vs warn) e configurado em `.ace/arch-config.yaml`.
+
 ### Ferramentas Transversais do Pipeline
 
 Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Consulte o [`llc-pipeline-design.md`](llc-pipeline-design.md) para documentacao completa:
 
-| Ferramenta | Skill | Funcao | Pipeline Design |
-|-----------|-------|--------|:--------------:|
+| Ferramenta | Skill / Script | Funcao | Pipeline Design |
+|-----------|----------------|--------|:--------------:|
 | **Analisador de Impacto** | `llc-impact-analyzer` | Detecta quais artefatos downstream sao afetados por alteracoes. Use antes de refatorar. | [§9](llc-pipeline-design.md#9-rastreabilidade-e-analise-de-impacto) |
+| **Fitness Functions** | `fitness-functions.py` | [NOVO] Verifica conformidade arquitetural: Dependency Rule, DIP, modulos isolados. | [§11](llc-pipeline-design.md#11-fitness-functions---conformidade-arquitetural) |
 | **Code Health** | `llc-code-health` | Monitora metricas estruturais (Moved Code, Copy/Paste, Legacy Touch). Use a cada onda. | [§10](llc-pipeline-design.md#10-saude-estrutural-do-codigo-code-health) |
 | **ACE Context** | `llc-ace-context` | Protocolo de continuidade entre sessoes. Gerenciado automaticamente pelo harness. | [§8](llc-pipeline-design.md#8-ace--agentic-context-engineering) |
 
@@ -857,6 +875,7 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Garantir que toda onda vire sessão no `.ace` | Instale o pre-commit: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ver [§8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement)) |
 | Verificar cobertura de testes (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
 | Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
+| Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver código health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |

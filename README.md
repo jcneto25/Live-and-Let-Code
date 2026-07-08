@@ -51,6 +51,16 @@ python .ace/scripts/llc.py gate run --gate test-coverage
 bash .ace/scripts/pre-wave-check.sh
 ```
 
+**New: Architecture Fitness Functions**
+
+```bash
+# Verify architectural compliance (Dependency Rule, circular deps, etc.)
+python .ace/scripts/fitness-functions.py --all
+
+# Strict mode (exit 1 on violations) for CI/CD
+python .ace/scripts/fitness-functions.py --all --strict
+```
+
 ### Pipeline
 
 ```

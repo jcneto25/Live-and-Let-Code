@@ -179,6 +179,9 @@ Step 2   → PRDs (Executivo + Tecnico)         👤 Gate 3
 Step 3   → PRPs                               👤 Gate 4
 Step 4   → Planejamento                       👤 Gate 5
 Step 5   → Arquitetura                        👤 Gate 6
+Step 5a  → Architecture Patterns              👤 Gate 6a
+Step 5b  → API Design Enforcement             👤 Gate 6b
+Step 5c  → Clean Code Enforcement             👤 Gate 8.5
 Step 6   → Tarefas                            👤 Gate 7
 Step 7   → Design System                      👤 Gate 8
 Step 8   → Setup + Mock Data                  👤 Gate 9
@@ -418,6 +421,91 @@ Execute a skill docs/skills/llc-step-5a-architecture-patterns.md
 - O `.ace/arch-config.yaml` reflete os módulos core corretos?
 - Os ADRs 008-011 estão criados e justificados?
 - A estrutura de pastas intra-módulo está definida?
+
+**Só avance quando aprovar.**
+
+---
+
+### Passo 5b: API Design Enforcement (Design de API — Obrigatório)
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-5b-api-design.md
+```
+
+**A IA faz:** Executa o pipeline de API Design baseado no processo ADD-R (Higginbotham):
+
+1. **Align** — Verifica alinhamento dos recursos com domínio de negócio (Vision + Modules + 7 Specs)
+2. **Define** — Define contratos de recursos, operações, parâmetros, status codes
+3. **Design** — Gera `docs/templates/CONTROLLER_TEMPLATE.ts` customizado por módulo
+4. **Refine** — Executa fitness functions (`--check-api-design`) para validar:
+   - Naming consistency (PT/EN, camelCase query params, kebab-case paths)
+   - REST semantics (PUT vs PATCH, RPC endpoints → PATCH { status })
+   - Nested resources modeling
+   - Duplicate endpoint detection
+   - HTTP status code decorators (@HttpCode)
+   - Error response documentation (@ApiResponse 401/403/404/422)
+   - Pagination coverage + standard envelope
+   - API versioning (api/v1/ prefix)
+   - OpenAPI spec existence + completeness
+   - HATEOAS links in responses
+   - BearerAuth security scheme
+
+**Artefatos gerados/atualizados:**
+- `docs/api/openapi.yaml` — OpenAPI 3.0 spec completo
+- `docs/templates/CONTROLLER_TEMPLATE.ts` — Template customizado por módulo
+- Controllers NestJS atualizados conforme template
+- `.ace/arch-config.yaml` — Regras de API design ativadas
+
+**Você valida:** 👤 Gate 6b (novo gate)
+- OpenAPI spec existe em `docs/api/openapi.yaml` e é válida?
+- Todos os controllers seguem o template padronizado?
+- Fitness functions `--check-api-design` passam sem bloqueios?
+- Recursos aninhados modelados corretamente (ex: `/auditorias/:id/achados`)?
+- Endpoints RPC migrados para PATCH { status }?
+- Paginação implementada em todos os endpoints de lista?
+- Versionamento `api/v1/` presente em todos os controllers?
+
+**Só avance quando aprovar.**
+
+---
+
+### Passo 5c: Clean Code Enforcement (Obrigatório)
+
+> **OBRIGATÓRIO** — Este sub-step deve ser executado após o Step 5b e antes do Step 6.
+> As 21 verificações de Clean Code são vinculantes e verificadas por fitness functions automatizadas.
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-5c-clean-code.md
+```
+
+**A IA faz:** Executa o pipeline de Clean Code consolidado (21 checks):
+
+1. **Funções** — Tamanho (≤20 linhas), Parâmetros (≤3), Responsabilidade única
+2. **Classes** — SRP, ≤5 deps, ≤100 linhas, DIP, Coesão, Entidades ricas, Use Cases
+3. **Nomes** — Sem `data`/`dto`/`result`/`info`/`obj`, Verbos em métodos, Consistência PT/EN
+4. **Erros** — Zero exceções vazias, Zero catch vazio, Magic numbers → constantes
+5. **Smells** — Código morto, Comentários ruído, `let`→`const`, `as any` proibido
+6. **ReadModels** — Repositórios retornam ReadModels tipados, Zero `any` em público
+
+**Artefatos gerados/atualizados:**
+- `.ace/arch-config.yaml` — Regras de Clean Code ativadas/thresholds por módulo
+- `docs/architecture/adr/ADR-012` a `ADR-014` — ReadModels, Use Cases, Thresholds
+- Relatórios de violações por arquivo: linha, regra, sugestão de fix
+
+**Você valida:** 👤 Gate 8.5 (novo gate)
+- Fitness functions `--check-clean-code` passam sem **bloqueios**?
+- Zero injeção de `PrismaService` em services/use-cases?
+- Todos os repositórios retornam `XxxReadModel` tipado?
+- Entidades de domínio têm métodos de negócio (não anêmicas)?
+- Use Cases separados por operação (não service monolítico)?
+- Nomes semânticos em todo código novo (`auditoriaEncontrada` vs `data`)?
+- Zero exceções vazias (`NotFoundException('')`)?
+- Zero `as any` em assinaturas públicas?
+- ADRs criados para decisões de Clean Code?
 
 **Só avance quando aprovar.**
 
@@ -895,9 +983,9 @@ Para mudancas em funcionalidades existentes, o Step 3 (modo delta) gera **PRP-A*
                     🔴 = Checkpoint visual obrigatório
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
-Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
+Step 4 ──👤──→ Step 5 ──👤──→ Step 5a ──👤──→ Step 5b ──👤──→ Step 5c ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
-Step 10.5 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→
+Step 10.5 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→ Step 10.8 ──👤──→
 
 Step 11:
   ├── PRPs sem UI → agente direto

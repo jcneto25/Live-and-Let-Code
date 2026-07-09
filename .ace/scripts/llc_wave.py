@@ -474,7 +474,8 @@ def _prp_to_keywords(prp_id: str) -> list[str]:
     }
     return mapping.get(prp_id, [])
 
-    # ── Pré/Pós-onda validation ──
+
+def _pre_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
     """Executa validacao de prontidao antes de iniciar a onda (build + bootstrap + health).
 
     Retorna True se passou ou se o script nao existe (projeto sem stack executavel).

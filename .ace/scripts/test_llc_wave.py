@@ -287,5 +287,20 @@ class TestFormatWaveList:
         assert "T-002" in result
 
 
+class TestPreWaveCheck:
+    """_pre_wave_check deve existir, ser chamavel e retornar bool."""
+
+    def test_pre_wave_check_is_defined_and_callable(self):
+        from llc_wave import _pre_wave_check
+
+        assert callable(_pre_wave_check)
+
+    def test_pre_wave_check_true_when_script_missing(self, monkeypatch, tmp_path):
+        import llc_wave
+
+        monkeypatch.setattr(llc_wave, "PRE_WAVE_CHECK_SCRIPT", tmp_path / "absent.sh")
+        assert llc_wave._pre_wave_check(dry_run=False, wave_num=1) is True
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

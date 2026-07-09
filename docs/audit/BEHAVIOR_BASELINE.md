@@ -103,7 +103,7 @@ block records the **Intended** behavior (from guide/skill), the **Actual** behav
   PY
   grep -n "def _pre_wave_check\|def _prp_to_keywords\|return mapping.get" .ace/scripts/llc_wave.py
   ```
-- **Gap:** **DEFECT A-01 (CRITICAL)** — `_pre_wave_check` does not exist; its body is dead code inside `_prp_to_keywords`, and `run_wave` would raise `NameError` at line 681. (To be hotfixed in Task 7; Gap will be updated to "fixed in audit (Task 7)" after that task. **Not yet fixed.**)
+- **Gap:** **fixed in audit (Task 7)** — `_pre_wave_check` is now a module-level `def _pre_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:` placed immediately before `_post_wave_check`; the dead block was removed from `_prp_to_keywords` (which again ends cleanly at its `return`). TDD: RED (`ImportError: cannot import name '_pre_wave_check'`) → GREEN (2/2 `TestPreWaveCheck` passing); full suite has no new failures (4 pre-existing failures unrelated to A-01).
 
 ### #8 backend-contract verify (API-first) — warn-by-default; blocks only on stubs
 - **Intended:** API-first enforcement checks UI PRPs for backend contracts; missing contracts warn (don't block); detected stub services block (unless `--auto-approve`).

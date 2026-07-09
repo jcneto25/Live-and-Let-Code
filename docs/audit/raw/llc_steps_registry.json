@@ -1,0 +1,243 @@
+{
+  "0": {
+    "number": 0.0,
+    "name": "Ingestão",
+    "skill_file": null,
+    "gate": null,
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "0.1": {
+    "number": 0.1,
+    "name": "Conversão (Docling)",
+    "skill_file": "llc-step-0-1",
+    "gate": null,
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "0.2": {
+    "number": 0.2,
+    "name": "Delta Impact Analysis",
+    "skill_file": "llc-step-delta-impact",
+    "gate": null,
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": [
+      "delta-impact",
+      "d-impact",
+      "d-0"
+    ]
+  },
+  "0.3": {
+    "number": 0.3,
+    "name": "Delta Grill Me",
+    "skill_file": "llc-step-delta-grill",
+    "gate": null,
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": [
+      "delta-grill",
+      "d-grill",
+      "d-1"
+    ]
+  },
+  "0.5": {
+    "number": 0.5,
+    "name": "Visão + Módulos",
+    "skill_file": "llc-step-0-5",
+    "gate": "1",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "1": {
+    "number": 1.0,
+    "name": "7 Especificações",
+    "skill_file": "llc-step-1",
+    "gate": "2",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "2": {
+    "number": 2.0,
+    "name": "PRDs",
+    "skill_file": "llc-step-2",
+    "gate": "3",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "3": {
+    "number": 3.0,
+    "name": "PRPs",
+    "skill_file": "llc-step-3",
+    "gate": "4",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "4": {
+    "number": 4.0,
+    "name": "Planejamento",
+    "skill_file": "llc-step-4",
+    "gate": "5",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "5": {
+    "number": 5.0,
+    "name": "Arquitetura",
+    "skill_file": "llc-step-5",
+    "gate": "6",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "6": {
+    "number": 6.0,
+    "name": "Tarefas",
+    "skill_file": "llc-step-6",
+    "gate": "7",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "7": {
+    "number": 7.0,
+    "name": "Design System",
+    "skill_file": "llc-step-7",
+    "gate": "8",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "8": {
+    "number": 8.0,
+    "name": "Setup + Mock Data",
+    "skill_file": "llc-step-8",
+    "gate": "9",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "9": {
+    "number": 9.0,
+    "name": "Documentação de Testes",
+    "skill_file": "llc-step-9",
+    "gate": "10",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "10": {
+    "number": 10.0,
+    "name": "Documentos do Projeto",
+    "skill_file": "llc-step-10",
+    "gate": "11",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "10.5": {
+    "number": 10.5,
+    "name": "User Guide",
+    "skill_file": "llc-user-guide",
+    "gate": "11.5",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": []
+  },
+  "10.6": {
+    "number": 10.6,
+    "name": "Security Audit",
+    "skill_file": "llc-step-11-security",
+    "gate": "11-SEC",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": [
+      "11-security",
+      "security",
+      "11-sec"
+    ]
+  },
+  "10.7": {
+    "number": 10.7,
+    "name": "Null Safety",
+    "skill_file": "llc-step-12-null-safety",
+    "gate": "12-NULL",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": [
+      "12-null",
+      "null-safety",
+      "12-null-safety",
+      "null"
+    ]
+  },
+  "10.8": {
+    "number": 10.8,
+    "name": "Test Coverage Gate",
+    "skill_file": "llc-step-10-8-test-coverage",
+    "gate": "10.8",
+    "in_pipeline": true,
+    "auto_worktree": false,
+    "aliases": [
+      "test-coverage",
+      "test",
+      "10-8-test-coverage"
+    ]
+  },
+  "11": {
+    "number": 11.0,
+    "name": "Execução",
+    "skill_file": "llc-step-11",
+    "gate": null,
+    "in_pipeline": true,
+    "auto_worktree": true,
+    "aliases": [
+      "execution"
+    ]
+  },
+  "11.1": {
+    "number": 11.1,
+    "name": "OWASP Hardening",
+    "skill_file": "llc-step-11-owasp-security",
+    "gate": "11-OWASP",
+    "in_pipeline": true,
+    "auto_worktree": true,
+    "aliases": [
+      "11-owasp",
+      "owasp",
+      "11-owasp-security"
+    ]
+  },
+  "11.2": {
+    "number": 11.2,
+    "name": "PRP Verify",
+    "skill_file": "llc-step-11-2-prp-verify",
+    "gate": "11-VERIFY",
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": [
+      "prp-verify",
+      "verify"
+    ]
+  },
+  "11.3": {
+    "number": 11.3,
+    "name": "Architecture Fitness",
+    "skill_file": "llc-arch-fitness",
+    "gate": "11-ARCH",
+    "in_pipeline": false,
+    "auto_worktree": false,
+    "aliases": [
+      "arch-fitness",
+      "arch",
+      "fitness"
+    ]
+  }
+}

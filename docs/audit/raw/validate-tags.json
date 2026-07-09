@@ -1,0 +1,80 @@
+{
+  "valid": false,
+  "total_errors": 12,
+  "fixable": 0,
+  "non_fixable": 12,
+  "errors": [
+    {
+      "file": ".ace/sessions/2026-07-09-006.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-007.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-008.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-009.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-011.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-012.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-013.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-014.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-015.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-016.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-017.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    },
+    {
+      "file": ".ace/sessions/2026-07-09-018.md",
+      "line": 1,
+      "message": "Sessão completed sem <dependencies>. O initialize_session.py deveria ter inj-etado o subgrafo de dependências do dependency-graph.yaml. Execute: python .ace/scripts/consistency-check.py para verificar se o grafo existe.",
+      "fixable": false
+    }
+  ]
+}

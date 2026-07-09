@@ -1,7 +1,7 @@
 ---
 name: llc-step-11
 description: Pipeline LLC Step 11 — Execução dos PRPs e PRP-A (amendment). Implementa features usando TDD estrito, suporta alteração de código existente com garantia de não regressão, registra deltas via ACE e gera <context_seed>.
-version: 1.1.0
+version: 1.2.0
 tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 ---
 
@@ -10,6 +10,7 @@ tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 **Pipeline:** Live and Let Code (LLC)
 **Fase:** Implementation (Step 11)
 **Depende de:** Step 3 (PRPs), Step 6 (TASKS.md), Step 9 (TESTING_GUIDE.md), Step 11-Security (gate pré-execução APROVADO), Step 12-Null-Safety (contratos de dados APROVADOS)
+**Sub-steps:** Step 11a (Domain Modeling - **obrigatório pré-execution**), Step 11b (Arch Fitness - **obrigatório no PRP Verify**)
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill
@@ -27,6 +28,10 @@ tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 - [ ] `docs/security/SECURITY_AUDIT_REPORT.md` — gate 11-SEC **APROVADO** (Step 11-Security)
 - [ ] `docs/security/NULL_SAFETY_REPORT.md` — gate 12-NULL **APROVADO** (Step 12-Null-Safety)
 - [ ] `code-health.py` com baseline registrado (Step 8)
+- [ ] `docs/architecture/ARCHITECTURE.md` — com §7, §8, §9 preenchidos (Step 5a)
+- [ ] `.ace/arch-config.yaml` — configuração fitness functions (Step 5a)
+- [ ] Repository Pattern implementado nos módulos alvo (Step 8b)
+- [ ] Domain Model gerado para PRPs core (Step 11a)
 
 ---
 

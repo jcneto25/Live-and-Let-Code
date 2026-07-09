@@ -1,8 +1,6 @@
 ---
 name: llc-step-5
-description: Pipeline LLC Passo 5: Gera documento de Arquitetura (ARCHITECTURE.md) com stack, C4, ADRs, domínio, Ports & Adapters, use cases, fitness functions. ADRs em arquivos separados.
-version: 1.1.0
-tags: [architecture, stack, adr, fitness, llc-pipeline]
+version: 1.2.0
 ---
 
 # LLC Skill: Step 5 — Arquitetura
@@ -10,6 +8,7 @@ tags: [architecture, stack, adr, fitness, llc-pipeline]
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** Architecture  
 **Depende de:** Step 4 (Planejamento validado)  
+**Sub-steps:** Step 5a (Architecture Patterns - **obrigatório**)  
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill
@@ -21,8 +20,9 @@ tags: [architecture, stack, adr, fitness, llc-pipeline]
 
 - [ ] PRDs, specs e PRPs validados (Steps 1-3)
 - [ ] `docs/planning/PLAN.md` (validado no Step 4)
-- [ ] `docs/architecture/ARCHITECTURE_TEMPLATE.md` (template expandido v1.1+)
+- [ ] `docs/architecture/ARCHITECTURE_TEMPLATE.md` (template expandido v1.2+)
 - [ ] `docs/architecture/ADR_TEMPLATE.md` (template de ADR individual)
+- [ ] `docs/architecture/ARCHITECTURE_PATTERNS_TEMPLATE.md` (template de padrões — **Step 5a**)
 - [ ] `docs/business/specs/requisitos_nao_funcionais.md`
 - [ ] `docs/business/specs/catalogo_integracoes.md`
 - [ ] `docs/business/specs/perfis_permissoes.md`
@@ -108,10 +108,23 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
   python .ace/scripts/fitness-functions.py --all --strict
   ```
 
-### 10. Saída
+### 10. Sub-Step Obrigatório: Step 5a — Architecture Patterns
+
+**Após concluir o Step 5, você DEVE executar o Step 5a (`llc-step-5a-architecture-patterns`)** para definir e documentar os padrões arquiteturais obrigatórios que serão enforceados durante toda a execução (Steps 8–11).
+
+O Step 5a:
+- Usa o template `docs/architecture/ARCHITECTURE_PATTERNS_TEMPLATE.md`
+- Define: Clean Architecture layers, Repository Pattern, Domain Layer puro, Use Cases, Event Bus
+- Gera/atualiza: `ARCHITECTURE.md` §7, §8, §9 + `.ace/arch-config.yaml` + ADRs 008–011
+- É **gate obrigatório** antes do Step 8 (Setup)
+
+> ⚠️ **Não prossiga para o Step 8 sem completar o Step 5a.** Os padrões definidos no 5a são vinculantes e verificados por fitness functions automatizadas.
+
+### 11. Saída
 - `docs/architecture/ARCHITECTURE.md` — documento principal (preencher template expandido)
-- `docs/architecture/adr/ADR-001-*.md` a `ADR-005-*.md` — ADRs individuais
-- `.ace/arch-config.yaml` — configuração das fitness functions
+- `docs/architecture/adr/ADR-001-*.md` a `ADR-005-*.md` — ADRs individuais (Step 5)
+- `docs/architecture/adr/ADR-008-*.md` a `ADR-011-*.md` — ADRs de padrões (Step 5a)
+- `.ace/arch-config.yaml` — configuração das fitness functions (Step 5a)
 
 ---
 

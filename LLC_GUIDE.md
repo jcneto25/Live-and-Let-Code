@@ -390,6 +390,39 @@ Execute a skill docs/skills/llc-step-5.md
 
 ---
 
+### Passo 5a: Architecture Patterns (Padrões Arquiteturais Obrigatórios)
+
+> **OBRIGATÓRIO** — Este sub-step deve ser executado após o Step 5 e antes do Step 8.
+> Os padrões definidos aqui são vinculantes e verificados por fitness functions automatizadas.
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-5a-architecture-patterns.md
+```
+
+**A IA faz:** Usa o template `docs/templates/ARCHITECTURE_PATTERNS_TEMPLATE.md` para definir e documentar:
+- **Clean Architecture Layers** — estrutura `domain/`, `application/`, `infrastructure/` por módulo
+- **Repository Pattern** — interfaces `I{Nome}Repository` + implementações `Prisma{Nome}Repository`
+- **Domain Layer Puro** — entidades de domínio sem decoradores, sem imports de framework
+- **Use Cases** — uma classe por caso de uso com método `execute(dto)`
+- **Event Bus** — comunicação assíncrona entre módulos via EventEmitter2
+
+**Artefatos gerados/atualizados:**
+- `docs/architecture/ARCHITECTURE.md` — seções §7, §8, §9 expandidas com exemplos de código
+- `.ace/arch-config.yaml` — configuração completa das fitness functions (25+ rules)
+- `docs/architecture/adr/ADR-008` a `ADR-011` — ADRs para Repository Pattern, Domain Layer, Use Cases, Event Bus
+
+**Você valida:** 👤 Gate 6a (novo gate)
+- Os padrões arquiteturais estão adequados ao projeto (greenfield vs brownfield)?
+- O `.ace/arch-config.yaml` reflete os módulos core corretos?
+- Os ADRs 008-011 estão criados e justificados?
+- A estrutura de pastas intra-módulo está definida?
+
+**Só avance quando aprovar.**
+
+---
+
 ### Passo 6: Tarefas
 
 **Você faz:**
@@ -454,6 +487,43 @@ Execute a skill docs/skills/llc-step-8.md
 - O projeto compila e roda localmente?
 - Os dados mock são realistas e cobrem todos os perfis?
 - Os handlers simulam erros corretamente?
+
+**Só avance quando aprovar.**
+
+---
+
+### Passo 8b: Repository Pattern (Obrigatório)
+
+> **OBRIGATÓRIO** — Este sub-step deve ser executado após o Step 8 (setup + mocks) e antes do Step 11 (Execução).
+> Implementa o Repository Pattern com interfaces (Ports & Adapters) em todos os módulos.
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-8b-repository-pattern.md
+```
+
+**A IA faz:** Usa o template `docs/templates/REPOSITORY_PATTERN_TEMPLATE.md` para implementar:
+- Interfaces de repositório `I{Nome}Repository` em `src/*/domain/repositories/`
+- Implementações Prisma `Prisma{Nome}Repository` em `src/*/infrastructure/repositories/`
+- Mappers Prisma → Domain em `src/*/infrastructure/mappers/`
+- Bindings de Injeção de Dependência nos modules (`{ provide: I*Repository, useClass: Prisma*Repository }`)
+- Atualiza Services para injetar interfaces (`@Inject(I*Repository)`), não `PrismaService`
+
+**Artefatos gerados:**
+- `src/*/domain/repositories/i*.repository.ts` — interfaces
+- `src/*/infrastructure/repositories/prisma-*.repository.ts` — implementações
+- `src/*/infrastructure/mappers/*.mapper.ts` — mappers
+- `src/*/*.module.ts` — bindings DI atualizados
+- `src/*/*.service.ts` — services atualizados para usar interfaces
+
+**Você valida:** 👤 Gate 9b (novo gate)
+- `grep -r "PrismaService" src/*/domain/ src/*/application/ src/*/use-cases/` — retorna vazio?
+- Interfaces existem para todos aggregate roots?
+- Implementações Prisma existem e delegam corretamente?
+- Mappers cobrem todos os campos da entidade de domínio?
+- Bindings DI existem em todos os modules?
+- Fitness function `repository-pattern` passa: `python .ace/scripts/fitness-functions.py --check repository-pattern`?
 
 **Só avance quando aprovar.**
 
@@ -622,8 +692,33 @@ Execute a skill docs/skills/llc-step-10-8-test-coverage.md
 > Cada PRP roda em seu proprio diretorio fisico (`prp-{id}/wave-{n}`), com `node_modules`,
 > `dist/` e `.env` independentes — paralelismo real sem colisao de arquivos.
 >
-> Ao finalizar, se o gate for `approved`, o branch e mergeado automaticamente e o worktree
+Ao finalizar, se o gate for `approved`, o branch e mergeado automaticamente e o worktree
 > removido. Se `rejected`, o worktree e descartado sem merge.
+
+### Passo 11a: Domain Modeling (Modelagem de Domínio — Obrigatório Pré-Execution)
+
+> **OBRIGATÓRIO** — Para cada PRP core, execute este sub-step **antes** de iniciar a implementação (Trilha A ou B).
+> Gera as entidades de domínio, use cases e interfaces de repositório específicas do PRP.
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-11a-domain-modeling.md --prp PRP-001
+```
+
+**A IA faz:** Usa o template `docs/templates/DOMAIN_MODEL_TEMPLATE.md` para gerar:
+- Entidades de domínio puras em `domain/`
+- Use cases com `execute(dto)` em `application/use-cases/`
+- Interfaces de repositório (se não existirem do Step 8b)
+- PRP atualizado com §7 completo
+
+**Você valida:** 👤 Gate 11-PRE (novo gate)
+- Entidades refletem as regras de negócio do PRP?
+- Use cases cobrem todos os RFs do PRP?
+- Interfaces de repositório são consistentes com Step 8b?
+- Contratos de dados (§7 do PRP) estão completos?
+
+**Só avance para Trilha A/B quando aprovar.**
 
 #### Trilha A: PRPs sem UI (backend, infra)
 
@@ -680,6 +775,30 @@ Execute a skill docs/skills/llc-step-11-2-prp-verify.md
 **Nota:** `_post_wave_check()` também bloqueia ondas com CRITICAL — a verificação
 ocorre tanto no nível de PRP individual (session_end) quanto no nível de onda
 (pós-onda). A verificação de cobertura do projeto inteiro roda como parte do `prp_verify.py --all`.
+
+### Passo 11b: Arch Fitness (Fitness Functions Arquiteturais — Obrigatório no PRP Verify)
+
+> **OBRIGATÓRIO** — Executado como parte do `prp_verify.py` e do Gate 11.2.
+> Verifica se a implementação do PRP viola alguma fitness function arquitetural.
+
+**Execução automática:**
+- `prp_verify.py` chama internamente `fitness-functions.py --all --strict`
+- Também executável manualmente: `python .ace/scripts/fitness-functions.py --all --strict`
+
+**Checks validados (conforme `.ace/arch-config.yaml`):**
+- **Dependency Rule** — domínio não importa infraestrutura
+- **Circular Dependencies** — sem ciclos entre módulos
+- **Interface Coverage** — todos aggregate roots têm `I{Nome}Repository`
+- **Domain Isolation** — `domain/` não importa `@prisma/client`, `repositories/`, `prisma/`
+- **Use Case Size** — use cases ≤ 200 linhas, responsabilidade única
+- **Module Coverage** — módulos core ≥ 90% cobertura, demais ≥ 80%
+
+**Você valida:** 👤 Gate 11.2 inclui fitness functions
+- `python .ace/scripts/fitness-functions.py --all --strict` passa (exit 0)?
+- Nenhuma violação BLOCKING em módulos core?
+- Violações WARNING são aceitáveis com justificativa documentada?
+
+**Só aprove se fitness functions passarem.**
 
 ---
 

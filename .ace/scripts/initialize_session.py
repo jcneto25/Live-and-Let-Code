@@ -32,6 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import session_sequence
 from llc_steps import normalize_step, REGISTRY
 
 try:
@@ -108,25 +109,10 @@ def extract_context_seed(session_file: Path) -> Optional[str]:
 def get_next_session_id() -> str:
     """Próximo ID de sessão livre (max+1, verificado contra o disco).
 
-    Usa max(numeros)+1 — não len+1 — para NÃO colidir quando uma sessão do meio
-    é deletada (len+1 reaproveitaria um número existente e sobrescreveria).
-    Mantenha em sincronia com validate-session-write.get_next_sequence.
+    Delega ao módulo compartilhado session_sequence (sem duplicar a lógica
+    usada também por validate-session-write.get_next_sequence).
     """
-    today = datetime.now().strftime("%Y-%m-%d")
-    if not SESSIONS_DIR.exists():
-        return f"{today}-001"
-    pattern = re.compile(rf"^{re.escape(today)}-(\d{{3}})\.md$")
-    nums = []
-    for f in SESSIONS_DIR.glob(f"{today}-*.md"):
-        m = pattern.match(f.name)
-        if m:
-            nums.append(int(m.group(1)))
-    next_num = (max(nums) + 1) if nums else 1
-    candidate = f"{today}-{next_num:03d}"
-    while (SESSIONS_DIR / f"{candidate}.md").exists():  # guard contra race/criação manual
-        next_num += 1
-        candidate = f"{today}-{next_num:03d}"
-    return candidate
+    return session_sequence.get_next_session_id()
 
 
 def load_dependency_graph() -> Optional[dict]:

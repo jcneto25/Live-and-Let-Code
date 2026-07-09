@@ -2,8 +2,9 @@
 """
 Promove learning_points de alta prioridade para memory/learning_points.md.
 
-NOTA: extract_learning_points() é idêntica à função em finalize_session.py.
-      Se modificar uma, modifique a outra.
+NOTA: extract_learning_points()/normalize_text()/load_existing_learning_points()
+      foram extraídos para o módulo compartilhado learning_points.py (evita a
+      duplicação com finalize_session.py).
 
 Uso:
     python .ace/scripts/promote-learning-points.py
@@ -15,10 +16,14 @@ Uso:
 import argparse
 import json
 import logging
-import re
 import sys
-from datetime import datetime
 from pathlib import Path
+
+from learning_points import (
+    extract_learning_points,
+    load_existing_learning_points,
+    normalize_text,
+)
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -27,36 +32,6 @@ ACE_DIR = Path(".ace")
 SESSIONS_DIR = ACE_DIR / "sessions"
 MEMORY_DIR = ACE_DIR / "memory"
 LEARNING_POINTS_FILE = MEMORY_DIR / "learning_points.md"
-
-
-def extract_learning_points(content: str) -> list[dict]:
-    pattern = r'<learning_point([^>]*)>(.*?)</learning_point>'
-    matches = re.findall(pattern, content, re.DOTALL)
-    results = []
-    for attrs_str, body in matches:
-        attrs = {}
-        for attr_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
-            attrs[attr_match.group(1)] = attr_match.group(2)
-        results.append({
-            "priority": attrs.get("priority", "medium"),
-            "content": body.strip()
-        })
-    return results
-
-
-def normalize_text(text: str) -> str:
-    return " ".join(text.lower().split())
-
-
-def load_existing_learning_points() -> dict[str, str]:
-    if not LEARNING_POINTS_FILE.exists():
-        return {}
-    content = LEARNING_POINTS_FILE.read_text(encoding='utf-8')
-    sections = re.findall(r'## ([^\n]+)\n\n(.*?)(?=\n## |\Z)', content, re.DOTALL)
-    existing = {}
-    for source, text in sections:
-        existing[normalize_text(text)] = text
-    return existing
 
 
 def promote_from_session(session_file: Path, existing: dict[str, str]) -> list[dict]:

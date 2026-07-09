@@ -15,6 +15,7 @@ Uso:
 """
 
 import argparse
+import fnmatch
 import json
 import logging
 import re
@@ -47,7 +48,6 @@ def get_file_tree(include_pattern: str | None = None, max_depth: int | None = No
                  and p.suffix not in EXCLUDE_EXTS]
 
     if include_pattern:
-        import fnmatch
         files = [f for f in files if fnmatch.fnmatch(f, include_pattern)]
 
     tree = defaultdict(list)
@@ -160,7 +160,6 @@ def get_key_files(include_pattern: str | None = None, max_files: int = 50) -> li
              and Path(f).suffix not in EXCLUDE_EXTS]
 
     if include_pattern:
-        import fnmatch
         files = [f for f in files if fnmatch.fnmatch(f, include_pattern)]
 
     return sorted(files)[:max_files]

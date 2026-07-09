@@ -25,38 +25,23 @@ Exit code: 0 (ok/info), 1 (arquivo já existe).
 
 import argparse
 import json
-import re
 import sys
 from datetime import date
 from pathlib import Path
+
+from session_sequence import get_next_session_id
 
 ACE_DIR = Path(__file__).resolve().parent.parent
 SESSIONS_DIR = ACE_DIR / "sessions"
 
 
 def get_next_sequence(today: str) -> str:
-    """Próximo nome disponível para a data (max+1, verificado contra o disco).
+    """Próximo nome disponível (com .md) para a data.
 
-    Usa max(numeros)+1 — não len+1 — para não colide quando uma sessão do meio
-    é deletada. Mantenha em sincronia com initialize_session.get_next_session_id.
+    Delega ao módulo compartilhado session_sequence (sem duplicar a lógica
+    de max+1 usada também por initialize_session).
     """
-    if not SESSIONS_DIR.exists():
-        return f"{today}-001.md"
-
-    pattern = re.compile(rf"^{re.escape(today)}-(\d{{3}})\.md$")
-    existing_numbers = []
-    for f in SESSIONS_DIR.iterdir():
-        if f.is_file():
-            m = pattern.match(f.name)
-            if m:
-                existing_numbers.append(int(m.group(1)))
-
-    next_num = (max(existing_numbers) + 1) if existing_numbers else 1
-    candidate = f"{today}-{next_num:03d}.md"
-    while (SESSIONS_DIR / candidate).exists():  # guard contra race/criação manual
-        next_num += 1
-        candidate = f"{today}-{next_num:03d}.md"
-    return candidate
+    return get_next_session_id(today) + ".md"
 
 
 def main():

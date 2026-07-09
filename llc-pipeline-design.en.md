@@ -315,15 +315,16 @@ graph TD
 | 3 | PRPs | PRDs + Specs + Modules | `PRP-*.md` | — | 👤 4 |
 | 4 | Planning | PRPs | Dependency Matrix + Plan + Waves | — | 👤 5 |
 | 5 | Architecture | PRDs + NFR + Integrations + Planning | `ARCHITECTURE.md` | — | 👤 6 |
+| 5a | Architecture Patterns (mandatory) | Architecture + ADR templates + Arch config | `ARCHITECTURE.md` §7-9, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
 | 6 | Tasks | PRPs + Architecture + Planning | `TASKS.md` | — | 👤 7 |
 | 7 | Design System | Architecture + Vision + Profiles | `DESIGN_SYSTEM.md` | — | 👤 8 |
 | 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | — | 👤 9 |
->
 > **Note on mock data:** The reference example uses **MSW** (Mock Service Worker, JS/TS). For
 > other stacks, the concept is the same — mock data + CRUD handlers — but the tool varies:
 > Python uses `responses`/`httpx`, Go uses `httptest`, Rust uses `mockall`. Step 8 generates the
 > `mocks/data/` and `mocks/handlers/` structure regardless of stack; the AI adapts handler
 > implementation based on the stack defined in `ARCHITECTURE.md`. See [FAQ](FAQ.en.md#does-llc-work-for-non-javascripttypescript-stacks).
+| 8b | Repository Pattern (mandatory) | Setup + Arch config + TASKS | Repositories (interfaces, impls, mappers, DI bindings) | `REPOSITORY_PATTERN_TEMPLATE.md` | 👤 9b |
 | 9 | Testing Docs | Architecture + PRPs + Tasks | Guide + Baseline + Progress | — | 👤 10 |
 | 10 | Project Docs | Architecture + Planning + Design + Testing | `README.md` + `DEPLOYMENT.md` + `CLAUDE.md` + `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Profiles + Workflows + Glossary | `USER_GUIDE.md`, `index.md`, `overview.md`, `profiles/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
@@ -337,6 +338,8 @@ graph TD
 > association, not order" caveat no longer applies.
 
 | 11 | Execution | All previous artifacts | Source code + user guide pages (`docs/user-guide/[module]/*.md`) | — | QA Checkpoints |
+| 11a | Domain Modeling (mandatory pre-exec) | PRP + arch-config + Step 8b output | Domain entities, use cases, repo interfaces, PRP §7 updated | `DOMAIN_MODEL_TEMPLATE.md` | 👤 11-PRE |
+| 11b | Arch Fitness (mandatory in PRP Verify) | Implemented code + arch-config | Fitness function report | — | 🔴 Blocks on BLOCKING violations |
 | 11.1 | OWASP Hardening (post-code) | Implemented code (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Blocks on 1+ critical |
 
 > **Security 3-layer model:** Security runs throughout the pipeline — not as a single gate.
@@ -392,15 +395,18 @@ into `run_wave()` and runs automatically for PRPs identified as UI via `_is_ui_p
 | `llc-step-3` | 3 | PRPs — self-contained implementation contracts |
 | `llc-step-4` | 4 | Dependency Matrix + Plan + Execution Waves |
 | `llc-step-5` | 5 | Architecture (Stack, C4, ADRs, CI/CD) |
+| `llc-step-5a-architecture-patterns` | 5a | Architecture Patterns — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
 | `llc-step-6` | 6 | TASKS.md with concrete tasks, agents, and estimates |
 | `llc-step-7` | 7 | Design System (tokens, components, patterns) |
 | `llc-step-8` | 8 | Project setup + Mock data layer (JSON + mock handlers, e.g., MSW for JS/TS) |
+| `llc-step-8b-repository-pattern` | 8b | Repository Pattern implementation — interfaces, Prisma impls, mappers, DI bindings |
 | `llc-step-9` | 9 | Testing documentation (Guide, Baseline, Progress) |
 | `llc-step-10` | 10 | README.md + DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | User manual skeleton from PRPs, profiles and workflows |
 | `llc-step-11-security` | 10.6 | Pre-execution security audit: SCA (npm audit), SAST (Semgrep), secrets (Gitleaks) |
-| `llc-step-11-owasp-security` | 11.1 | Post-implementation OWASP Top 10:2021 hardening — manual/AI verification |
 | `llc-step-12-null-safety` | 10.7 | Null safety validation for PRPs — nullability contracts, schemas, payload limits |
+| `llc-step-11a-domain-modeling` | 11a | Domain Modeling per PRP — entities, use cases, repository interfaces |
+| `llc-step-11b-arch-fitness` | 11b | Architectural Fitness Functions — automated architectural governance |
 | `llc-subflow-prototyping` | Subflow | 6-phase agentic prototyping for UI modules |
 | `llc-ace-context` | Transversal | ACE context protocol — append-only session history, anti-amnesia |
 | `llc-code-health` | 11 | Monitors structural code health (Moved Code, Copy/Paste, Legacy Touch) |

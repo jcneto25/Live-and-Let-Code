@@ -379,9 +379,11 @@ graph TD
 | 3 | PRPs | PRDs + Specs + Módulos | `PRP-*.md` (N arquivos) | `PRP_TEMPLATE.md` | 👤 4 |
 | 4 | Planejamento | PRPs | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | `DEPENDENCY_MATRIX_TEMPLATE.md`, `PLAN_TEMPLATE.md`, `EXECUTION_WAVES_TEMPLATE.md` | 👤 5 |
 | 5 | Arquitetura | PRDs + RNF + Integrações + Planejamento | `ARCHITECTURE.md` | `ARCHITECTURE_TEMPLATE.md` | 👤 6 |
+| 5a | Architecture Patterns (obrigatório) | `ARCHITECTURE.md` §7-9 + RNF | `ARCHITECTURE.md` atualizado, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
 | 6 | Tarefas | PRPs + Arquitetura + Planejamento | `TASKS.md` | `TASKS_TEMPLATE.md` | 👤 7 |
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
+| 8b | Repository Pattern (obrigatório) | Setup + mocks + arch-config + TASKS + PRPs | `src/*/domain/repositories/`, `src/*/infrastructure/repositories/`, `src/*/infrastructure/mappers/`, DI bindings | `REPOSITORY_PATTERN_TEMPLATE.md` | 👤 9b |
 >
 > **Nota sobre mock data:** O exemplo de referencia usa **MSW** (Mock Service Worker, JS/TS). Para
 > outros stacks, o conceito e o mesmo — dados mockados + handlers CRUD — mas a ferramenta varia:
@@ -400,7 +402,9 @@ graph TD
 > precedem 11 por numero — entao a ressalva "prefixo 11/12 indica associacao, nao ordem" nao se aplica mais.
 
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
+| 11a | Domain Modeling (obrigatório pré-exec) | PRP + arch-config + Step 8b output | `src/*/domain/`, `src/*/application/use-cases/`, PRP §7 atualizado | `DOMAIN_MODEL_TEMPLATE.md` | 👤 11-PRE |
 | 11.1 | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
+| 11b | Arch Fitness (obrigatório no PRP Verify) | Código implementado + arch-config | Relatório fitness functions | — | 🔴 Bloqueia em violações BLOCKING |
 | **11.2** | **PRP Verify (aceite mecânico)** | **PRP concluído + §2 preenchida** | **Relatório de gaps RF-por-RF** | **—** | **🔴 Bloqueia merge em CRITICAL** |
 
 > **Modelo de seguranca em 3 camadas:** A seguranca percorre todo o pipeline — nao e um gate unico.
@@ -478,16 +482,20 @@ tags: [categoria, llc-pipeline]
 | `llc-step-3` | 3 | Gera PRPs (Project Requirement Proposals) — contratos auto-contidos |
 | `llc-step-4` | 4 | Gera Matriz de Dependências, Plano e Ondas de Execução |
 | `llc-step-5` | 5 | Gera documento de Arquitetura (Stack, C4, ADRs, CI/CD) |
+| `llc-step-5a-architecture-patterns` | 5a | Padrões Arquiteturais — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
 | `llc-step-6` | 6 | Gera TASKS.md com tarefas concretas, agentes e estimativas |
 | `llc-step-7` | 7 | Gera Design System completo (tokens, componentes, padrões) |
 | `llc-step-8` | 8 | Setup do projeto + Camada de dados mockados (JSON + MSW handlers) |
+| `llc-step-8b-repository-pattern` | 8b | Repository Pattern — interfaces, impls Prisma, mappers, bindings DI |
 | `llc-step-9` | 9 | Gera documentação de testes (Guia, Baseline, Progresso) |
 | `llc-step-10` | 10 | Gera README.md e DEPLOYMENT.md |
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
 | `llc-step-11-security` | 10.6 | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
-| `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
-| `llc-step-11-2-prp-verify` | **11.2** | **Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps** |
 | `llc-step-12-null-safety` | 10.7 | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
+| `llc-step-11a-domain-modeling` | 11a | Modelagem de Dominio por PRP — entidades, use cases, interfaces de repositorio |
+| `llc-step-11b-arch-fitness` | 11b | Fitness Functions Arquiteturais — governança arquitetural automatizada |
+| `llc-step-11-2-prp-verify` | **11.2** | **Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps** |
+| `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
 | `llc-step-delta-impact` | Δ.0 | [NOVO] Analisa o delta entre versão atual e novos documentos, gera DELTA_REPORT.md com classificação major/minor |
 | `llc-step-delta-grill` | Δ.1 | [NOVO] Grill Me de Mudança — até 8 perguntas focadas no delta entre versões |
 | `llc-smart-skip` | Transversal | [NOVO] Mecanismo de skip condicional para steps inalterados em iterações delta |

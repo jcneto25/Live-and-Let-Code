@@ -1,17 +1,16 @@
 ---
 name: llc-step-8
-description: Pipeline LLC Passo 8: Setup do projeto e camada de dados mockados (JSON + MSW handlers) — fundação para o MVP.
-version: 1.2.0
-tags: [mvp, mock, foundation, llc-pipeline]
+version: 1.3.0
 ---
 
 # LLC Skill: Step 8 — Setup do Projeto + Camada de Dados Mockados
 
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** MVP / Fundação  
-**Depende de:** Steps 5 (Arquitetura), 6 (Tarefas), 7 (Design System) — todos validados  
-**Escopo:** Setup do projeto, scaffolding e camada de dados mockados.  
-**OBSERVAÇÃO:** A implementação das telas e componentes de UI será tratada em um subfluxo separado com aprovação visual prévia. Este passo PARA após a camada de dados mockados.  
+**Depende de:** Steps 5 (Arquitetura), 5a (Architecture Patterns), 6 (Tarefas), 7 (Design System) — todos validados  
+**Sub-steps:** Step 8b (Repository Pattern — **obrigatório**)  
+**Escopo:** Setup do projeto, scaffolding, camada de dados mockados, Repository Pattern.  
+**OBSERVAÇÃO:** A implementação das telas e componentes de UI será tratada em um subfluxo separado com aprovação visual prévia. Este passo PARA após a camada de dados mockados + Repository Pattern.  
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill
@@ -22,6 +21,9 @@ tags: [mvp, mock, foundation, llc-pipeline]
 ## 📋 Pré-requisitos
 
 - [ ] `docs/architecture/ARCHITECTURE.md` — stack definido (Step 5)
+- [ ] `docs/architecture/ARCHITECTURE.md` §7, §8, §9 — padrões definidos (Step 5a)
+- [ ] `.ace/arch-config.yaml` — configuração fitness functions (Step 5a)
+- [ ] `docs/templates/REPOSITORY_PATTERN_TEMPLATE.md` — template Repository Pattern (Step 8b)
 - [ ] `docs/planning/TASKS.md` — tarefas priorizadas (Step 6)
 - [ ] `docs/design/DESIGN_SYSTEM.md` — padrões visuais (Step 7)
 - [ ] `docs/business/specs/perfis_permissoes.md` — papéis de usuário
@@ -215,6 +217,19 @@ Para cada PRP da Wave 1:
 - Na Wave 1, atualize o status da fase de fundação.
 - Adicione nota sobre a conclusão da camada mock.
 
+### 5. Execute Step 8b — Repository Pattern (OBRIGATÓRIO)
+
+**Após concluir o Step 8 (setup + mocks), você DEVE executar o Step 8b antes de prosseguir para o Step 11.**
+
+> **Skill:** `llc-step-8b-repository-pattern`
+> **Template:** `docs/templates/REPOSITORY_PATTERN_TEMPLATE.md`
+> **Entradas:** `ARCHITECTURE.md` §7, `.ace/arch-config.yaml`, `TASKS.md`, `PRP-*.md`
+> **Saídas:** `domain/repositories/` interfaces, `infrastructure/repositories/` impls, `mappers/`, DI bindings nos modules.
+
+O Step 8b implementa o **Repository Pattern com interfaces (Ports & Adapters)** em todos os módulos, conforme definido no Step 5a. Isso é **obrigatório** para garantir a Dependency Rule antes da execução dos PRPs.
+
+**Não pule para o Step 11 sem ter completado o Step 8b.** O Gate 9 só aprova após ambos os sub-steps.
+
 ---
 
 ## ⚠️ REGRAS CRÍTICAS
@@ -272,3 +287,12 @@ Ao finalizar o Step 8, o operador humano deve validar:
 **Documentação:**
 - [ ] `TASKS.md`, PRPs e `EXECUTION_WAVES.md` atualizados com progresso
 - [ ] `mocks/README.md` documenta como usar a camada mock
+
+**Repository Pattern (Step 8b):**
+- [ ] `src/*/domain/repositories/i*.repository.ts` — interfaces existem para todos aggregate roots
+- [ ] `src/*/infrastructure/repositories/prisma-*.repository.ts` — implementações Prisma existem
+- [ ] `src/*/infrastructure/mappers/*.mapper.ts` — mappers Prisma ↔ Domain existem
+- [ ] `src/*/*.module.ts` — bindings DI `{ provide: I*Repository, useClass: Prisma*Repository }` existem
+- [ ] `src/*/*.service.ts` — injetam interface (`@Inject(I*Repository)`), não `PrismaService`
+- [ ] `grep -r "PrismaService" src/*/domain/ src/*/application/ src/*/use-cases/` — retorna vazio
+- [ ] Fitness function `repository-pattern` passa: `python .ace/scripts/fitness-functions.py --check repository-pattern`

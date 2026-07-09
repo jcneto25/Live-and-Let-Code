@@ -344,6 +344,39 @@ Execute the skill docs/skills/llc-step-5.md
 
 ---
 
+### Step 5a: Architecture Patterns (Mandatory Architectural Patterns)
+
+> **⚠️ MANDATORY** — This sub-step must be executed **after Step 5 and before Step 8**.
+> The patterns defined here are binding and verified by automated fitness functions.
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-5a-architecture-patterns.md
+```
+
+**The AI does:** Uses the template `docs/templates/ARCHITECTURE_PATTERNS_TEMPLATE.md` to define and document:
+- **Clean Architecture Layers** — `domain/`, `application/`, `infrastructure/` structure per module
+- **Repository Pattern** — `I{Nome}Repository` interfaces + `Prisma{Nome}Repository` implementations
+- **Pure Domain Layer** — domain entities without decorators, no framework imports
+- **Use Cases** — one class per use case with `execute(dto)` method
+- **Event Bus** — async inter-module communication via EventEmitter2
+
+**Artifacts generated/updated:**
+- `docs/architecture/ARCHITECTURE.md` — expanded §7, §8, §9 with code examples
+- `.ace/arch-config.yaml` — complete fitness function configuration (25+ rules)
+- `docs/architecture/adr/ADR-008` to `ADR-011` — ADRs for Repository Pattern, Domain Layer, Use Cases, Event Bus
+
+**You validate:** 👤 Gate 6a (new gate)
+- Are the architectural patterns appropriate for the project (greenfield vs brownfield)?
+- Does `.ace/arch-config.yaml` reflect the correct core modules?
+- Are ADRs 008-011 created and justified?
+- Is the intra-module folder structure defined?
+
+**Only advance when approved.**
+
+---
+
 ### Step 6: Tasks
 
 **You do:**
@@ -408,6 +441,43 @@ Execute the skill docs/skills/llc-step-8.md
 - Does the project compile and run locally?
 - Are mock data realistic and covering all profiles?
 - Do handlers simulate errors correctly?
+
+**Only advance when approved.**
+
+---
+
+### Step 8b: Repository Pattern (Mandatory)
+
+> **MANDATORY** — This sub-step must be executed after Step 8 (setup + mocks) and before Step 11 (Execution).
+> Implements the Repository Pattern with interfaces (Ports & Adapters) in all modules.
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-8b-repository-pattern.md
+```
+
+**The AI does:** Uses the template `docs/templates/REPOSITORY_PATTERN_TEMPLATE.md` to implement:
+- Repository interfaces `I{Nome}Repository` in `src/*/domain/repositories/`
+- Prisma implementations `Prisma{Nome}Repository` in `src/*/infrastructure/repositories/`
+- Prisma → Domain mappers in `src/*/infrastructure/mappers/`
+- DI bindings in modules (`{ provide: I*Repository, useClass: Prisma*Repository }`)
+- Updates Services to inject interfaces (`@Inject(I*Repository)`), not `PrismaService`
+
+**Artifacts generated:**
+- `src/*/domain/repositories/i*.repository.ts` — interfaces
+- `src/*/infrastructure/repositories/prisma-*.repository.ts` — implementations
+- `src/*/infrastructure/mappers/*.mapper.ts` — mappers
+- `src/*/*.module.ts` — updated DI bindings
+- `src/*/*.service.ts` — services updated to use interfaces
+
+**You validate:** 👤 Gate 9b (new gate)
+- `grep -r "PrismaService" src/*/domain/ src/*/application/ src/*/use-cases/` — returns empty?
+- Interfaces exist for all aggregate roots?
+- Prisma implementations exist and delegate correctly?
+- Mappers cover all domain entity fields?
+- DI bindings exist in all modules?
+- Fitness function `repository-pattern` passes: `python .ace/scripts/fitness-functions.py --check repository-pattern`?
 
 **Only advance when approved.**
 
@@ -571,6 +641,37 @@ Execute the skill docs/skills/llc-step-10-8-test-coverage.md
 
 **Now development begins.** You have two tracks:
 
+### Step 11a: Domain Modeling (Mandatory Pre-Execution)
+
+> **MANDATORY** — For each core PRP, execute this sub-step **before** starting implementation (Track A or B).
+> Generates domain entities, use cases, and repository interfaces specific to the PRP.
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-11a-domain-modeling.md --prp PRP-001
+```
+
+**The AI does:** Uses the template `docs/templates/DOMAIN_MODEL_TEMPLATE.md` (generated in Step 5a) to:
+- Create `src/{module}/domain/{entity}.entity.ts` — pure domain entity (no decorators)
+- Create `src/{module}/domain/repositories/i{entity}.repository.ts` — repository interface
+- Create `src/{module}/application/use-cases/{action}.use-case.ts` — use cases with `execute(dto)`
+- Update `docs/prps/PRP-{NNN}.md` §7 (Data Model) with definitive contracts
+
+**Artifacts generated per PRP:**
+- Domain entities in `domain/`
+- Use cases in `application/use-cases/`
+- Repository interfaces (if not existing from Step 8b)
+- PRP updated with §7 complete
+
+**You validate:** 👤 Gate 11-PRE (new gate)
+- Do entities reflect the PRP's business rules?
+- Do use cases cover all RFs from the PRP?
+- Are repository interfaces consistent with Step 8b?
+- Are data contracts (§7 of PRP) complete and validated in Step 12?
+
+**Only advance to Track A/B when approved.**
+
 #### Track A: Non-UI PRPs (backend, infra)
 
 ```
@@ -645,6 +746,30 @@ Execute the skill docs/skills/llc-step-11-2-prp-verify.md
 **Note:** `_post_wave_check()` also blocks waves with CRITICAL — verification
 happens at both individual PRP level (session_end) and wave level
 (post-wave). Project-wide coverage check runs as part of `prp_verify.py --all`.
+
+### Step 11b: Arch Fitness (Architectural Fitness Functions — Mandatory in PRP Verify)
+
+> **MANDATORY** — Executed as part of `prp_verify.py` and Gate 11.2.
+> Verifies if the PRP implementation violates any architectural fitness function.
+
+**Automatic execution:**
+- `prp_verify.py` internally calls `fitness-functions.py --all --strict`
+- Also manually runnable: `python .ace/scripts/fitness-functions.py --all --strict`
+
+**Checks validated (per `.ace/arch-config.yaml`):**
+- **Dependency Rule** — domain does not import infrastructure
+- **Circular Dependencies** — no cycles between modules
+- **Interface Coverage** — all aggregate roots have `I{Nome}Repository`
+- **Domain Isolation** — `domain/` does not import `@prisma/client`, `repositories/`, `prisma/`
+- **Use Case Size** — use cases ≤ 200 lines, single responsibility
+- **Module Coverage** — core modules ≥ 90% coverage, others ≥ 80%
+
+**You validate:** 👤 Gate 11.2 includes fitness functions
+- Does `python .ace/scripts/fitness-functions.py --all --strict` pass (exit 0)?
+- No BLOCKING violations in core modules?
+- WARNING violations acceptable with documented justification?
+
+**Only approve if fitness functions pass.**
 
 ---
 

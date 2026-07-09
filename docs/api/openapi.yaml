@@ -1,0 +1,493 @@
+openapi: 3.0.3
+info:
+  title: LLC Reference API
+  description: |
+    OpenAPI 3.0 reference specification for Live and Let Code (LLC) methodology.
+    This document demonstrates API Design best practices per Higginbotham's ADD-R process.
+  version: 1.0.0
+  contact:
+    name: LLC Community
+    url: https://github.com/Live-and-Let-Code
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development
+tags:
+  - name: Resources
+    description: Core resource management
+  - name: Authentication
+    description: Authentication and authorization
+paths:
+  /resources:
+    parameters:
+      - name: page
+        in: query
+        description: Page number (1-based)
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: limit
+        in: query
+        description: Items per page (max 100)
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: sort
+        in: query
+        description: Sort field and direction (e.g., createdAt:desc)
+        schema:
+          type: string
+          pattern: '^[a-zA-Z]+:(asc|desc)$'
+      - name: filter
+        in: query
+        description: Filter expression (field:operator:value)
+        schema:
+          type: string
+    get:
+      summary: List resources with pagination, sorting, and filtering
+      operationId: listResources
+      tags:
+        - Resources
+      responses:
+        '200':
+          description: Paginated list of resources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create a new resource
+      operationId: createResource
+      tags:
+        - Resources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceCreate'
+      responses:
+        '201':
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /resources/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Resource UUID
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get a resource by ID
+      operationId: getResource
+      tags:
+        - Resources
+      responses:
+        '200':
+          description: Resource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Partially update a resource (use PATCH for partial updates)
+      operationId: updateResource
+      tags:
+        - Resources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceUpdate'
+      responses:
+        '200':
+          description: Resource updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      summary: Delete a resource
+      operationId: deleteResource
+      tags:
+        - Resources
+      responses:
+        '204':
+          description: Resource deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /resources/{id}/subresources:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Parent resource UUID
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    get:
+      summary: List sub-resources of a resource (nested resource pattern)
+      operationId: listSubResources
+      tags:
+        - Resources
+      responses:
+        '200':
+          description: Paginated list of sub-resources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/login:
+    post:
+      summary: Authenticate and obtain access token
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refreshToken
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token obtained from /auth/login
+
+  schemas:
+    Resource:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          maxLength: 255
+          example: "Project Alpha"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Main project for Q3"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-20T14:45:00Z"
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceLink'
+
+    ResourceCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Project Alpha"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Main project for Q3"
+
+    ResourceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Project Alpha Updated"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Updated description"
+
+    PaginatedResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+
+    PaginationMeta:
+      type: object
+      required:
+        - total
+        - page
+        - limit
+        - totalPages
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 150
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        totalPages:
+          type: integer
+          minimum: 0
+          example: 8
+
+    PaginationLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          format: uri
+          example: "/v1/resources?page=1&limit=20"
+        last:
+          type: string
+          format: uri
+          example: "/v1/resources?page=8&limit=20"
+        prev:
+          type: string
+          format: uri
+          nullable: true
+          example: null
+        next:
+          type: string
+          format: uri
+          nullable: true
+          example: "/v1/resources?page=2&limit=20"
+
+    ResourceLink:
+      type: object
+      required:
+        - rel
+        - href
+      properties:
+        rel:
+          type: string
+          enum: [self, parent, children, related]
+          example: "self"
+        href:
+          type: string
+          format: uri
+          example: "/v1/resources/550e8400-e29b-41d4-a716-446655440000"
+        type:
+          type: string
+          example: "application/json"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "securePassword123"
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        tokenType:
+          type: string
+          enum: [Bearer]
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Token lifetime in seconds
+          example: 3600
+        refreshToken:
+          type: string
+          nullable: true
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+
+    Error:
+      type: object
+      required:
+        - statusCode
+        - error
+        - message
+        - timestamp
+        - path
+      properties:
+        statusCode:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Not Found"
+        message:
+          type: string
+          example: "Resource with id 550e8400-e29b-41d4-a716-446655440000 not found"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        path:
+          type: string
+          example: "/v1/resources/550e8400-e29b-41d4-a716-446655440000"
+        details:
+          type: object
+          nullable: true
+          example: {}
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity - Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

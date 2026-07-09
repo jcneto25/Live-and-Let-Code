@@ -128,13 +128,38 @@ def parse_delta_report() -> dict | None:
 
 # ── Smart Skip ──
 
+# Steps que SEMPRE executam — o DELTA_REPORT.md nunca pode pulá-los (E-12).
+# Set do guia: 10, 10.6, 10.7, 10.8, 11, 11.1, 11.2 (ids canônicos llc_steps).
+ALWAYS_RUN: frozenset[str] = frozenset(
+    {"10", "10.6", "10.7", "10.8", "11", "11.1", "11.2"}
+)
+
+
+def _canonical_step_id(step_id: str) -> str:
+    """Resolve step_id (id/alias/slug) para o id canônico llc_steps.
+    Em caso de falha de import/resolve, retorna o valor cru (comparação
+    defensiva, ainda assim protegida por ALWAYS_RUN quando resolúvel)."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import llc_steps
+
+        return llc_steps.canonical_id(step_id)
+    except Exception:
+        return step_id
+
 
 def is_step_skipped(step_id: str, delta_plan: dict | None) -> bool:
-    """Verifica se um step deve ser pulado no modo delta."""
+    """Verifica se um step deve ser pulado no modo delta.
+    Steps em ALWAYS_RUN nunca são pulados, independente do DELTA_REPORT.md
+    (E-12): protege os gates obrigatórios (coverage 10.8, PRP-acceptance 11.2,
+    security 10.6, etc.) de skip silencioso ou adversarial."""
     if delta_plan is None:
         return False
+    canon = _canonical_step_id(step_id)
+    if canon in ALWAYS_RUN:
+        return False
     for skip in delta_plan.get("skip_steps", []):
-        if skip["step_id"] == step_id:
+        if _canonical_step_id(skip["step_id"]) == canon:
             return True
     return False
 

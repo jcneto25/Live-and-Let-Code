@@ -100,7 +100,7 @@
       ]
     },
     "11-SEC": {
-      "step": 11,
+      "step": 10.6,
       "label": "Security Audit",
       "checklist": [
         "0 vulnerabilidades criticas (CVSS >= 9.0)?",
@@ -109,7 +109,7 @@
       ]
     },
     "11-OWASP": {
-      "step": 11,
+      "step": 11.1,
       "label": "OWASP Hardening",
       "checklist": [
         "0 verificacoes OWASP criticas?",
@@ -137,7 +137,7 @@
       ]
     },
     "12-NULL": {
-      "step": 12,
+      "step": 10.7,
       "label": "Null Safety",
       "checklist": [
         "0 campos sem especificacao de nulabilidade?",

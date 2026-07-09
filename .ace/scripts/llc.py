@@ -37,12 +37,16 @@ from llc_steps import StepParamType
 from llc_wave import format_wave_list, parse_execution_waves, parse_tasks, run_wave
 
 # ── Mapeamento de aliases para IDs de gates ──
+# Aliases reconhecidos pelo CLI `llc gate`. O gate de cobertura tem 3 nomes na
+# base de conhecimento (guia "10-COVERAGE", config/id "10.8", CLI "test-coverage");
+# todos resolvem para o mesmo id "10.8" para evitar confusão (E-11).
 GATE_ALIASES = {
     "security": "11-SEC",
     "null-safety": "12-NULL",
     "owasp": "11-OWASP",
     "verify": "11.2",
     "test-coverage": "10.8",
+    "10-coverage": "10.8",
 }
 
 # ── Tabela de gates e suas validações ──
@@ -338,8 +342,8 @@ def status():
 
 
 def _get_gate_id(gate_name: str) -> str:
-    """Converte nome/alias para ID do gate."""
-    return GATE_ALIASES.get(gate_name, gate_name)
+    """Converte nome/alias para ID do gate (lookup case-insensitive)."""
+    return GATE_ALIASES.get(gate_name.lower(), gate_name)
 
 
 def _show_gate_checklist(gate_id: str):
@@ -394,7 +398,7 @@ gate.add_command(gate_checklist)
     "--gate",
     "-g",
     required=True,
-    help="ID ou alias do gate (ex: security, null-safety, owasp, 11-SEC, 12-NULL)",
+    help="ID ou alias do gate (ex: security, null-safety, owasp, test-coverage, 10-coverage)",
 )
 @click.option(
     "--prp",
@@ -406,7 +410,13 @@ gate.add_command(gate_checklist)
     "--dry-run", "-n", is_flag=True, help="Apenas mostra o que seria verificado"
 )
 def gate_run(gate, prp, dry_run):
-    """Executa validação de um gate específico."""
+    """Validação manual de um gate (checklist + decisão humana).
+
+    ⚠️ Este comando NÃO mede cobertura nem executa ferramentas: ele exibe o
+    checklist do gate e aguarda a decisão A/R do operador. A cobertura real é
+    verificada por `prp_verify` (step 10.8 / dente #9), que bloqueia o merge em
+    caso de CRITICAL — use `prp_verify` para o limite efetivo de cobertura.
+    """
     gate_id = _get_gate_id(gate)
 
     if dry_run:
@@ -416,6 +426,13 @@ def gate_run(gate, prp, dry_run):
 
     click.echo(f"\n🔍 Validando Gate {gate_id}")
     click.echo(f"{'=' * 50}")
+
+    if gate_id == "10.8":
+        click.echo(
+            "ℹ️  Checklist manual — não mede cobertura. O limite real de cobertura "
+            "(≥80% statements, 0 arquivos sem cobertura) é imposto por `prp_verify` "
+            "(step 10.8 / dente #9), que bloqueia o merge em caso de CRITICAL."
+        )
 
     # Executa o gate check
     decision = gate_check(gate_id, prp)

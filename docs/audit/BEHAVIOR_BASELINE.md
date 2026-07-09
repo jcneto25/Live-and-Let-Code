@@ -9,10 +9,9 @@ block records the **Intended** behavior (from guide/skill), the **Actual** behav
 (observed in P2/P3), the **Proof** command that reproduces it, and the **Gap**
 (none, or a one-line description).
 
-> Source under `.ace/scripts/*` was READ-ONLY for this audit. The two CRITICAL wave
-> defects are **A-01 (#7)** and **A-02 (#6)**; their Gap is recorded as the defect
-> and is **not** marked fixed — the hotfixes land in Task 7 (A-01) / Task 8 (A-02),
-> after which their Gap will be updated to "fixed in audit (Task N)".
+> Source under `.ace/scripts/*` was READ-ONLY for this audit except the two CRITICAL
+> wave hotfixes: **A-01 (#7)** and **A-02 (#6)**, both fixed in Task 7 / Task 8 — their
+> Gap reads "fixed in audit (Task N)". The refactor must not regress them.
 
 ---
 
@@ -195,7 +194,7 @@ Canonical model = `llc_steps.py`. Drift = mismatch vs guide / skills / `gates.js
 
 ### D-01 three stale `step` fields in gates.json (LOW)
 - **Intended:** Every gate's `step` field in `.ace/config/gates.json` matches the canonical step number in `llc_steps.REGISTRY` (within `EPS`).
-- **Actual:** Three stale `step` fields: `11-SEC` has `"step": 11` (should be 10.6), `12-NULL` has `"step": 12` (should be 10.7), `11-OWASP` has `"step": 11` (should be 11.1). The gate **KEYS** all resolve correctly from `llc_steps` (`in_gj=True` for all 19); only the display/lookup `step` field is stale. Of 19 steps with gates, **16 match**, **3 mismatch** (`match=False`). No missing keys, no collisions.
+- **Actual:** Three stale `step` fields: `11-SEC` has `"step": 11` (should be 10.6), `12-NULL` has `"step": 12` (should be 10.7), `11-OWASP` has `"step": 11` (should be 11.1). The gate **KEYS** all resolve correctly from `llc_steps` (`in_gj=True` for all 18); only the display/lookup `step` field is stale. Of 18 steps with gates, **15 match**, **3 mismatch** (`match=False`). No missing keys, no collisions.
 - **Proof:**
   ```bash
   python3 - <<'PY'

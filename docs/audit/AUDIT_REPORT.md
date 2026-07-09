@@ -95,7 +95,7 @@ mismatch vs guide / skills / `gates.json`.
 - **D-01 (LOW, conformance-drift) — 3 stale `step` display fields.** Gates
   `11-SEC`, `12-NULL`, `11-OWASP` carry pre-renumber `step` values (`11`, `12`,
   `11`) instead of `10.6`, `10.7`, `11.1`. The gate **keys** all resolve
-  correctly from `llc_steps` (19/19 `in_gj=True`, 16/19 `match=True`); only the
+  correctly from `llc_steps` (18/18 `in_gj=True`, 15/18 `match=True`); only the
   human-facing display field is stale. No enforcement or code-path depends on
   it. → **open, doc-only / sub-project-2.**
 
@@ -210,7 +210,7 @@ verified. The contract is:
      Re-wiring those steps is a separate initiative, not part of the clean-code
      refactor.
    - **The gate-remap drift from the original Task 9 brief** — it does not exist
-     at this baseline (gates 4/5 present, keys align, 16/19 match). The only
+     at this baseline (gates 4/5 present, keys align, 15/18 match). The only
      drift is D-01 (cosmetic). The characterization test
      (`test_llc_steps.py`, commit `fc886bf`) pins the current step↔gate mapping
      as the regression guard; the refactor must keep it green.

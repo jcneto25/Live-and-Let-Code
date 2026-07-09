@@ -56,8 +56,8 @@ Output at baseline `a519d0f` (BASE commit `f0150fe`):
  11.3  11.3    11-ARCH   True     11.3   True Architecture Compliance
 ```
 
-Summary: 19 steps with gates; **16 match**, **3 mismatch** (`match=False`).
-All 19 gate keys exist (`in_gj=True`) — no missing keys, no collisions. The 3
+Summary: 18 steps with gates; **15 match**, **3 mismatch** (`match=False`).
+All 18 gate keys exist (`in_gj=True`) — no missing keys, no collisions. The 3
 mismatches are stale `step` *fields* (display/lookup values), not bad gate keys.
 
 ## Drift findings

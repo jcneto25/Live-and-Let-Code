@@ -302,5 +302,17 @@ class TestPreWaveCheck:
         assert llc_wave._pre_wave_check(dry_run=False, wave_num=1) is True
 
 
+class TestPostWaveCheck:
+    """_post_wave_check deve retornar bool (nao None)."""
+
+    def test_post_wave_check_returns_true_when_script_missing(self, monkeypatch, tmp_path):
+        import llc_wave
+
+        monkeypatch.setattr(llc_wave, "PRE_WAVE_CHECK_SCRIPT", tmp_path / "absent.sh")
+        monkeypatch.delenv("LLC_PRP_NO_VERIFY", raising=False)
+        result = llc_wave._post_wave_check(dry_run=False, wave_num=1, prp_ids=None)
+        assert result is True  # before fix the outer fn returns None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

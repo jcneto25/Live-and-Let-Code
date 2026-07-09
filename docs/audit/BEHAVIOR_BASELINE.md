@@ -86,7 +86,7 @@ block records the **Intended** behavior (from guide/skill), the **Actual** behav
   # → returned: None
   sed -n '514,520p' .ace/scripts/llc_wave.py     # outer def + nested def, no call
   ```
-- **Gap:** **DEFECT A-02 (CRITICAL)** — `_post_wave_check` returns `None` instead of `bool`; the post-wave CRITICAL block is inert and the `if not …` guard misfires. (To be hotfixed in Task 8; Gap will be updated to "fixed in audit (Task 8)" after that task. **Not yet fixed.**)
+- **Gap:** **fixed in audit (Task 8)** — `_post_wave_check` is now a single module-level `def _post_wave_check(dry_run: bool = False, wave_num: int = 0, prp_ids: Optional[list[str]] = None) -> bool:`; the nested `def` header was removed and its body de-indented into the outer function. It returns `bool` in all paths (`True` on script-missing/dry-run/bypass/success, `False` on prp_verify CRITICAL), so the call site `if not _post_wave_check(...)` actually gates. TDD: RED (`assert None is True`) → GREEN (1/1 `TestPostWaveCheck` passing); full suite has no new failures (4 pre-existing failures unrelated to A-02).
 
 ### #7 pre-wave baseline check — `_pre_wave_check` is undefined (DEFECT A-01 — CRITICAL)
 - **Intended:** `_pre_wave_check` runs `pre-wave-check.sh --build-only` before each wave and returns False on a failed build so `run_wave` aborts before any PRP session opens (`llc_wave.py:478-511`).

@@ -514,120 +514,117 @@ def _pre_wave_check(dry_run: bool = False, wave_num: int = 0) -> bool:
 
 def _post_wave_check(
     dry_run: bool = False, wave_num: int = 0, prp_ids: Optional[list[str]] = None
-):
-    def _post_wave_check(
-        dry_run: bool = False, wave_num: int = 0, prp_ids: Optional[list[str]] = None
-    ) -> bool:
-        """Executa validacao pos-onda: build + bootstrap + health check + consistency + aceite de PRP.
+) -> bool:
+    """Executa validacao pos-onda: build + bootstrap + health check + consistency + aceite de PRP.
 
-        Retorna True se passou; retorna False se prp_verify encontrar CRITICAL
-        (bloqueia a onda). build/bootstrap/health e consistency-check permanecem
-        advisory (warnings).
-        """
-        if not PRE_WAVE_CHECK_SCRIPT.exists():
-            logger.info(
-                "ℹ️  pre-wave-check.sh nao encontrado — pulando validacao pos-onda."
-            )
-            return True
+    Retorna True se passou; retorna False se prp_verify encontrar CRITICAL
+    (bloqueia a onda). build/bootstrap/health e consistency-check permanecem
+    advisory (warnings).
+    """
+    if not PRE_WAVE_CHECK_SCRIPT.exists():
+        logger.info(
+            "ℹ️  pre-wave-check.sh nao encontrado — pulando validacao pos-onda."
+        )
+        return True
 
-        if dry_run:
-            logger.info("   [dry-run] post-wave-check seria executado")
-            return True
+    if dry_run:
+        logger.info("   [dry-run] post-wave-check seria executado")
+        return True
 
+    logger.info(f"\n{'─' * 50}")
+    logger.info("🔍 Post-Wave Check — validando integridade apos a onda")
+
+    result = subprocess.run(
+        ["bash", str(PRE_WAVE_CHECK_SCRIPT), "--timeout", "30"],
+        capture_output=True,
+        text=True,
+        cwd=Path.cwd(),
+    )
+
+    if result.stdout:
+        for line in result.stdout.split("\n"):
+            if line.strip():
+                logger.info(f"   {line.strip()}")
+
+    if result.returncode == 0:
+        logger.info("✅ Post-Wave Check: todos os checks OK")
+    else:
+        logger.warning(f"⚠️  Post-Wave Check: {result.returncode} check(s) falharam")
+        logger.warning(
+            "   A onda foi concluida, mas ha problemas de build/bootstrap/health."
+        )
+        logger.warning(
+            "   Registre como blocker e corrija antes de iniciar a proxima onda."
+        )
+
+    # ── Verificação de consistência TASKS.md × código ──
+    consistency_script = Path(".ace") / "scripts" / "consistency-check.py"
+    if consistency_script.exists():
         logger.info(f"\n{'─' * 50}")
-        logger.info("🔍 Post-Wave Check — validando integridade apos a onda")
-
-        result = subprocess.run(
-            ["bash", str(PRE_WAVE_CHECK_SCRIPT), "--timeout", "30"],
+        logger.info("📋 Verificando consistencia TASKS.md × codigo...")
+        result_cc = subprocess.run(
+            ["python3", str(consistency_script)],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
         )
-
-        if result.stdout:
-            for line in result.stdout.split("\n"):
-                if line.strip():
+        if result_cc.stdout:
+            for line in result_cc.stdout.split("\n"):
+                if line.strip() and not line.startswith("="):
                     logger.info(f"   {line.strip()}")
-
-        if result.returncode == 0:
-            logger.info("✅ Post-Wave Check: todos os checks OK")
+        if result_cc.returncode != 0 and result_cc.stderr:
+            for line in result_cc.stderr.strip().split("\n"):
+                logger.warning(f"   {line.strip()}")
         else:
-            logger.warning(f"⚠️  Post-Wave Check: {result.returncode} check(s) falharam")
-            logger.warning(
-                "   A onda foi concluida, mas ha problemas de build/bootstrap/health."
-            )
-            logger.warning(
-                "   Registre como blocker e corrija antes de iniciar a proxima onda."
-            )
+            logger.info("✅ Consistencia OK — documentacao reflete o codigo.")
+    else:
+        logger.info(
+            "ℹ️  consistency-check.py nao encontrado — pulando verificacao de consistencia."
+        )
 
-        # ── Verificação de consistência TASKS.md × código ──
-        consistency_script = Path(".ace") / "scripts" / "consistency-check.py"
-        if consistency_script.exists():
-            logger.info(f"\n{'─' * 50}")
-            logger.info("📋 Verificando consistencia TASKS.md × codigo...")
-            result_cc = subprocess.run(
-                ["python3", str(consistency_script)],
+    # ── Aceite mecânico de PRP (Step 11.2) — BLOQUEANTE em CRITICAL ──
+    # Diferente do build/consistency (advisory), o prp_verify bloqueia a onda.
+    if os.environ.get("LLC_PRP_NO_VERIFY") == "1":
+        logger.info("ℹ️  prp_verify bypassado via LLC_PRP_NO_VERIFY=1.")
+        return True
+
+    verify_script = Path(".ace") / "scripts" / "prp_verify.py"
+    if prp_ids and verify_script.exists():
+        logger.info(f"\n{'─' * 50}")
+        logger.info("📋 Verificando aceite mecânico dos PRPs (prp_verify)...")
+        critical_found = False
+        for prp_id in prp_ids:
+            rv = subprocess.run(
+                [
+                    "python3",
+                    str(verify_script),
+                    "--prp",
+                    prp_id,
+                    "--strict",
+                    "--json",
+                ],
                 capture_output=True,
                 text=True,
                 cwd=Path.cwd(),
             )
-            if result_cc.stdout:
-                for line in result_cc.stdout.split("\n"):
-                    if line.strip() and not line.startswith("="):
-                        logger.info(f"   {line.strip()}")
-            if result_cc.returncode != 0 and result_cc.stderr:
-                for line in result_cc.stderr.strip().split("\n"):
-                    logger.warning(f"   {line.strip()}")
-            else:
-                logger.info("✅ Consistencia OK — documentacao reflete o codigo.")
-        else:
-            logger.info(
-                "ℹ️  consistency-check.py nao encontrado — pulando verificacao de consistencia."
-            )
-
-        # ── Aceite mecânico de PRP (Step 11.2) — BLOQUEANTE em CRITICAL ──
-        # Diferente do build/consistency (advisory), o prp_verify bloqueia a onda.
-        if os.environ.get("LLC_PRP_NO_VERIFY") == "1":
-            logger.info("ℹ️  prp_verify bypassado via LLC_PRP_NO_VERIFY=1.")
-            return True
-
-        verify_script = Path(".ace") / "scripts" / "prp_verify.py"
-        if prp_ids and verify_script.exists():
-            logger.info(f"\n{'─' * 50}")
-            logger.info("📋 Verificando aceite mecânico dos PRPs (prp_verify)...")
-            critical_found = False
-            for prp_id in prp_ids:
-                rv = subprocess.run(
-                    [
-                        "python3",
-                        str(verify_script),
-                        "--prp",
-                        prp_id,
-                        "--strict",
-                        "--json",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    cwd=Path.cwd(),
-                )
-                if rv.returncode == 2:
-                    critical_found = True
-                    try:
-                        n = json.loads(rv.stdout).get("critical", "?")
-                    except (json.JSONDecodeError, TypeError):
-                        n = "?"
-                    logger.error(
-                        f"⛔ {prp_id}: prp_verify CRITICAL ({n} pendência(s) bloqueante(s))"
-                    )
-            if critical_found:
-                logger.error("⛔ Onda BLOQUEADA — prp_verify encontrou CRITICAL.")
+            if rv.returncode == 2:
+                critical_found = True
+                try:
+                    n = json.loads(rv.stdout).get("critical", "?")
+                except (json.JSONDecodeError, TypeError):
+                    n = "?"
                 logger.error(
-                    "   Corrija as pendências ou use bypass explícito: LLC_PRP_NO_VERIFY=1."
+                    f"⛔ {prp_id}: prp_verify CRITICAL ({n} pendência(s) bloqueante(s))"
                 )
-                return False
-            logger.info("✅ prp_verify limpo para todos os PRPs da onda.")
+        if critical_found:
+            logger.error("⛔ Onda BLOQUEADA — prp_verify encontrou CRITICAL.")
+            logger.error(
+                "   Corrija as pendências ou use bypass explícito: LLC_PRP_NO_VERIFY=1."
+            )
+            return False
+        logger.info("✅ prp_verify limpo para todos os PRPs da onda.")
 
-        return True
+    return True
 
 
 # ── Execution ──

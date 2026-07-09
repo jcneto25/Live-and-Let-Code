@@ -227,3 +227,73 @@ verified. The contract is:
 *Synthesized by Task 10 of the LLC Workflow & Gate Logic Audit. Source evidence:
 `p2-enforcement-log.md`, `p3-conformance-findings.md`, `BEHAVIOR_BASELINE.md`,
 `DEFECT_BACKLOG.md` (all in this directory).*
+
+---
+
+## Acceptance Sign-off
+
+Task 11 (final) verification against the 6 acceptance criteria. Each criterion
+recorded PASS/FAIL with evidence; rerun + cleanup confirmed below.
+
+1. **All 15 enforcement points have a baseline tuple — PASS.**
+   `BEHAVIOR_BASELINE.md` has **17 `### ` blocks**: the 15 enforcement points
+   (`### #1` … `### #15`, all present) plus the 2 conformance-drift blocks
+   (`### D-01`, `### D-02`). Each block records Intended / Actual / Proof / Gap.
+
+2. **Every drift catalogued — PASS.**
+   `DEFECT_BACKLOG.md` contains both drift rows: **D-01** (3 stale `step`
+   display fields, LOW) and **D-02** (steps 5a/5b/5c unwired, INFO/out-of-scope).
+
+3. **Every backlog item has severity/proof/fix-target — PASS.**
+   Backtick-aware parse of the 9-row table (A-01, A-02, E-13, E-12, E-11, D-01,
+   D-02, ADV-03, ADV-15) finds **zero empty `Severity` / `Proof` / `Fix target`
+   cells.** (An initial naïve pipe-split falsely flagged ADV-03's `Proof` cell —
+   that was a parser artifact from literal `||` / `2>/dev/null` shell tokens
+   inside the cell's backticked code; the cell is fully populated.)
+
+4. **Every §4 anchor confirmed or refuted — PASS.** All anchors appear with a
+   verdict in `AUDIT_REPORT.md` and/or the backlog:
+   - **A-01** — confirmed CRITICAL, hotfixed-in-audit (§4, commit `607a1b8`).
+   - **A-02** — confirmed CRITICAL, hotfixed-in-audit (§4, commit `e02a544`).
+   - **D-01** — confirmed LOW, open/doc-only (§3, §5).
+   - **D-02** — confirmed INFO, out-of-scope (§3, §6).
+   - **smart-skip (E-12)** — confirmed MEDIUM, escalated (§2 #12, §5).
+   - **silent-bypass / fail-open (E-13)** — confirmed MEDIUM, escalated (§2 #13, §5).
+
+5. **Hotfixes green + suite passes — PASS.**
+   `cd .ace/scripts && python3 -m pytest test_llc_wave.py test_llc_steps.py -v` →
+   **32 passed, 4 failed.** The 4 failures are the known pre-existing Path-mock
+   failures in `test_llc_wave.py` (`TestPrpInfo::test_init_with_tasks`,
+   `TestStripPlaceholders::test_removes_multiple_placeholders`,
+   `TestParseExecutionWaves::test_parses_waves_with_prps`,
+   `TestParseTasks::test_returns_prps_from_headings`) — all in parsing/mock
+   helpers, unrelated to the hotfixes or the characterization test, and
+   acceptable per the brief. The hotfix tests (`TestPreWaveCheck` 2/2,
+   `TestPostWaveCheck` 1/1) and both `test_llc_steps.py` characterization tests
+   PASS. Commits confirmed: `git log | grep audit-hotfix` → 2
+   (`607a1b8` A-01, `e02a544` A-02); `git log | grep 'test(audit)'` → 1
+   (`fc886bf`, Task 9).
+
+6. **Rerunnability — PASS (2 minor recipe-fidelity gaps, both known/acceptable).**
+   `bash docs/audit/audit-recipe.sh` exits **0** (no unhandled errors; every
+   command is `|| true`-guarded) and **regenerates 5/7 raw outputs** with fresh
+   content + mtimes (`validate-tags.json`, `consistency-check.json`,
+   `fitness-functions.json`, `code-health.json`, `prp-verify-all.json`). The
+   `code-health.json` delta is the legitimate commit-count drift since baseline
+   (227→236 commits analyzed). Two minor gaps:
+   - **`dependency-graph.yaml` is not regenerated** — the recipe's line 11
+     references `docs/prps/PRP-001.md`, which does not exist in this repo
+     (`ERROR: PRP não encontrado`); the `-o` file is left containing that error
+     string (same state as the committed baseline). This is the known
+     recipe-fidelity gap from Task 2; flagged as minor, not a failure.
+   - **`llc_steps_registry.json` is not in the recipe** — it is a P3 artifact
+     (Task 5), captured separately. Minor recipe-completeness note.
+
+**Rerun verified:** 2026-07-09 — recipe exits 0, regenerates the 5 self-check
+outputs; 2 known minor gaps noted above (dependency-graph input missing,
+llc_steps_registry not in recipe).
+
+**Cleanup confirmed:** scratch worktree `../llc-audit-scratch` removed
+(`git worktree remove --force`) and throwaway branch `llc-audit-scratch`
+(deleted at `a519d0f`) deleted (`git branch -D`); `git worktree list` now shows
+only the main worktree at `aa9d45f [api-design-enforcement-docs]`.

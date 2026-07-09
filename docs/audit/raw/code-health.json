@@ -1,21 +1,21 @@
 {
-  "commits_analyzed": 227,
+  "commits_analyzed": 236,
   "period": "90 days ago",
   "stats": {
-    "added": 26597,
+    "added": 27700,
     "deleted": 2169,
-    "modified": 28585,
+    "modified": 29504,
     "moved_min": 0,
     "moved_est": 0,
-    "copy_est": 2,
+    "copy_est": 3,
     "pct_moved": 0.0,
-    "pct_added": 46.4,
-    "pct_modified": 49.8
+    "pct_added": 46.7,
+    "pct_modified": 49.7
   },
   "file_age": {
-    "total_lines_modified": 78284,
+    "total_lines_modified": 80865,
     "lines_in_files_older_than_30d": 15249,
-    "pct_legacy_touched": 19.5
+    "pct_legacy_touched": 18.9
   },
   "alerts": [
     {
@@ -29,7 +29,7 @@
     {
       "severity": "high",
       "metric": "Copy/Paste vs Moved",
-      "value": "copy=2 moved=0",
+      "value": "copy=3 moved=0",
       "threshold": "copy ≤ moved",
       "message": "Duplicação superando reuso. Princípio DRY em risco.",
       "action": "Revisar PRPs recentes: consolidar código duplicado em módulo compartilhado."
@@ -37,7 +37,7 @@
     {
       "severity": "high",
       "metric": "Legacy Code Touch %",
-      "value": "19.5%",
+      "value": "18.9%",
       "threshold": "≥ 20%",
       "message": "Código antigo (>30 dias) não está sendo refatorado. Agentes focam apenas em novas linhas.",
       "action": "Agendar onda de refatoração de código legacy nos próximos PRPs."

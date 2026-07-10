@@ -10,10 +10,14 @@ Uso:
 """
 
 import argparse
+import logging
 import re
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 FEEDBACK_FILE = Path(".ace/memory/skill_feedback.md")
 
@@ -39,9 +43,9 @@ def parse_feedback() -> list[dict]:
     return results
 
 
-def mark_status(items: list[dict], target_session: str, new_status: str):
+def mark_status(items: list[dict], target_session: str, new_status: str) -> None:
     if not FEEDBACK_FILE.exists():
-        print("❌ Nenhum feedback registrado.")
+        logger.warning("Nenhum feedback registrado.")
         return
 
     content = FEEDBACK_FILE.read_text(encoding='utf-8')
@@ -55,18 +59,18 @@ def mark_status(items: list[dict], target_session: str, new_status: str):
 
     if updated:
         FEEDBACK_FILE.write_text(content, encoding='utf-8')
-        print(f"✅ {updated} feedback(s) da sessão {target_session} marcados como [{new_status}]")
+        logger.info(f"✅ {updated} feedback(s) da sessão {target_session} marcados como [{new_status}]")
     else:
-        print(f"ℹ️  Nenhum feedback encontrado para a sessão {target_session}")
+        logger.info(f"ℹ️  Nenhum feedback encontrado para a sessão {target_session}")
 
 
-def display(items: list[dict], filter_skill: str = None, filter_status: str = "pending"):
+def display(items: list[dict], filter_skill: str = None, filter_status: str = "pending") -> None:
     filtered = [i for i in items if i["status"] == filter_status]
     if filter_skill:
         filtered = [i for i in filtered if i["skill"] == filter_skill]
 
     if not filtered:
-        print(f"✅ Nenhum feedback pendente{' para ' + filter_skill if filter_skill else ''}.")
+        logger.info(f"✅ Nenhum feedback pendente{' para ' + filter_skill if filter_skill else ''}.")
         return
 
     by_skill = defaultdict(list)
@@ -75,17 +79,14 @@ def display(items: list[dict], filter_skill: str = None, filter_status: str = "p
 
     icons = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}
     for skill, feedbacks in sorted(by_skill.items()):
-        print(f"\n{'─'*60}")
-        print(f"📦 {skill} ({len(feedbacks)} sugestões)")
-        print(f"{'─'*60}")
+        logger.info(f"📦 {skill} ({len(feedbacks)} sugestões)")
         for fb in feedbacks:
             icon = icons.get(fb["priority"], "⚪")
-            print(f"  {icon} [{fb['priority']}] Sessão: {fb['session_id']}")
-            print(f"     {fb['content'][:200]}")
-            print()
+            logger.info(f"  {icon} [{fb['priority']}] Sessão: {fb['session_id']}")
+            logger.info(f"     {fb['content'][:200]}")
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="Gerencia sugestões de melhoria de skills LLC")
     parser.add_argument("--skill", type=str, help="Filtrar por skill específico")
     parser.add_argument("--mark", type=str, choices=["applied", "dismissed"],

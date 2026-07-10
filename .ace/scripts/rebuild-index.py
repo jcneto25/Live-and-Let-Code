@@ -51,19 +51,13 @@ SESSION_ID_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-\d{3}$")
 CONTEXT_SEED_RE = re.compile(r"<context_seed>\s*\n\s*\S", re.MULTILINE)
 
 
-def parse_frontmatter(path: Path) -> Optional[dict]:
+def parse_frontmatter_text(content: str) -> Optional[dict]:
     """Extrai o YAML frontmatter como dict (parser minimalista, sem dependências).
 
-    Suporta chaves top-level no formato `chave: valor`. Não suporta listas
-    aninhadas, blocos ou tipos complexos — esses são raros no frontmatter
-    de sessão e podem ser adicionados sob demanda.
+    Versão pura (recebe o conteúdo do arquivo) para permitir characterization
+    tests sem I/O. Suporta chaves top-level no formato `chave: valor`. Não
+    suporta listas aninhadas, blocos ou tipos complexos.
     """
-    try:
-        content = path.read_text(encoding="utf-8")
-    except OSError as e:
-        logger.error(f"❌ Não foi possível ler {path}: {e}")
-        return None
-
     match = FRONTMATTER_RE.match(content)
     if not match:
         return None
@@ -80,6 +74,16 @@ def parse_frontmatter(path: Path) -> Optional[dict]:
         key, _, value = line.partition(":")
         entry[key.strip()] = value.strip().strip('"').strip("'")
     return entry
+
+
+def parse_frontmatter(path: Path) -> Optional[dict]:
+    """Lê o arquivo e delega ao parser puro `parse_frontmatter_text`."""
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError as e:
+        logger.error(f"❌ Não foi possível ler {path}: {e}")
+        return None
+    return parse_frontmatter_text(content)
 
 
 def infer_status(content: str) -> str:

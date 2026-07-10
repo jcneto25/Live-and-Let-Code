@@ -52,13 +52,19 @@ def git_bisect_reset() -> None:
     subprocess.run(["git", "bisect", "reset"], capture_output=True, text=True)
 
 
+def parse_offending_commit(log_text: str) -> str | None:
+    """Extrai o SHA do primeiro commit ruim do texto de `git bisect log`."""
+    for line in log_text.split("\n"):
+        line = line.strip()
+        if line.startswith("# first bad commit: ["):
+            return line.split("[")[1].split("]")[0]
+    return None
+
+
 def get_offending_commit() -> str | None:
     try:
         result = run_git("bisect", "log")
-        for line in result.stdout.split("\n"):
-            line = line.strip()
-            if line.startswith("# first bad commit: ["):
-                return line.split("[")[1].split("]")[0]
+        return parse_offending_commit(result.stdout)
     except subprocess.CalledProcessError:
         pass
     return None
@@ -118,7 +124,7 @@ def main():
     try:
         git_bisect_start(args.good, args.bad)
     except subprocess.CalledProcessError as e:
-        print(json.dumps({"error": f"git bisect start falhou: {e.stderr}"}), file=sys.stderr)
+        logger.error(f"git bisect start falhou: {e.stderr}")
         git_bisect_reset()
         sys.exit(1)
 

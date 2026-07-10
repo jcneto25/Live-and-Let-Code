@@ -1,26 +1,9 @@
-"""
-llc_delta — modulo de suporte ao fluxo delta (mudancas em sistema existente).
+#!/usr/bin/env python3
+"""Leitura e parsing do DELTA_REPORT.md."""
 
-Responsabilidades:
-- Ler e interpretar DELTA_REPORT.md
-- Determinar quais steps executar vs pular
-- Gerar skip notes automaticamente
-- Integrar com pipeline_run para modo delta
-"""
-
-import json
-import os
 import re
-import sys
-from pathlib import Path
 
-# ── Constants ──
-
-DELTA_REPORT_PATH = Path("docs/planning/DELTA_REPORT.md")
-SKIP_NOTES_DIR = Path("docs/delta/skip-notes")
-
-
-# ── Parse DELTA_REPORT.md ──
+from .paths import DELTA_REPORT_PATH
 
 
 def delta_report_exists() -> bool:
@@ -124,75 +107,3 @@ def parse_delta_report() -> dict | None:
             in_new = False
 
     return result
-
-
-# ── Smart Skip ──
-
-
-def is_step_skipped(step_id: str, delta_plan: dict | None) -> bool:
-    """Verifica se um step deve ser pulado no modo delta."""
-    if delta_plan is None:
-        return False
-    for skip in delta_plan.get("skip_steps", []):
-        if skip["step_id"] == step_id:
-            return True
-    return False
-
-
-def get_skip_reason(step_id: str, step_name: str, delta_plan: dict | None) -> str | None:
-    """Retorna a justificativa de skip para um step, ou None se nao for skip."""
-    if delta_plan is None:
-        return None
-    for skip in delta_plan.get("skip_steps", []):
-        if skip["step_id"] == step_id:
-            return skip.get("reason", "Nao informado")
-    return None
-
-
-def generate_skip_note(step_id: str, step_name: str, reason: str,
-                       iteration: str | None = None) -> Path:
-    """Gera um skip note para o step e retorna o caminho do arquivo."""
-    SKIP_NOTES_DIR.mkdir(parents=True, exist_ok=True)
-    note_file = SKIP_NOTES_DIR / f"step-{step_id}.md"
-
-    content = [
-        f"# Skip Note: Step {step_id} — {step_name}",
-        "",
-        f"**Decisao:** Step pulado conforme DELTA_REPORT.md",
-        f"**Justificativa:** {reason}",
-        "",
-    ]
-    if iteration:
-        content.append(f"**Iteracao:** {iteration}")
-    content.append("")
-    content.append(
-        "**Gate:** ✅ Auto-aprovado via Smart Skip "
-        "(reaproveitando artefatos da versao anterior)"
-    )
-    content.append("")
-
-    note_file.write_text("\n".join(content), encoding="utf-8")
-    return note_file
-
-
-# ── Integration with pipeline ──
-
-
-def get_delta_steps(delta_plan: dict | None) -> list[str]:
-    """Retorna a lista de steps a executar no modo delta.
-
-    Inclui steps de analise (0.2, 0.3) se DELTA_REPORT.md ainda nao existir,
-    mais os steps listados em execute_steps do relatorio.
-    """
-    steps = []
-
-    if delta_plan is None or not delta_report_exists():
-        # Delta ainda nao iniciado — precisa executar Δ.0 primeiro
-        steps.append("0.2")  # Delta Impact Analysis
-        steps.append("0.3")  # Delta Grill Me
-    else:
-        # Delta ja analisado — executar steps planejados
-        for step_id in delta_plan.get("execute_steps", []):
-            steps.append(step_id)
-
-    return steps

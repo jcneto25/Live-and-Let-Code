@@ -1,0 +1,285 @@
+{
+  "commits_analyzed": 236,
+  "period": "90 days ago",
+  "stats": {
+    "added": 27700,
+    "deleted": 2169,
+    "modified": 29504,
+    "moved_min": 0,
+    "moved_est": 0,
+    "copy_est": 3,
+    "pct_moved": 0.0,
+    "pct_added": 46.7,
+    "pct_modified": 49.7
+  },
+  "file_age": {
+    "total_lines_modified": 80865,
+    "lines_in_files_older_than_30d": 15249,
+    "pct_legacy_touched": 18.9
+  },
+  "alerts": [
+    {
+      "severity": "critical",
+      "metric": "Moved Code %",
+      "value": "0.0%",
+      "threshold": "≥ 10%",
+      "message": "Perda estrutural de manutenibilidade. Código não está sendo reorganizado em módulos.",
+      "action": "Identificar blocos duplicados e propor refatoração cross-PRP."
+    },
+    {
+      "severity": "high",
+      "metric": "Copy/Paste vs Moved",
+      "value": "copy=3 moved=0",
+      "threshold": "copy ≤ moved",
+      "message": "Duplicação superando reuso. Princípio DRY em risco.",
+      "action": "Revisar PRPs recentes: consolidar código duplicado em módulo compartilhado."
+    },
+    {
+      "severity": "high",
+      "metric": "Legacy Code Touch %",
+      "value": "18.9%",
+      "threshold": "≥ 20%",
+      "message": "Código antigo (>30 dias) não está sendo refatorado. Agentes focam apenas em novas linhas.",
+      "action": "Agendar onda de refatoração de código legacy nos próximos PRPs."
+    }
+  ],
+  "fitness": {
+    "config": {
+      "core_modules": [
+        "auth",
+        "usuarios"
+      ]
+    },
+    "results": {
+      "dependency_rule": {
+        "check": "dependency_rule",
+        "label": "Dependency Rule (Ports & Adapters)",
+        "description": "Services não devem importar diretamente Prisma/infra — usar interfaces",
+        "passed": true,
+        "blocked": false,
+        "total_services": 0,
+        "violations_count": 0,
+        "violations": []
+      },
+      "circular_deps": {
+        "check": "circular_deps",
+        "label": "Circular Dependencies",
+        "description": "Módulos não devem ter dependências circulares entre si",
+        "passed": true,
+        "blocked": false,
+        "modules_analyzed": 0,
+        "violations_count": 0,
+        "violations": []
+      },
+      "interface_coverage": {
+        "check": "interface_coverage",
+        "label": "Interface Coverage (DIP)",
+        "description": "Todo Service deve ter uma interface correspondente (I{Nome}Interface)",
+        "passed": true,
+        "blocked": false,
+        "total_services": 0,
+        "covered": 0,
+        "coverage_pct": 100,
+        "violations_count": 0,
+        "violations": []
+      },
+      "domain_isolation": {
+        "check": "domain_isolation",
+        "label": "Domain Isolation",
+        "description": "Arquivos de domínio não devem importar infraestrutura (Prisma, TypeORM, database)",
+        "passed": true,
+        "blocked": false,
+        "files_analyzed": 0,
+        "violations_count": 0,
+        "violations": []
+      },
+      "use_case_size": {
+        "check": "use_case_size",
+        "label": "Use Case Size",
+        "description": "Services/UseCases com mais de 8 metodos publicos devem ser decompostos",
+        "passed": true,
+        "blocked": false,
+        "max_methods": 8,
+        "violations_count": 0,
+        "violations": []
+      },
+      "module_coverage": {
+        "check": "module_coverage",
+        "label": "Module Coverage",
+        "description": "Cobertura minima de 60% por modulo",
+        "passed": null,
+        "blocked": false,
+        "error": "Nenhum arquivo de cobertura encontrado. Execute os testes primeiro.",
+        "violations_count": 0,
+        "violations": []
+      },
+      "function_max_lines": {
+        "check": "function_max_lines",
+        "label": "Function Max Lines",
+        "description": "Funções não devem exceder 20 linhas",
+        "passed": true,
+        "blocked": false,
+        "max_lines": 20,
+        "violations_count": 0,
+        "violations": []
+      },
+      "function_max_params": {
+        "check": "function_max_params",
+        "label": "Function Max Parameters",
+        "description": "Funções não devem ter mais de 3 parâmetros",
+        "passed": true,
+        "blocked": false,
+        "max_params": 3,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_generic_names": {
+        "check": "no_generic_names",
+        "label": "No Generic Names",
+        "description": "Proíbe variáveis/parâmetros genéricos: data, dto, result, info, obj, item, entity, model, temp, tmp, value",
+        "passed": true,
+        "blocked": false,
+        "forbidden": [
+          "data",
+          "dto",
+          "result",
+          "info",
+          "obj",
+          "item",
+          "entity",
+          "model",
+          "temp",
+          "tmp",
+          "value"
+        ],
+        "violations_count": 0,
+        "violations": []
+      },
+      "class_max_lines": {
+        "check": "class_max_lines",
+        "label": "Class Max Lines",
+        "description": "Classes não devem exceder 100 linhas efetivas",
+        "passed": true,
+        "blocked": false,
+        "max_lines": 100,
+        "violations_count": 0,
+        "violations": []
+      },
+      "class_max_deps": {
+        "check": "class_max_deps",
+        "label": "Class Max Dependencies",
+        "description": "Classes não devem ter mais de 5 dependências injetadas",
+        "passed": true,
+        "blocked": false,
+        "max_deps": 5,
+        "violations_count": 0,
+        "violations": []
+      },
+      "dip_violation": {
+        "check": "dip_violation",
+        "label": "DIP Violation (Prisma in Services)",
+        "description": "Services/UseCases não devem injetar PrismaService nem importar @prisma/client",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_empty_exceptions": {
+        "check": "no_empty_exceptions",
+        "label": "No Empty Exception Messages",
+        "description": "Exceptions nunca devem ter mensagens vazias",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_empty_catch": {
+        "check": "no_empty_catch",
+        "label": "No Empty Catch Blocks",
+        "description": "Blocos catch não devem ser vazios — sempre tratar ou logar com contexto",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_magic_numbers": {
+        "check": "no_magic_numbers",
+        "label": "No Magic Numbers",
+        "description": "Números mágicos em lógica de negócio devem ser constantes nomeadas",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_dead_code": {
+        "check": "no_dead_code",
+        "label": "No Dead Code / Stubs",
+        "description": "Zero stubs 'não implementado' e zero TODO/FIXME/HACK em código de produção",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_noise_comments": {
+        "check": "no_noise_comments",
+        "label": "No Noise Comments",
+        "description": "Remove comentários de seção, código comentado, comentários óbvios",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "prefer_const": {
+        "check": "prefer_const",
+        "label": "Prefer Const Over Let",
+        "description": "Variáveis declaradas com 'let' que nunca são reatribuídas devem usar 'const'",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "readmodel_exists": {
+        "check": "readmodel_exists",
+        "label": "ReadModel Exists",
+        "description": "Toda interface de repositório deve definir e retornar ReadModel tipado",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "repo_returns_readmodel": {
+        "check": "repo_returns_readmodel",
+        "label": "Repo Returns ReadModel",
+        "description": "Métodos de repositório não devem retornar 'any' — usar ReadModel",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_any_in_public": {
+        "check": "no_any_in_public",
+        "label": "No 'any' in Public Interfaces",
+        "description": "Interfaces públicas (repo, use case, dto, service) não devem usar 'any'",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      },
+      "no_as_any": {
+        "check": "no_as_any",
+        "label": "No 'as any' Casts",
+        "description": "Casts 'as any' são proibidos sem justificativa documentada",
+        "passed": true,
+        "blocked": false,
+        "violations_count": 0,
+        "violations": []
+      }
+    },
+    "summary": {
+      "total": 22,
+      "passed": 21,
+      "blocked": false,
+      "warnings": 0
+    }
+  }
+}

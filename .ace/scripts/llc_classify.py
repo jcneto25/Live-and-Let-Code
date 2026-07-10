@@ -16,6 +16,7 @@ Taxonomy (Pareto: 4 types cover ~80% of repeatable tasks):
 import subprocess
 import sys
 import shutil
+import re
 from typing import Optional
 
 
@@ -75,7 +76,6 @@ def classify_task(task_description, client=None):
     else:
         return None
 
-    import re
     type_match = re.search(r"<type>(.*?)</type>", output)
     confidence_match = re.search(r"<confidence>(.*?)</confidence>", output)
     reasoning_match = re.search(r"<reasoning>(.*?)</reasoning>", output)

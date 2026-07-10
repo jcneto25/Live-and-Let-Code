@@ -8,10 +8,15 @@ Uso:
 """
 
 import argparse
+import logging
 import re
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Optional
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 PRP_PATTERN = re.compile(r"PRP-(\d{3})")
 
@@ -42,7 +47,7 @@ def generate_dependency_graph(prp_files: list[Path]) -> dict:
     graph = {
         "version": "1.2.0",
         "generated_by": "dependency-graph-generator",
-        "last_updated": "2026-07-04",
+        "last_updated": date.today().isoformat(),
         "artifacts": {},
     }
 
@@ -102,7 +107,7 @@ def yaml_dump(data: dict, indent: int = 0) -> str:
     return "\n".join(result)
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(
         description="Gerador de dependency-graph.yaml baseado em PRPs"
     )
@@ -119,13 +124,13 @@ def main():
     args = parser.parse_args()
 
     if not args.prps:
-        print("ERROR: Especifique pelo menos um arquivo PRP com --prps")
-        sys.exit(1)
+        logger.error("Especifique pelo menos um arquivo PRP com --prps")
+        return 1
 
     for prp_file in args.prps:
         if not prp_file.exists():
-            print(f"ERROR: PRP não encontrado: {prp_file}")
-            sys.exit(1)
+            logger.error(f"PRP não encontrado: {prp_file}")
+            return 1
 
     graph = generate_dependency_graph(args.prps)
     yaml_content = yaml_dump(graph)
@@ -133,8 +138,9 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(yaml_content, encoding="utf-8")
 
-    print(f"✅ dependency-graph.yaml gerado em: {args.output}")
+    logger.info(f"✅ dependency-graph.yaml gerado em: {args.output}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

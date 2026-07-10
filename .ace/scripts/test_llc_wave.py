@@ -93,7 +93,7 @@ class TestStripPlaceholders:
     def test_removes_multiple_placeholders(self):
         """Deve remover múltiplos placeholders."""
         result = _strip_placeholders("{Nome} {Data} {N}")
-        assert result == "   "
+        assert result == "  "
 
     def test_preserves_text(self):
         """Deve preservar texto fora dos placeholders."""
@@ -215,18 +215,20 @@ class TestParseExecutionWaves:
         result = parse_execution_waves()
         assert result == []
 
-    @patch("llc_wave.Path")
-    def test_parses_waves_with_prps(self, mock_path):
-        """Deve parsear ondas com PRPs associados."""
-        mock_path.return_value.exists.return_value = True
-        content = """
+    def test_parses_waves_with_prps(self, tmp_path, monkeypatch):
+        """Deve parsear ondas com PRPs associados (arquivo real em tmp)."""
+        wave_file = tmp_path / "EXECUTION_WAVES.md"
+        wave_file.write_text(
+            """
 ### Onda 1: Primeira Onda
 
 | PRP-001 | Descrição |
 | PRP-002 | Descrição |
-"""
-        mock_path.return_value.read_text.return_value = content
-        result = parse_execution_waves()
+""",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr("llc_wave.parsing.EXECUTION_WAVES_FILE", wave_file)
+        result = parse_execution_waves(wave_file)
         assert len(result) == 1
         assert result[0].number == 1
         assert "PRP-001" in result[0].prps
@@ -236,25 +238,27 @@ class TestParseExecutionWaves:
 class TestParseTasks:
     """Testes para parse_tasks."""
 
-    @patch("llc_wave.Path")
-    def test_returns_empty_when_file_not_found(self, mock_path):
+    def test_returns_empty_when_file_not_found(self, tmp_path, monkeypatch):
         """Deve retornar dicionário vazio se arquivo não existir."""
-        mock_path.return_value.exists.return_value = False
+        missing = tmp_path / "TASKS.md"
+        monkeypatch.setattr("llc_wave.parsing.TASKS_FILE", missing)
         result = parse_tasks()
         assert result == {}
 
-    @patch("llc_wave.Path")
-    def test_returns_prps_from_headings(self, mock_path):
-        """Deve extrair PRPs dos headings."""
-        mock_path.return_value.exists.return_value = True
-        content = """#### PRP-001: ID1 — Nome do PRP 1
+    def test_returns_prps_from_headings(self, tmp_path, monkeypatch):
+        """Deve extrair PRPs dos headings (arquivo real em tmp)."""
+        tasks_file = tmp_path / "TASKS.md"
+        tasks_file.write_text(
+            """#### PRP-001: ID1 — Nome do PRP 1
 - [ ] Tarefa (T-001)
 
 #### PRP-002: ID2
 - [x] Tarefa (T-002)
-"""
-        mock_path.return_value.read_text.return_value = content
-        result = parse_tasks()
+""",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr("llc_wave.parsing.TASKS_FILE", tasks_file)
+        result = parse_tasks(tasks_file)
         assert "PRP-001" in result
         assert "PRP-002" in result
         assert result["PRP-001"].tasks == ["T-001"]
@@ -285,6 +289,33 @@ class TestFormatWaveList:
         result = format_wave_list(waves, prps)
         assert "T-001" in result
         assert "T-002" in result
+
+
+class TestPreWaveCheck:
+    """_pre_wave_check deve existir, ser chamavel e retornar bool."""
+
+    def test_pre_wave_check_is_defined_and_callable(self):
+        from llc_wave import _pre_wave_check
+
+        assert callable(_pre_wave_check)
+
+    def test_pre_wave_check_true_when_script_missing(self, monkeypatch, tmp_path):
+        import llc_wave
+
+        monkeypatch.setattr(llc_wave, "PRE_WAVE_CHECK_SCRIPT", tmp_path / "absent.sh")
+        assert llc_wave._pre_wave_check(dry_run=False, wave_num=1) is True
+
+
+class TestPostWaveCheck:
+    """_post_wave_check deve retornar bool (nao None)."""
+
+    def test_post_wave_check_returns_true_when_script_missing(self, monkeypatch, tmp_path):
+        import llc_wave
+
+        monkeypatch.setattr(llc_wave, "PRE_WAVE_CHECK_SCRIPT", tmp_path / "absent.sh")
+        monkeypatch.delenv("LLC_PRP_NO_VERIFY", raising=False)
+        result = llc_wave._post_wave_check(dry_run=False, wave_num=1, prp_ids=None)
+        assert result is True  # before fix the outer fn returns None
 
 
 if __name__ == "__main__":

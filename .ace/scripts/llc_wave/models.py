@@ -10,7 +10,7 @@ class WaveInfo:
     def __init__(self, number: int, name: str, prps: list[str]):
         self.number: int = number
         self.name: str = name
-        self.prps: list[str] = prps
+        self.prps: list[str] = list(prps)
 
     def __repr__(self):
         return f"Wave {self.number}: {self.name} ({len(self.prps)} PRPs)"
@@ -22,7 +22,8 @@ class PrpInfo:
     def __init__(self, prp_id: str, name: str = "", tasks: Optional[list[str]] = None):
         self.prp_id: str = prp_id
         self.name: str = name
-        self.tasks: list[str] = tasks if tasks is not None else []
+        # Cópia defensiva: o chamador pode continuar mutando sua lista.
+        self.tasks: list[str] = list(tasks) if tasks is not None else []
 
     def __repr__(self):
         return f"{self.prp_id}: {self.name} ({len(self.tasks)} tasks)"

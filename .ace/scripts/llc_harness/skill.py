@@ -12,8 +12,17 @@ from .common import AGENTS_FILE, SKILLS_DIR
 
 def load_agents_conventions():
     """Carrega apenas o Document Index do AGENTS.md, nao o arquivo inteiro (R4).
-    O agente usa o indice comprimido para decidir quais arquivos carregar sob demanda."""
+    O agente usa o indice comprimido para decidir quais arquivos carregar sob demanda.
+
+    Se AGENTS.md nao existir no repo root, warna alto (F-09) — o agente fica sem
+    convencoes (zonas vermelhas, Document Index, TDD enforcement), o que e
+    semanticamente incorreto para o workflow LLC."""
     if not AGENTS_FILE.exists():
+        print(
+            f"⚠️  AGENTS.md nao encontrado em {AGENTS_FILE} — "
+            f"o agente nao recebera convencoes (Document Index, zonas, TDD). "
+            f"Crie a partir de docs/templates/AGENTS_TEMPLATE.md."
+        )
         return ""
 
     content = AGENTS_FILE.read_text(encoding="utf-8")

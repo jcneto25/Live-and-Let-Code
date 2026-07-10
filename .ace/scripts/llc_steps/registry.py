@@ -3,13 +3,13 @@ from .models import _spec
 # Ordem das entradas == ordem do pipeline (apenas p/ legibilidade; a ordenação
 # real usa `number`).
 REGISTRY: dict[str, "StepSpec"] = {
-    "0": _spec("0", "Ingestão", None, None, False, False),
+    "0": _spec("0", "Ingestão", "llc-step-0-greenfield", None, False, False),
     "0.1": _spec("0.1", "Conversão (Docling)", "llc-step-0-1", None, False, False),
     "0.2": _spec(
         "0.2",
         "Delta Impact Analysis",
         "llc-step-delta-impact",
-        None,
+        "Δ.0",
         False,
         False,
         aliases=("delta-impact", "d-impact", "d-0"),
@@ -18,7 +18,7 @@ REGISTRY: dict[str, "StepSpec"] = {
         "0.3",
         "Delta Grill Me",
         "llc-step-delta-grill",
-        None,
+        "Δ.1",
         False,
         False,
         aliases=("delta-grill", "d-grill", "d-1"),
@@ -29,9 +29,47 @@ REGISTRY: dict[str, "StepSpec"] = {
     "3": _spec("3", "PRPs", "llc-step-3", "4", True, False),
     "4": _spec("4", "Planejamento", "llc-step-4", "5", True, False),
     "5": _spec("5", "Arquitetura", "llc-step-5", "6", True, False),
+    # Sub-steps de arquitetura (F-14: wirear sub-skills 5a/5b/5c):
+    "5.1": _spec(
+        "5.1",
+        "Architecture Patterns",
+        "llc-step-5a-architecture-patterns",
+        "6a",
+        True,
+        False,
+        aliases=("5a", "architecture-patterns", "arch-patterns"),
+    ),
+    "5.2": _spec(
+        "5.2",
+        "API Design Enforcement",
+        "llc-step-5b-api-design",
+        "6b",
+        True,
+        False,
+        aliases=("5b", "api-design"),
+    ),
+    "5.3": _spec(
+        "5.3",
+        "Clean Code Enforcement",
+        "llc-step-5c-clean-code",
+        "8.5",
+        True,
+        False,
+        aliases=("5c", "clean-code"),
+    ),
     "6": _spec("6", "Tarefas", "llc-step-6", "7", True, False),
     "7": _spec("7", "Design System", "llc-step-7", "8", True, False),
     "8": _spec("8", "Setup + Mock Data", "llc-step-8", "9", True, False),
+    # Sub-step de setup (F-14: wirear sub-skill 8b):
+    "8.1": _spec(
+        "8.1",
+        "Repository Pattern Setup",
+        "llc-step-8b-repository-pattern",
+        "9b",
+        True,
+        False,
+        aliases=("8b", "repository-pattern", "repo-pattern"),
+    ),
     "9": _spec("9", "Documentação de Testes", "llc-step-9", "10", True, False),
     "10": _spec("10", "Documentos do Projeto", "llc-step-10", "11", True, False),
     "10.5": _spec("10.5", "User Guide", "llc-user-guide", "11.5", True, False),
@@ -61,7 +99,17 @@ REGISTRY: dict[str, "StepSpec"] = {
         "10.8",
         True,
         False,
-        aliases=("test-coverage", "test", "10-8-test-coverage"),
+        aliases=("test-coverage", "test", "10-8-test-coverage", "10-coverage"),
+    ),
+    # Pré-execução: domain modeling per PRP (F-14: wirear sub-skill 11a):
+    "10.9": _spec(
+        "10.9",
+        "Domain Modeling",
+        "llc-step-11a-domain-modeling",
+        "11-PRE",
+        True,
+        False,
+        aliases=("11a", "domain-modeling", "domain-model"),
     ),
     # Execução (escreve código) — gate é o QA Checkpoint, sem checklist 👤 em gates.json:
     "11": _spec(
@@ -88,14 +136,15 @@ REGISTRY: dict[str, "StepSpec"] = {
         aliases=("prp-verify", "verify"),
     ),
     # Pós-execução / pré-merge (conformidade arquitetural — fitness functions):
+    # F-14: skill atualizada para a versão detalhada (llc-step-11b-arch-fitness)
     "11.3": _spec(
         "11.3",
         "Architecture Fitness",
-        "llc-arch-fitness",
+        "llc-step-11b-arch-fitness",
         "11-ARCH",
         False,
         False,
-        aliases=("arch-fitness", "arch", "fitness"),
+        aliases=("arch-fitness", "arch", "fitness", "11b"),
     ),
 }
 

@@ -12,6 +12,27 @@ DEFAULT_COVERAGE_THRESHOLDS = {
     "lines": 80,
 }
 
+# Stack markers → (marker file, coverage tool prefix). Detectado antes de
+# tentar gerar cobertura para evitar desperdício de timeout em stack errado.
+_JS_MARKERS = ("package.json",)
+_PY_MARKERS = ("pyproject.toml", "setup.py", "setup.cfg", "tox.ini")
+_GO_MARKERS = ("go.mod",)
+
+
+def _detect_stack(cwd: Path) -> str:
+    """Detecta o stack do projeto pela presença de marker files (F-13).
+    Retorna 'js', 'python', 'go' ou 'unknown'."""
+    for marker in _JS_MARKERS:
+        if (cwd / marker).exists():
+            return "js"
+    for marker in _PY_MARKERS:
+        if (cwd / marker).exists():
+            return "python"
+    for marker in _GO_MARKERS:
+        if (cwd / marker).exists():
+            return "go"
+    return "unknown"
+
 
 def check_project_coverage(
     thresholds: dict = None, strict: bool = False
@@ -28,40 +49,43 @@ def check_project_coverage(
     findings = []
     exit_code = 0
 
-    # Tenta executar cobertura com vitest/jest
+    # Tenta executar cobertura — só para stacks JS (vitest/jest via npx).
+    # Projetos Python/Go/unknown pulam direto para WARN (F-13: evitar
+    # desperdício de timeout 120s×2 em `npx` para stacks não-JS).
     coverage_file = Path("coverage/coverage-final.json")
     if not coverage_file.exists():
-        # Tenta gerar cobertura
-        try:
-            result = subprocess.run(
-                [
-                    "npx",
-                    "vitest",
-                    "run",
-                    "--coverage",
-                    "--reporter=json",
-                    "--outputFile=coverage/coverage-final.json",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            if result.returncode != 0:
-                # Tenta com jest
+        stack = _detect_stack(Path.cwd())
+        if stack == "js":
+            try:
                 result = subprocess.run(
                     [
                         "npx",
-                        "jest",
+                        "vitest",
+                        "run",
                         "--coverage",
-                        "--coverageReporters=json",
+                        "--reporter=json",
                         "--outputFile=coverage/coverage-final.json",
                     ],
                     capture_output=True,
                     text=True,
                     timeout=120,
                 )
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+                if result.returncode != 0:
+                    # Tenta com jest
+                    result = subprocess.run(
+                        [
+                            "npx",
+                            "jest",
+                            "--coverage",
+                            "--coverageReporters=json",
+                            "--outputFile=coverage/coverage-final.json",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                    )
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
 
     if not coverage_file.exists():
         findings.append(

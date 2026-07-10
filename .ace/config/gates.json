@@ -54,6 +54,62 @@
         "RNFs enderecados?"
       ]
     },
+    "6a": {
+      "step": 5.1,
+      "label": "Architecture Patterns",
+      "checklist": [
+        "Clean Architecture layers definidas (domain, application, infrastructure)?",
+        "Repository Pattern com interfaces declarado?",
+        "Domain Layer isolado (sem imports de infra)?",
+        ".ace/arch-config.yaml gerado com modulos core corretos?",
+        "ADRs 008-011 criados e justificados?"
+      ]
+    },
+    "6b": {
+      "step": 5.2,
+      "label": "API Design Enforcement",
+      "checklist": [
+        "OpenAPI spec existe em docs/api/openapi.yaml e e valida?",
+        "Controllers seguem template padronizado?",
+        "fitness-functions --check-api-design passou sem bloqueios?",
+        "Recursos aninhados modelados corretamente?",
+        "Paginacao implementada em todos os endpoints de lista?",
+        "Versionamento api/v1/ presente em todos os controllers?"
+      ]
+    },
+    "8.5": {
+      "step": 5.3,
+      "label": "Clean Code Enforcement",
+      "checklist": [
+        "fitness-functions --check-functions passou (max lines, params)?",
+        "fitness-functions --check-naming passou (no generic names)?",
+        "fitness-functions --check-classes passou (max lines, deps, DIP)?",
+        "fitness-functions --check-errors passou (no empty exceptions/catch)?",
+        "fitness-functions --check-smells passou (no magic numbers, dead code)?",
+        "fitness-functions --check-readmodels passou?"
+      ]
+    },
+    "9b": {
+      "step": 8.1,
+      "label": "Repository Pattern Setup",
+      "checklist": [
+        "Interfaces em domain/repositories/ para todos os modulos?",
+        "Implementacoes em infrastructure/repositories/?",
+        "Mappers cobrem todos os campos da entidade de dominio?",
+        "Bindings DI existem em todos os modules?",
+        "fitness-functions --check-deps passou (DIP)?"
+      ]
+    },
+    "11-PRE": {
+      "step": 10.9,
+      "label": "Domain Modeling (Pre-Execution)",
+      "checklist": [
+        "Entidades refletem as regras de negocio do PRP?",
+        "Use cases cobrem todos os RFs do PRP?",
+        "Interfaces de repositorio sao consistentes com Step 8b?",
+        "Contratos de dados (secao 7 do PRP) estao completos?"
+      ]
+    },
     "7": {
       "step": 6,
       "label": "Tarefas",

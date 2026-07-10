@@ -29,7 +29,7 @@ Live and Let Code (LLC) is an agentic software development methodology that stru
 This document specifies:
 
 - The LLC directory architecture (§2)
-- The complete pipeline with 14 main steps + 1 subflow (§3)
+- The complete pipeline with 22 pipeline steps + 2 delta steps (§3)
 - The skills catalog (§4)
 - The agentic prototyping subflow (§5)
 - The human gate system (§6)
@@ -49,7 +49,7 @@ LLC is organized into 5 conceptual layers from foundation to delivery:
 | **1. Context** | Context window, session continuity, token compression | ACE `<context_seed>` (~300 tokens, 93% reduction), Document Hierarchy in AGENTS.md, compressed documentation index, prompt caching strategy, append-only sessions |
 | **2. Knowledge** | Domain artifacts, specifications, architectural decisions | Strategic vision, 7 specs (glossary, FR, NFR, business rules, BPMN, profiles, integrations), PRDs (executive + technical), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agents** | Who executes, how they reason, with which rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, ACE handoff), per-step roles (analyst, spec writer, architect, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, validation gates, orchestration | 14 steps + F1-F6 subflow, 15 human gates + visual checkpoint, `<gate_result>`, execution waves, PRRS (7 analysis prisms), dependency matrix, impact-analyzer.py |
+| **4. Workflows** | Pipeline, validation gates, orchestration | 22 pipeline steps + 2 delta, 25 human gates + visual checkpoint, `<gate_result>`, execution waves, PRRS (7 analysis prisms), dependency matrix, impact-analyzer.py |
 | **5. Delivery** | Parallel execution, structural quality, deployment | Auto git worktrees (Step 11), code-health.py (4 metrics), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -709,7 +709,7 @@ AI agents maximize short-term productivity at the cost of structural code health
 | Level | Trigger | Behavior |
 |-------|---------|----------|
 | **QA Checkpoint (Step 11)** | 1 🔴 Critical OR 2+ 🟡 High below threshold | Blocking |
-| **Gate 10-COVERAGE (Step 10.8)** | Pre-execution coverage check | Blocking if 0% files, thresholds not met, or regression > 5% |
+| **Gate 10.8 (Step 10.8)** | Pre-execution coverage check | Blocking if 0% files, thresholds not met, or regression > 5% |
 | **Pre-commit hook** | Any metric below threshold | Warning |
 | **Manual execution** | On demand | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
 

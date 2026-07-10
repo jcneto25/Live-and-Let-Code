@@ -74,8 +74,8 @@ def run_wave(
         logger.error(
             f"Erro ao importar llc_harness: {e}\n\n"
             "O comando `wave run` depende dos modulos de orquestracao do harness.\n"
-            "Certifique-se de estar executando a partir de .ace/scripts/:\n"
-            f"  cd .ace/scripts && python llc.py wave run --wave {wave_num}"
+            "Execute a partir do repo root (os paths sao cwd-relativos: docs/skills, .ace/index.json):\n"
+            f"  python .ace/scripts/llc.py wave run --wave {wave_num}"
         )
         return False
 

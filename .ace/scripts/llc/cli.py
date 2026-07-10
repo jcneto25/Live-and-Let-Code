@@ -177,8 +177,8 @@ def pipeline(from_step, to_step, task, quickstart, delta, iteration, auto_approv
         to_step = "11"
         print("\n🚀 LLC Pipeline Quickstart")
         print(f"{'=' * 60}")
-        print("Gates incluídos: 1 (Visão), 4 (PRPs), 11 (Execução)")
-        print("Pule para o modo completo com: llc pipeline --from 0 --to 11.1")
+        print("Pipeline 0.5 → 11 (21 steps, todos os gates de especificação + segurança + arquitetura).")
+        print("Modo completo (com OWASP/PRP-Verify/Arch-Fitness): llc pipeline --from 0 --to 11.1")
     elif delta:
         print(f"\n🚀 LLC Pipeline — Modo Delta (Iteracao: {iteration or 'N/A'})")
         print(f"{'=' * 60}")
@@ -234,20 +234,6 @@ def session_end_cmd(decision):
         "Cole o context_seed gerado pelo agente (ou Enter para pular): "
     ).strip()
     session_end("manual", decision, context_seed or None)
-
-
-@cli.command()
-@click.option(
-    "--step",
-    "-s",
-    type=StepParamType(),
-    required=True,
-    help="Step LLC (id/alias/numero)",
-)
-def gate(step):
-    """Exibe o checklist do gate para revisao manual."""
-    decision = gate_check(step, None)
-    print(f"\nGate decision: {decision}")
 
 
 @cli.command()

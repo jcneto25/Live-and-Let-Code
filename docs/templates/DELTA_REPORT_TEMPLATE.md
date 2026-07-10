@@ -131,7 +131,7 @@
 | 10.5 | `llc-user-guide` | User guide atualizado (se UI afetada) | 👤 11.5 |
 | 10.6 | `llc-step-11-security` | Segurança (sempre) | 👤 11-SEC |
 | 10.7 | `llc-step-12-null-safety` | Contratos (sempre) | 👤 12-NULL |
-| 10.8 | `llc-step-10-8-test-coverage` | Cobertura (sempre) | 👤 10-COVERAGE |
+| 10.8 | `llc-step-10-8-test-coverage` | Cobertura (sempre) | 👤 10.8 |
 | 11 | `llc-step-11` | Execução PRP-A + PRP-N | QA |
 | 11.1 | `llc-step-11-owasp-security` | OWASP (sempre) | 👤 11-OWASP |
 | 11.2 | `llc-step-11-2-prp-verify` | PRP Verify (sempre) | 🔴 11-VERIFY |

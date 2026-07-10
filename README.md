@@ -8,7 +8,7 @@
 
 ### 🇧🇷 Português
 
-Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **14 etapas principais + 5 auxiliares + 2 de análise de mudança (Δ)** com **gates de validação humana** em cada fase. **23 skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
+Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **22 etapas pipeline + 2 de análise de mudança (Δ)** com **25 gates de validação humana** em cada fase. **26+ skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
 
 📘 **[Guia de Execução (PT-BR)](LLC_GUIDE.md)** — passo a passo completo  
 📄 **[Especificação do Pipeline](llc-pipeline-design.md)** — design document
@@ -17,7 +17,7 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 ### 🇺🇸 English
 
-Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **14 main + 5 auxiliary + 2 change analysis (Δ) steps** with **human validation gates** at every phase. **23 tool-agnostic skills** executable by any terminal AI client.
+Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **22 pipeline + 2 change analysis (Δ) steps** with **25 human validation gates** at every phase. **26+ tool-agnostic skills** executable by any terminal AI client.
 
 📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — full step-by-step guide  
 📄 **[Pipeline Specification](llc-pipeline-design.en.md)** — design document

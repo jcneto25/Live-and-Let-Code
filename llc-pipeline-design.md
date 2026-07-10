@@ -27,7 +27,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 Este documento especifica:
 
 - A arquitetura de diretórios do LLC (§2)
-- O pipeline completo com 14 etapas principais + 1 subfluxo + 2 etapas delta (§3)
+- O pipeline completo com 22 etapas pipeline + 2 etapas delta (§3)
 - O catálogo de skills (§4)
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)
@@ -48,7 +48,7 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 | **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 14 steps + subfluxo F1-F6 + 2 delta, 15 human gates + checkpoint visual + Gate 11-ARCH, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 22 steps pipeline + 2 delta, 25 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
 | **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -380,6 +380,8 @@ graph TD
 | 4 | Planejamento | PRPs | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | `DEPENDENCY_MATRIX_TEMPLATE.md`, `PLAN_TEMPLATE.md`, `EXECUTION_WAVES_TEMPLATE.md` | 👤 5 |
 | 5 | Arquitetura | PRDs + RNF + Integrações + Planejamento | `ARCHITECTURE.md` | `ARCHITECTURE_TEMPLATE.md` | 👤 6 |
 | 5a | Architecture Patterns (obrigatório) | `ARCHITECTURE.md` §7-9 + RNF | `ARCHITECTURE.md` atualizado, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
+| 5b | API Design Enforcement (obrigatório) | `ARCHITECTURE.md` + PRPs + Specs | `docs/api/openapi.yaml`, controllers padronizados | — | 👤 6b |
+| 5c | Clean Code Enforcement (obrigatório) | `ARCHITECTURE.md` + arch-config | 21+ fitness functions configuradas | — | 👤 8.5 |
 | 6 | Tarefas | PRPs + Arquitetura + Planejamento | `TASKS.md` | `TASKS_TEMPLATE.md` | 👤 7 |
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
@@ -395,6 +397,8 @@ graph TD
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
 | 10.6 | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
 | 10.7 | Null Safety (pre-code) | PRPs com secao `§7 (Data Model)` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
+| 10.8 | Test Coverage Gate (pre-exec) | `TESTING_GUIDE.md` + código existente | `COVERAGE_REPORT.md` | `COVERAGE_REPORT_TEMPLATE.md` | 👤 10.8 |
+| 10.9 | Domain Modeling (pre-exec, per PRP) | PRP + arch-config + Step 8b output | `src/*/domain/`, `src/*/application/use-cases/`, PRP §7 atualizado | `DOMAIN_MODEL_TEMPLATE.md` | 👤 11-PRE |
 
 > **📋 Sequenciamento:** 10.6 (Security) e 10.7 (Null Safety) executam **ANTES** do Step 11 (gates pre-implementacao:
 > auditar codigo existente e validar contratos de dados). 11.1 (OWASP) executa **DEPOIS** do Step 11
@@ -402,10 +406,11 @@ graph TD
 > precedem 11 por numero — entao a ressalva "prefixo 11/12 indica associacao, nao ordem" nao se aplica mais.
 
 | 11 | Execucao | Todos os artefatos anteriores | Codigo fonte + paginas de manual (`docs/user-guide/[modulo]/*.md`) | — | Checkpoints QA |
-| 11a | Domain Modeling (obrigatório pré-exec) | PRP + arch-config + Step 8b output | `src/*/domain/`, `src/*/application/use-cases/`, PRP §7 atualizado | `DOMAIN_MODEL_TEMPLATE.md` | 👤 11-PRE |
 | 11.1 | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
-| 11b | Arch Fitness (obrigatório no PRP Verify) | Código implementado + arch-config | Relatório fitness functions | — | 🔴 Bloqueia em violações BLOCKING |
 | **11.2** | **PRP Verify (aceite mecânico)** | **PRP concluído + §2 preenchida** | **Relatório de gaps RF-por-RF** | **—** | **🔴 Bloqueia merge em CRITICAL** |
+| **11.3** | **Arch Fitness (fitness functions)** | **Código implementado + arch-config** | **Relatório fitness functions** | **—** | **🔴 11-ARCH (bloqueia em BLOCKING)** |
+| **Δ.0** | **Delta Impact Analysis** | **Novos docs em `ingestion/converted/`** | **`DELTA_REPORT.md`** | **`DELTA_REPORT_TEMPLATE.md`** | **👤 Δ.0** |
+| **Δ.1** | **Delta Grill Me** | **`DELTA_REPORT.md` + ambiguidades** | **Respostas registradas** | **—** | **👤 Δ.1** |
 
 > **Modelo de seguranca em 3 camadas:** A seguranca percorre todo o pipeline — nao e um gate unico.
 > **10.6 (Gate 11-SEC)** (pre-code) escaneia dependencias, codigo e secrets. **10.7 (Gate 12-NULL)** (pre-code) valida contratos de dados.
@@ -483,6 +488,8 @@ tags: [categoria, llc-pipeline]
 | `llc-step-4` | 4 | Gera Matriz de Dependências, Plano e Ondas de Execução |
 | `llc-step-5` | 5 | Gera documento de Arquitetura (Stack, C4, ADRs, CI/CD) |
 | `llc-step-5a-architecture-patterns` | 5a | Padrões Arquiteturais — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
+| `llc-step-5b-api-design` | 5b | API Design Enforcement — REST semantics, OpenAPI, paginação, HATEOAS, versioning |
+| `llc-step-5c-clean-code` | 5c | Clean Code Enforcement — Functions, Classes, Naming, Errors, Smells, ReadModels (21+ fitness functions) |
 | `llc-step-6` | 6 | Gera TASKS.md com tarefas concretas, agentes e estimativas |
 | `llc-step-7` | 7 | Gera Design System completo (tokens, componentes, padrões) |
 | `llc-step-8` | 8 | Setup do projeto + Camada de dados mockados (JSON + MSW handlers) |
@@ -492,19 +499,19 @@ tags: [categoria, llc-pipeline]
 | `llc-user-guide` | 10.5 | Gera esqueleto do manual do usuario a partir dos PRPs, perfis e workflows |
 | `llc-step-11-security` | 10.6 | Auditoria de seguranca pre-execucao: SCA (npm audit), SAST (Semgrep) e secrets (Gitleaks) |
 | `llc-step-12-null-safety` | 10.7 | Validacao de null safety nos PRPs — contratos de nulabilidade, schemas e limites de payload |
-| `llc-step-11a-domain-modeling` | 11a | Modelagem de Dominio por PRP — entidades, use cases, interfaces de repositorio |
-| `llc-step-11b-arch-fitness` | 11b | Fitness Functions Arquiteturais — governança arquitetural automatizada |
-| `llc-step-11-2-prp-verify` | **11.2** | **Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps** |
+| `llc-step-10-8-test-coverage` | 10.8 | Gate de cobertura de testes pre-execucao — thresholds (statements ≥ 80%, 0 arquivos sem cobertura) |
+| `llc-step-11a-domain-modeling` | 10.9 | Modelagem de Dominio por PRP — entidades, use cases, interfaces de repositorio |
+| `llc-step-11b-arch-fitness` | 11.3 | Fitness Functions Arquiteturais — governança arquitetural automatizada (Gate 11-ARCH) |
+| `llc-step-11-2-prp-verify` | 11.2 | Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps |
 | `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
-| `llc-step-delta-impact` | Δ.0 | [NOVO] Analisa o delta entre versão atual e novos documentos, gera DELTA_REPORT.md com classificação major/minor |
-| `llc-step-delta-grill` | Δ.1 | [NOVO] Grill Me de Mudança — até 8 perguntas focadas no delta entre versões |
-| `llc-smart-skip` | Transversal | [NOVO] Mecanismo de skip condicional para steps inalterados em iterações delta |
+| `llc-step-delta-impact` | Δ.0 | Analisa o delta entre versão atual e novos documentos, gera DELTA_REPORT.md com classificação major/minor |
+| `llc-step-delta-grill` | Δ.1 | Grill Me de Mudança — até 8 perguntas focadas no delta entre versões |
+| `llc-smart-skip` | Transversal | Mecanismo de skip condicional para steps inalterados em iterações delta |
 | `llc-subflow-prototyping` | Subfluxo | Prototipagem agentica em 6 fases para PRPs com UI |
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
-| `llc-arch-fitness` | **11.3** | **[NOVO] Skill transversal do Gate 11-ARCH: executa fitness functions, classifica violações, registra dívida técnica** |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
 | `llc-impact-analyzer` | Transversal | Analisa impacto de alterações via git diff + grafo de dependências |
-| **fitness-functions.py** | **11.3** | **[NOVO] Script de fitness functions: Dependency Rule, circular deps, DIP, domain isolation, use case size, module coverage** |
+| **fitness-functions.py** | 11.3 | Script de fitness functions: Dependency Rule, circular deps, DIP, domain isolation, use case size, module coverage, clean code |
 
 ---
 
@@ -554,20 +561,25 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 4 | 3 | PRPs têm granularidade correta? Dependências entre PRPs fazem sentido? |
 | 👤 5 | 4 | Ondas estão bem agrupadas? Caminho crítico é realista? |
 | 👤 6 | 5 | Stack é viável? ADRs são justificados? RNFs estão endereçados? |
+| 👤 6a | 5.1 | Clean Architecture layers definidas? Repository Pattern com interfaces? Domain Layer isolado? .ace/arch-config.yaml gerado? ADRs 008-011 criados? |
+| 👤 6b | 5.2 | OpenAPI spec existe e é válida? Controllers seguem template? fitness-functions --check-api-design passou? Paginação implementada? Versionamento api/v1/ presente? |
+| 👤 8.5 | 5.3 | fitness-functions --check-functions/naming/classes/errors/smells/readmodels passou? Zero PrismaService em services? Use Cases separados? Nomes semânticos? |
 | 👤 7 | 6 | Tarefas são acionáveis? Agentes estão corretamente atribuídos? |
 | 👤 8 | 7 | Design System reflete a identidade do projeto? Todos os componentes têm estados definidos? |
 | 👤 9 | 8 | Projeto roda? Dados mock são realistas? Handlers cobrem o núcleo? |
+| 👤 9b | 8.1 | Interfaces em domain/repositories/ para todos os módulos? Implementações em infrastructure/repositories/? Mappers cobrem todos os campos? Bindings DI existem? fitness-functions --check-deps passou (DIP)? |
 | 👤 10 | 9 | Estratégia de testes é adequada ao stack? Thresholds são realistas? |
 | 👤 11 | 10 | README permite onboarding em ≤ 10 min? DEPLOYMENT cobre rollback e monitoramento? |
 | 👤 11.5 | 10.5 | A estrutura cobre todos os modulos? Os perfis tem paginas relevantes? O indice e navegavel? A linguagem e adequada ao usuario final? |
 | 👤 11-SEC | 10.6 | 0 vulnerabilidades criticas (CVSS ≥ 9.0)? Secrets reais zerados? Vulnerabilidades altas com decisao registrada? |
 | 👤 11-OWASP | 11.1 | 0 verificacoes OWASP 🔴 (criticas)? Todas 🟡 (altas) com plano de correcao documentado? |
-| 🔴 11-VERIFY | **11.2** | **prp_verify --strict passou (0 CRITICAL)? WARNs revisados? Bypass nao ativo?** |
+| 🔴 11-VERIFY | 11.2 | prp_verify --strict passou (0 CRITICAL)? WARNs revisados? Bypass nao ativo? |
 | 👤 12-NULL | 10.7 | 0 campos sem especificacao de nulabilidade? 0 endpoints sem schema de validacao? |
-| 👤 **Δ.0** | **0.2** | **[NOVO] Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados?** |
-| 👤 **Δ.1** | **0.3** | **[NOVO] Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas?** |
-| 👤 10-COVERAGE | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
-| 🔴 **11-ARCH** | **11.3** | **[NOVO] fitness-functions.py --all --strict passou (0 CRITICAL)? Core modules sem violação de Dependency Rule? Nenhuma dependência circular? Interface coverage ≥ threshold? Domínio não importa infra? WARNs registrados?** |
+| 👤 10.8 | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
+| 👤 11-PRE | 10.9 | Entidades refletem as regras de negócio do PRP? Use cases cobrem todos os RFs? Interfaces de repositório consistentes com Step 8b? Contratos de dados (§7 do PRP) completos? |
+| 🔴 11-ARCH | 11.3 | fitness-functions.py --all --strict passou (0 CRITICAL)? Core modules sem violação de Dependency Rule? Nenhuma dependência circular? Interface coverage ≥ threshold? Domínio não importa infra? WARNs registrados? |
+| 👤 Δ.0 | 0.2 | Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados? |
+| 👤 Δ.1 | 0.3 | Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |
 | Checkpoints | 11 (Execução) | QA score ≥ 7.0? Cobertura ≥ thresholds? Security audit aprovado? |
 

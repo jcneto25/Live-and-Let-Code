@@ -228,7 +228,7 @@ Para cada PRP da Wave 1:
 
 O Step 8b implementa o **Repository Pattern com interfaces (Ports & Adapters)** em todos os módulos, conforme definido no Step 5a. Isso é **obrigatório** para garantir a Dependency Rule antes da execução dos PRPs.
 
-**Não pule para o Step 11 sem ter completado o Step 8b.** O Gate 9 só aprova após ambos os sub-steps.
+**Não pule para o Step 11 sem ter completado o Step 8b.** O Gate 9 valida o Step 8 (setup + mocks) e o Gate 9b valida o Step 8b (Repository Pattern) — ambos devem ser aprovados.
 
 ---
 
@@ -295,4 +295,4 @@ Ao finalizar o Step 8, o operador humano deve validar:
 - [ ] `src/*/*.module.ts` — bindings DI `{ provide: I*Repository, useClass: Prisma*Repository }` existem
 - [ ] `src/*/*.service.ts` — injetam interface (`@Inject(I*Repository)`), não `PrismaService`
 - [ ] `grep -r "PrismaService" src/*/domain/ src/*/application/ src/*/use-cases/` — retorna vazio
-- [ ] Fitness function `repository-pattern` passa: `python .ace/scripts/fitness-functions.py --check repository-pattern`
+- [ ] Fitness function DIP passa: `python .ace/scripts/fitness-functions.py --check-deps --strict`

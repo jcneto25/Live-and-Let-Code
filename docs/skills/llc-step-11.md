@@ -9,7 +9,7 @@ tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 
 **Pipeline:** Live and Let Code (LLC)
 **Fase:** Implementation (Step 11)
-**Depende de:** Step 3 (PRPs), Step 6 (TASKS.md), Step 9 (TESTING_GUIDE.md), Step 11-Security (gate pré-execução APROVADO), Step 12-Null-Safety (contratos de dados APROVADOS)
+**Depende de:** Step 3 (PRPs), Step 6 (TASKS.md), Step 9 (TESTING_GUIDE.md), Step 10.6 (Security Audit, gate pré-execução APROVADO), Step 10.7 (Null Safety, contratos de dados APROVADOS), Step 10.8 (Test Coverage Gate)
 **Sub-steps:** Step 11a (Domain Modeling - **obrigatório pré-execution**), Step 11b (Arch Fitness - **obrigatório no PRP Verify**)
 **Mantenedor:** Equipe LLC
 
@@ -25,8 +25,9 @@ tags: [execution, implementation, tdd, prp, ace, llc-pipeline]
 - [ ] `docs/planning/TASKS.md` — tarefas com IDs na coluna ID (Step 6)
 - [ ] `docs/planning/EXECUTION_WAVES.md` — PRPs agrupados por onda (Step 4/6)
 - [ ] `docs/testing/TESTING_GUIDE.md` — estratégia de testes e thresholds (Step 9)
-- [ ] `docs/security/SECURITY_AUDIT_REPORT.md` — gate 11-SEC **APROVADO** (Step 11-Security)
-- [ ] `docs/security/NULL_SAFETY_REPORT.md` — gate 12-NULL **APROVADO** (Step 12-Null-Safety)
+- [ ] `docs/security/SECURITY_AUDIT_REPORT.md` — gate 11-SEC **APROVADO** (Step 10.6)
+- [ ] `docs/security/NULL_SAFETY_REPORT.md` — gate 12-NULL **APROVADO** (Step 10.7)
+- [ ] `docs/testing/COVERAGE_REPORT.md` — gate 10.8 **APROVADO** (Step 10.8, cobertura ≥ thresholds)
 - [ ] `code-health.py` com baseline registrado (Step 8)
 - [ ] `docs/architecture/ARCHITECTURE.md` — com §7, §8, §9 preenchidos (Step 5a)
 - [ ] `.ace/arch-config.yaml` — configuração fitness functions (Step 5a)
@@ -44,8 +45,9 @@ Você está executando a skill `llc-step-11` do pipeline LLC. Seu objetivo é **
 | Step | Skill | Quando |
 |------|-------|--------|
 | **11** | **`llc-step-11` (esta)** | **Execução**: implementar o PRP (código + testes) |
-| 11-Security | `llc-step-11-security` | **Gate pré-execução**: SCA+SAST+secrets (já deve estar APROVADO) |
-| 11-OWASP | `llc-step-11-owasp-security` | **Hardening pós-código**: roda APÓS todos os PRPs implementados |
+| 10.6 | `llc-step-11-security` | **Gate pré-execução**: SCA+SAST+secrets (já deve estar APROVADO) |
+| 11.1 | `llc-step-11-owasp-security` | **Hardening pós-código**: roda APÓS todos os PRPs implementados |
+| 11.3 | `llc-step-11b-arch-fitness` | **Arch Fitness**: fitness functions pós-código, gate 11-ARCH |
 
 Esta skill **não** faz auditoria de segurança (isso é pré-gate) nem hardening OWASP (isso é pós-código). Se encontrar um problema de segurança durante a implementação, registre como `<blocker>` e escale — não tente resolver ad-hoc.
 
@@ -285,4 +287,4 @@ Finalize pelo harness: `python .ace/scripts/llc.py session end --approve` (ou o 
 - **PRP parcial/pendente:** continue na próxima sessão com `llc run --step 11 --prp <PRP> --wave <N>`.
 - **Todos os PRPs da onda concluídos:** avance para a próxima onda em `EXECUTION_WAVES.md`.
 - **PRP-A concluído:** Atualize o PRP original com a referência ao PRP-A (nota no topo) e registre o status no DELTA_REPORT.md.
-- **Todos os PRPs (incluindo PRP-A e PRP-N) implementados:** execute a skill `llc-step-11-owasp-security` (hardening pós-código, Gate 11-OWASP) antes de considerar o Step 11 concluído.
+- **Todos os PRPs (incluindo PRP-A e PRP-N) implementados:** execute a skill `llc-step-11-owasp-security` (hardening pós-código, Gate 11-OWASP) e `llc-step-11b-arch-fitness` (fitness functions, Gate 11-ARCH) antes de considerar o Step 11 concluído.

@@ -8,7 +8,7 @@
 
 ### O que é um workflow agentico de desenvolvimento?
 
-É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 21 skills, 15 human gates e um protocolo de continuidade de contexto (ACE).
+É uma metodologia estruturada que utiliza agentes de IA especializados para colaborar ao longo do ciclo de vida do software — desde análise e requisitos até arquitetura, implementação e garantia de qualidade. Diferente do "vibe coding" (codificação informal por prompts), workflows agenticos definem papéis, artefatos, gates de qualidade e handoffs entre agentes. O LLC materializa isso em 26+ skills, 25 human gates e um protocolo de continuidade de contexto (ACE).
 
 ### Como o LLC esta organizado arquiteturalmente?
 
@@ -19,7 +19,7 @@ O LLC se organiza em **5 camadas conceituais** que vao da fundacao a entrega:
 | **1. Contexto** | Gerencia a janela de contexto, continuidade entre sessoes e compressao de tokens | ACE `<context_seed>`, Document Hierarchy, indice comprimido, prompt caching, append-only sessions |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes e decisoes arquiteturais | Visao estrategica, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
 | **3. Agentes** | Quem executa, como raciocina e com quais regras | AGENTS.md (protocolo epistemic, zonas, TDD, handoff), papeis por step, Grill Me, CODE-REVIEW |
-| **4. Workflows** | Pipeline, gates de validacao e orquestracao | 14 steps + subfluxo, 15 human gates + checkpoint visual, execution waves, PRRS, dependency matrix |
+| **4. Workflows** | Pipeline, gates de validacao e orquestracao | 22 steps pipeline + 2 delta, 25 human gates + checkpoint visual, execution waves, PRRS, dependency matrix |
 | **5. Entrega** | Execucao paralela, qualidade estrutural e deploy | Git worktrees automaticos, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
 
 Cada camada depende da inferior: sem contexto bem gerido, o conhecimento nao cabe na janela; sem conhecimento estruturado, agentes nao tem direcao; sem agentes instruidos, workflows nao produzem qualidade; sem workflows orquestrados, a entrega nao e confiavel.
@@ -42,7 +42,7 @@ O SDD tradicional tem 5 críticas legítimas. O LLC foi desenhado para endereça
 
 | Crítica ao SDD tradicional | Como o LLC resolve |
 |---------------------------|-------------------|
-| **1. Waterfall rígido e lento** — documentação pesada antes de qualquer código, 10x mais lento | O LLC **não é waterfall**. As 14 etapas são pipeline, não fase congelada. PRPs têm 2-8 dias e rodam em **ondas paralelas** assim que validados. O Grill Me é uma rodada curta de perguntas (~15 min), não meses de documentação. O MVP mockado (Step 8) entrega algo funcional e demonstrável em dias, não meses |
+| **1. Waterfall rígido e lento** — documentação pesada antes de qualquer código, 10x mais lento | O LLC **não é waterfall**. As 22 etapas são pipeline, não fase congelada. PRPs têm 2-8 dias e rodam em **ondas paralelas** assim que validados. O Grill Me é uma rodada curta de perguntas (~15 min), não meses de documentação. O MVP mockado (Step 8) entrega algo funcional e demonstrável em dias, não meses |
 | **2. "Markdown Madness"** — milhares de linhas de documentação, 80% do tempo lendo Markdown | O ACE resolve isso: o `<context_seed>` comprime o estado em **4 campos (~300 tokens)**. Um agente de implementação recebe **apenas o PRP que vai executar** (~50-80 linhas), não o projeto inteiro. O `impact-analyzer.py` diz exatamente quais artefatos ler, eliminando leitura desnecessária |
 | **3. Bugs persistentes e código insustentável** — mesmo com specs, código gerado contém erros triviais | **TDD embutido em cada PRP** + `code-health.py` + self-healing loop. A IA escreve teste → vê falhar → implementa → vê passar. Se falhar, o ciclo recomeça. O agente não entrega código sem teste passando. Métricas de Moved Code, Copy/Paste e Legacy Touch são monitoradas a cada onda |
 | **4. Spec Drift** — código alterado manualmente quebra a "fonte única da verdade" | O `dependency-graph.yaml` + `impact-analyzer.py` detectam drift automaticamente: `git diff` → cruza com grafo → reporta quais artefatos estão desatualizados. **Não é manual.** O pre-commit hook alerta antes do commit. O `<gate_result>` força validação humana antes de prosseguir |
@@ -60,7 +60,7 @@ O resultado: o LLC mantém os benefícios do SDD (rastreabilidade, especificaç�
 
 ### O que são Human Gates?
 
-São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 15 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
+São pontos de validação humana obrigatórios no pipeline LLC. Nenhum step avança sem aprovação explícita do usuário. O LLC tem 25 human gates + 1 checkpoint visual (subfluxo de prototipagem) + checkpoints de QA na execução. Um gate reprovado retorna o fluxo ao passo anterior com `<gate_result decision="rejected">` registrado no ACE.
 
 ### O que é Grill Me?
 
@@ -138,7 +138,7 @@ Não. Projetos pequenos (ex: single-page app, script CLI) podem condensar múlti
 
 ### Agentes substituem engenheiros humanos?
 
-Não. Humanos definem direção, negociam escopo, supervisionam design e aprovam releases. Os agentes melhoram o retorno da atenção humana, não a substituem. O LLC formaliza isso com **human-in-the-loop** em todas as fases críticas: 15 human gates, 1 checkpoint visual e checkpoints de QA na execução. Nenhum step avança sem aprovação explícita.
+Não. Humanos definem direção, negociam escopo, supervisionam design e aprovam releases. Os agentes melhoram o retorno da atenção humana, não a substituem. O LLC formaliza isso com **human-in-the-loop** em todas as fases críticas: 25 human gates, 1 checkpoint visual e checkpoints de QA na execução. Nenhum step avança sem aprovação explícita.
 
 ### Como os agentes se comunicam entre si?
 
@@ -345,7 +345,7 @@ Todos os artefatos LLC são documentos Markdown persistentes versionados em **Gi
 
 São checkpoints de transição de fase que verificam se cada artefato atende aos critérios definidos antes do próximo agente começar. No LLC, os gates são formais e registrados:
 
-- **15 human gates:** um apos cada step de geracao (0.5 a 11). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
+- **25 human gates:** um apos cada step de geracao (0.5 a 11.3). O humano revisa o artefato e decide: `approved`, `rejected` ou `conditional`
 - **1 checkpoint visual:** no subfluxo de prototipagem (F4 → F5). O protótipo hi-fi não vira código sem aprovação visual explícita
 - **Checkpoints de QA:** durante a execução (Step 11): score ≥ 7.0, cobertura ≥ thresholds, security audit aprovado
 
@@ -359,7 +359,7 @@ O LLC implementa 6 camadas de garantia de qualidade:
 |--------|---------------|
 | **1. Especificação antes do código** | Steps 0-GF a 3 geram specs, PRDs e PRPs detalhados com Grill Me — a IA não escreve uma linha de código antes que os requisitos estejam validados |
 | **2. Agentes especializados por fase** | Cada etapa tem um agente com contexto restrito: o arquiteto não implementa, o dev não define requisitos |
-| **3. Quality gates em cada transição** | 15 human gates + 1 checkpoint visual + QA gates + Gate 11-ARCH (fitness functions) — nenhum artefato avança sem validação |
+| **3. Quality gates em cada transição** | 25 human gates + 1 checkpoint visual + QA gates + Gate 11-ARCH (fitness functions) — nenhum artefato avança sem validação |
 | **4. TDD embutido nos PRPs** | Cada PRP define estratégia de testes (unitários, integração, E2E). O `code-health.py` monitora se agentes estão seguindo TDD |
 | **5. Revisão por pares (humanos e agentes)** | `<gate_result>` humano + `llc-impact-analyzer` automatizado + pre-commit hooks de validação |
 | **6. Rastreabilidade de requisitos a código** | Cadeia completa: Visão → Módulo → Spec → PRD → PRP → Tarefa → Commit. O `dependency-graph.yaml` + `impact-analyzer.py` garantem que mudanças propaguem corretamente |
@@ -461,7 +461,7 @@ O "problema dos 70%" (conceito de Addy Osmani, Google Chrome DX) descreve um pad
 | Degradação de contexto | ACE append-only: cada ação é atômica e verificável; `context_seed` mantém ~300 tokens de continuidade |
 | Edge cases ignorados | TDD + Grill Me + especificação antes de geração (spec-driven) |
 | IA não aprende com erros | `<learning_point>` registra lições; `<skill_feedback>` captura melhorias estruturais nos skills |
-| Dívida técnica invisível | 15 human gates + QA checkpoints: cada artefato passa por validação explícita antes de prosseguir |
+| Dívida técnica invisível | 25 human gates + QA checkpoints: cada artefato passa por validação explícita antes de prosseguir |
 
 O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + ferramentas estruturais (grafos, testes, gates, memória persistente) para que o conjunto entregue 100% de valor com a IA cobrindo o que ela faz bem e o humano decidindo nos 30% críticos.
 
@@ -474,7 +474,7 @@ O LLC não tenta fazer a IA chegar a 100% sozinha. Ele combina IA + humano + fer
 | **Definir objetivos** | O humano descreve o sistema (ingestion) ou responde à entrevista greenfield |
 | **Negociar escopo** | Grill Me: a IA pergunta, o humano responde. Suposições não validadas são bloqueadas |
 | **Supervisionar design** | CHECKPOINT VISUAL no subfluxo F4 → F5: protótipo não vira código sem aprovação |
-| **Aprovar releases** | 15 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
+| **Aprovar releases** | 25 human gates + QA checkpoints: cada artefato e cada onda passam por validação explícita |
 | **Registrar decisões** | `<gate_result>` no ACE fecha o loop de accountability |
 
 Agentes melhoram o retorno da atenção humana — não a substituem. Um engenheiro que antes passava 4h escrevendo specs agora passa 30 minutos revisando e aprovando specs geradas pela IA.
@@ -541,8 +541,8 @@ O LLC tem **3 skills de seguranca** que operam em momentos diferentes do pipelin
 
 | Skill | Step | Quando executa | O que verifica | Gate |
 |-------|------|---------------|----------------|------|
-| `llc-step-11-security` | Step 11 | **Pre-implementacao** (antes de codar) | SCA (dependencias), SAST (Semgrep), Secrets (Gitleaks) | Bloqueia em CVSS >= 9.0 ou secret real |
-| `llc-step-12-null-safety` | Step 12 | **Pre-implementacao** (antes de codar) | Nulabilidade nos PRPs: campos sem `?`/`Optional`, fallbacks ausentes, inconsistencias entre PRPs | Bloqueia em campos sem especificacao de nulabilidade |
+| `llc-step-11-security` | Step 10.6 | **Pre-implementacao** (antes de codar) | SCA (dependencias), SAST (Semgrep), Secrets (Gitleaks) | Bloqueia em CVSS >= 9.0 ou secret real |
+| `llc-step-12-null-safety` | Step 10.7 | **Pre-implementacao** (antes de codar) | Nulabilidade nos PRPs: campos sem `?`/`Optional`, fallbacks ausentes, inconsistencias entre PRPs | Bloqueia em campos sem especificacao de nulabilidade |
 | `llc-step-11-owasp-security` | Step 11.1 | **Pos-implementacao** (depois de codar) | Hardening OWASP Top 10: access control, crypto, injection, design, misconfig, auth, logging, SSRF | Bloqueia em 1+ verificacao critica |
 
 **Fluxo completo de seguranca:**
@@ -750,7 +750,7 @@ Essas ferramentas podem ser adicionadas ao pipeline CI/CD definido no `docs/DEPL
 
 ### Quantas etapas tem o LLC?
 
-14 etapas principais + 5 auxiliares + 2 delta (21 no total), 23 skills (incluindo 1 subfluxo composto de prototipagem + 2 delta + 1 smart-skip). O pipeline vai da ingestao de conhecimento de negocio ao deploy, com suporte a mudancas em sistemas existentes via fluxo delta:
+22 etapas pipeline + 2 delta (24 no total), 26+ skills (incluindo 1 subfluxo composto de prototipagem + 2 delta + 1 smart-skip). O pipeline vai da ingestao de conhecimento de negocio ao deploy, com suporte a mudancas em sistemas existentes via fluxo delta:
 
 > **Principais (14):** Steps numerados sequenciais — 0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.
 > **Auxiliares (5):** 0-GF (alternativa greenfield), 10.5 (manual do usuario), 11-SEC (auditoria pre-code),

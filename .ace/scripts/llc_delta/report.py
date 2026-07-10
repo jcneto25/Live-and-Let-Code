@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
-"""Leitura e parsing do DELTA_REPORT.md."""
+"""Leitura e parsing do DELTA_REPORT.md.
+
+Robusto a acentos (F-04): o template DELTA_REPORT_TEMPLATE.md usa
+ortografia portuguesa acentuada ("Alteração", "Necessários",
+"Classificação", "Iteração proposta") mas versões legadas/ASCII também
+são aceitas. O parser normaliza diacriticos antes de casar.
+"""
 
 import re
+import unicodedata
 
 from .paths import DELTA_REPORT_PATH
+
+
+def _strip_accents(text: str) -> str:
+    """Remove diacriticos (acentos) para matching insensivel a acentuacao.
+    NFC -> NFKD separa base + combining marks -> encode ascii descarta marks."""
+    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
 
 def delta_report_exists() -> bool:
@@ -26,6 +39,8 @@ def parse_delta_report() -> dict | None:
         return None
 
     content = DELTA_REPORT_PATH.read_text(encoding="utf-8")
+    # Conteudo normalizado (sem acentos) para regex/substring insensivel a acento.
+    norm = _strip_accents(content)
 
     result = {
         "change_type": "unknown",
@@ -36,17 +51,18 @@ def parse_delta_report() -> dict | None:
         "new_prps": [],
     }
 
-    # Extrai iteracao do §1
-    m = re.search(r"Iteracao proposta\s*\|\s*`(v[\d.]+)`", content)
+    # Extrai iteracao do §1 (casa "Iteracao proposta" e "Iteração proposta")
+    # O template usa bold: | **Iteração proposta** | `v2.0` | — \** permite os **.
+    m = re.search(r"Iteracao proposta\**\s*\|\s*`(v[\d.]+)`", norm)
     if m:
         result["iteration"] = m.group(1)
 
-    # Extrai classificacao
-    m = re.search(r"Classificacao\s*\|\s*`(\w+)`", content)
+    # Extrai classificacao (casa "Classificacao" e "Classificação")
+    m = re.search(r"Classificacao\**\s*\|\s*`(\w+)`", norm)
     if m:
         result["change_type"] = m.group(1).lower()
 
-    # Extrai steps a executar (§5.1)
+    # Extrai steps a executar (§5.1) — header sem acento no template
     in_execute = False
     in_skip = False
     for line in content.split("\n"):
@@ -71,39 +87,47 @@ def parse_delta_report() -> dict | None:
         if in_skip and stripped.startswith("|") and not stripped.startswith("|---"):
             parts = [p.strip() for p in stripped.split("|")[1:-1]]
             if parts and len(parts) >= 2:
-                skip_entry = {
-                    "step_id": parts[0].strip(),
-                    "reason": parts[1].strip(),
-                    "artifacts_reused": parts[2].strip() if len(parts) > 2 else "",
-                }
-                result["skip_steps"].append(skip_entry)
-                # Muda in_skip para False apos ler a linha (so espera uma linha da tabela)
-                # Na verdade, a tabela tem multiplas linhas, entao mantemos True
+                step_id = parts[0].strip()
+                # Filtra linha de cabecalho "Step | Justificativa | ..." (F-05),
+                # espelhando o filtro que ja existe no bloco execute_steps.
+                if step_id and not step_id.lower() == "step":
+                    skip_entry = {
+                        "step_id": step_id,
+                        "reason": parts[1].strip(),
+                        "artifacts_reused": parts[2].strip() if len(parts) > 2 else "",
+                    }
+                    result["skip_steps"].append(skip_entry)
+                    # Muda in_skip para False apos ler a linha (so espera uma linha da tabela)
+                    # Na verdade, a tabela tem multiplas linhas, entao mantemos True
 
-    # Extrai PRPs afetados (§3.2)
+    # Extrai PRPs afetados (§3.2) — casa "Alteracao" e "Alteração"
+    # Pattern PRP-\d evita capturar header "PRP Original" como PRP real.
+    target_affected = _strip_accents("PRPs Existentes com Alteração (PRP-A)")
     in_affected = False
     for line in content.split("\n"):
-        if "PRPs Existentes com Alteracao (PRP-A)" in line:
+        if target_affected in _strip_accents(line):
             in_affected = True
             continue
         if in_affected and line.startswith("|") and not line.startswith("|---"):
             parts = [p.strip() for p in line.split("|")[1:-1]]
-            if parts and len(parts) >= 1 and parts[0].startswith("PRP-"):
+            if parts and re.match(r"PRP-\d", parts[0]):
                 result["affected_prps"].append(parts[0])
-        elif in_affected and not line.startswith("|"):
+        elif in_affected and not line.startswith("|") and line.strip():
             in_affected = False
 
-    # Extrai novos PRPs (§4)
+    # Extrai novos PRPs (§4) — casa "Necessarios" e "Necessários"
+    # Pattern PRP-N-\d evita capturar header "PRP-N" como PRP real.
+    target_new = _strip_accents("Novos PRPs Necessários (PRP-N)")
     in_new = False
     for line in content.split("\n"):
-        if "Novos PRPs Necessarios (PRP-N)" in line:
+        if target_new in _strip_accents(line):
             in_new = True
             continue
         if in_new and line.startswith("|") and not line.startswith("|---"):
             parts = [p.strip() for p in line.split("|")[1:-1]]
-            if parts and len(parts) >= 1 and parts[0].startswith("PRP-"):
+            if parts and re.match(r"PRP-N-\d", parts[0]):
                 result["new_prps"].append(parts[0])
-        elif in_new and not line.startswith("|"):
+        elif in_new and not line.startswith("|") and line.strip():
             in_new = False
 
     return result

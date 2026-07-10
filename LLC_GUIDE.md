@@ -167,7 +167,7 @@ Snippets prontos (Claude Code `PreToolUse` + `SessionStart`) em
 
 ## Passo a Passo
 
-### 📋 Visao Geral do Pipeline (14 principais + 5 auxiliares + 2 delta)
+### 📋 Visao Geral do Pipeline (22 etapas pipeline + 2 delta)
 
 ```
 Greenfield / Documentos novos:
@@ -190,7 +190,7 @@ Step 10  → Project Docs + Steering Files      👤 Gate 11
 Step 10.5 → Manual do Usuario                 👤 Gate 11.5
 Step 10.6 → Auditoria (SCA+SAST+Secrets)  👤 Gate 11-SEC
 Step 10.7 → Contratos de Dados            👤 Gate 12-NULL
-Step 10.8 → Cobertura de Testes               👤 Gate 10-COVERAGE
+Step 10.8 → Cobertura de Testes               👤 Gate 10.8
 Step 11  → Execucao (PRPs)                    QA Checkpoints
 Step 11.1 → Hardening (post-code)         👤 Gate 11-OWASP
 
@@ -416,7 +416,7 @@ Execute a skill docs/skills/llc-step-5a-architecture-patterns.md
 - `.ace/arch-config.yaml` — configuração completa das fitness functions (25+ rules)
 - `docs/architecture/adr/ADR-008` a `ADR-011` — ADRs para Repository Pattern, Domain Layer, Use Cases, Event Bus
 
-**Você valida:** 👤 Gate 6a (novo gate)
+**Você valida:** 👤 Gate 6a
 - Os padrões arquiteturais estão adequados ao projeto (greenfield vs brownfield)?
 - O `.ace/arch-config.yaml` reflete os módulos core corretos?
 - Os ADRs 008-011 estão criados e justificados?
@@ -458,7 +458,7 @@ Execute a skill docs/skills/llc-step-5b-api-design.md
 - Controllers NestJS atualizados conforme template
 - `.ace/arch-config.yaml` — Regras de API design ativadas
 
-**Você valida:** 👤 Gate 6b (novo gate)
+**Você valida:** 👤 Gate 6b
 - OpenAPI spec existe em `docs/api/openapi.yaml` e é válida?
 - Todos os controllers seguem o template padronizado?
 - Fitness functions `--check-api-design` passam sem bloqueios?
@@ -496,7 +496,7 @@ Execute a skill docs/skills/llc-step-5c-clean-code.md
 - `docs/architecture/adr/ADR-012` a `ADR-014` — ReadModels, Use Cases, Thresholds
 - Relatórios de violações por arquivo: linha, regra, sugestão de fix
 
-**Você valida:** 👤 Gate 8.5 (novo gate)
+**Você valida:** 👤 Gate 8.5
 - Fitness functions `--check-clean-code` passam sem **bloqueios**?
 - Zero injeção de `PrismaService` em services/use-cases?
 - Todos os repositórios retornam `XxxReadModel` tipado?
@@ -605,7 +605,7 @@ Execute a skill docs/skills/llc-step-8b-repository-pattern.md
 - `src/*/*.module.ts` — bindings DI atualizados
 - `src/*/*.service.ts` — services atualizados para usar interfaces
 
-**Você valida:** 👤 Gate 9b (novo gate)
+**Você valida:** 👤 Gate 9b
 - `grep -r "PrismaService" src/*/domain/ src/*/application/ src/*/use-cases/` — retorna vazio?
 - Interfaces existem para todos aggregate roots?
 - Implementações Prisma existem e delegam corretamente?
@@ -761,7 +761,7 @@ Execute a skill docs/skills/llc-step-10-8-test-coverage.md
 - Detecta regressão de cobertura > 5% vs. baseline anterior
 - Gera relatório em `docs/testing/COVERAGE_REPORT.md` no formato padrão
 
-**Voce valida:** 👤 Gate 10-COVERAGE
+**Voce valida:** 👤 Gate 10.8
 - 0 arquivos de implementação com 0% cobertura?
 - Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)?
 - Caminhos críticos ≥ 90%?
@@ -800,7 +800,7 @@ Execute a skill docs/skills/llc-step-11a-domain-modeling.md --prp PRP-001
 - Interfaces de repositório (se não existirem do Step 8b)
 - PRP atualizado com §7 completo
 
-**Você valida:** 👤 Gate 11-PRE (novo gate)
+**Você valida:** 👤 Gate 11-PRE
 - Entidades refletem as regras de negócio do PRP?
 - Use cases cobrem todos os RFs do PRP?
 - Interfaces de repositório são consistentes com Step 8b?
@@ -1091,7 +1091,7 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Prototipar um módulo | `Execute a skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Gerar manual do usuario | `Execute a skill docs/skills/llc-user-guide.md` |
 | Garantir que toda onda vire sessão no `.ace` | Instale o pre-commit: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (ver [§8.7](llc-pipeline-design.md#87-registro-garantido-de-sessões-session-enrollment-enforcement)) |
-| Verificar cobertura de testes (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
+| Verificar cobertura de testes (Gate 10.8) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
 | Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
 | Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver código health trends + fitness | `python .ace/scripts/code-health.py --since "30 days ago" --json --fitness` |

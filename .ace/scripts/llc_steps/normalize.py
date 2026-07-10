@@ -24,8 +24,12 @@ def normalize_step(raw) -> "StepSpec":
         s = raw.strip()
         if s in REGISTRY:
             return REGISTRY[s]
-        if s in _ALIAS_MAP:
-            return REGISTRY[_ALIAS_MAP[s]]
+        # Case-insensitive alias lookup (F-07): GATE_ALIASES/_get_gate_id already
+        # lowercase, so normalize_step must too — otherwise "Security"/"SECURITY"
+        # resolve via the gate CLI path but raise UnknownStepError here.
+        s_lower = s.lower()
+        if s_lower in _ALIAS_MAP:
+            return REGISTRY[_ALIAS_MAP[s_lower]]
         try:
             return normalize_step(float(s))
         except ValueError:

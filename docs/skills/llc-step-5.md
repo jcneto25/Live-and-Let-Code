@@ -8,7 +8,7 @@ version: 1.2.0
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** Architecture  
 **Depende de:** Step 4 (Planejamento validado)  
-**Sub-steps:** Step 5a (Architecture Patterns - **obrigatório**)  
+**Sub-steps:** Step 5a (Architecture Patterns - **obrigatório**), Step 5b (API Design Enforcement - **obrigatório**), Step 5c (Clean Code Enforcement - **obrigatório**)  
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill
@@ -108,23 +108,42 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
   python .ace/scripts/fitness-functions.py --all --strict
   ```
 
-### 10. Sub-Step Obrigatório: Step 5a — Architecture Patterns
+### 10. Sub-Steps Obrigatórios: 5a, 5b, 5c
 
-**Após concluir o Step 5, você DEVE executar o Step 5a (`llc-step-5a-architecture-patterns`)** para definir e documentar os padrões arquiteturais obrigatórios que serão enforceados durante toda a execução (Steps 8–11).
+**Após concluir o Step 5, você DEVE executar três sub-steps obrigatórios antes de prosseguir para o Step 6:**
 
-O Step 5a:
+#### Step 5a — Architecture Patterns (`llc-step-5a-architecture-patterns`)
+
 - Usa o template `docs/architecture/ARCHITECTURE_PATTERNS_TEMPLATE.md`
 - Define: Clean Architecture layers, Repository Pattern, Domain Layer puro, Use Cases, Event Bus
 - Gera/atualiza: `ARCHITECTURE.md` §7, §8, §9 + `.ace/arch-config.yaml` + ADRs 008–011
-- É **gate obrigatório** antes do Step 8 (Setup)
+- **Gate 6a** — obrigatório antes do Step 5b
 
-> ⚠️ **Não prossiga para o Step 8 sem completar o Step 5a.** Os padrões definidos no 5a são vinculantes e verificados por fitness functions automatizadas.
+> ⚠️ **Não prossiga para o Step 5b sem completar o Step 5a.** Os padrões definidos no 5a são vinculantes e verificados por fitness functions automatizadas.
+
+#### Step 5b — API Design Enforcement (`llc-step-5b-api-design`)
+
+- Valida REST semantics, naming consistency, pagination, OpenAPI spec, HATEOAS, versioning
+- Gera: `docs/api/openapi.yaml` + valida controllers contra template padronizado
+- **Gate 6b** — obrigatório antes do Step 5c
+
+> ⚠️ **Não prossiga para o Step 5c sem completar o Step 5b.** Os contratos de API definidos no 5b são vinculantes para a execução dos PRPs.
+
+#### Step 5c — Clean Code Enforcement (`llc-step-5c-clean-code`)
+
+- Consolida regras de Functions, Classes, Naming, Errors, Smells, ReadModels
+- Executa 21+ fitness functions automatizadas (`--check-functions`, `--check-naming`, `--check-classes`, `--check-errors`, `--check-smells`, `--check-readmodels`)
+- **Gate 8.5** — obrigatório antes do Step 6
+
+> ⚠️ **Não prossiga para o Step 6 sem completar o Step 5c.** As regras de Clean Code são verificadas por fitness functions em todo o pipeline de execução.
 
 ### 11. Saída
 - `docs/architecture/ARCHITECTURE.md` — documento principal (preencher template expandido)
 - `docs/architecture/adr/ADR-001-*.md` a `ADR-005-*.md` — ADRs individuais (Step 5)
 - `docs/architecture/adr/ADR-008-*.md` a `ADR-011-*.md` — ADRs de padrões (Step 5a)
 - `.ace/arch-config.yaml` — configuração das fitness functions (Step 5a)
+- `docs/api/openapi.yaml` — spec OpenAPI com REST semantics, paginação, versionamento (Step 5b)
+- ADRs de decisões de Clean Code (Step 5c)
 
 ---
 

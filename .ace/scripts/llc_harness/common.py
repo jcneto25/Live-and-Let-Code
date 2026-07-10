@@ -4,8 +4,10 @@
 import json
 from pathlib import Path
 
-ACE_DIR = Path(__file__).resolve().parent.parent
-SCRIPTS_DIR = ACE_DIR / "scripts"
+# common.py vive em .ace/scripts/llc_harness/common.py — 2 .parent para chegar
+# em .ace/scripts/, depois 1 .parent para chegar em .ace/.
+SCRIPTS_DIR = Path(__file__).resolve().parent.parent
+ACE_DIR = SCRIPTS_DIR.parent
 CONFIG_DIR = ACE_DIR / "config"
 SKILLS_DIR = Path("docs/skills")
 AGENTS_FILE = Path("AGENTS.md")

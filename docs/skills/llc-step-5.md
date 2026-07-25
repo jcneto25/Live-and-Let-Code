@@ -8,7 +8,7 @@ version: 1.2.0
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** Architecture  
 **Depende de:** Step 4 (Planejamento validado)  
-**Sub-steps:** Step 5a (Architecture Patterns - **obrigatório**), Step 5b (API Design Enforcement - **obrigatório**), Step 5c (Clean Code Enforcement - **obrigatório**)  
+**Sub-steps:** Step 5a (Architecture Patterns - **obrigatório**), Step 5b (API Design Enforcement - **obrigatório**), Step 5c (Clean Code Enforcement - **obrigatório**), Step 5d (Secure-by-Design - **obrigatório**)  
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill
@@ -108,9 +108,9 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
   python .ace/scripts/fitness-functions.py --all --strict
   ```
 
-### 10. Sub-Steps Obrigatórios: 5a, 5b, 5c
+### 10. Sub-Steps Obrigatórios: 5a, 5b, 5c, 5d
 
-**Após concluir o Step 5, você DEVE executar três sub-steps obrigatórios antes de prosseguir para o Step 6:**
+**Após concluir o Step 5, você DEVE executar quatro sub-steps obrigatórios antes de prosseguir para o Step 6:**
 
 #### Step 5a — Architecture Patterns (`llc-step-5a-architecture-patterns`)
 
@@ -133,9 +133,20 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 
 - Consolida regras de Functions, Classes, Naming, Errors, Smells, ReadModels
 - Executa 21+ fitness functions automatizadas (`--check-functions`, `--check-naming`, `--check-classes`, `--check-errors`, `--check-smells`, `--check-readmodels`)
-- **Gate 8.5** — obrigatório antes do Step 6
+- **Gate 8.5** — obrigatório antes do Step 5d
 
-> ⚠️ **Não prossiga para o Step 6 sem completar o Step 5c.** As regras de Clean Code são verificadas por fitness functions em todo o pipeline de execução.
+> ⚠️ **Não prossiga para o Step 5d sem completar o Step 5c.** As regras de Clean Code são verificadas por fitness functions em todo o pipeline de execução.
+
+#### Step 5d — Secure-by-Design Enforcement (`llc-step-5d-secure-by-design`)
+
+- Estabelece 10 hard gates de segurança (NUNCA hardcode secrets, NUNCA SQL com interpolação, etc.)
+- Executa threat modeling check (6 perguntas obrigatórias por feature)
+- Gera 4 safe code templates (piiEncryption, secureStorage, parameterizedQueries, entitlementValidation)
+- Configura 5 fitness functions de segurança (`--check-security`)
+- Gera: `.ace/arch-config.yaml` expandido com `security_rules`, `docs/architecture/adr/ADR-018-secure-by-design.md`
+- **Gate 5d** — obrigatório antes do Step 6
+
+> ⚠️ **Não prossiga para o Step 6 sem completar o Step 5d.** As regras de Secure-by-Design são injetadas em toda sessão subsequente de geração de código.
 
 ### 11. Saída
 - `docs/architecture/ARCHITECTURE.md` — documento principal (preencher template expandido)
@@ -144,6 +155,8 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 - `.ace/arch-config.yaml` — configuração das fitness functions (Step 5a)
 - `docs/api/openapi.yaml` — spec OpenAPI com REST semantics, paginação, versionamento (Step 5b)
 - ADRs de decisões de Clean Code (Step 5c)
+- `docs/architecture/adr/ADR-018-secure-by-design.md` — 10 hard gates, threat modeling, safe code templates (Step 5d)
+- `.ace/arch-config.yaml` expandido com `security_rules` (Step 5d)
 
 ---
 

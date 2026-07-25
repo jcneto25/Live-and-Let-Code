@@ -55,6 +55,16 @@ from .checks_clean import (
     check_readmodel_exists,
     check_repo_returns_readmodel,
 )
+from .checks_deep_clean import (
+    check_max_function_lines_deep,
+    check_no_cqs_violation,
+    check_no_data_clump,
+    check_no_flag_arguments,
+    check_no_missing_validation,
+    check_no_null_return,
+    check_no_pass_through,
+    check_no_primitive_obsession,
+)
 from .runner import format_human, run_checks
 from .cli import main
 
@@ -93,6 +103,14 @@ __all__ = [
     "check_prefer_const",
     "check_readmodel_exists",
     "check_repo_returns_readmodel",
+    "check_no_cqs_violation",
+    "check_no_null_return",
+    "check_no_data_clump",
+    "check_no_flag_arguments",
+    "check_no_primitive_obsession",
+    "check_max_function_lines_deep",
+    "check_no_missing_validation",
+    "check_no_pass_through",
     "format_human",
     "run_checks",
     "main",

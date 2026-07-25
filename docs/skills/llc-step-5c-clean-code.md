@@ -10,7 +10,7 @@ tags: [clean-code, functions, classes, naming, errors, smells, readmodels, solid
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** Architecture (sub-step of Step 5 — after Step 5b API Design Enforcement)  
 **Depende de:** Step 5b (API Design Enforcement validado)  
-**Executa antes de:** Step 6 (Tasks) e Step 8 (Setup + Mock)  
+**Executa antes de:** Step 5d (Secure-by-Design), Step 6 (Tasks), Step 8 (Setup + Mock)  
 **Mantenedor:** Equipe LLC
 
 ---
@@ -54,7 +54,7 @@ tags: [clean-code, functions, classes, naming, errors, smells, readmodels, solid
      **Validador:** [Nome] | **Data:** [YYYY-MM-DD]
      ```
    - **Não execute** as verificações nem aguarde Gate 8.5.
-   - Avance para Step 6.
+   - Avance para Step 5d.
 
 ---
 
@@ -193,7 +193,7 @@ Ao executar esta skill, o agente deve:
 6. **Validar** via fitness functions automatizadas
 7. **Aguardar** validação humana (Gate 8.5) antes de prosseguir
 
-**NÃO prossiga para Step 6 (Tasks) sem Gate 8.5 aprovado.**
+**NÃO prossiga para Step 5d (Secure-by-Design) sem Gate 8.5 aprovado.**
 
 ---
 

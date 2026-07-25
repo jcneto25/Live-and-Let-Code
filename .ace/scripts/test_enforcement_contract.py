@@ -616,14 +616,14 @@ def test_f10_delta_report_template_uses_correct_gate_key():
 
 # ── F-11: quickstart message reflects actual step range (not misleading) ──
 # The old message said "Gates incluídos: 1, 4, 11" but --quickstart runs
-# pipeline_steps('0.5','11') = 16 steps with all their gates.
+# pipeline_steps('0.5','11') = 22 steps with all their gates.
 
 
-def test_f11_quickstart_runs_21_steps():
-    """--quickstart sets from=0.5, to=11 which yields 21 pipeline steps
-    (17 original + 5.1/5.2/5.3/8.1/10.9 sub-steps from F-14)."""
+def test_f11_quickstart_runs_22_steps():
+    """--quickstart sets from=0.5, to=11 which yields 22 pipeline steps
+    (17 original + 5.1/5.2/5.3/5.4/8.1/10.9 sub-steps from F-14)."""
     specs = llc_steps.pipeline_steps("0.5", "11")
-    assert len(specs) == 21, f"expected 21 steps, got {len(specs)}: {[s.id for s in specs]}"
+    assert len(specs) == 22, f"expected 22 steps, got {len(specs)}: {[s.id for s in specs]}"
 
 
 def test_f11_quickstart_message_is_accurate():
@@ -643,7 +643,7 @@ def test_f11_quickstart_message_is_accurate():
         f"old misleading quickstart message still present: {output}"
     )
     # The new accurate message must mention 16 steps or the 0.5→11 range
-    assert "16 steps" in output or "21 steps" in output or "0.5 → 11" in output or "0.5->11" in output, (
+    assert "22 steps" in output or "0.5 → 11" in output or "0.5->11" in output, (
         f"new quickstart message missing step count/range: {output}"
     )
 
@@ -739,6 +739,7 @@ def test_f13_non_js_project_skips_npx(monkeypatch, tmp_path):
     ("5.1", "5a", "6a", "llc-step-5a-architecture-patterns"),
     ("5.2", "5b", "6b", "llc-step-5b-api-design"),
     ("5.3", "5c", "8.5", "llc-step-5c-clean-code"),
+    ("5.4", "5d", "5d", "llc-step-5d-secure-by-design"),
     ("8.1", "8b", "9b", "llc-step-8b-repository-pattern"),
     ("10.9", "11a", "11-PRE", "llc-step-11a-domain-modeling"),
 ])
@@ -752,7 +753,7 @@ def test_f14_sub_step_wired_in_registry(step_id, alias, gate, skill_file):
 
 
 @pytest.mark.parametrize("alias,expected_id", [
-    ("5a", "5.1"), ("5b", "5.2"), ("5c", "5.3"),
+    ("5a", "5.1"), ("5b", "5.2"), ("5c", "5.3"), ("5d", "5.4"),
     ("8b", "8.1"), ("11a", "10.9"), ("11b", "11.3"),
 ])
 def test_f14_sub_step_aliases_resolve(alias, expected_id):
@@ -764,6 +765,7 @@ def test_f14_sub_step_aliases_resolve(alias, expected_id):
     ("5.1", "6a", 5),
     ("5.2", "6b", 6),
     ("5.3", "8.5", 6),
+    ("5.4", "5d", 5),
     ("8.1", "9b", 5),
     ("10.9", "11-PRE", 4),
 ])
@@ -788,13 +790,13 @@ def test_f14_step_11_3_uses_detailed_skill():
 
 
 def test_f14_pipeline_includes_sub_steps():
-    """pipeline_steps(0.5, 11.1) must include the 5 new sub-steps in order."""
+    """pipeline_steps(0.5, 11.1) must include the 6 new sub-steps in order."""
     specs = llc_steps.pipeline_steps("0.5", "11.1")
     ids = [s.id for s in specs]
-    assert "5.1" in ids and "5.2" in ids and "5.3" in ids
+    assert "5.1" in ids and "5.2" in ids and "5.3" in ids and "5.4" in ids
     assert "8.1" in ids and "10.9" in ids
-    # Verify ordering: 5.1/5.2/5.3 after 5, before 6
-    assert ids.index("5") < ids.index("5.1") < ids.index("5.2") < ids.index("5.3") < ids.index("6")
+    # Verify ordering: 5.1/5.2/5.3/5.4 after 5, before 6
+    assert ids.index("5") < ids.index("5.1") < ids.index("5.2") < ids.index("5.3") < ids.index("5.4") < ids.index("6")
     # 8.1 after 8, before 9
     assert ids.index("8") < ids.index("8.1") < ids.index("9")
     # 10.9 after 10.8, before 11

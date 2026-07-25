@@ -1,7 +1,7 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Version:** 1.5.0
-**Date:** June 4, 2026 (updated June 13, 2026)  
+**Version:** 1.8.0
+**Date:** July 25, 2026  
 **Status:** Design Approved  
 **Project:** Live and Let Code (LLC) — Agentic Autonomous Development Methodology  
 **Author:** LLC Team  
@@ -29,7 +29,7 @@ Live and Let Code (LLC) is an agentic software development methodology that stru
 This document specifies:
 
 - The LLC directory architecture (§2)
-- The complete pipeline with 22 pipeline steps + 2 delta steps (§3)
+- The complete pipeline with 23 pipeline steps + 2 delta steps (§3)
 - The skills catalog (§4)
 - The agentic prototyping subflow (§5)
 - The human gate system (§6)
@@ -49,7 +49,7 @@ LLC is organized into 5 conceptual layers from foundation to delivery:
 | **1. Context** | Context window, session continuity, token compression | ACE `<context_seed>` (~300 tokens, 93% reduction), Document Hierarchy in AGENTS.md, compressed documentation index, prompt caching strategy, append-only sessions |
 | **2. Knowledge** | Domain artifacts, specifications, architectural decisions | Strategic vision, 7 specs (glossary, FR, NFR, business rules, BPMN, profiles, integrations), PRDs (executive + technical), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agents** | Who executes, how they reason, with which rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, ACE handoff), per-step roles (analyst, spec writer, architect, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, validation gates, orchestration | 22 pipeline steps + 2 delta, 25 human gates + visual checkpoint, `<gate_result>`, execution waves, PRRS (7 analysis prisms), dependency matrix, impact-analyzer.py |
+| **4. Workflows** | Pipeline, validation gates, orchestration | 23 pipeline steps + 2 delta, 26 human gates + visual checkpoint, `<gate_result>`, execution waves, PRRS (7 analysis prisms), dependency matrix, impact-analyzer.py |
 | **5. Delivery** | Parallel execution, structural quality, deployment | Auto git worktrees (Step 11), code-health.py (4 metrics), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -83,7 +83,7 @@ The harness is "thin" by design: it does not implement tool-calling, does not de
 | **Replay Stats** (`replay_stats.py`) | Metrics dashboard: hit rate, success rate, token savings | — |
 
 ```
-FAT SKILLS (Markdown)     ← docs/skills/ (21 files)
+FAT SKILLS (Markdown)     ← docs/skills/ (23 files)
      ↑
 THIN HARNESS (Python)     ← .ace/scripts/llc.py + llc_harness.py (~390 lines)
      ↑  + llc_classify.py + llc_replay.py (Early Commitment + Replay)
@@ -160,7 +160,7 @@ project-root/
 │   │   ├── COVERAGE_PROGRESS_TEMPLATE.md
 │   │   └── *.md                                # [OUTPUT]
 │   │
-│   ├── skills/                                 # LLC Skills (tool-agnostic — 21 files)
+│   ├── skills/                                 # LLC Skills (tool-agnostic — 23 files)
 │   │   ├── llc-step-0-greenfield.md
 │   │   ├── llc-step-0-1.md
 │   │   ├── llc-step-0-5.md
@@ -169,6 +169,7 @@ project-root/
 │   │   ├── llc-step-3.md
 │   │   ├── llc-step-4.md
 │   │   ├── llc-step-5.md
+│   │   ├── llc-step-5d-secure-by-design.md
 │   │   ├── llc-step-6.md
 │   │   ├── llc-step-7.md
 │   │   ├── llc-step-8.md
@@ -266,7 +267,10 @@ graph TD
     S4 --> G5{👤 Gate 5}
     G5 -->|approved| S5[Step 5: AI → Architecture]
     S5 --> G6{👤 Gate 6}
-    G6 -->|approved| S6[Step 6: AI → Tasks]
+    G6 -->|approved| S5D[Step 5d: Secure-by-Design]
+    S5D --> G5D{👤 Gate 5d}
+    G5D -->|approved| S6[Step 6: AI → Tasks]
+    G5D -->|rejected| S5D
     S6 --> G7{👤 Gate 7}
     G7 -->|approved| S7[Step 7: AI → Design System]
     S7 --> G8{👤 Gate 8}
@@ -316,6 +320,7 @@ graph TD
 | 4 | Planning | PRPs | Dependency Matrix + Plan + Waves | — | 👤 5 |
 | 5 | Architecture | PRDs + NFR + Integrations + Planning | `ARCHITECTURE.md` | — | 👤 6 |
 | 5a | Architecture Patterns (mandatory) | Architecture + ADR templates + Arch config | `ARCHITECTURE.md` §7-9, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
+| 5d | Secure-by-Design | `.ace/arch-config.yaml` + ADRs from 5a | `.ace/arch-config.yaml` expanded, ADR-018, security fitness functions | — | 👤 5d |
 | 6 | Tasks | PRPs + Architecture + Planning | `TASKS.md` | — | 👤 7 |
 | 7 | Design System | Architecture + Vision + Profiles | `DESIGN_SYSTEM.md` | — | 👤 8 |
 | 8 | Setup + Mock | Architecture + Tasks + Design System | `mocks/` + initialized project | — | 👤 9 |
@@ -343,6 +348,7 @@ graph TD
 | 11.1 | OWASP Hardening (post-code) | Implemented code (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Blocks on 1+ critical |
 
 > **Security 3-layer model:** Security runs throughout the pipeline — not as a single gate.
+> **5d (Gate 5d)** (design-time) establishes 10 hard gates, threat modeling, and safe code templates during architecture.
 > **10.6 (Gate 11-SEC)** (pre-code) scans dependencies, code, and secrets. **10.7 (Gate 12-NULL)** (pre-code) validates data contracts.
 > Both run BEFORE Step 11 (Execution). After PRPs are implemented, **11.1 (Gate 11-OWASP)** (post-code) hardens against
 > OWASP Top 10. This matches the FAQ's documented security flow.
@@ -383,7 +389,7 @@ into `run_wave()` and runs automatically for PRPs identified as UI via `_is_ui_p
 
 ## 4. Skills Catalog
 
-21 skills in `docs/skills/`. Each is a Markdown file with YAML frontmatter — tool-agnostic, executable by any terminal AI client.
+23 skills in `docs/skills/`. Each is a Markdown file with YAML frontmatter — tool-agnostic, executable by any terminal AI client.
 
 | Skill | Step | Description |
 |-------|------|-------------|
@@ -396,6 +402,9 @@ into `run_wave()` and runs automatically for PRPs identified as UI via `_is_ui_p
 | `llc-step-4` | 4 | Dependency Matrix + Plan + Execution Waves |
 | `llc-step-5` | 5 | Architecture (Stack, C4, ADRs, CI/CD) |
 | `llc-step-5a-architecture-patterns` | 5a | Architecture Patterns — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
+| `llc-step-5b-api-design` | 5b | API Design Enforcement — REST semantics, OpenAPI, pagination, HATEOAS, versioning |
+| `llc-step-5c-clean-code` | 5c | Clean Code Enforcement — Functions, Classes, Naming, Errors, Smells, ReadModels (21+ fitness functions) |
+| `llc-step-5d-secure-by-design` | 5d | Establishes 10 hard security gates, threat modeling, safe code templates and 5 security fitness functions |
 | `llc-step-6` | 6 | TASKS.md with concrete tasks, agents, and estimates |
 | `llc-step-7` | 7 | Design System (tokens, components, patterns) |
 | `llc-step-8` | 8 | Project setup + Mock data layer (JSON + mock handlers, e.g., MSW for JS/TS) |
@@ -440,6 +449,7 @@ Invoked **within Step 11 (Execution)** for each UI module or PRP.
 | 👤 4 | 3 | PRP granularity correct? Dependencies make sense? |
 | 👤 5 | 4 | Waves well-grouped? Critical path realistic? |
 | 👤 6 | 5 | Stack viable? ADRs justified? NFRs addressed? |
+| 👤 5d | 5d | Do the 10 hard gates make sense? Templates adapted to stack? fitness-functions --check-security passed? ADR-018 created? |
 | 👤 7 | 6 | Tasks actionable? Agents correctly assigned? |
 | 👤 8 | 7 | Design System reflects project identity? All states defined? |
 | 👤 9 | 8 | Project runs? Mock data realistic? Handlers cover core? |
@@ -742,6 +752,7 @@ When alerts fire, apply corrective actions in order:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.8.0 | 07/25/2026 | LLC Team | Added Step 5d (Secure-by-Design): 10 hard security gates, threat modeling check, 4 safe code templates, 5 security fitness functions, Gate 5d |
 | 1.6.0 | 06/26/2026 | LLC Team | Canonical `normalize_step()` + `llc_steps.REGISTRY` (single source of truth for step identity). Renumbered so step number == pipeline sequence: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execution stays 11). Added `llc_step_id` canonical field to session frontmatter + `index.json` (alongside numeric `llc_step`); CLI `--step` accepts ids/aliases (`security`, `owasp`, `null-safety`). Fixes #2/#3/#4 (textual steps unreachable, 10.5/10.6/10.7/11.1 invalid, non-deterministic `skill_load`). |
 | 1.5.0 | 06/13/2026 | LLC Team | Added Thin Harness (CLI orchestrator), Early Commitment + Deterministic Replay, security steps (11-Security, 11-OWASP, 12-Null-Safety), compressed documentation index, 15 human gates |
 | 1.4.0 | 06/12/2026 | LLC Team | Added Step 11-Security (SCA+SAST+secrets), Step 12-Null-Safety, auto git worktrees, prompt caching strategy |

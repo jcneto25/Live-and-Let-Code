@@ -29,7 +29,7 @@ REGISTRY: dict[str, "StepSpec"] = {
     "3": _spec("3", "PRPs", "llc-step-3", "4", True, False),
     "4": _spec("4", "Planejamento", "llc-step-4", "5", True, False),
     "5": _spec("5", "Arquitetura", "llc-step-5", "6", True, False),
-    # Sub-steps de arquitetura (F-14: wirear sub-skills 5a/5b/5c):
+    # Sub-steps de arquitetura (F-14: wirear sub-skills 5a/5b/5c/5d):
     "5.1": _spec(
         "5.1",
         "Architecture Patterns",
@@ -56,6 +56,15 @@ REGISTRY: dict[str, "StepSpec"] = {
         True,
         False,
         aliases=("5c", "clean-code"),
+    ),
+    "5.4": _spec(
+        "5.4",
+        "Secure-by-Design",
+        "llc-step-5d-secure-by-design",
+        "5d",
+        True,
+        False,
+        aliases=("5d", "secure-by-design"),
     ),
     "6": _spec("6", "Tarefas", "llc-step-6", "7", True, False),
     "7": _spec("7", "Design System", "llc-step-7", "8", True, False),

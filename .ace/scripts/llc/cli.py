@@ -177,7 +177,7 @@ def pipeline(from_step, to_step, task, quickstart, delta, iteration, auto_approv
         to_step = "11"
         print("\n🚀 LLC Pipeline Quickstart")
         print(f"{'=' * 60}")
-        print("Pipeline 0.5 → 11 (21 steps, todos os gates de especificação + segurança + arquitetura).")
+        print("Pipeline 0.5 → 11 (22 steps, todos os gates de especificação + segurança + arquitetura).")
         print("Modo completo (com OWASP/PRP-Verify/Arch-Fitness): llc pipeline --from 0 --to 11.1")
     elif delta:
         print(f"\n🚀 LLC Pipeline — Modo Delta (Iteracao: {iteration or 'N/A'})")

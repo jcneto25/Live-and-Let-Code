@@ -86,7 +86,21 @@
         "fitness-functions --check-classes passou (max lines, deps, DIP)?",
         "fitness-functions --check-errors passou (no empty exceptions/catch)?",
         "fitness-functions --check-smells passou (no magic numbers, dead code)?",
-        "fitness-functions --check-readmodels passou?"
+        "fitness-functions --check-readmodels passou?",
+        "fitness-functions --check-deep-clean passou (CQS, null, data clumps, flags, primitives)?",
+        "Violacoes block do Deep Clean resolvidas (no-cqs-violation, no-null-return, no-flag-arguments, no-missing-validation)?",
+        "Violacoes warn do Deep Clean registradas em divida tecnica (no-data-clump, no-primitive-obsession, no-pass-through, max-function-lines-deep)?"
+      ]
+    },
+    "5d": {
+      "step": 5.4,
+      "label": "Secure-by-Design",
+      "checklist": [
+        "As 10 hard gates fazem sentido para o dominio do projeto?",
+        "Algum template precisa de adaptacao ao stack especifico?",
+        "Fitness functions --check-security --strict passaram sem bloqueios?",
+        "ADR-018 criado e justificado?",
+        "Excecoes documentadas (ex: projeto sem banco de dados → regra #10 nao se aplica)?"
       ]
     },
     "9b": {
@@ -119,6 +133,18 @@
         "Estimativas realistas?"
       ]
     },
+    "7a": {
+      "step": 7.1,
+      "label": "UX Heuristics & Personas",
+      "checklist": [
+        "As personas sao representativas do publico real do projeto?",
+        "As 10 hard gates de UX fazem sentido para o tipo de aplicacao?",
+        "Nielsen Checklist foi aplicado a pelo menos 1 tela como exercicio?",
+        "Os 4 padroes de implementacao (useForm, FormField, showErrorAlert, i18n) sao compativeis com o stack?",
+        "Algum anti-padrao e particularmente relevante para este dominio?",
+        "Excecoes documentadas?"
+      ]
+    },
     "8": {
       "step": 7,
       "label": "Design System",
@@ -146,6 +172,18 @@
         "Templates reutilizaveis?"
       ]
     },
+    "9a": {
+      "step": 9.1,
+      "label": "TDD Discipline",
+      "checklist": [
+        "As 7 hard gates de TDD fazem sentido para o stack e dominio do projeto?",
+        "Os padroes de mock (Test Data Builder, Constructor Injection) sao compativeis com a arquitetura?",
+        "A equipe entende o ciclo RED → GREEN → REFACTOR com commits por fase?",
+        "O campo tdd_phase esta configurado no context_seed das sessoes Step 11?",
+        "O pre-commit hook pre-commit-tests.sh esta configurado e funcional?",
+        "Excecoes documentadas (ex: projeto sem async → delays irrelevantes)?"
+      ]
+    },
     "11": {
       "step": 10,
       "label": "Project Docs",
@@ -153,6 +191,19 @@
         "README permite onboarding <= 10 min?",
         "DEPLOYMENT cobre rollback?",
         "Sem secrets expostos?"
+      ]
+    },
+    "10a": {
+      "step": 10.1,
+      "label": "DevOps Bootstrap",
+      "checklist": [
+        "CI pipeline esta funcional e passando (pelo menos lint + build + test)?",
+        "Feature flags estao corretas para o dominio? Kill-switches criticos definidos?",
+        "Observabilidade cobre os cenarios de falha relevantes (crash reporting + logging)?",
+        "Dependabot configurado com frequencia adequada ao ciclo de sprint?",
+        "SBOM gerado automaticamente no CI?",
+        "DevOps checklist cobre todos os ambientes (dev, staging, prod)?",
+        "Stack adaptation correta (Node/Python/Go — comandos batem com a realidade)?"
       ]
     },
     "11-SEC": {

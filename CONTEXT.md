@@ -9,7 +9,7 @@ Unidade atomica do pipeline LLC. Cada step tem entradas (artefatos), saidas (nov
 _Avoid_: Etapa, fase, estagio
 
 **Gate**:
-Checkpoint de validacao humana ao final de cada step. O agente propoe, o humano revisa uma checklist e aprova ou rejeita. 25 gates no total.
+Checkpoint de validacao humana ao final de cada step. O agente propoe, o humano revisa uma checklist e aprova ou rejeita. 26 gates no total.
 _Avoid_: Aprovacao, checkpoint, revisao
 
 **PRP (Project Requirement Proposal)**:

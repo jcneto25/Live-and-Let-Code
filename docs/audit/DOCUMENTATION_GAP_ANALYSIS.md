@@ -4,7 +4,7 @@
 **Data:** 2026-07-10
 **Baseline:** Repo state após correções F-01 a F-14 do `WORKFLOW_LOGIC_AUDIT.md`
 **Suíte:** 153 passed
-**Escopo:** Verificar se a documentação (LLC_GUIDE, pipeline-design, FAQ, README, AGENTS.md, skills) reflete o estado atual do código (REGISTRY com 28 entries, gates.json com 25 gates, CLI com sub-steps 5a/5b/5c/8b/11a/11b wired).
+**Escopo:** Verificar se a documentação (LLC_GUIDE, pipeline-design, FAQ, README, AGENTS.md, skills) reflete o estado atual do código (REGISTRY com 29 entries, gates.json com 26 gates, CLI com sub-steps 5a/5b/5c/5d/8b/11a/11b wired).
 
 ---
 
@@ -41,14 +41,14 @@ A auditoria identificou **7 defeitos HIGH**, **11 MEDIUM** e **8 LOW** distribu�
 | D-08 | `LLC_GUIDE.md` | 173-201 | Diagrama overview omita 8.1 (Repository Pattern) e 10.9 (Domain Modeling) |
 | D-09 | `LLC_GUIDE.md` | 867-890 | Passo 11b folda arch-fitness em "Gate 11.2"; código tem step separado 11.3 com gate 11-ARCH |
 | D-10 | `LLC_GUIDE.md` | 17-27 | Quickstart diz "3 gates (1, 4, 11)"; atual = 21 steps com todos os gates |
-| D-11 | `LLC_GUIDE.md` | 170 | Header "14 principais + 5 auxiliares + 2 delta" (=21); atual = 22 pipeline + 2 delta = 24 |
+| D-11 | `LLC_GUIDE.md` | 170 | Header "14 principais + 5 auxiliares + 2 delta" (=21); atual = 23 pipeline + 2 delta = 25 |
 | D-12 | `llc-pipeline-design.md` + `.en.md` | 569, 452 | Gate "10-COVERAGE" em vez de gates.json key "10.8" |
 | D-13 | `llc-step-8.md` | 222-231 | Confla Gate 9 com Gate 9b (são gates separados no código) |
 | D-14 | `llc-step-11.md` | 12, 28-29 | Pré-requisitos usam "Step 11-Security"/"Step 12-Null-Safety" (deprecated); canônico 10.6/10.7 |
 | D-15 | `llc-step-11.md` | 22-34 | Pré-requisitos não incluem Test Coverage Gate (10.8) |
 | D-16 | `llc-step-11.md` | 288 | Não referencia step 11.3 (11-ARCH) como requisito de fechamento |
-| D-17 | `AGENTS.md` | 446 | "12+ steps, 20 gates" — stale (28 steps, 25 gates) |
-| D-18 | `FAQ.md` + `FAQ.en.md` | 11, 22, 348, 753 | "21 skills, 15 human gates" — stale (≈26 skills, 25 gates) |
+| D-17 | `AGENTS.md` | 446 | "12+ steps, 20 gates" — stale (29 steps, 26 gates) |
+| D-18 | `FAQ.md` + `FAQ.en.md` | 11, 22, 348, 753 | "21 skills, 15 human gates" — stale (≈27 skills, 26 gates) |
 
 ### LOW (8)
 
@@ -69,18 +69,18 @@ A auditoria identificou **7 defeitos HIGH**, **11 MEDIUM** e **8 LOW** distribu�
 
 | Arquivo | Linha | Diz | Deveria ser |
 |---------|-------|-----|-------------|
-| `LLC_GUIDE.md` | 170 | "14 principais + 5 aux + 2 delta" (=21) | 22 pipeline + 2 delta = 24 |
-| `llc-pipeline-design.md` | 30 | "14 etapas principais" | 22 pipeline steps |
-| `llc-pipeline-design.md` | 51 | "14 steps, 15 human gates" | 22 steps, 25 gates |
-| `llc-pipeline-design.en.md` | 32 | "14 main steps" | 22 pipeline steps |
-| `llc-pipeline-design.en.md` | 52 | "14 steps, 15 human gates" | 22 steps, 25 gates |
-| `FAQ.md` | 11 | "21 skills, 15 human gates" | ≈26 skills, 25 gates |
-| `FAQ.md` | 22 | "14 steps, 15 human gates" | 22 steps, 25 gates |
-| `FAQ.md` | 753 | "14+5+2=21 total, 23 skills" | 22+2=24 total, ≈26 skills |
-| `FAQ.en.md` | 11 | "21 skills, 15 human gates" | ≈26 skills, 25 gates |
-| `FAQ.en.md` | 22 | "14 steps, 15 human gates" | 22 steps, 25 gates |
-| `README.md` | 11, 20 | "5 auxiliares, 23 skills" | 7 auxiliares (5a/5b/5c/8b/10.5/10.8/10.9), ≈26 skills |
-| `AGENTS.md` | 446 | "12+ steps, 20 gates" | 28 steps, 25 gates |
+| `LLC_GUIDE.md` | 170 | "14 principais + 5 aux + 2 delta" (=21) | 23 pipeline + 2 delta = 25 |
+| `llc-pipeline-design.md` | 30 | "14 etapas principais" | 23 pipeline steps |
+| `llc-pipeline-design.md` | 51 | "14 steps, 15 human gates" | 23 steps, 26 gates |
+| `llc-pipeline-design.en.md` | 32 | "14 main steps" | 23 pipeline steps |
+| `llc-pipeline-design.en.md` | 52 | "14 steps, 15 human gates" | 23 steps, 26 gates |
+| `FAQ.md` | 11 | "21 skills, 15 human gates" | ≈27 skills, 26 gates |
+| `FAQ.md` | 22 | "14 steps, 15 human gates" | 23 steps, 26 gates |
+| `FAQ.md` | 753 | "14+5+2=21 total, 23 skills" | 23+2=25 total, ≈27 skills |
+| `FAQ.en.md` | 11 | "21 skills, 15 human gates" | ≈27 skills, 26 gates |
+| `FAQ.en.md` | 22 | "14 steps, 15 human gates" | 23 steps, 26 gates |
+| `README.md` | 11, 20 | "5 auxiliares, 23 skills" | 7 auxiliares (5a/5b/5c/5d/8b/10.5/10.8/10.9), ≈27 skills |
+| `AGENTS.md` | 446 | "12+ steps, 20 gates" | 29 steps, 26 gates |
 
 ---
 

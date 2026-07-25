@@ -2,9 +2,18 @@ repos:
   - repo: local
     hooks:
       - id: ace-validate
-        name: ACE — Cobertura de sessão + integridade do histórico
-        description: Verifica cobertura de sessão (commit com código exige sessão ACE registrada), integridade do index.json, context_seed, tags XML e consistência
+        name: ACE — Cobertura de sessão + integridade do histórico + secret scanning
+        description: Verifica cobertura de sessão (commit com código exige sessão ACE registrada), integridade do index.json, context_seed, tags XML, consistência e secrets hardcoded
         entry: bash .ace/scripts/pre-commit.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: ace-tests
+        name: ACE — Test Gate (placeholders + delays + execução)
+        description: "Detecta placeholders (expect(true).toBe(true)), delays hardcoded (setTimeout) em testes, executa test runner nos arquivos modificados. Stack-aware: Jest, Vitest, Pytest, Go test."
+        entry: bash .ace/scripts/pre-commit-tests.sh
         language: system
         pass_filenames: false
         always_run: true

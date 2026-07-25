@@ -138,7 +138,7 @@ Ready-made snippets (Claude Code `PreToolUse` + `SessionStart`) in
 
 ## Step by Step
 
-### 📋 Pipeline Overview (14 main + 5 auxiliary)
+### 📋 Pipeline Overview
 
 ```
 Step 0   → Document Ingestion
@@ -149,6 +149,10 @@ Step 2   → PRDs (Executive + Technical)       👤 Gate 3
 Step 3   → PRPs                                👤 Gate 4
 Step 4   → Planning                            👤 Gate 5
 Step 5   → Architecture                        👤 Gate 6
+Step 5a  → Architecture Patterns               👤 Gate 6a
+Step 5b  → API Design Enforcement              👤 Gate 6b
+Step 5c  → Clean Code Enforcement              👤 Gate 8.5
+Step 5d  → Secure-by-Design                   👤 Gate 5d
 Step 6   → Tasks                               👤 Gate 7
 Step 7   → Design System                       👤 Gate 8
 Step 8   → Setup + Mock Data                   👤 Gate 9
@@ -374,6 +378,40 @@ Execute the skill docs/skills/llc-step-5a-architecture-patterns.md
 - Is the intra-module folder structure defined?
 
 **Only advance when approved.**
+
+---
+
+### Step 5d: Secure-by-Design Enforcement (Mandatory)
+
+> **MANDATORY** — This sub-step must run after Step 5c and before Step 6.
+> Establishes 10 hard security gates that the agent loads before generating any code.
+
+**You do:**
+
+```
+Execute the skill docs/skills/llc-step-5d-secure-by-design.md
+```
+
+**The AI does:** Establishes the Secure-by-Design framework with:
+
+1. **10 Hard Gates** — unbreakable rules: NEVER hardcode secrets, NEVER use XOR/MD5, NEVER reuse IV, NEVER AsyncStorage for tokens, NEVER SQL with interpolation, NEVER log PII, NEVER fallback that grants privileges, NEVER validate premium client-only, NEVER AES-CBC, NEVER tables without user_id
+2. **Threat Modeling Check** — 6 mandatory questions before each feature (PII data? Storage? Protection at rest? In transit? Access? Fail-closed?)
+3. **4 Safe Code Templates** — piiEncryption (AES-256-GCM), secureStorage (fail-closed), parameterizedQueries (anti-injection), entitlementValidation (fail-safe)
+4. **5 Security Fitness Functions** — no-hardcoded-secrets, no-sql-injection, no-asyncstorage-tokens, no-client-only-auth, user-id-in-tables
+
+**Artifacts generated/updated:**
+- `.ace/arch-config.yaml` — expanded with `security_rules`
+- `docs/architecture/adr/ADR-018-secure-by-design.md`
+- Fitness functions `--check-security` configured
+
+**You validate:** 👤 Gate 5d
+- Do the 10 hard gates make sense for the project domain?
+- Does any template need adaptation to the specific stack?
+- Do fitness functions `--check-security --strict` pass without blocks?
+- Is ADR-018 created and justified?
+- Are exceptions documented (e.g., project without database → rule #10 doesn't apply)?
+
+**Only advance when you approve.**
 
 ---
 
@@ -709,8 +747,9 @@ The subflow has 6 phases:
                     🔴 = Mandatory visual checkpoint
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
-Step 4 ──👤──→ Step 5 ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
-Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→
+Step 4 ──👤──→ Step 5 ──👤──→ Step 5a ──👤──→ Step 5b ──👤──→ Step 5c ──👤──→ Step 5d ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
+Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
+Step 10.5 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→ Step 10.8 ──👤──→
 
 Step 11:
   ├── Non-UI PRPs → direct agent
@@ -842,6 +881,7 @@ Beyond the main steps, LLC includes tools that operate between stages. See [`llc
 | I want to... | Command |
 |--------------|---------|
 | Start the pipeline | `Execute the skill docs/skills/llc-step-0-1.md` (conversion) |
+| Run Secure-by-Design | `Execute a skill docs/skills/llc-step-5d-secure-by-design.md` |
 | Jump to a specific step | `Execute the skill docs/skills/llc-step-N.md` ensuring previous gates are approved |
 | Prototype a module | `Execute the skill docs/skills/llc-subflow-prototyping.md --module MOD-PLN-001` |
 | Guarantee every wave becomes an `.ace` session | Install the pre-commit hook: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit` (see [§8.7](llc-pipeline-design.en.md#87-guaranteed-session-registration-enforcement)) |

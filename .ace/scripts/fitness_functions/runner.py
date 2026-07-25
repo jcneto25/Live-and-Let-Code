@@ -29,6 +29,16 @@ from .checks_clean import (
     check_readmodel_exists,
     check_repo_returns_readmodel,
 )
+from .checks_deep_clean import (
+    check_max_function_lines_deep,
+    check_no_cqs_violation,
+    check_no_data_clump,
+    check_no_flag_arguments,
+    check_no_missing_validation,
+    check_no_null_return,
+    check_no_pass_through,
+    check_no_primitive_obsession,
+)
 from .config import severity_label
 
 
@@ -58,6 +68,15 @@ def run_checks(requested: list[str], config: dict, verbose: bool = False) -> dic
         "repo_returns_readmodel": check_repo_returns_readmodel,
         "no_any_in_public": check_no_any_in_public,
         "no_as_any": check_no_as_any,
+        # Deep Clean checks (Ação 4 — Harness Preventivo LLC)
+        "no_cqs_violation": check_no_cqs_violation,
+        "no_null_return": check_no_null_return,
+        "no_data_clump": check_no_data_clump,
+        "no_flag_arguments": check_no_flag_arguments,
+        "no_primitive_obsession": check_no_primitive_obsession,
+        "max_function_lines_deep": check_max_function_lines_deep,
+        "no_missing_validation": check_no_missing_validation,
+        "no_pass_through": check_no_pass_through,
     }
 
     if "all" in requested:

@@ -15,9 +15,22 @@ This document defines the security policy for the **Live and Let Code (LLC)** me
 
 ## 3. LLC Security Model
 
-The LLC methodology enforces security at **every stage** of the development lifecycle — not as a final gate before deploy. Security is integrated into the pipeline's 14 steps through 3 complementary layers:
+The LLC methodology enforces security at **every stage** of the development lifecycle — not as a final gate before deploy. Security is integrated into the pipeline through 3 complementary layers:
 
-### 3.1 Pre-Code Security (Step 10.6)
+### 3.1 Design-Time Prevention (Step 5d)
+
+Establishes security rules **during architecture**, before any code is written. Generates hard gates that the agent loads before every code generation session.
+
+- **10 hard gates:** NUNCA hardcode secrets, NUNCA SQL com interpolacao, NUNCA AsyncStorage para tokens, NUNCA logar PII, NUNCA fallback que conceda privilegios, NUNCA validar premium no client, NUNCA AES-CBC, NUNCA tabelas sem user_id, NUNCA XOR/MD5, NUNCA reusar IV
+- **Threat modeling:** 6 perguntas obrigatorias por feature (dados PII? armazenamento? protecao em repouso? em transito? acesso? fail-closed?)
+- **4 safe code templates:** piiEncryption (AES-256-GCM), secureStorage (fail-closed), parameterizedQueries (anti-injecao), entitlementValidation (fail-safe)
+- **5 fitness functions de seguranca:** `--check-security` validado no CI
+
+**Skill:** `docs/skills/llc-step-5d-secure-by-design.md`
+**Artefato:** `docs/architecture/adr/ADR-018-secure-by-design.md`
+**Gate:** 5d — bloqueia Step 6 se as 10 hard gates nao forem validadas.
+
+### 3.2 Pre-Code Security (Step 10.6)
 
 Executes automated tools **before** any PRP implementation begins:
 
@@ -31,7 +44,7 @@ Executes automated tools **before** any PRP implementation begins:
 **Relatorio:** `docs/security/SECURITY_AUDIT_REPORT.md` (template, instanciado por projeto)
 **Gate:** 11-SEC — blocks PRP execution on critical findings or real secrets.
 
-### 3.2 Design-Time Security (Step 10.7)
+### 3.3 Data Contracts Security (Step 10.7)
 
 Validates data contracts **before** code is written. Prevents null pointer exceptions, missing input schemas, undefined payload limits, and missing HTML sanitization at the PRP design level.
 
@@ -39,7 +52,7 @@ Validates data contracts **before** code is written. Prevents null pointer excep
 **Relatorio:** `docs/security/NULL_SAFETY_REPORT.md` (template, instanciado por projeto)
 **Gate:** Blocks implementation on fields without explicit nullability or endpoints without schema validation.
 
-### 3.3 Post-Code Security (Step 11.1)
+### 3.4 Post-Code Security (Step 11.1)
 
 After PRPs are implemented, performs manual/AI verification against the **OWASP Top 10:2021** — controls that automated tools cannot detect (e.g., ownership verification, business logic flaws, password policy enforcement).
 
@@ -60,7 +73,7 @@ After PRPs are implemented, performs manual/AI verification against the **OWASP 
 **Relatorio:** `docs/security/OWASP_HARDENING_REPORT.md` (template, instanciado por projeto)
 **Gate:** Blocks release on 1+ critical (🔴) finding.
 
-### 3.4 Relatorios de Seguranca
+### 3.5 Relatorios de Seguranca
 
 Cada relatorio acima e um **template** instanciado pela skill correspondente. Os templates canonicos ficam neste repositorio (`docs/security/SECURITY_AUDIT_REPORT_TEMPLATE.md`, `NULL_SAFETY_REPORT_TEMPLATE.md`); as instancias geradas (sem o sufixo `_TEMPLATE`) aparecem no `docs/security/` de cada projeto apos rodar a skill. O proprio repo da metodologia LLC contem suas versoes instanciadas, ja que o pipeline foi auditado contra si mesmo. Scans crus ficam em `.ace/security/` (nao versionados — regenerados a cada auditoria).
 

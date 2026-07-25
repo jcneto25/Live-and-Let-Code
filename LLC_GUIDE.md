@@ -167,7 +167,7 @@ Snippets prontos (Claude Code `PreToolUse` + `SessionStart`) em
 
 ## Passo a Passo
 
-### 📋 Visao Geral do Pipeline (22 etapas pipeline + 2 delta)
+### 📋 Visao Geral do Pipeline (23 etapas pipeline + 2 delta)
 
 ```
 Greenfield / Documentos novos:
@@ -182,6 +182,7 @@ Step 5   → Arquitetura                        👤 Gate 6
 Step 5a  → Architecture Patterns              👤 Gate 6a
 Step 5b  → API Design Enforcement             👤 Gate 6b
 Step 5c  → Clean Code Enforcement             👤 Gate 8.5
+Step 5d  → Secure-by-Design                   👤 Gate 5d
 Step 6   → Tarefas                            👤 Gate 7
 Step 7   → Design System                      👤 Gate 8
 Step 8   → Setup + Mock Data                  👤 Gate 9
@@ -506,6 +507,40 @@ Execute a skill docs/skills/llc-step-5c-clean-code.md
 - Zero exceções vazias (`NotFoundException('')`)?
 - Zero `as any` em assinaturas públicas?
 - ADRs criados para decisões de Clean Code?
+
+**Só avance quando aprovar.**
+
+---
+
+### Passo 5d: Secure-by-Design Enforcement (Obrigatório)
+
+> **OBRIGATÓRIO** — Este sub-step deve ser executado após o Step 5c e antes do Step 6.
+> Estabelece 10 hard gates de segurança que o agente carrega antes de gerar qualquer código.
+
+**Você faz:**
+
+```
+Execute a skill docs/skills/llc-step-5d-secure-by-design.md
+```
+
+**A IA faz:** Estabelece o framework Secure-by-Design com:
+
+1. **10 Hard Gates** — regras intransponíveis: NUNCA hardcode secrets, NUNCA usar XOR/MD5, NUNCA reusar IV, NUNCA AsyncStorage para tokens, NUNCA SQL com interpolação, NUNCA logar PII, NUNCA fallback que conceda privilégios, NUNCA validar premium no client, NUNCA AES-CBC, NUNCA tabelas sem user_id
+2. **Threat Modeling Check** — 6 perguntas obrigatórias antes de cada feature (dados PII? armazenamento? proteção em repouso? em trânsito? acesso? fail-closed?)
+3. **4 Safe Code Templates** — piiEncryption (AES-256-GCM), secureStorage (fail-closed), parameterizedQueries (anti-injeção), entitlementValidation (fail-safe)
+4. **5 Fitness Functions de Segurança** — no-hardcoded-secrets, no-sql-injection, no-asyncstorage-tokens, no-client-only-auth, user-id-in-tables
+
+**Artefatos gerados/atualizados:**
+- `.ace/arch-config.yaml` — expandido com `security_rules`
+- `docs/architecture/adr/ADR-018-secure-by-design.md`
+- Fitness functions `--check-security` configuradas
+
+**Você valida:** 👤 Gate 5d
+- As 10 hard gates fazem sentido para o domínio do projeto?
+- Algum template precisa de adaptação ao stack específico?
+- Fitness functions `--check-security --strict` passam sem bloqueios?
+- ADR-018 criado e justificado?
+- Exceções documentadas (ex: projeto sem banco de dados → regra #10 não se aplica)?
 
 **Só avance quando aprovar.**
 
@@ -957,6 +992,7 @@ Os seguintes steps sao automaticamente pulados se o DELTA_REPORT.md indicar que 
 | 1 (Specs) | Nenhum spec afetado | ✅ Auto-aprovado |
 | 2 (PRDs) | PRDs inalterados | ✅ Auto-aprovado |
 | 5 (Arquitetura) | Stack/ADRs inalterados | ✅ Auto-aprovado |
+| 5d (Secure-by-Design) | Regras de segurança inalteradas | ✅ Auto-aprovado |
 | 7 (Design System) | Tokens/componentes inalterados | ✅ Auto-aprovado |
 | 8 (Setup + Mock) | Modelo de dados inalterado | ✅ Auto-aprovado |
 | 9 (Testing Docs) | Estrategia de testes mantida | ✅ Auto-aprovado |
@@ -983,7 +1019,7 @@ Para mudancas em funcionalidades existentes, o Step 3 (modo delta) gera **PRP-A*
                     🔴 = Checkpoint visual obrigatório
 
 Step 0 ──→ Step 0.1 ──→ Step 0.5 ──👤──→ Step 1 ──👤──→ Step 2 ──👤──→ Step 3 ──👤──→
-Step 4 ──👤──→ Step 5 ──👤──→ Step 5a ──👤──→ Step 5b ──👤──→ Step 5c ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
+Step 4 ──👤──→ Step 5 ──👤──→ Step 5a ──👤──→ Step 5b ──👤──→ Step 5c ──👤──→ Step 5d ──👤──→ Step 6 ──👤──→ Step 7 ──👤──→
 Step 8 ──👤──→ Step 9 ──👤──→ Step 10 ──👤──→
 Step 10.5 ──👤──→ Step 10.6 ──👤──→ Step 10.7 ──👤──→ Step 10.8 ──👤──→
 

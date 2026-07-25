@@ -9,7 +9,7 @@ tags: [security, audit, sast, sca, secrets, llc-pipeline]
 
 **Pipeline:** Live and Let Code (LLC)
 **Fase:** Security Gate (início do Step 11)
-**Depende de:** Step 8 (Setup + dependências instaladas), Step 5 (Arquitetura — stack e ferramentas)
+**Depende de:** Step 8 (Setup + dependências instaladas), Step 5 (Arquitetura — stack e ferramentas), Step 5d (Secure-by-Design — 10 hard gates e threat modeling)
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill

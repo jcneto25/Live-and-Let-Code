@@ -9,7 +9,7 @@ tags: [tasks, backlog, llc-pipeline]
 
 **Pipeline:** Live and Let Code (LLC)  
 **Fase:** Task Breakdown  
-**Depende de:** Step 5 (Arquitetura validada)  
+**Depende de:** Step 5 (Arquitetura validada), Step 5d (Secure-by-Design validado)  
 **Mantenedor:** Equipe LLC
 
 ## 🛠️ Como usar esta Skill

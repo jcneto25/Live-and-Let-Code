@@ -11,6 +11,10 @@ GATE_ALIASES = {
     "verify": "11.2",
     "test-coverage": "10.8",
     "10-coverage": "10.8",
+    "secure-by-design": "5d",
+    "tdd-discipline": "9a",
+    "ux-heuristics": "7a",
+    "devops-bootstrap": "10a",
 }
 
 # ── Tabela de gates e suas validações ──
@@ -52,6 +56,68 @@ GATE_CHECKLIST = {
             "Bypass LLC_PRP_NO_VERIFY nao ativo",
         ],
         "output_files": [],
+    },
+    "5d": {
+        "name": "Secure-by-Design (design-time prevention)",
+        "checks": [
+            "As 10 hard gates fazem sentido para o dominio do projeto?",
+            "Templates adaptados ao stack especifico?",
+            "Fitness functions --check-security --strict passaram?",
+            "ADR-018 criado e justificado?",
+            "Excecoes documentadas?",
+        ],
+        "output_files": [
+            "docs/architecture/adr/ADR-018-secure-by-design.md",
+            ".ace/arch-config.yaml",
+        ],
+    },
+    "10a": {
+        "name": "DevOps Bootstrap (infrastructure generation)",
+        "checks": [
+            "CI pipeline esta funcional e passando (pelo menos lint + build + test)?",
+            "Feature flags estao corretas para o dominio? Kill-switches criticos definidos?",
+            "Observabilidade cobre os cenarios de falha relevantes (crash reporting + logging)?",
+            "Dependabot configurado com frequencia adequada ao ciclo de sprint?",
+            "SBOM gerado automaticamente no CI?",
+            "DevOps checklist cobre todos os ambientes (dev, staging, prod)?",
+            "Stack adaptation correta (Node/Python/Go — comandos batem com a realidade)?",
+        ],
+        "output_files": [
+            ".github/workflows/ci.yml",
+            "src/config/features.ts",
+            "src/utils/observability.ts",
+            ".github/dependabot.yml",
+            "docs/DEVOPS_CHECKLIST.md",
+        ],
+    },
+    "7a": {
+        "name": "UX Heuristics & Personas (design-time UX enforcement)",
+        "checks": [
+            "As personas sao representativas do publico real do projeto?",
+            "As 10 hard gates de UX fazem sentido para o tipo de aplicacao?",
+            "Nielsen Checklist foi aplicado a pelo menos 1 tela como exercicio?",
+            "Os 4 padroes de implementacao sao compativeis com o stack?",
+            "Algum anti-padrao e particularmente relevante para este dominio?",
+            "Excecoes documentadas?",
+        ],
+        "output_files": [
+            "docs/skills/llc-step-7a-ux-heuristics.md",
+            "docs/business/personas.md",
+        ],
+    },
+    "9a": {
+        "name": "TDD Discipline (test-first enforcement)",
+        "checks": [
+            "As 7 hard gates de TDD fazem sentido para o stack e dominio?",
+            "Os padroes de mock (Test Data Builder, Constructor Injection) sao compativeis com a arquitetura?",
+            "A equipe entende o ciclo RED → GREEN → REFACTOR com commits por fase?",
+            "O campo tdd_phase esta configurado no context_seed das sessoes Step 11?",
+            "O pre-commit hook pre-commit-tests.sh esta configurado e funcional?",
+            "Excecoes documentadas?",
+        ],
+        "output_files": [
+            "docs/skills/llc-step-9a-tdd-discipline.md",
+        ],
     },
     "10.8": {
         "name": "Test Coverage Gate (pre-execution)",

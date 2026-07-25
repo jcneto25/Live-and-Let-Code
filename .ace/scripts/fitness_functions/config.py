@@ -134,6 +134,46 @@ DEFAULT_ARCH_CONFIG = {
             "mode": "hybrid",
             "block_for": "core_modules",
         },
+        # Deep Clean Checks (Ação 4 — Harness Preventivo LLC)
+        "no_cqs_violation": {
+            "enabled": True,
+            "mode": "hybrid",
+            "block_for": "core_modules",
+        },
+        "no_null_return": {
+            "enabled": True,
+            "mode": "hybrid",
+            "block_for": "core_modules",
+        },
+        "no_data_clump": {
+            "enabled": True,
+            "mode": "warn",
+            "min_fields": 3,
+            "min_occurrences": 5,
+        },
+        "no_flag_arguments": {
+            "enabled": True,
+            "mode": "hybrid",
+            "block_for": "core_modules",
+        },
+        "no_primitive_obsession": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "max_function_lines_deep": {
+            "enabled": True,
+            "mode": "warn",
+            "max_lines": 30,
+        },
+        "no_missing_validation": {
+            "enabled": True,
+            "mode": "hybrid",
+            "block_for": "core_modules",
+        },
+        "no_pass_through": {
+            "enabled": True,
+            "mode": "warn",
+        },
     },
 }
 

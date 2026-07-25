@@ -1,6 +1,6 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versao:** 1.7.0
+**Versao:** 1.8.0
 **Data:** 07 de Julho de 2026
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
@@ -27,7 +27,7 @@ Live and Let Code (LLC) é uma metodologia de desenvolvimento de software agenti
 Este documento especifica:
 
 - A arquitetura de diretórios do LLC (§2)
-- O pipeline completo com 22 etapas pipeline + 2 etapas delta (§3)
+- O pipeline completo com 23 etapas pipeline + 2 etapas delta (§3)
 - O catálogo de skills (§4)
 - O subfluxo de prototipagem agentica (§5)
 - O sistema de gates humanos (§6)
@@ -48,7 +48,7 @@ O LLC organiza-se em 5 camadas conceituais que operam da fundacao a entrega:
 | **1. Contexto** | Janela de contexto, continuidade entre sessoes, compressao de tokens | ACE `<context_seed>` (~300 tokens, 93% reducao), Document Hierarchy no AGENTS.md, indice comprimido de documentacao, prompt caching strategy, sessoes append-only |
 | **2. Conhecimento** | Artefatos de dominio, especificacoes, decisoes arquiteturais | Visao estrategica, 7 specs (glossario, RF, RNF, RN, BPMN, perfis, integracoes), PRDs (executivo + tecnico), PRPs, ARCHITECTURE.md (C4 + ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md, `<learning_point>` |
 | **3. Agentes** | Quem executa, como raciocina, com quais regras | AGENTS.md (protocolo epistemic, zonas de autonomia, TDD, handoff ACE), papeis por step (analista, especificador, arquiteto, designer, planner, dev, QA, tech writer), Grill Me, CODE-REVIEW guidelines |
-| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 22 steps pipeline + 2 delta, 25 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
+| **4. Workflows** | Pipeline, gates de validacao, orquestracao | 23 steps pipeline + 2 delta, 26 human gates + checkpoint visual, `<gate_result>`, execution waves, PRRS (7 prismas de analise), dependency matrix, impact-analyzer.py, fitness functions |
 | **5. Entrega** | Execucao paralela, qualidade estrutural, deploy | Git worktrees automaticos (Step 11), code-health.py (4 metricas), mock data layer (MSW), CI/CD pipeline, DEPLOYMENT.md, coverage thresholds |
 
 ```
@@ -187,6 +187,7 @@ project-root/
 │   │   ├── llc-step-3.md
 │   │   ├── llc-step-4.md
 │   │   ├── llc-step-5.md
+│   │   ├── llc-step-5d-secure-by-design.md
 │   │   ├── llc-step-6.md
 │   │   ├── llc-step-7.md
 │   │   ├── llc-step-8.md
@@ -308,7 +309,10 @@ graph TD
     S4 --> G5{👤 Gate 5}
     G5 -->|approved| S5[Step 5: AI → Architecture]
     S5 --> G6{👤 Gate 6}
-    G6 -->|approved| S6[Step 6: AI → Tasks]
+    G6 -->|approved| S5D[Step 5d: Secure-by-Design]
+    S5D --> G5D{👤 Gate 5d}
+    G5D -->|approved| S6[Step 6: AI → Tasks]
+    G5D -->|rejected| S5D
     S6 --> G7{👤 Gate 7}
     G7 -->|approved| S7[Step 7: AI → Design System]
     S7 --> G8{👤 Gate 8}
@@ -382,6 +386,7 @@ graph TD
 | 5a | Architecture Patterns (obrigatório) | `ARCHITECTURE.md` §7-9 + RNF | `ARCHITECTURE.md` atualizado, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
 | 5b | API Design Enforcement (obrigatório) | `ARCHITECTURE.md` + PRPs + Specs | `docs/api/openapi.yaml`, controllers padronizados | — | 👤 6b |
 | 5c | Clean Code Enforcement (obrigatório) | `ARCHITECTURE.md` + arch-config | 21+ fitness functions configuradas | — | 👤 8.5 |
+| 5d | Secure-by-Design | `.ace/arch-config.yaml` + ADRs 5a | `.ace/arch-config.yaml` expandido, ADR-018, fitness functions de segurança | — | 👤 5d |
 | 6 | Tarefas | PRPs + Arquitetura + Planejamento | `TASKS.md` | `TASKS_TEMPLATE.md` | 👤 7 |
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
 | 8 | Setup + Mock | Arquitetura + Tarefas + Design System | `mocks/` + projeto inicializado | — | 👤 9 |
@@ -413,9 +418,10 @@ graph TD
 | **Δ.1** | **Delta Grill Me** | **`DELTA_REPORT.md` + ambiguidades** | **Respostas registradas** | **—** | **👤 Δ.1** |
 
 > **Modelo de seguranca em 3 camadas:** A seguranca percorre todo o pipeline — nao e um gate unico.
+> **5d (Gate 5d)** (design-time) estabelece 10 hard gates, threat modeling e safe code templates durante a arquitetura.
 > **10.6 (Gate 11-SEC)** (pre-code) escaneia dependencias, codigo e secrets. **10.7 (Gate 12-NULL)** (pre-code) valida contratos de dados.
 > Ambos executam ANTES do Step 11 (Execucao). Apos os PRPs implementados, o **11.1 (Gate 11-OWASP)** (post-code) faz
-> hardening contra OWASP Top 10. Este fluxo e consistente com o FAQ e o SECURITY.md.
+> hardening contra OWASP Top 10. Este fluxo e consistente com o FAQ e o README.
 
 ---
 
@@ -490,6 +496,7 @@ tags: [categoria, llc-pipeline]
 | `llc-step-5a-architecture-patterns` | 5a | Padrões Arquiteturais — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
 | `llc-step-5b-api-design` | 5b | API Design Enforcement — REST semantics, OpenAPI, paginação, HATEOAS, versioning |
 | `llc-step-5c-clean-code` | 5c | Clean Code Enforcement — Functions, Classes, Naming, Errors, Smells, ReadModels (21+ fitness functions) |
+| `llc-step-5d-secure-by-design` | 5d | Estabelece 10 hard gates de segurança, threat modeling, safe code templates e 5 fitness functions de segurança |
 | `llc-step-6` | 6 | Gera TASKS.md com tarefas concretas, agentes e estimativas |
 | `llc-step-7` | 7 | Gera Design System completo (tokens, componentes, padrões) |
 | `llc-step-8` | 8 | Setup do projeto + Camada de dados mockados (JSON + MSW handlers) |
@@ -564,6 +571,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 6a | 5.1 | Clean Architecture layers definidas? Repository Pattern com interfaces? Domain Layer isolado? .ace/arch-config.yaml gerado? ADRs 008-011 criados? |
 | 👤 6b | 5.2 | OpenAPI spec existe e é válida? Controllers seguem template? fitness-functions --check-api-design passou? Paginação implementada? Versionamento api/v1/ presente? |
 | 👤 8.5 | 5.3 | fitness-functions --check-functions/naming/classes/errors/smells/readmodels passou? Zero PrismaService em services? Use Cases separados? Nomes semânticos? |
+| 👤 5d | 5d | As 10 hard gates fazem sentido? Templates adaptados ao stack? fitness-functions --check-security passou? ADR-018 criado? |
 | 👤 7 | 6 | Tarefas são acionáveis? Agentes estão corretamente atribuídos? |
 | 👤 8 | 7 | Design System reflete a identidade do projeto? Todos os componentes têm estados definidos? |
 | 👤 9 | 8 | Projeto roda? Dados mock são realistas? Handlers cobrem o núcleo? |
@@ -923,6 +931,8 @@ O LLC implementa **fitness functions** (Ingeno ch16) — verificacoes automatiza
 | **Use Case Size** | `--check-usecase` | Services com ≤ 8 metodos publicos | > 8 = alerta | 🟡 warn |
 | **Module Coverage** | `--check-coverage` | Cobertura por modulo (lcov) | Core: ≥ 70%, geral: ≥ 60% | 🟡 warn / block se < 50% |
 
+O Step 5d adiciona 5 fitness functions de segurança (`--check-security`) ao pipeline de verificação arquitetural.
+
 ### 11.3 Modo Híbrido
 
 O comportamento de cada check e definido em `.ace/arch-config.yaml`, gerado pelo Step 5 (Arquitetura):
@@ -1004,6 +1014,7 @@ Quando uma fitness function falha:
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.8.0 | 25/07/2026 | Equipe LLC | Adicionado Step 5d (Secure-by-Design): 10 hard gates de segurança, threat modeling check, 4 safe code templates, 5 fitness functions de segurança, Gate 5d |
 | 1.7.0 | 07/07/2026 | Equipe LLC | Fluxo delta completo (Δ.0 + Δ.1), Smart Skip, PRP-A, Thin Harness --delta/--iteration, fitness functions (6 checks, modo híbrido), ADRs em arquivos separados (ADR_TEMPLATE.md), ARCHITECTURE_TEMPLATE expandido (domínio, ports & adapters, eventos), PRP_TEMPLATE expandido (repository interfaces, use cases, domain entities), AGENTS_TEMPLATE v1.2 (6 regras arquiteturais), Gate 11-ARCH, code-health --fitness, llc-arch-fitness skill |
 | 1.7.0 | 03/07/2026 | Equipe LLC | Adicionado Step 11.2 (PRP Verify): `prp_verify.py` engine, skill `llc-step-11-2-prp-verify`, gate 11-VERIFY, bloqueio determinístico no `session_end()` + `_post_wave_check()`, colunas Teste(s)/Arquivo(s) impl no PRP_TEMPLATE.md §2, escopo de SAST/secrets restrito a `apps/*/src/` |
 | 1.6.0 | 26/06/2026 | Equipe LLC | `normalize_step()` canônico + `llc_steps.REGISTRY` (fonte única de verdade para identidade de step). Renumerado para que o número do step == a sequência do pipeline: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execução segue 11). Adicionado campo canônico `llc_step_id` no frontmatter da sessão + `index.json` (ao lado do `llc_step` numérico); a CLI `--step` aceita ids/aliases (`security`, `owasp`, `null-safety`). Corrige #2/#3/#4 (steps textuais inalcançáveis, 10.5/10.6/10.7/11.1 inválidos, `skill_load` não-determinístico). |

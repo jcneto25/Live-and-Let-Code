@@ -130,6 +130,7 @@ docs/architecture/ | ARCHITECTURE_TEMPLATE.md, ADR_TEMPLATE.md (ARCH) | 5 | PLAN
 docs/architecture/ | ARCHITECTURE_PATTERNS_TEMPLATE.md (ARCH_PATTERNS) | 5.1 | ARCH
 docs/api/ | openapi.yaml (API_DESIGN) | 5.2 | ARCH_PATTERNS
 docs/skills/ | llc-step-5c-clean-code.md (CLEAN_CODE) | 5.3 | ARCH_PATTERNS
+docs/skills/ | llc-step-5d-secure-by-design.md (SECURE_BY_DESIGN) | 5.4 | CLEAN_CODE
 docs/design/ | Design_System_Master.md (DS) | 7 | ARCH
 docs/security/ | SECURITY_AUDIT_REPORT_TEMPLATE.md (SEC_AUDIT) | 10.6 | ARCH
 docs/security/ | NULL_SAFETY_REPORT_TEMPLATE.md (NULL_SAFETY) | 10.7 | PRPs
@@ -139,6 +140,7 @@ docs/testing/ | COVERAGE_REPORT_TEMPLATE.md (COVERAGE) | 10.8 | TEST_GUIDE
 docs/skills/ | llc-step-5a-architecture-patterns.md (SKILL_5A) | 5.1 | ARCH
 docs/skills/ | llc-step-5b-api-design.md (SKILL_5B) | 5.2 | SKILL_5A
 docs/skills/ | llc-step-5c-clean-code.md (SKILL_5C) | 5.3 | SKILL_5B
+docs/skills/ | llc-step-5d-secure-by-design.md (SKILL_5D) | 5.4 | SKILL_5C
 docs/skills/ | llc-step-8b-repository-pattern.md (SKILL_8B) | 8.1 | SKILL_5A
 docs/skills/ | llc-step-11a-domain-modeling.md (SKILL_11A) | 10.9 | SKILL_8B
 docs/skills/ | llc-step-11b-arch-fitness.md (SKILL_11B) | 11.3 | step 11
@@ -458,8 +460,8 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 ### Core Directives for this Project
 - **Multi-tenancy / Data Isolation (CRITICAL):** N/A — pipeline LLC é single-tenant (ferramenta de desenvolvimento)
 - **Architecture:** Pipeline LLC: scripts Python (.ace/scripts/) + skills Markdown (docs/skills/) + templates (docs/templates/)
-- **Domain Logic:** Workflow de desenvolvimento guiado por IA com gates humanos (22+ steps, 25 gates)
-- **Security & Auth:** Gates 11-SEC (SCA/SAST/secrets pré-código), 12-NULL (null safety), 11-OWASP (hardening pós-código)
+- **Domain Logic:** Workflow de desenvolvimento guiado por IA com gates humanos (23+ steps, 26 gates)
+- **Security & Auth:** Gate 5d (Secure-by-Design, design-time prevention), Gates 11-SEC (SCA/SAST/secrets pré-código), 12-NULL (null safety), 11-OWASP (hardening pós-código)
 - **Coding Standards:** `python3 -m py_compile` + `python3 -m pytest -q`. Use `argparse/click (CLI), json (config)` for input schemas.
 
 ### Review Checklist

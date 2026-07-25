@@ -60,6 +60,12 @@ def main():
         action="store_true",
         help="Clean Code: ReadModels & Type Safety",
     )
+    # Deep Clean checks (Ação 4 — Harness Preventivo LLC)
+    parser.add_argument(
+        "--check-deep-clean",
+        action="store_true",
+        help="Deep Clean: CQS, null, data clumps, flags, primitives, validation, pass-through",
+    )
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     parser.add_argument(
         "--strict", action="store_true", help="Exit code 1 se violacao ou bloqueio"
@@ -107,6 +113,20 @@ def main():
                 "repo_returns_readmodel",
                 "no_any_in_public",
                 "no_as_any",
+            ]
+        )
+    # Deep Clean
+    if args.check_deep_clean:
+        requested.extend(
+            [
+                "no_cqs_violation",
+                "no_null_return",
+                "no_data_clump",
+                "no_flag_arguments",
+                "no_primitive_obsession",
+                "max_function_lines_deep",
+                "no_missing_validation",
+                "no_pass_through",
             ]
         )
 

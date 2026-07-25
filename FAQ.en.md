@@ -8,7 +8,7 @@
 
 ### What is an agentic development workflow?
 
-A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 26+ skills, 25 human gates, and a context continuity protocol (ACE).
+A structured methodology that uses specialized AI agents collaborating throughout the software lifecycle — from analysis and requirements through architecture, implementation, and quality assurance. Unlike "vibe coding" (informal prompt-based coding), agentic workflows define roles, artifacts, quality gates, and agent handoffs. LLC materializes this in 27+ skills, 26 human gates, and a context continuity protocol (ACE).
 
 ### How is LLC architecturally organized?
 
@@ -19,7 +19,7 @@ LLC is organized into **5 conceptual layers** from foundation to delivery:
 | **1. Context** | Manages context window, session continuity, and token compression | ACE `<context_seed>`, Document Hierarchy, compressed index, prompt caching, append-only sessions |
 | **2. Knowledge** | Domain artifacts, specifications, and architectural decisions | Strategic vision, 7 specs, PRDs, PRPs, ARCHITECTURE.md (C4+ADRs), DESIGN_SYSTEM.md, USER_GUIDE.md |
 | **3. Agents** | Who executes, how they reason, and with what rules | AGENTS.md (epistemic protocol, autonomy zones, TDD, handoff), per-step roles, Grill Me, CODE-REVIEW |
-| **4. Workflows** | Pipeline, validation gates, and orchestration | 22 pipeline steps + 2 delta, 25 human gates + visual checkpoint, execution waves, PRRS, dependency matrix |
+| **4. Workflows** | Pipeline, validation gates, and orchestration | 23 pipeline steps + 2 delta, 26 human gates + visual checkpoint, execution waves, PRRS, dependency matrix |
 | **5. Delivery** | Parallel execution, structural quality, and deployment | Auto git worktrees, code-health.py, mock data, CI/CD, DEPLOYMENT.md |
 
 Each layer depends on the one below: without well-managed context, knowledge won't fit in the window; without structured knowledge, agents have no direction; without well-instructed agents, workflows produce no quality; without orchestrated workflows, delivery is unreliable.
@@ -42,7 +42,7 @@ Traditional SDD has 5 legitimate criticisms. LLC was designed to address each on
 
 | Traditional SDD criticism | How LLC solves it |
 |--------------------------|-------------------|
-| **1. Rigid waterfall, too slow** — heavy documentation before any code, 10x slower | LLC **is not waterfall**. The 22 steps are a pipeline, not frozen phases. PRPs are 2-8 days and run in **parallel waves** as soon as validated. Grill Me is a short Q&A round (~15 min), not months of documentation. The mocked MVP (Step 8) delivers something functional and demonstrable in days, not months |
+| **1. Rigid waterfall, too slow** — heavy documentation before any code, 10x slower | LLC **is not waterfall**. The 23 steps are a pipeline, not frozen phases. PRPs are 2-8 days and run in **parallel waves** as soon as validated. Grill Me is a short Q&A round (~15 min), not months of documentation. The mocked MVP (Step 8) delivers something functional and demonstrable in days, not months |
 | **2. "Markdown Madness"** — thousands of lines of docs, 80% of time reading Markdown | ACE solves this: `<context_seed>` compresses state into **4 fields (~300 tokens)**. An implementation agent receives **only the PRP it will execute** (~50-80 lines), not the entire project. `impact-analyzer.py` tells exactly which artifacts to read, eliminating unnecessary reading |
 | **3. Persistent bugs, unmaintainable code** — even with specs, generated code has trivial errors | **TDD embedded in every PRP** + `code-health.py` + self-healing loop. AI writes test → sees it fail → implements → sees it pass. If it fails, the cycle restarts. The agent doesn't deliver code without passing tests. Moved Code, Copy/Paste, and Legacy Touch metrics are monitored every wave |
 | **4. Spec Drift** — manually changed code breaks the "single source of truth" | `dependency-graph.yaml` + `impact-analyzer.py` detect drift automatically: `git diff` → cross with graph → reports which artifacts are outdated. **Not manual.** Pre-commit hook alerts before commit. `<gate_result>` forces human validation before proceeding |
@@ -60,7 +60,7 @@ LLC's cross-session continuity protocol. Combines Markdown (human readability), 
 
 ### What are Human Gates?
 
-Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 25 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
+Mandatory human validation points in the LLC pipeline. No step advances without explicit user approval. LLC has 26 human gates + 1 visual checkpoint (prototyping subflow) + QA checkpoints during execution. A rejected gate returns the flow to the previous step with `<gate_result decision="rejected">` logged in ACE.
 
 ### What is Grill Me?
 
@@ -138,7 +138,7 @@ No. Small projects (e.g., single-page app, CLI script) can condense multiple rol
 
 ### Do agents replace human engineers?
 
-No. Humans define direction, negotiate scope, oversee design, and approve releases. Agents improve the return on human attention — they don't replace it. LLC formalizes this with **human-in-the-loop** at every critical phase: 25 human gates, 1 visual checkpoint, and QA checkpoints during execution. No step advances without explicit approval.
+No. Humans define direction, negotiate scope, oversee design, and approve releases. Agents improve the return on human attention — they don't replace it. LLC formalizes this with **human-in-the-loop** at every critical phase: 26 human gates, 1 visual checkpoint, and QA checkpoints during execution. No step advances without explicit approval.
 
 ### How do agents communicate with each other?
 
@@ -333,7 +333,7 @@ All LLC artifacts are persistent Markdown documents versioned in **Git**, treate
 
 Phase transition checkpoints that verify each artifact meets defined criteria before the next agent starts. In LLC, gates are formal and recorded:
 
-- **25 human gates:** one after each generation step and auxiliary step (0.5, 1–10, 10.5, 11-SEC, 11-OWASP, 12-NULL). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
+- **26 human gates:** one after each generation step and auxiliary step (0.5, 1–10, 10.5, 11-SEC, 11-OWASP, 12-NULL). The human reviews the artifact and decides: `approved`, `rejected`, or `conditional`
 - **1 visual checkpoint:** in the prototyping subflow (F4 → F5). The hi-fi prototype doesn't become code without explicit visual approval
 - **QA checkpoints:** during execution (Step 11): score ≥ 7.0, coverage ≥ thresholds, security audit passed
 
@@ -347,7 +347,7 @@ LLC implements 6 quality assurance layers:
 |-------|---------------|
 | **1. Specification before code** | Steps 0-GF through 3 generate detailed specs, PRDs, and PRPs with Grill Me — the AI doesn't write a single line of code before requirements are validated |
 | **2. Specialized agents per phase** | Each stage has an agent with restricted context: the architect doesn't implement, the developer doesn't define requirements |
-| **3. Quality gates at every transition** | 25 human gates + 1 visual checkpoint + QA gates — no artifact advances without validation |
+| **3. Quality gates at every transition** | 26 human gates + 1 visual checkpoint + QA gates — no artifact advances without validation |
 | **4. TDD embedded in PRPs** | Each PRP defines test strategy (unit, integration, E2E). `code-health.py` monitors whether agents follow TDD |
 | **5. Peer review (human and agent)** | Human `<gate_result>` + automated `llc-impact-analyzer` + pre-commit validation hooks |
 | **6. Requirements-to-code traceability** | Full chain: Vision → Module → Spec → PRD → PRP → Task → Commit. `dependency-graph.yaml` + `impact-analyzer.py` ensure changes propagate correctly |
@@ -425,7 +425,7 @@ The "70% problem" (coined by Addy Osmani, Google Chrome DX) describes a pattern 
 | Context degradation | ACE append-only: each action is atomic and verifiable; `context_seed` maintains ~300 tokens of continuity |
 | Edge cases ignored | TDD + Grill Me + spec-driven generation |
 | AI doesn't learn from mistakes | `<learning_point>` records lessons; `<skill_feedback>` captures structural skill improvements |
-| Invisible tech debt | 25 human gates + QA checkpoints: every artifact undergoes explicit validation before proceeding |
+| Invisible tech debt | 26 human gates + QA checkpoints: every artifact undergoes explicit validation before proceeding |
 
 LLC doesn't try to make AI reach 100% on its own. It combines AI + human + structural tools (graphs, tests, gates, persistent memory) so the ensemble delivers 100% value — AI covering what it does well, and the human deciding on the critical 30%.
 
@@ -438,7 +438,7 @@ The principle that humans remain in control of all critical development decision
 | **Define objectives** | Human describes the system (ingestion) or answers the greenfield interview |
 | **Negotiate scope** | Grill Me: AI asks, human answers. Unvalidated assumptions are blocked |
 | **Oversee design** | VISUAL CHECKPOINT in subflow F4 → F5: prototype doesn't become code without approval |
-| **Approve releases** | 25 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
+| **Approve releases** | 26 human gates + QA checkpoints: every artifact and every wave undergoes explicit validation |
 | **Record decisions** | `<gate_result>` in ACE closes the accountability loop |
 
 Agents improve the return on human attention — they don't replace it. An engineer who used to spend 4 hours writing specs now spends 30 minutes reviewing and approving AI-generated specs.
@@ -479,10 +479,11 @@ LLC dedicates **Step 11.1** (`docs/skills/llc-step-11-owasp-security.md`) exclus
 
 ### How does the LLC security audit pipeline work?
 
-LLC has **3 security skills** that operate at different points in the pipeline, forming a layered defense:
+LLC has **4 security skills** that operate at different points in the pipeline, forming a layered defense:
 
 | Skill | Step | When it runs | What it checks | Gate |
 |-------|------|-------------|----------------|------|
+| `llc-step-5d-secure-by-design` | Step 5d | **Design-time** (during architecture) | 10 hard gates, threat modeling, safe code templates, fitness functions | Blocks on design violations |
 | `llc-step-11-security` | Step 10.6 | **Pre-implementation** (before coding) | SCA (dependencies), SAST (Semgrep), Secrets (Gitleaks) | Blocks on CVSS >= 9.0 or real secret |
 | `llc-step-12-null-safety` | Step 10.7 | **Pre-implementation** (before coding) | Nullability in PRPs: fields without `?`/`Optional`, missing fallbacks, cross-PRP inconsistencies | Blocks on unspecified nullability |
 | `llc-step-11-owasp-security` | Step 11.1 | **Post-implementation** (after coding) | OWASP Top 10 hardening: access control, crypto, injection, design, misconfig, auth, logging, SSRF | Blocks on 1+ critical finding |
@@ -490,6 +491,15 @@ LLC has **3 security skills** that operate at different points in the pipeline, 
 **Complete security flow:**
 
 ```
+Step 5d (design-time)
+        │
+        ▼
+  10 hard gates + threat modeling
+        │
+        ▼
+   PASSED ────────────────────────────────────┐
+        │                                      │
+        ▼                                      ▼
 Step 10.6 (pre-code)       Step 10.7 (pre-code)
         │                                    │
         ▼                                    ▼
@@ -512,19 +522,21 @@ Step 10.6 (pre-code)       Step 10.7 (pre-code)
           PASSED → Release (via DEPLOYMENT.md + CI/CD)
 ```
 
-**Why 3 separate skills?**
+**Why 4 separate skills?**
 
-1. **Automated tools first (Step 10.6):** Before writing a single line of code, the pipeline checks whether dependencies have CVEs, whether secrets are exposed, and whether existing code has insecure patterns. This prevents the team from building on a vulnerable foundation.
+1. **Design-time prevention first (Step 5d):** Before any implementation decision, the pipeline establishes 10 hard security gates (NEVER hardcode secrets, NEVER SQL interpolation, etc.), mandatory threat modeling, and safe code templates. This ensures the agent loads the security framework before generating any line of code.
 
-2. **Secure design before coding (Step 10.7):** Fields without nullability specification are the primary cause of `NullPointerException` and `Cannot read properties of null` in production. Step 12 validates that every field in PRPs explicitly declares whether it can be null and, if so, what the fallback is. This prevents the most common class of production bugs before they're written.
+2. **Automated tools next (Step 10.6):** Before writing a single line of code, the pipeline checks whether dependencies have CVEs, whether secrets are exposed, and whether existing code has insecure patterns. This prevents the team from building on a vulnerable foundation.
 
-3. **Manual/AI reasoning after code (Step 11.1):** Automated tools cannot answer questions like "does this endpoint verify that the logged-in user owns the resource?" or "is this password reset single-use?" Step 11.1 inspects the implemented code against all 10 OWASP categories, requiring file:line evidence for each check.
+3. **Secure data contracts (Step 10.7):** Fields without nullability specification are the primary cause of `NullPointerException` and `Cannot read properties of null` in production. Step 12 validates that every field in PRPs explicitly declares whether it can be null and, if so, what the fallback is. This prevents the most common class of production bugs before they're written.
+
+4. **Manual/AI reasoning after code (Step 11.1):** Automated tools cannot answer questions like "does this endpoint verify that the logged-in user owns the resource?" or "is this password reset single-use?" Step 11.1 inspects the implemented code against all 10 OWASP categories, requiring file:line evidence for each check.
 
 **Generated reports:** `docs/security/SECURITY_AUDIT_REPORT.md`, `docs/security/NULL_SAFETY_REPORT.md`, `docs/security/OWASP_HARDENING_REPORT.md`.
 
 **Tasks:** `docs/planning/TASKS.md` §4 (SEC-001, SEC-002, SEC-003, SEC-004).
 
-**Real example — Full execution on SGI project (June 2026):** All 3 skills were executed against the LLC repository. Step 10.6: Semgrep 340 rules on 147 files → 0 findings; SCA N/A (no dependencies); Gitleaks unavailable → manual check clean. Gate: PASSED. Step 10.7: 0 PRPs found (specification phase) → `PRP_TEMPLATE.md` validation showed good practices (`?` for optionals, documented fallbacks). Gate: PASSED. Step 11.1: manual audit of 9 `.py` scripts (~85 KB) → A02 0 secrets, A03 28 safe `subprocess.run()`, A08 `yaml.safe_load()`, A09 clean logs, A10 0 network. Gate: PASSED. Pipeline cleared for PRP implementation.
+**Real example — Full execution on SGI project (June 2026):** All 4 skills were executed against the LLC repository. Step 10.6: Semgrep 340 rules on 147 files → 0 findings; SCA N/A (no dependencies); Gitleaks unavailable → manual check clean. Gate: PASSED. Step 10.7: 0 PRPs found (specification phase) → `PRP_TEMPLATE.md` validation showed good practices (`?` for optionals, documented fallbacks). Gate: PASSED. Step 11.1: manual audit of 9 `.py` scripts (~85 KB) → A02 0 secrets, A03 28 safe `subprocess.run()`, A08 `yaml.safe_load()`, A09 clean logs, A10 0 network. Gate: PASSED. Pipeline cleared for PRP implementation.
 
 ---
 
@@ -635,7 +647,7 @@ LLC uses **both** paradigms, in different phases. The choice isn't in the AI cli
 
 | Paradigm | How it works | Steps per task | Tokens |
 |----------|-------------|---------------|--------|
-| **ToolCallingAgent** | LLM generates JSON with tool + params. One tool at a time. Waits for result before next | 22 steps | ~29K tokens |
+| **ToolCallingAgent** | LLM generates JSON with tool + params. One tool at a time. Waits for result before next | 23 steps | ~29K tokens |
 | **CodeAgent** | LLM generates + executes Python block. Chains multiple actions in one step. Can loop and branch | 2 steps | ~5.4K tokens |
 
 **A well-written skill controls the paradigm — regardless of the client:**
@@ -692,7 +704,7 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 
 ### How many steps does LLC have?
 
-22 pipeline steps + 2 delta (24 total), 26+ skills (including 1 composite prototyping subflow). The pipeline goes from business knowledge ingestion to production deployment:
+23 pipeline steps + 2 delta (25 total), 27+ skills (including 1 composite prototyping subflow). The pipeline goes from business knowledge ingestion to production deployment:
 
 > **Main (14):** Numbered sequential steps — 0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.
 > **Auxiliary (5):** 0-GF (greenfield alternative), 10.5 (user guide), 11-SEC (pre-code audit),
@@ -709,6 +721,7 @@ These tools can be added to the CI/CD pipeline defined in `docs/DEPLOYMENT.md` (
 | 3 | PRPs | `llc-step-3` | Grill Me, Gherkin contracts |
 | 4 | Planning | `llc-step-4` | **Mermaid** (dependency graph), YAML |
 | 5 | Architecture | `llc-step-5` | **Mermaid** (C4), ADRs, Stack decisions |
+| 5d | Secure-by-Design | `llc-step-5d-secure-by-design` | 10 hard gates, threat modeling, safe code templates |
 | 6 | Tasks | `llc-step-6` | **TASKS.md** with checkboxes |
 | 7 | Design System | `llc-step-7` | Design tokens (CSS/JSON), Components |
 | 8 | Setup + Mock | `llc-step-8` | **MSW** (Mock Service Worker), JSON |

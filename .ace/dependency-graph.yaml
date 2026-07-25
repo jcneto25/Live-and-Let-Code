@@ -7,9 +7,9 @@
 #
 # Mantido manualmente como artefato da metodologia LLC. Evolui quando novos artefatos são adicionados ao pipeline.
 
-version: "1.3.0"
+version: "1.4.0"
 generated_by: "llc-step-4"
-last_updated: "2026-07-07"
+last_updated: "2026-07-25"
 
 artifacts:
 
@@ -420,11 +420,23 @@ artifacts:
       - deployment
       - test_guide
 
+  # ── STEP 5d (Secure-by-Design) ──
+  secure_by_design_adr:
+    path: "docs/architecture/adr/ADR-018-secure-by-design.md"
+    depends_on:
+      - architecture
+    triggers_update:
+      - security_audit_report
+      - null_safety_report
+      - owasp_hardening_report
+      - tasks
+
   # ── STEP 5 / F3 (Architecture Config + Fitness) ──
   arch_config:
     path: ".ace/arch-config.yaml"
     depends_on:
       - architecture
+      - secure_by_design_adr
     triggers_update:
       - fitness_functions
 

@@ -8,7 +8,7 @@
 
 ### 🇧🇷 Português
 
-Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **22 etapas pipeline + 2 de análise de mudança (Δ)** com **25 gates de validação humana** em cada fase. **26+ skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
+Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **23 etapas pipeline + 2 de análise de mudança (Δ)** com **26 gates de validação humana** em cada fase. **27+ skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
 
 📘 **[Guia de Execução (PT-BR)](LLC_GUIDE.md)** — passo a passo completo  
 📄 **[Especificação do Pipeline](llc-pipeline-design.md)** — design document
@@ -17,7 +17,7 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 ### 🇺🇸 English
 
-Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **22 pipeline + 2 change analysis (Δ) steps** with **25 human validation gates** at every phase. **26+ tool-agnostic skills** executable by any terminal AI client.
+Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **23 pipeline + 2 change analysis (Δ) steps** with **26 human validation gates** at every phase. **27+ tool-agnostic skills** executable by any terminal AI client.
 
 📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — full step-by-step guide  
 📄 **[Pipeline Specification](llc-pipeline-design.en.md)** — design document
@@ -85,9 +85,9 @@ New Documents ─👤─→ Δ.0 Impact Analysis ─👤─→ Δ.1 Grill Me ─
 (cada step condicional decide: executar diff ou skip com reaproveitamento)
 ```
 
-> 🔒 **Security gates** wrap every execution wave — SCA/SAST/secrets audit (pre-code), OWASP hardening + null-safety (post-code), **Test Coverage Gate (10.8)**. See the [Execution Guide](LLC_GUIDE.en.md).
+> 🔒 **Security in 3 layers:** Secure-by-Design (Step 5d, design-time prevention) → SCA/SAST/secrets audit (10.6, pre-code detection) → OWASP hardening + null-safety (11.1, post-code verification). Plus **Test Coverage Gate (10.8)**. See the [Execution Guide](LLC_GUIDE.en.md).
 >
-> 🔒 **Gates de segurança** envolvem cada onda de execução — auditoria SCA/SAST/secrets (pré-código), hardening OWASP + null-safety (pós-código), **Test Coverage Gate (10.8)**. Veja o [Guia de Execução](LLC_GUIDE.md).
+> 🔒 **Segurança em 3 camadas:** Secure-by-Design (Step 5d, prevenção no design) → auditoria SCA/SAST/secrets (10.6, detecção pré-código) → hardening OWASP + null-safety (11.1, verificação pós-código). Mais **Test Coverage Gate (10.8)**. Veja o [Guia de Execução](LLC_GUIDE.md).
 >
 > 🔄 **Fluxo Delta:** Para mudanças em sistemas existentes, o LLC oferece 2 steps de análise de impacto (Δ.0 + Δ.1) + Smart Skip que pula steps inalterados. Consulte o [FAQ](FAQ.md#-fluxo-delta-mudanças-em-sistemas-existentes).
 

@@ -18,3 +18,12 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+
+      - id: ace-llm-validation
+        name: ACE — LLM Self-Validation (8 checks pós-geração)
+        description: "Verifica código gerado por IA: secrets hardcoded, SQL injection, return null em services, SQL fora de repositories, placeholder tests, delays em testes, any em signatures, console.log. Bloqueia commit se houver ❌ (Ação 8 — Harness Preventivo LLC §2.8)."
+        entry: bash .ace/scripts/llm-validation.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

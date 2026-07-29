@@ -106,6 +106,7 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 | FDN-011 | Ondas de Execução | llc-step-4 | ⏳ | Crítico | FDN-010 | `docs/planning/EXECUTION_WAVES.md` |
 | FDN-012 | Arquitetura (ADD) | llc-step-5 | ⏳ | Crítico | FDN-004, FDN-007 | `docs/architecture/ARCHITECTURE.md` |
 | FDN-013 | Tasks (este documento) | llc-step-6 | ✅ | Crítico | FDN-001 a FDN-012 | `docs/planning/TASKS.md` |
+| FDN-014 | Step 2.5 — Casos de Uso | 📋 docs/skills/llc-step-2-5.md | ⏳ | — | — | Novo step: template CU + skill + gate 3.5 + INDEX.md |
 
 ### 3.2 Design e Testes
 

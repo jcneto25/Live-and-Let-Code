@@ -174,6 +174,49 @@ DEFAULT_ARCH_CONFIG = {
             "enabled": True,
             "mode": "warn",
         },
+        # Security Checks (Ação 1 — Harness Preventivo LLC / Step 5d)
+        "no_hardcoded_secrets": {
+            "enabled": True,
+            "mode": "block",
+        },
+        "no_sql_injection": {
+            "enabled": True,
+            "mode": "block",
+        },
+        "no_asyncstorage_tokens": {
+            "enabled": True,
+            "mode": "block",
+        },
+        "no_client_only_auth": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "user_id_in_tables": {
+            "enabled": True,
+            "mode": "block",
+        },
+        # UX Checks (Ação 3 — Harness Preventivo LLC / Step 7a)
+        "no_hardcoded_strings": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "no_confirmshaming": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "no_alert_without_recovery": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "no_roach_motel": {
+            "enabled": True,
+            "mode": "warn",
+        },
+        "form_field_without_label": {
+            "enabled": True,
+            "mode": "hybrid",
+            "block_for": "core_modules",
+        },
     },
 }
 

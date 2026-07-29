@@ -44,3 +44,48 @@ checks:
     enabled: true
     mode: warn
     threshold: 60
+
+  # Security Checks (Ação 1 — Harness Preventivo LLC / Step 5d Secure-by-Design)
+  # Executados via: python .ace/scripts/fitness-functions.py --check-security --strict
+  no_hardcoded_secrets:
+    enabled: true
+    mode: block
+
+  no_sql_injection:
+    enabled: true
+    mode: block
+
+  no_asyncstorage_tokens:
+    enabled: true
+    mode: block
+
+  no_client_only_auth:
+    enabled: true
+    mode: warn
+
+  user_id_in_tables:
+    enabled: true
+    mode: block
+
+  # UX Checks (Ação 3 — Harness Preventivo LLC / Step 7a UX Heuristics)
+  # Executados via: python .ace/scripts/fitness-functions.py --check-ux --strict
+  no_hardcoded_strings:
+    enabled: true
+    mode: warn
+
+  no_confirmshaming:
+    enabled: true
+    mode: warn
+
+  no_alert_without_recovery:
+    enabled: true
+    mode: warn
+
+  no_roach_motel:
+    enabled: true
+    mode: warn
+
+  form_field_without_label:
+    enabled: true
+    mode: hybrid
+    block_for: core_modules

@@ -27,6 +27,17 @@
         "Ambos sao consistentes?"
       ]
     },
+    "3.5": {
+      "step": 2.5,
+      "label": "Casos de Uso",
+      "checklist": [
+        "CUs cobrem todos os objetivos de negócio dos PRDs?",
+        "Cada CU tem atores identificados?",
+        "Granularidade adequada (≤15 passos no fluxo principal)?",
+        "Matriz de rastreabilidade CU↔RF completa?",
+        "INDEX.md atualizado com todos os CUs?"
+      ]
+    },
     "4": {
       "step": 3,
       "label": "PRPs",

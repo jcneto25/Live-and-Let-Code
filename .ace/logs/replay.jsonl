@@ -7,3 +7,4 @@
 {"timestamp": "2026-07-10T10:35:46.682214", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-07-10T11:18:38.521843", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-07-10T11:18:55.938626", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
+{"timestamp": "2026-07-27T21:14:05.917186", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}

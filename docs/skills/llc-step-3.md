@@ -22,6 +22,7 @@ tags: [prp, planning, delta, amendment, llc-pipeline]
 
 ### Modo Padrão (Greenfield)
 - [ ] `docs/prd/executive_PRD.md` e `docs/prd/PRD_tecnico_institucional.md` (validados no Step 2)
+- [ ] Casos de Uso validados no Step 2.5 (`docs/business/use-cases/`)
 - [ ] 7 specs em `docs/business/specs/` (base de referência)
 - [ ] `docs/prps/PRP_TEMPLATE.md`
 - [ ] `docs/business/specs/MOD-*.md` (módulos validados)

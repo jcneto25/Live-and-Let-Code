@@ -152,6 +152,7 @@ docs/skills/ | llc-smart-skip.md (SMART_SKIP) | transversal | Δ
 docs/skills/ | llc-step-*.md (SKILLS) | all | —
 docs/templates/ | DELTA_REPORT_TEMPLATE.md (DELTA) | Δ.0 | —
 docs/templates/ | AGENTS_TEMPLATE.md (AGENTS_TEMPLATE) | — | —
+docs/templates/ | MASTER_PROMPT_TEMPLATE.md (MASTER_PROMPT, HARNESS_BLOCKS) | 10 | AGENTS_TEMPLATE
 docs/templates/ | ARCHITECTURE_PATTERNS_TEMPLATE.md, REPOSITORY_PATTERN_TEMPLATE.md, DOMAIN_MODEL_TEMPLATE.md, FITNESS_FUNCTION_TEMPLATE.md (ARCH_TEMPLATES) | 5.1-11.3 | ARCH
 docs/audit/ | WORKFLOW_LOGIC_AUDIT.md, DOCUMENTATION_GAP_ANALYSIS.md (AUDIT) | — | —
 .ace/scripts/ | llc.py, llc_steps/, llc_harness/, llc_delta/, llc_wave/ (HARNESS) | all | —

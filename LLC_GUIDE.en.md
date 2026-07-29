@@ -117,6 +117,7 @@ LLC applies **defense in depth** — layers with distinct roles:
 | **Contract** | `AGENTS.md`/`CLAUDE.md` state "all work becomes a session" | Advisory (states the rule) | ✅ |
 | **Procedure** | the step's skill (auto-loaded by `llc run`) | Advisory (operationalizes) | ✅ |
 | **Guarantee** | `pre-commit.sh` + `validate-tags.py --coverage`: a commit with code but no session is **rejected** by git | **Deterministic** | ✅ |
+| **Self-validation** | `llm-validation.sh`: 8 post-generation checks (secrets, SQL injection, `return null`, placeholder tests…) — the agent runs it before reporting a task as done; the `ace-llm-validation` hook repeats the barrier at commit | **Deterministic** | ✅ |
 | **Per-client UX** | a client hook (e.g. Claude Code `PreToolUse`) blocks edits with no open session | Deterministic | ❌ (per-client) |
 
 The layer that **actually guarantees** recording is the **git pre-commit hook** — git runs it
@@ -555,7 +556,7 @@ Execute the skill docs/skills/llc-step-10.md
 - `README.md` at root — entry point with badges, stack, how to run, docs
 - `docs/DEPLOYMENT.md` — environments, CI/CD pipeline, variables, rollback, monitoring
 - `CLAUDE.md` — project steering file (stack, domain, architecture, constraints, commands)
-- `AGENTS.md` — developer steering file (epistemic protocol, zones, TDD, handoff)
+- `AGENTS.md` — developer steering file (epistemic protocol, zones, TDD, handoff), with the **Master Prompt** injected from `docs/templates/MASTER_PROMPT_TEMPLATE.md` — 5 harness blocks (SECURITY, ARCHITECTURE, CLEAN_CODE, TDD, DEVOPS — 28 rules traceable to fitness functions) + mandatory gates (lint, build, arch:check, test, coverage)
 
 #### CLAUDE.md vs AGENTS.md: Which to use?
 
@@ -570,6 +571,7 @@ Execute the skill docs/skills/llc-step-10.md
 - Can a new developer run the project in ≤ 10 min following the README?
 - Does DEPLOYMENT cover rollback and monitoring?
 - Are there no exposed secrets or credentials?
+- Was the Master Prompt injected into `AGENTS.md` with all placeholders (`{{LINT_CMD}}`, `{{TEST_CMD}}`…) resolved for the project's stack?
 
 **Only advance when approved.**
 
@@ -676,6 +678,12 @@ Execute the skill docs/skills/llc-step-10-8-test-coverage.md
 ---
 
 ### Step 11: Execution
+
+> **🤖 Post-generation self-validation:** before reporting any task as done, the agent runs
+> `bash .ace/scripts/llm-validation.sh` — 8 checks on the generated code
+> (5 blocking: hardcoded secrets, SQL with interpolation, `return null` in services, SQL outside
+> repositories, placeholder tests; 3 warnings: delays in tests, `any` in signatures,
+> `console.*`). The `ace-llm-validation` hook in `.pre-commit-config.yaml` repeats the barrier at commit.
 
 **Now development begins.** You have two tracks:
 
@@ -802,6 +810,7 @@ happens at both individual PRP level (session_end) and wave level
 - **Domain Isolation** — `domain/` does not import `@prisma/client`, `repositories/`, `prisma/`
 - **Use Case Size** — use cases ≤ 200 lines, single responsibility
 - **Module Coverage** — core modules ≥ 90% coverage, others ≥ 80%
+- **Clean Code + Deep Clean + Security + UX** — 34 additional checks via `--check-clean-code`, `--check-deep-clean`, `--check-security`, `--check-ux` (40 checks total with `--all`)
 
 **You validate:** 👤 Gate 11.2 includes fitness functions
 - Does `python .ace/scripts/fitness-functions.py --all --strict` pass (exit 0)?

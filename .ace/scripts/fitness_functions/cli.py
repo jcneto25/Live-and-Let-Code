@@ -66,6 +66,18 @@ def main():
         action="store_true",
         help="Deep Clean: CQS, null, data clumps, flags, primitives, validation, pass-through",
     )
+    # Security checks (Ação 1 — Harness Preventivo LLC / Step 5d)
+    parser.add_argument(
+        "--check-security",
+        action="store_true",
+        help="Security: secrets, SQL injection, AsyncStorage, client-only auth, user_id",
+    )
+    # UX checks (Ação 3 — Harness Preventivo LLC / Step 7a)
+    parser.add_argument(
+        "--check-ux",
+        action="store_true",
+        help="UX: hardcoded strings, confirmshaming, alerts, roach motel, labels",
+    )
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     parser.add_argument(
         "--strict", action="store_true", help="Exit code 1 se violacao ou bloqueio"
@@ -127,6 +139,28 @@ def main():
                 "max_function_lines_deep",
                 "no_missing_validation",
                 "no_pass_through",
+            ]
+        )
+    # Security
+    if args.check_security:
+        requested.extend(
+            [
+                "no_hardcoded_secrets",
+                "no_sql_injection",
+                "no_asyncstorage_tokens",
+                "no_client_only_auth",
+                "user_id_in_tables",
+            ]
+        )
+    # UX
+    if args.check_ux:
+        requested.extend(
+            [
+                "no_hardcoded_strings",
+                "no_confirmshaming",
+                "no_alert_without_recovery",
+                "no_roach_motel",
+                "form_field_without_label",
             ]
         )
 

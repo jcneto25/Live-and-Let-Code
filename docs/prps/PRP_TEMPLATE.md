@@ -6,24 +6,37 @@
 > **Prioridade:** {Crítico / Alto / Médio / Baixo}
 > **Complexidade:** {Baixa / Média / Alta}
 > **Criado em:** {YYYY-MM-DD} | **Última atualização:** {YYYY-MM-DD} | **Versão:** {v1.0}
+> **Caso de Uso:** CU-{NNN}
 
 ---
 
 ## 1. Contexto e Objetivo
 
-### 1.1 Por que este PRP existe?
+### 1.1 Caso de Uso de Origem
+
+| Campo | Valor |
+|-------|-------|
+| ID | CU-{NNN} |
+| Objetivo de negócio | {resumo em 1 linha} |
+| Atores | {lista de atores} |
+| Link | `docs/business/use-cases/CU-NNN-[nome].md` |
+
+> **Regra:** Todo PRP DEVE referenciar exatamente 1 CU de origem.
+> Se um PRP atende a múltiplos CUs, sub-divida o PRP em PRPs menores (1 CU → 1 PRP).
+
+### 1.2 Por que este PRP existe?
 {Explique em 1-2 parágrafos o problema de negócio ou técnico que este PRP resolve. Use linguagem do usuário final, não técnica.}
 
 > **Exemplo:** *"Terapeutas precisam registrar sessões com crianças em locais sem internet. Este PRP entrega a gravação de sessão no mobile com timer, contadores de frequência e registro de mood, salvando localmente até o sync."*
 
-### 1.2 O que é entregue?
+### 1.3 O que é entregue?
 {Liste em bullets o que o usuário final (ou sistema) poderá fazer após este PRP estar completo.}
 
 - [ ] {Ação concreta 1}
 - [ ] {Ação concreta 2}
 - [ ] {Ação concreta 3}
 
-### 1.3 O que NÃO está no escopo (será feito em PRPs futuros)
+### 1.4 O que NÃO está no escopo (será feito em PRPs futuros)
 {Explicitamente liste o que NÃO será feito aqui. Isso evita scope creep e alinha expectativas.}
 
 - ❌ {Feature futura 1} → PRP-{YYY}

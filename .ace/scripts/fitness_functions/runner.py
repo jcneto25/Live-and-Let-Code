@@ -39,6 +39,20 @@ from .checks_deep_clean import (
     check_no_pass_through,
     check_no_primitive_obsession,
 )
+from .checks_security import (
+    check_no_asyncstorage_tokens,
+    check_no_client_only_auth,
+    check_no_hardcoded_secrets,
+    check_no_sql_injection,
+    check_user_id_in_tables,
+)
+from .checks_ux import (
+    check_form_field_without_label,
+    check_no_alert_without_recovery,
+    check_no_confirmshaming,
+    check_no_hardcoded_strings,
+    check_no_roach_motel,
+)
 from .config import severity_label
 
 
@@ -77,6 +91,18 @@ def run_checks(requested: list[str], config: dict, verbose: bool = False) -> dic
         "max_function_lines_deep": check_max_function_lines_deep,
         "no_missing_validation": check_no_missing_validation,
         "no_pass_through": check_no_pass_through,
+        # Security checks (Ação 1 — Harness Preventivo LLC / Step 5d)
+        "no_hardcoded_secrets": check_no_hardcoded_secrets,
+        "no_sql_injection": check_no_sql_injection,
+        "no_asyncstorage_tokens": check_no_asyncstorage_tokens,
+        "no_client_only_auth": check_no_client_only_auth,
+        "user_id_in_tables": check_user_id_in_tables,
+        # UX checks (Ação 3 — Harness Preventivo LLC / Step 7a)
+        "no_hardcoded_strings": check_no_hardcoded_strings,
+        "no_confirmshaming": check_no_confirmshaming,
+        "no_alert_without_recovery": check_no_alert_without_recovery,
+        "no_roach_motel": check_no_roach_motel,
+        "form_field_without_label": check_form_field_without_label,
     }
 
     if "all" in requested:

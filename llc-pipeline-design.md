@@ -205,7 +205,8 @@ project-root/
   │   │
   │   ├── templates/                              # Templates de arquivos de steering
   │   │   ├── CLAUDE_TEMPLATE.md                  # Template para CLAUDE.md (projeto)
-  │   │   └── AGENTS_TEMPLATE.md                  # Template para AGENTS.md (desenvolvedor)
+  │   │   ├── AGENTS_TEMPLATE.md                  # Template para AGENTS.md (desenvolvedor)
+  │   │   └── MASTER_PROMPT_TEMPLATE.md           # [Ação 7] Master Prompt — 5 harness blocks (28 regras) injetados no AGENTS.md
   │   │
 │   ├── superpowers/                             # Meta-documentação
 │   │   └── specs/                               # Design specs
@@ -235,13 +236,14 @@ project-root/
 │   │   ├── validate-tags.py
 │   │   ├── impact-analyzer.py
 │   │   ├── code-health.py
-│   │   ├── fitness-functions.py                  # [1.7.0] Fitness Functions
+│   │   ├── fitness-functions.py                  # [1.7.0] Fitness Functions (40 checks: arquitetura, clean code, deep clean, segurança, UX)
 │   │   ├── llc.py                                # [1.5.0] Thin Harness CLI
 │   │   ├── llc_harness.py                        # [1.5.0] Harness orchestrator
 │   │   ├── llc_classify.py                       # [1.5.0] Early Commitment classifier
 │   │   ├── llc_replay.py                         # [1.5.0] Deterministic Replay engine
 │   │   ├── replay_stats.py                       # [1.5.0] Replay metrics dashboard
-│   │   └── pre-commit.sh
+│   │   ├── pre-commit.sh
+│   │   └── llm-validation.sh                     # [Ação 8] Self-validation pós-geração (8 checks)
 │   ├── config/                                    # [1.5.0] Config files
 │   │   ├── gates.json
 │   │   └── arch-config.yaml                       # [1.7.0] Fitness Functions config
@@ -254,7 +256,7 @@ project-root/
 │   └── templates/
 │       └── session.template.md
 │
-├── .pre-commit-config.yaml                       # Validação ACE + impacto no commit
+├── .pre-commit-config.yaml                       # Validação ACE + test gate + LLM self-validation no commit
 │
 ├── mocks/                                       # Camada de dados mockados (Step 8)
 │   ├── data/
@@ -380,12 +382,13 @@ graph TD
 | 0.5 | Visão + Módulos | `ingestion/converted/` | Visão + MOD-*.md | `template_visao_estrategica_e_negocio.md`, `Template_Especificacao_Modulo.md`, guia de preenchimento | 👤 1 |
 | 1 | 7 Especificações | Visão + Módulos | Glossário, RF, RNF, RN, BPMN, Perfis, Integrações | 7 templates em `docs/` | 👤 2 |
 | 2 | PRDs | 7 specs + Visão | `executive_PRD.md`, `PRD_tecnico_institucional.md` | `template_prd_executivo_institucional.md`, `template_prd_tecnico_institucional.md` | 👤 3 |
+| 2.5 | Casos de Uso | PRDs validados | CUs + INDEX.md | `llc-step-2-5.md` | 👤 3.5 |
 | 3 | PRPs | PRDs + Specs + Módulos | `PRP-*.md` (N arquivos) | `PRP_TEMPLATE.md` | 👤 4 |
 | 4 | Planejamento | PRPs | `DEPENDENCY_MATRIX.md`, `PLAN.md`, `EXECUTION_WAVES.md` | `DEPENDENCY_MATRIX_TEMPLATE.md`, `PLAN_TEMPLATE.md`, `EXECUTION_WAVES_TEMPLATE.md` | 👤 5 |
 | 5 | Arquitetura | PRDs + RNF + Integrações + Planejamento | `ARCHITECTURE.md` | `ARCHITECTURE_TEMPLATE.md` | 👤 6 |
 | 5a | Architecture Patterns (obrigatório) | `ARCHITECTURE.md` §7-9 + RNF | `ARCHITECTURE.md` atualizado, `.ace/arch-config.yaml`, ADRs 008-011 | `ARCHITECTURE_PATTERNS_TEMPLATE.md` | 👤 6a |
 | 5b | API Design Enforcement (obrigatório) | `ARCHITECTURE.md` + PRPs + Specs | `docs/api/openapi.yaml`, controllers padronizados | — | 👤 6b |
-| 5c | Clean Code Enforcement (obrigatório) | `ARCHITECTURE.md` + arch-config | 21+ fitness functions configuradas | — | 👤 8.5 |
+| 5c | Clean Code Enforcement (obrigatório) | `ARCHITECTURE.md` + arch-config | 29 fitness functions configuradas (7 dimensões, incl. Deep Clean) | — | 👤 8.5 |
 | 5d | Secure-by-Design | `.ace/arch-config.yaml` + ADRs 5a | `.ace/arch-config.yaml` expandido, ADR-018, fitness functions de segurança | — | 👤 5d |
 | 6 | Tarefas | PRPs + Arquitetura + Planejamento | `TASKS.md` | `TASKS_TEMPLATE.md` | 👤 7 |
 | 7 | Design System | Arquitetura + Visão + Perfis | `DESIGN_SYSTEM.md` | `Design_System_Master.md` | 👤 8 |
@@ -398,7 +401,7 @@ graph TD
 > `mocks/data/` e `mocks/handlers/` independente do stack; a implementacao concreta dos handlers e
 > adaptada pela IA conforme o stack definido no `ARCHITECTURE.md`. Veja [FAQ](FAQ.md#o-llc-funciona-para-stacks-que-nao-sao-javascripttypescript).
 | 9 | Testing Docs | Arquitetura + PRPs + Tarefas | `TESTING_GUIDE.md`, `COVERAGE_BASELINE.md`, `COVERAGE_PROGRESS.md` | `TESTING_GUIDE_TEMPLATE.md`, `COVERAGE_BASELINE_TEMPLATE.md`, `COVERAGE_PROGRESS_TEMPLATE.md` | 👤 10 |
-| 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md` | 👤 11 |
+| 10 | Project Docs | Arquitetura + Planejamento + Design System + Testing | `README.md`, `DEPLOYMENT.md`, `CLAUDE.md`, `AGENTS.md` (com Master Prompt injetado) | `CLAUDE_TEMPLATE.md`, `AGENTS_TEMPLATE.md`, `MASTER_PROMPT_TEMPLATE.md` | 👤 11 |
 | 10.5 | User Guide | PRPs + Perfis + Workflows + Glossario | `USER_GUIDE.md`, `index.md`, `visao-geral.md`, `perfis/index.md` | `USER_GUIDE_TEMPLATE.md` | 👤 11.5 |
 | 10.6 | Security Audit (pre-code) | Setup + Dependencias instaladas (Step 8) | `.ace/security/*.json`, `docs/security/SECURITY_AUDIT_REPORT.md` | `SECURITY_AUDIT_REPORT_TEMPLATE.md` | 👤 11-SEC |
 | 10.7 | Null Safety (pre-code) | PRPs com secao `§7 (Data Model)` | `docs/security/NULL_SAFETY_REPORT.md` | `NULL_SAFETY_REPORT_TEMPLATE.md` | 👤 12-NULL |
@@ -490,12 +493,14 @@ tags: [categoria, llc-pipeline]
 | `llc-step-0-5` | 0.5 | Gera Visão Estratégica + Especificação de Módulos a partir de documentos de ingestão |
 | `llc-step-1` | 1 | Gera 7 documentos de especificação (Glossário, RF, RNF, RN, BPMN, Perfis, Integrações) |
 | `llc-step-2` | 2 | Gera PRD Executivo e PRD Técnico Institucional |
+| `llc-step-2-5.md` | Step 2.5 | Casos de Uso | 2.5 |
 | `llc-step-3` | 3 | Gera PRPs (Project Requirement Proposals) — contratos auto-contidos |
 | `llc-step-4` | 4 | Gera Matriz de Dependências, Plano e Ondas de Execução |
 | `llc-step-5` | 5 | Gera documento de Arquitetura (Stack, C4, ADRs, CI/CD) |
 | `llc-step-5a-architecture-patterns` | 5a | Padrões Arquiteturais — Clean Architecture, Repository Pattern, Domain Layer, Use Cases, Event Bus |
 | `llc-step-5b-api-design` | 5b | API Design Enforcement — REST semantics, OpenAPI, paginação, HATEOAS, versioning |
-| `llc-step-5c-clean-code` | 5c | Clean Code Enforcement — Functions, Classes, Naming, Errors, Smells, ReadModels (21+ fitness functions) |
+| `llc-step-5c-clean-code` | 5c | Clean Code Enforcement — Functions, Classes, Naming, Errors, Smells, ReadModels, Deep Clean (29 fitness functions em 7 dimensões) |
+| `llc-step-clean-code-deep` | 5c | Deep Clean — 8 regras de lógica recorrente: CQS, return null, data clumps, flag arguments, primitive obsession, validação ausente, pass-through |
 | `llc-step-5d-secure-by-design` | 5d | Estabelece 10 hard gates de segurança, threat modeling, safe code templates e 5 fitness functions de segurança |
 | `llc-step-6` | 6 | Gera TASKS.md com tarefas concretas, agentes e estimativas |
 | `llc-step-7` | 7 | Gera Design System completo (tokens, componentes, padrões) |
@@ -518,7 +523,8 @@ tags: [categoria, llc-pipeline]
 | `llc-ace-context` | Transversal | Protocolo ACE de contexto entre sessões — append-only, anti-amnésia |
 | `llc-code-health` | 11 | Monitora saúde estrutural (Moved Code, Copy/Paste, Legacy Touch) |
 | `llc-impact-analyzer` | Transversal | Analisa impacto de alterações via git diff + grafo de dependências |
-| **fitness-functions.py** | 11.3 | Script de fitness functions: Dependency Rule, circular deps, DIP, domain isolation, use case size, module coverage, clean code |
+| **fitness-functions.py** | 11.3 | Script de fitness functions — 40 checks: arquitetura (6), clean code (16), deep clean (8), segurança (5), UX (5) |
+| **llm-validation.sh** | 11 | Self-validation pós-geração (Ação 8) — 8 checks (5 bloqueantes, 3 advertências); chamado pelo agente antes de reportar task concluída + hook `ace-llm-validation` no pre-commit |
 
 ---
 
@@ -565,6 +571,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 1 | 0.5 | Visão estratégica cobre o escopo? Módulos estão corretamente identificados? |
 | 👤 2 | 1 | 7 specs estão completos? Glossário é consistente? Perfis e integrações batem com a visão? |
 | 👤 3 | 2 | PRD executivo comunica valor? PRD técnico cobre todos os requisitos? |
+| 👤 3.5 | 2.5 | Casos de Uso — Aprovação em lote dos CUs |
 | 👤 4 | 3 | PRPs têm granularidade correta? Dependências entre PRPs fazem sentido? |
 | 👤 5 | 4 | Ondas estão bem agrupadas? Caminho crítico é realista? |
 | 👤 6 | 5 | Stack é viável? ADRs são justificados? RNFs estão endereçados? |
@@ -644,6 +651,7 @@ O histórico ACE da sessão rejeitada **nunca é deletado** — append-only, pre
 | 23 | **PRP Amendment** | `docs/templates/PRP_AMENDMENT_TEMPLATE.md` | IA (Step 3, modo delta) | `docs/prps/PRP-A-*.md` |
 | 24 | **Delta Report** | `docs/templates/DELTA_REPORT_TEMPLATE.md` | IA (Step Δ.0) | `docs/planning/DELTA_REPORT.md` |
 | 25 | **ADR** | `docs/architecture/ADR_TEMPLATE.md` | IA (Step 5) | `docs/architecture/adr/ADR-*.md` |
+| 26 | **Master Prompt** | `docs/templates/MASTER_PROMPT_TEMPLATE.md` | IA (Step 10) | Injetado no `AGENTS.md` do projeto-alvo (placeholder `{{MASTER_PROMPT}}`) |
 
 ---
 
@@ -719,6 +727,7 @@ agente entre pelo fluxo em vez de codar por fora. O LLC aplica camadas com papé
 | **Contrato** | `AGENTS.md`/`CLAUDE.md` (`AGENTS_TEMPLATE.md` §Workflow Discipline) declaram a regra | Advisory | ✅ |
 | **Procedimento** | skill do step, auto-carregada pelo `llc run` | Advisory | ✅ |
 | **Garantia** | `pre-commit.sh` + `validate-tags.py --coverage` — commit com código sem sessão é **rejeitado** | **Determinística** | ✅ |
+| **Self-validation** | `llm-validation.sh` — 8 checks pós-geração (secrets, SQL injection, return null, SQL fora de repo, placeholder tests, delays, `any`, `console.*`); chamado pelo agente antes de reportar task concluída + hook `ace-llm-validation` | **Determinística** | ✅ |
 | **UX por cliente** | hook do cliente (ex.: Claude Code `PreToolUse`) bloqueia edição sem sessão `in_progress` | Determinística | ❌ (por cliente) |
 
 **A camada determinística e tool-agnostic é o pre-commit do git.** O `validate-tags.py

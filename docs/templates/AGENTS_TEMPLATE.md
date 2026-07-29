@@ -122,6 +122,17 @@ When in doubt about which artifact to consult, use the impact analyzer:
 
 ---
 
+## Master Prompt — Cross-Cutting Harness (LLC)
+
+<!-- Step 10: substitua o placeholder abaixo pelo bloco MASTER_PROMPT:BEGIN..END de
+     docs/templates/MASTER_PROMPT_TEMPLATE.md, com os placeholders {{STACK}} e
+     {{*_CMD}} preenchidos para este projeto. Estes 5 harness blocks (SECURITY,
+     ARCHITECTURE, CLEAN_CODE, TDD, DEVOPS) valem para TODA sessão de código. -->
+
+{{MASTER_PROMPT}}
+
+---
+
 ## PART I — Working with {{DEVELOPER_NAME}}: Coding Agent Protocol
 
 ### What This Is

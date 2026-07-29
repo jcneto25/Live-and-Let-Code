@@ -8,7 +8,7 @@
 
 ### 🇧🇷 Português
 
-Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **23 etapas pipeline + 2 de análise de mudança (Δ)** com **26 gates de validação humana** em cada fase. **27+ skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
+Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo completo de construção de software — da ingestão de conhecimento de negócio ao deploy em produção — em **24 etapas pipeline + 2 de análise de mudança (Δ)** com **26 gates de validação humana** em cada fase. **27+ skills tool-agnostic** executáveis por qualquer cliente de IA terminal.
 
 📘 **[Guia de Execução (PT-BR)](LLC_GUIDE.md)** — passo a passo completo  
 📄 **[Especificação do Pipeline](llc-pipeline-design.md)** — design document
@@ -17,7 +17,7 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 ### 🇺🇸 English
 
-Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **23 pipeline + 2 change analysis (Δ) steps** with **26 human validation gates** at every phase. **27+ tool-agnostic skills** executable by any terminal AI client.
+Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **24 pipeline + 2 change analysis (Δ) steps** with **26 human validation gates** at every phase. **27+ tool-agnostic skills** executable by any terminal AI client.
 
 📘 **[Execution Guide (EN-US)](LLC_GUIDE.en.md)** — full step-by-step guide  
 📄 **[Pipeline Specification](llc-pipeline-design.en.md)** — design document
@@ -51,10 +51,11 @@ python .ace/scripts/llc.py gate run --gate test-coverage
 bash .ace/scripts/pre-wave-check.sh
 ```
 
-**New: Architecture Fitness Functions**
+**New: Architecture Fitness Functions (40 checks)**
 
 ```bash
-# Verify architectural compliance (Dependency Rule, circular deps, etc.)
+# Verify compliance — 40 checks: architecture (6), clean code (16),
+# deep clean (8), security (5), UX (5)
 python .ace/scripts/fitness-functions.py --all
 
 # Strict mode (exit 1 on violations) for CI/CD
@@ -62,6 +63,15 @@ python .ace/scripts/fitness-functions.py --all --strict
 
 # Include in code health report
 python .ace/scripts/code-health.py --since "30 days ago" --fitness
+```
+
+**New: LLM Self-Validation (post-generation)**
+
+```bash
+# 8 checks on AI-generated code (5 blocking + 3 warnings)
+# Run by the agent before reporting a task as done;
+# the ace-llm-validation hook repeats the barrier at commit
+bash .ace/scripts/llm-validation.sh
 ```
 
 **New: ADRs in separate files**
@@ -76,7 +86,7 @@ python .ace/scripts/llc.py run --step 5 --task "Arquitetura do sistema"
 
 ```
 Greenfield:
-Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 7 Specs ─👤─→ PRDs ─👤─→ PRPs
+Ingestion → Conversion (Docling) ─👤─→ Vision + Modules ─👤─→ 2.5 Casos de Uso ─👤─→ 7 Specs ─👤─→ PRDs ─👤─→ PRPs
 ─👤─→ Planning ─👤─→ Architecture ─👤─→ Tasks ─👤─→ Design System ─👤─→ Setup + Mock
 ─👤─→ Testing ─👤─→ Project Docs ─👤─→ User Guide ─👤─→ Security Gates ─👤─→ Execution
 

@@ -420,7 +420,17 @@ Sessão N+1
 
 Fitness functions (Ingeno, Software Architect's Handbook ch16) sao **verificacoes automatizadas** que validam caracteristicas arquiteturais do codigo. Diferente de testes unitarios (que validam comportamento), fitness functions validam estrutura: as dependencias estao corretas? As camadas estao isoladas? Ha ciclos entre modulos?
 
-O LLC implementa 6 fitness functions no script `.ace/scripts/fitness-functions.py`:
+O LLC implementa **40 fitness functions** no script `.ace/scripts/fitness-functions.py`, em 5 categorias:
+
+| Categoria | Checks | Flags |
+|-----------|:---:|-------|
+| **Arquitetura** | 6 | `--check-deps`, `--check-circular`, `--check-interfaces`, `--check-domain`, `--check-usecase`, `--check-coverage` |
+| **Clean Code** | 16 | `--check-functions`, `--check-naming`, `--check-classes`, `--check-errors`, `--check-smells`, `--check-readmodels` |
+| **Deep Clean** | 8 | `--check-deep-clean` (CQS, `return null`, data clumps, flag arguments, primitive obsession, validação ausente, pass-through) |
+| **Segurança** | 5 | `--check-security` (secrets, SQL injection, AsyncStorage tokens, client-only auth, user_id em tabelas) |
+| **UX** | 5 | `--check-ux` (loading states, error feedback, empty states, a11y, responsividade) |
+
+As 6 fitness functions arquiteturais originais:
 
 | Fitness Function | O que verifica | Modo |
 |-----------------|----------------|------|
@@ -440,6 +450,8 @@ python .ace/scripts/fitness-functions.py --all
 # Modo estrito para CI/CD (exit code 1 se violacao)
 python .ace/scripts/fitness-functions.py --all --strict --json
 ```
+
+Além das fitness functions, o script `.ace/scripts/llm-validation.sh` faz **self-validation pós-geração**: 8 checks sobre o código gerado pela IA (5 bloqueantes: secrets hardcoded, SQL com interpolação, `return null` em services, SQL fora de repositories, placeholder tests; 3 advertências: delays em testes, `any` em signatures, `console.*`). O agente o executa antes de reportar qualquer task como concluída, e o hook `ace-llm-validation` no `.pre-commit-config.yaml` repete a barreira no commit.
 
 ### O que é o "problema dos 70%" e como o LLC ajuda a combatê-lo?
 

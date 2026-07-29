@@ -60,7 +60,7 @@ tags: [clean-code, functions, classes, naming, errors, smells, readmodels, solid
 
 ## 🎯 OBJETIVO
 
-Consolidar e executar **todas as verificações de Clean Code** através de **21+ fitness functions automatizadas**, cobrindo 6 dimensões:
+Consolidar e executar **todas as verificações de Clean Code** através de **29 fitness functions automatizadas**, cobrindo 7 dimensões:
 
 | Dimensão | Skill Componente | Fitness Functions | Referência |
 |----------|------------------|-------------------|------------|
@@ -70,10 +70,11 @@ Consolidar e executar **todas as verificações de Clean Code** através de **21
 | **Errors** | `llc-step-clean-code-errors` | `no-empty-exceptions`, `no-empty-catch`, `result-pattern` | Clean Code Ch.7 |
 | **Smells** | `llc-step-clean-code-smells` | `no-magic-numbers`, `no-dead-code`, `no-noise-comments`, `prefer-const` | Clean Code Ch.17 |
 | **ReadModels** | `llc-step-clean-code-readmodels` | `readmodel-exists`, `repo-returns-readmodel`, `no-any-in-public`, `no-as-any` | Clean Architecture |
+| **Deep Clean** | `llc-step-clean-code-deep` | `no-cqs-violation`, `no-null-return`, `no-data-clump`, `no-flag-arguments`, `no-primitive-obsession`, `max-function-lines-deep`, `no-missing-validation`, `no-pass-through` | Clean Code Ch.3/6/17, CQS, Refactoring |
 
 ---
 
-## 🔧 FITNESS FUNCTIONS AUTOMATIZADAS (21 Checks)
+## 🔧 FITNESS FUNCTIONS AUTOMATIZADAS (29 Checks)
 
 ### Functions (4 checks)
 | Check | Descrição | Threshold | Severidade Core/Non-core |
@@ -121,6 +122,21 @@ Consolidar e executar **todas as verificações de Clean Code** através de **21
 | `no-any-in-public` | Zero `any` em signatures públicas (params, returns, props) | block |
 | `no-as-any` | Zero casts `as any` (exceto 2 permitidos no global filter) | block |
 
+### Deep Clean (8 checks) — Ação 4 do Harness Preventivo
+
+Erros recorrentes de lógica que os checks estruturais não pegam. Detalhes e exemplos em `llc-step-clean-code-deep`.
+
+| Check | Descrição | Threshold | Severidade Core/Non-core |
+|-------|-----------|-----------|--------------------------|
+| `no-cqs-violation` | Command retorna valor E tem side effect | heurística | block / warn |
+| `no-null-return` | `return null` em services/repositories | regex | block / warn |
+| `no-data-clump` | 3+ campos juntos em 5+ assinaturas | 3 / 5 | warn / warn |
+| `no-flag-arguments` | Parâmetro booleano em método público | heurística | block / warn |
+| `no-primitive-obsession` | Primitivo onde tipo de domínio caberia | heurística | warn / warn |
+| `max-function-lines-deep` | Funções > 30 linhas em qualquer módulo | 30 | warn / warn |
+| `no-missing-validation` | `create`/`update` sem validação explícita | heurística | block / warn |
+| `no-pass-through` | Método que apenas delega sem lógica | heurística | warn / warn |
+
 ---
 
 ## 📊 COMANDO DE EXECUÇÃO
@@ -136,6 +152,7 @@ python .ace/scripts/fitness-functions.py --check-naming --strict
 python .ace/scripts/fitness-functions.py --check-errors --strict
 python .ace/scripts/fitness-functions.py --check-smells --strict
 python .ace/scripts/fitness-functions.py --check-readmodels --strict
+python .ace/scripts/fitness-functions.py --check-deep-clean --strict
 ```
 
 **Opções:**
@@ -166,6 +183,8 @@ python .ace/scripts/fitness-functions.py --check-readmodels --strict
 - [ ] Módulos core (auditorias, achados, planos, relatórios, notificações) têm **zero** violações block?
 - [ ] `Result<T, E>` pattern adotado em novos use cases?
 - [ ] Repository interfaces retornam `XxxReadModel` tipado (zero `any`)?
+- [ ] **Deep Clean:** zero CQS violations, `return null`, flag arguments e validação ausente em módulos core? (`--check-deep-clean --strict`)
+- [ ] **Deep Clean:** data clumps, primitive obsession e pass-through (warn) registrados em dívida técnica quando remanescentes?
 - [ ] Código legacy marcado `// LEGACY` tem plano de migração em `docs/tech-debt/MIGRATION_PLAN.md`?
 
 **Só avance quando aprovar.**
@@ -185,9 +204,9 @@ python .ace/scripts/fitness-functions.py --check-readmodels --strict
 
 Ao executar esta skill, o agente deve:
 
-1. **Verificar** código existente contra as 21 rules via `fitness-functions.py --check-clean-code`
+1. **Verificar** código existente contra as 29 rules via `fitness-functions.py --check-clean-code --check-deep-clean`
 2. **Reportar** violações com localização exata (arquivo, linha, regra, sugestão de fix)
-3. **Agrupar** por dimensão (Functions, Classes, Naming, Errors, Smells, ReadModels)
+3. **Agrupar** por dimensão (Functions, Classes, Naming, Errors, Smells, ReadModels, Deep Clean)
 4. **Priorizar**: block em core → block em non-core → warn
 5. **Sugerir** refatoração padrão (extract use case, extract interface, introduce ReadModel, etc.)
 6. **Validar** via fitness functions automatizadas
@@ -211,7 +230,9 @@ Ao executar esta skill, o agente deve:
 
 ## 📚 REFERÊNCIAS
 
-- **Clean Code** (Robert C. Martin) — Cap. 2 (Nomes), 3 (Funções), 7 (Erros), 10 (Classes), 17 (Smells)
+- **Clean Code** (Robert C. Martin) — Cap. 2 (Nomes), 3 (Funções), 6 (Objetos e Estruturas), 7 (Erros), 10 (Classes), 17 (Smells)
+- **Refactoring** (Martin Fowler) — Code Smells: Data Clumps, Primitive Obsession, Middle Man (pass-through)
+- **Command-Query Separation** (Bertrand Meyer) — base do check `no-cqs-violation`
 - **Clean Architecture** (Robert C. Martin) — Dependency Rule, DIP
 - **Software Design & Architecture** (Khalil Stemmler) — SRP, Coesão, Entidades de Domínio, Use Cases
 - **Software Architect's Handbook** (Joseph Ingeno) — Fitness Functions, ADRs

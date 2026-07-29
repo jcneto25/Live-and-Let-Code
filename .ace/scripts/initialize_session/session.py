@@ -5,7 +5,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -57,9 +57,14 @@ def get_previous_session() -> Optional[SessionInfo]:
         logger.error(f"index.json inválido: {e}")
         return None
     sessions = index.get("sessions", [])
+    known_fields = {f.name for f in fields(SessionInfo)}
     for session_data in reversed(sessions):
         if session_data.get("status") in ("completed", "in_progress"):
-            return SessionInfo(**session_data)
+            # Tolera campos extras do index.json (completed_at, prp, futuros)
+            # gravados por finalize_session/update_index — só os campos do
+            # dataclass são desempacotados.
+            return SessionInfo(**{k: v for k, v in session_data.items()
+                                  if k in known_fields})
     return None
 
 

@@ -146,6 +146,7 @@ O LLC aplica **defense in depth** — camadas com papéis distintos:
 | **Contrato** | `AGENTS.md`/`CLAUDE.md` declaram "todo trabalho vira sessão" | Advisory (define a regra) | ✅ |
 | **Procedimento** | skill do step (auto-carregada pelo `llc run`) | Advisory (operacionaliza) | ✅ |
 | **Garantia** | `pre-commit.sh` + `validate-tags.py --coverage`: commit com código sem sessão é **rejeitado** pelo git | **Determinística** | ✅ |
+| **Self-validation** | `llm-validation.sh`: 8 checks pós-geração (secrets, SQL injection, `return null`, placeholder tests…) — o agente executa antes de reportar task concluída; hook `ace-llm-validation` repete a barreira no commit | **Determinística** | ✅ |
 | **UX por cliente** | hook do cliente (ex.: Claude Code `PreToolUse`) bloqueia edição sem sessão aberta | Determinística | ❌ (por cliente) |
 
 A camada que **realmente garante** o registro é o **pre-commit do git** — o git o executa
@@ -176,6 +177,7 @@ Step 0.1 → Conversao para Markdown (Docling)
 Step 0.5 → Visao Estrategica + Modulos       👤 Gate 1
 Step 1   → 7 Especificacoes                  👤 Gate 2
 Step 2   → PRDs (Executivo + Tecnico)         👤 Gate 3
+Step 2.5 → Casos de Uso (LLC)                👤 Gate 3.5
 Step 3   → PRPs                               👤 Gate 4
 Step 4   → Planejamento                       👤 Gate 5
 Step 5   → Arquitetura                        👤 Gate 6
@@ -314,6 +316,31 @@ Execute a skill docs/skills/llc-step-2.md
 - O PRD executivo comunica o valor do sistema claramente?
 - O PRD técnico cobre todos os requisitos dos specs?
 - Ambos são consistentes entre si?
+
+**Só avance quando aprovar.**
+
+---
+
+### Passo 2.5: Casos de Uso (LLC)
+
+#### Step 2.5 — Casos de Uso (LLC)
+
+> 📖 Skill: `docs/skills/llc-step-2-5.md`
+
+Deriva Casos de Uso dos PRDs validados. Cada CU descreve um objetivo de negócio com atores, fluxos e regras. Servem como âncora de rastreabilidade entre negócio e técnica.
+
+**Entrada:** PRDs validados (Step 2), specs, módulos
+**Saída:** `docs/business/use-cases/CU-NNN-[nome].md` + `INDEX.md`
+**Gate:** 👤 Gate 3.5 — Aprovação em lote dos CUs
+
+#### 👤 Gate 3.5 — Aprovação dos Casos de Uso
+
+**Checklist:**
+- [ ] CUs cobrem todos os objetivos de negócio dos PRDs?
+- [ ] Cada CU tem atores identificados?
+- [ ] Granularidade adequada (≤15 passos no fluxo principal)?
+- [ ] Matriz de rastreabilidade CU↔RF completa?
+- [ ] INDEX.md atualizado com todos os CUs?
 
 **Só avance quando aprovar.**
 
@@ -475,7 +502,7 @@ Execute a skill docs/skills/llc-step-5b-api-design.md
 ### Passo 5c: Clean Code Enforcement (Obrigatório)
 
 > **OBRIGATÓRIO** — Este sub-step deve ser executado após o Step 5b e antes do Step 6.
-> As 21 verificações de Clean Code são vinculantes e verificadas por fitness functions automatizadas.
+> As 29 verificações de Clean Code são vinculantes e verificadas por fitness functions automatizadas.
 
 **Você faz:**
 
@@ -483,7 +510,7 @@ Execute a skill docs/skills/llc-step-5b-api-design.md
 Execute a skill docs/skills/llc-step-5c-clean-code.md
 ```
 
-**A IA faz:** Executa o pipeline de Clean Code consolidado (21 checks):
+**A IA faz:** Executa o pipeline de Clean Code consolidado (29 checks em 7 dimensões):
 
 1. **Funções** — Tamanho (≤20 linhas), Parâmetros (≤3), Responsabilidade única
 2. **Classes** — SRP, ≤5 deps, ≤100 linhas, DIP, Coesão, Entidades ricas, Use Cases
@@ -491,6 +518,7 @@ Execute a skill docs/skills/llc-step-5c-clean-code.md
 4. **Erros** — Zero exceções vazias, Zero catch vazio, Magic numbers → constantes
 5. **Smells** — Código morto, Comentários ruído, `let`→`const`, `as any` proibido
 6. **ReadModels** — Repositórios retornam ReadModels tipados, Zero `any` em público
+7. **Deep Clean** — CQS, `return null`, data clumps, flag arguments, primitive obsession, validação ausente, pass-through (skill `llc-step-clean-code-deep`)
 
 **Artefatos gerados/atualizados:**
 - `.ace/arch-config.yaml` — Regras de Clean Code ativadas/thresholds por módulo
@@ -506,6 +534,7 @@ Execute a skill docs/skills/llc-step-5c-clean-code.md
 - Nomes semânticos em todo código novo (`auditoriaEncontrada` vs `data`)?
 - Zero exceções vazias (`NotFoundException('')`)?
 - Zero `as any` em assinaturas públicas?
+- **Deep Clean:** `--check-deep-clean --strict` passa sem bloqueios em módulos core (CQS, `return null`, flag arguments, validação ausente)?
 - ADRs criados para decisões de Clean Code?
 
 **Só avance quando aprovar.**
@@ -686,7 +715,7 @@ Execute a skill docs/skills/llc-step-10.md
 - `README.md` na raiz — portal de entrada com badges, stack, como rodar, docs
 - `docs/DEPLOYMENT.md` — ambientes, pipeline CI/CD, variáveis, rollback, monitoramento
 - `CLAUDE.md` — arquivo de steering do projeto (stack, domínio, arquitetura, restrições, comandos)
-- `AGENTS.md` — arquivo de steering do desenvolvedor (protocolo epistêmico, zonas, TDD)
+- `AGENTS.md` — arquivo de steering do desenvolvedor (protocolo epistêmico, zonas, TDD), com o **Master Prompt** injetado a partir de `docs/templates/MASTER_PROMPT_TEMPLATE.md` — 5 harness blocks (SECURITY, ARCHITECTURE, CLEAN_CODE, TDD, DEVOPS — 28 regras rastreáveis a fitness functions) + gates obrigatórios (lint, build, arch:check, test, coverage)
 
 #### CLAUDE.md vs AGENTS.md: Qual usar?
 
@@ -701,6 +730,7 @@ Execute a skill docs/skills/llc-step-10.md
 - Um dev novo consegue rodar o projeto em ≤ 10 min seguindo o README?
 - O DEPLOYMENT cobre rollback e monitoramento?
 - Não há secrets ou credenciais expostos?
+- O Master Prompt foi injetado no `AGENTS.md` com todos os placeholders (`{{LINT_CMD}}`, `{{TEST_CMD}}`…) resolvidos para o stack do projeto?
 
 **Só avance quando aprovar.**
 
@@ -818,6 +848,12 @@ Execute a skill docs/skills/llc-step-10-8-test-coverage.md
 Ao finalizar, se o gate for `approved`, o branch e mergeado automaticamente e o worktree
 > removido. Se `rejected`, o worktree e descartado sem merge.
 
+> **🤖 Self-validation pós-geração:** antes de reportar qualquer task como concluída, o agente
+> executa `bash .ace/scripts/llm-validation.sh` — 8 verificações sobre o código gerado
+> (5 bloqueantes: secrets hardcoded, SQL com interpolação, `return null` em services, SQL fora
+> de repositories, placeholder tests; 3 advertências: delays em testes, `any` em signatures,
+> `console.*`). O hook `ace-llm-validation` no `.pre-commit-config.yaml` repete a barreira no commit.
+
 ### Passo 11a: Domain Modeling (Modelagem de Domínio — Obrigatório Pré-Execution)
 
 > **OBRIGATÓRIO** — Para cada PRP core, execute este sub-step **antes** de iniciar a implementação (Trilha A ou B).
@@ -915,6 +951,7 @@ ocorre tanto no nível de PRP individual (session_end) quanto no nível de onda
 - **Domain Isolation** — `domain/` não importa `@prisma/client`, `repositories/`, `prisma/`
 - **Use Case Size** — use cases ≤ 200 linhas, responsabilidade única
 - **Module Coverage** — módulos core ≥ 90% cobertura, demais ≥ 80%
+- **Clean Code + Deep Clean + Segurança + UX** — 34 checks adicionais via `--check-clean-code`, `--check-deep-clean`, `--check-security`, `--check-ux` (40 checks no total com `--all`)
 
 **Você valida:** 👤 Gate 11.2 inclui fitness functions
 - `python .ace/scripts/fitness-functions.py --all --strict` passa (exit 0)?

@@ -272,6 +272,7 @@ Além do README.md e DEPLOYMENT.md, gere os arquivos de direção (steering file
 #### AGENTS.md
 - Use o template `docs/templates/AGENTS_TEMPLATE.md`.
 - Preencha com: nome do desenvolvedor, zonas de autonomia, protocolo epistêmico, TDD enforcement, handoff ACE, reviewer guidelines.
+- Injete o **Master Prompt** (harness blocks) no placeholder `{{MASTER_PROMPT}}` — ver seção 5.1 abaixo.
 - Salve na **raiz do projeto**: `AGENTS.md`.
 
 **Relação:** CLAUDE.md = projeto (stack, domínio). AGENTS.md = desenvolvedor (como trabalha). Ambos referenciam a infraestrutura ACE.
@@ -315,6 +316,23 @@ docs/ | DEPLOYMENT.md (AMBIENTES, PIPELINE, ROLLBACK, VARIAVEIS) | Step 10 | arq
 docs/user-guide/ | USER_GUIDE.md (MANUAL, USUARIO, TUTORIAIS, NAVEGACAO) | Step 10.5 | prps, perfis
 ```
 
+### 5.1. Injete o Master Prompt (Harness Blocks) no AGENTS.md
+
+No `AGENTS.md` gerado, localize o placeholder `{{MASTER_PROMPT}}` e substitua pelo bloco
+`MASTER_PROMPT:BEGIN..END` de `docs/templates/MASTER_PROMPT_TEMPLATE.md`.
+
+#### Regras de preenchimento
+
+1. **Preencha os placeholders** do bloco com os valores do projeto:
+   `{{STACK}}`, `{{LINT_CMD}}`, `{{BUILD_CMD}}`, `{{ARCH_CHECK_CMD}}`, `{{TEST_CMD}}`, `{{COVERAGE_CMD}}`
+   (use a tabela "Adaptação por Stack" do template — mesma matriz do Step 10a).
+2. **Não edite as regras** dos 5 harness blocks (SECURITY, ARCHITECTURE, CLEAN_CODE, TDD, DEVOPS) —
+   elas são resumos executáveis das skills 5d, 5a, 5c, 9a e 10a. Mudança de regra = mudança na skill de origem.
+3. **Remova referências a enforcement inexistente:** se o projeto não tem `fitness-functions.py` ou
+   pre-commit hooks instalados, mantenha a regra mas remova a referência entre parênteses ao check.
+4. **Gates obrigatórios:** os 5 gates (lint, build, arch:check, test, coverage) devem apontar para
+   comandos que EXISTEM no projeto. Gate sem comando disponível = remova a linha e registre em dívida técnica.
+
 ### 6. Validação Cruzada
 
 Após gerar ambos os documentos, verifique:
@@ -348,7 +366,9 @@ Após gerar os 2 documentos, **PARE** e apresente:
 4. **Variáveis:** Lista de variáveis de ambiente documentadas. Alguma ficou de fora?
 5. **Documentation Index:** O indice comprimido foi preenchido no AGENTS.md?
    Todas as keywords cobrem os dominios do projeto? Algum artefato existente ficou de fora?
-6. **Consistencia:** Todos os comandos do README funcionam com os scripts do projeto?
+6. **Master Prompt:** Os 5 harness blocks foram injetados no `{{MASTER_PROMPT}}` do AGENTS.md?
+   Os comandos dos gates obrigatorios (lint, build, arch:check, test, coverage) existem e funcionam no projeto?
+7. **Consistencia:** Todos os comandos do README funcionam com os scripts do projeto?
 
 **Este é o último passo antes da Execução (Step 11).**
 

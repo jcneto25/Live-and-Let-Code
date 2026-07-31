@@ -1,6 +1,6 @@
 # Live and Let Code (LLC) — Pipeline Design Specification
 
-**Versao:** 1.8.0
+**Versao:** 1.9.0
 **Data:** 07 de Julho de 2026
 **Status:** Design Aprovado  
 **Projeto:** Live and Let Code (LLC) — Metodologia de Desenvolvimento Agentico Autônomo  
@@ -343,8 +343,13 @@ graph TD
     F6 --> QA
     QA --> S112[Step 11.2: PRP Verify]
     S112 --> V112{prp_verify --strict}
-    V112 -->|CRITICAL| REJ[merge bloqueado — corrija]
-    V112 -->|0 CRITICAL| DEPLOY[Deploy]
+    V112 -->|0 CRITICAL| S113[Step 11.3: Arch Fitness]
+    S113 --> V113{🔴 11-ARCH}
+    V113 -->|BLOCKING| REJ
+    V113 -->|PASS| S114["Step 11.4: Governance Conversion"]
+    S114 --> V114{👤 Gate 11.4}
+    V114 -->|approved| DEPLOY[Deploy]
+    V114 -->|rejected| S114
     REJ --> S11
 
     subgraph FLUXO DELTA
@@ -417,6 +422,7 @@ graph TD
 | 11.1 | OWASP Hardening (post-code) | Codigo implementado (PRPs) | `docs/security/OWASP_HARDENING_REPORT.md` | — | 🔴 Bloqueia em 1+ critico |
 | **11.2** | **PRP Verify (aceite mecânico)** | **PRP concluído + §2 preenchida** | **Relatório de gaps RF-por-RF** | **—** | **🔴 Bloqueia merge em CRITICAL** |
 | **11.3** | **Arch Fitness (fitness functions)** | **Código implementado + arch-config** | **Relatório fitness functions** | **—** | **🔴 11-ARCH (bloqueia em BLOCKING)** |
+| **11.4** | **Governance Conversion** | **PRPs concluídos + sessões ACE + GOVs abertos** | **GOVs resolvidos + mecanismos instalados + relatório de governança** | **`GOV-TEMPLATE.md`** | **👤 11.4 (revisão humana dos GOVs e mecanismos)** |
 | **Δ.0** | **Delta Impact Analysis** | **Novos docs em `ingestion/converted/`** | **`DELTA_REPORT.md`** | **`DELTA_REPORT_TEMPLATE.md`** | **👤 Δ.0** |
 | **Δ.1** | **Delta Grill Me** | **`DELTA_REPORT.md` + ambiguidades** | **Respostas registradas** | **—** | **👤 Δ.1** |
 
@@ -515,6 +521,7 @@ tags: [categoria, llc-pipeline]
 | `llc-step-11a-domain-modeling` | 10.9 | Modelagem de Dominio por PRP — entidades, use cases, interfaces de repositorio |
 | `llc-step-11b-arch-fitness` | 11.3 | Fitness Functions Arquiteturais — governança arquitetural automatizada (Gate 11-ARCH) |
 | `llc-step-11-2-prp-verify` | 11.2 | Aceite mecânico de PRP — verifica RFs, componentes e testes contra código real, gera relatório de gaps |
+| `llc-step-11-4-governance-conversion` | 11.4 | Governance Conversion — revisa falhas estruturais da wave, classifica, registra GOVs, instala mecanismos de governança |
 | `llc-step-11-owasp-security` | 11.1 | Hardening OWASP Top 10:2021 pos-implementacao — verificacao manual/IA de 10 categorias |
 | `llc-step-delta-impact` | Δ.0 | Analisa o delta entre versão atual e novos documentos, gera DELTA_REPORT.md com classificação major/minor |
 | `llc-step-delta-grill` | Δ.1 | Grill Me de Mudança — até 8 perguntas focadas no delta entre versões |
@@ -593,6 +600,7 @@ MCP servers (Excalidraw, Pencil) são recomendados mas não obrigatórios. Fallb
 | 👤 10.8 | 10.8 | 0 arquivos implementação com 0% cobertura? Thresholds globais atingidos (statements ≥ 80%, branches ≥ 70%, functions ≥ 80%, lines ≥ 80%)? Caminhos críticos ≥ 90%? Sem regressão > 5%? |
 | 👤 11-PRE | 10.9 | Entidades refletem as regras de negócio do PRP? Use cases cobrem todos os RFs? Interfaces de repositório consistentes com Step 8b? Contratos de dados (§7 do PRP) completos? |
 | 🔴 11-ARCH | 11.3 | fitness-functions.py --all --strict passou (0 CRITICAL)? Core modules sem violação de Dependency Rule? Nenhuma dependência circular? Interface coverage ≥ threshold? Domínio não importa infra? WARNs registrados? |
+| 👤 11.4 | 11.4 | Todas as falhas estruturais da wave classificadas? GOVs criados? Mecanismos instalados (lints, fitness functions, ADRs, skills)? `failure_to_control_lead_time` registrado? GOVs open têm plano na próxima wave? |
 | 👤 Δ.0 | 0.2 | Classificacao major/minor correta? Artefatos inalterados confirmados? PRPs afetados identificados? |
 | 👤 Δ.1 | 0.3 | Respostas do usuario registradas? Ambiguidades documentadas? Correcoes no DELTA_REPORT aplicadas? |
 | 🔴 | Subfluxo F4 | Protótipo hi-fi corresponde ao wireframe aprovado? Design System foi aplicado corretamente? |

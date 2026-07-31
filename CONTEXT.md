@@ -60,6 +60,47 @@ _Avoid_: Permissions, access levels, sandbox
 Regra arquitetural obrigatoria: services dependem de interfaces (`IUserRepository`), nunca de implementacoes concretas (`PrismaService`). Verificado por fitness functions.
 _Avoid_: DI, IoC, injection
 
+## Governance Conversion
+
+**Governance Conversion**:
+Processo de converter padrões de falha agentica observados em governança durável e explícita. Ciclo: execução → falha estrutural → conversão em governança → propagação para próximas execuções. Substep formal 11.4 do pipeline LLC.
+_Avoid_: Learnings, lessons learned, improvement process
+
+**Defeito Local**:
+Erro ou defeito isolado e pontual que não indica necessariamente uma lacuna sistêmica no ambiente de engenharia.
+_Avoid_: Bug, incident
+
+**Falha Estrutural**:
+Falha interpretada como evidência de abstração, salvaguarda ou modelo fraco/ausente no ambiente de engenharia. Representa uma classe recorrente de erro impossível de prever totalmente de forma ex-ante.
+_Avoid_: Bug recorrente, systemic issue, recurring error
+
+**Resposta Arquitetural**:
+Tipo de resposta a uma falha estrutural que elimina a classe de falha por construção (ex.: modelo tipado, componente catalog, seam canônico). Após instalada, a falha não pode mais ser expressa pelo agente.
+_Avoid_: Fix arquitetural, structural fix
+
+**Resposta de Controle**:
+Tipo de resposta a uma falha estrutural que detecta a falha após ocorrer (ex.: lint, fitness function, teste, gate). Não elimina a possibilidade, mas barra ou sinaliza a falha antes que chegue a produção.
+_Avoid_: Check, validation, guard
+
+**Controle Probabilístico**:
+Mecanismo de governança que orienta o comportamento do agente sem garantia determinística. Ex.: skills, prompts, brief templates, steering files. Útil quando a classe de falha tem baixo impacto, não é formalizável, ou o custo de automatizar supera o benefício.
+_Avoid_: Soft control, guideline, suggestion
+
+**Controle Determinístico**:
+Mecanismo de governança que falha ou bloqueia de forma determinística se violado. Ex.: hooks, lints, types, fitness functions, merge/deploy gates. Meta preferencial para respostas a falhas estruturais de alto impacto.
+_Avoid_: Hard control, hard gate, enforcement
+
+**GOV (Governance Artifact)**:
+Artefato imortal em `docs/governance/GOV-NNN-<slug>.md` que registra uma falha estrutural e o mecanismo instalado em resposta. Ciclo de vida: **open** (identificada, sem mecanismo) → **addressed** (mecanismo instalado, monitorando) → **closed** (sem reincidência por 3 PRPs). Pode reabrir se a mesma classe de falha reaparecer.
+_Avoid_: Incident report, post-mortem, failure log
+
+**Autoridade de Conversão**:
+Regra de quem pode promover uma falha estrutural em novo mecanismo de governança. Qualquer operador pode registrar um GOV (open); a promoção para guardrail/lint/fitness function/skill novo exige validação humana em gate. A instalação do mecanismo é zona 🔴.
+_Avoid_: Approval, ownership, governance authority
+
+**Documento de Análise (article-parallel-llc.md)**:
+Documento `docs/article-parallel-llc.md` que faz o paralelo entre o artigo "Cheap Code, Costly Judgment" (Davis et al.) e o workflow LLC. Identifica convergências, lacunas e 7 prioridades de evolução da metodologia, sendo a principal a institucionalização do loop de Governance Conversion.
+
 ## Wizard (TUI)
 
 **Wizard**:

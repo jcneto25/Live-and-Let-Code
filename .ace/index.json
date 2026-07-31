@@ -145,11 +145,24 @@
     {
       "session_id": "2026-07-28-001",
       "file": "2026-07-28-001.md",
-      "status": "in_progress",
+      "status": "completed",
       "llc_step": 3.0,
       "llc_step_id": "3",
-      "tags": [],
-      "timestamp": "2026-07-28T00:43:48.858318"
+      "tags": [
+        "E:\\Users\\Desktop\\javascript\\LLC\\.ace\\sessions\\2026-07-28-001.md",
+        "docs/skills/llc-step-2.md",
+        "docs/skills/llc-step-3.md",
+        "docs/prps/PRP_TEMPLATE.md",
+        "LLC_GUIDE.md",
+        "llc-pipeline-design.md",
+        "docs/planning/PLAN_TEMPLATE.md",
+        "docs/planning/TASKS.md",
+        ".ace/config/gates.json",
+        ".ace/sessions/2026-07-28-001.md",
+        "—"
+      ],
+      "timestamp": "2026-07-28T00:43:48.858318",
+      "completed_at": "2026-07-30T22:20:51.363491"
     },
     {
       "session_id": "2026-07-28-002",
@@ -178,6 +191,24 @@
       ],
       "timestamp": "2026-07-28T09:30:10.436948",
       "completed_at": "2026-07-28T09:42:28.881391"
+    },
+    {
+      "session_id": "2026-07-30-001",
+      "file": "2026-07-30-001.md",
+      "status": "completed",
+      "llc_step": 10.0,
+      "llc_step_id": "10",
+      "tags": [
+        ".ace/scripts/governance-metrics.py",
+        ".ace/scripts/gov-tools.py",
+        ".ace/scripts/initialize_session/session.py",
+        ".ace/scripts/initialize_session/cli.py",
+        "docs/skills/llc-step-11-4-governance-conversion.md",
+        "docs/governance/GOV-TEMPLATE.md",
+        "docs/planning/TASKS.md"
+      ],
+      "timestamp": "2026-07-30T22:13:56.537795",
+      "completed_at": "2026-07-30T22:21:00.000000"
     }
   ]
 }

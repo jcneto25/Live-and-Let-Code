@@ -7,7 +7,7 @@ tags: [tasks, backlog, planning, llc-pipeline, sgi]
 
 # Tasks — Backlog de Desenvolvimento
 
-> **Versão:** 1.0 | **Última atualização:** 2026-06-13 | **Status:** Em execução (fase de planejamento)
+> **Versão:** 1.1 | **Última atualização:** 2026-07-30 | **Status:** Em execução (fase de planejamento + governança)
 > **Projeto:** Sistema de Gestão de Investigações (SGI) | **Metodologia:** PRP-Based Development + Dependency Matrix
 > **Autor:** Equipe LLC | **Referências:** `docs/planning/PLAN.md`, `docs/planning/DEPENDENCY_MATRIX.md`, `docs/planning/EXECUTION_WAVES.md`
 
@@ -269,8 +269,53 @@ Este documento é o **backlog operacional** do SGI. Ele organiza todas as tarefa
 
 ---
 
-## 8. Controle de Versão
+---
+
+## 9. Metodologia — Governance Conversion
+
+> **Fase:** Evolução da Metodologia LLC | **Onda:** 1 (Núcleo), 2 (Harness)
+> **Objetivo:** Institucionalizar o loop de Governance Conversion no pipeline LLC conforme `docs/planning/PLAN-GOV.md`.
+> **Referências:** `docs/article-parallel-llc.md`, `CONTEXT.md` § Governance Conversion, `llc-pipeline-design.md` § Step 11.4
+
+### 9.1 Onda 1 — Núcleo do Governance Conversion
+
+| ID | Tarefa | PRP | Skill | Status | Prioridade | Output |
+|----|--------|-----|-------|--------|------------|--------|
+| **GOV-001** | **Step 11.4 — Skill + Pipeline + Gate** | PRP-GOV-001 | `llc-step-11-4-governance-conversion` | ✅ | Crítico | `docs/skills/llc-step-11-4-governance-conversion.md`, `llc-pipeline-design.md` atualizado |
+| GOV-001.1 | Criar skill do step 11.4 | PRP-GOV-001 | — | ✅ | Crítico | Skill com classificação de falhas, registro GOV, instalação de mecanismos |
+| GOV-001.2 | Atualizar pipeline design | PRP-GOV-001 | — | ✅ | Crítico | Diagrama + tabela + skills + gates atualizados |
+| **GOV-002** | **GOV Template e Diretório** | PRP-GOV-002 | — | ✅ | Crítico | `docs/governance/GOV-TEMPLATE.md`, `CONTEXT.md` atualizado |
+| GOV-002.1 | Criar template GOV | PRP-GOV-002 | — | ✅ | Crítico | Template com 11 campos + ciclo de vida open/addressed/closed |
+| GOV-002.2 | Adicionar termos ao glossário | PRP-GOV-002 | — | ✅ | Alto | `CONTEXT.md` atualizado |
+| **GOV-003** | **Métricas de Governança** | PRP-GOV-003 | — | ✅ | Alto | `.ace/scripts/governance-metrics.py` |
+| GOV-003.1 | Script `failure_to_control_lead_time` | PRP-GOV-003 | — | ✅ | Alto | Métrica calculada a partir de GOVs |
+| GOV-003.2 | Script `structural_failure_recurrence_rate` | PRP-GOV-003 | — | ✅ | Alto | Métrica calculada a partir de GOVs |
+| GOV-003.3 | Atualizar skill 11.4 para invocar script | PRP-GOV-003 | — | ✅ | Médio | Skill atualizado |
+
+### 9.2 Onda 2 — Harness Integration
+
+| ID | Tarefa | PRP | Status | Prioridade | Output |
+|----|--------|-----|--------|------------|--------|
+| **GOV-004** | **Harness Integration para GOV Lifecycle** | PRP-GOV-004 | — | ✅ | `.ace/scripts/gov-tools.py`, `initialize_session.py` atualizado |
+| GOV-004.1 | Injetar GOVs abertos no contexto da sessão | PRP-GOV-004 | — | ✅ | `initialize_session.py` modificado |
+| GOV-004.2 | Script `gov-tools.py` (list, impact, check-recurrence) | PRP-GOV-004 | — | ✅ | `.ace/scripts/gov-tools.py` |
+| GOV-004.3 | Atualizar step 11.4 para usar `gov-tools.py` | PRP-GOV-004 | — | ✅ | Skill atualizado |
+
+### 9.3 Resumo
+
+| Métrica | Valor |
+|---------|-------|
+| **Total tarefas** | 10 |
+| **Complete** | 10 (GOV-001, GOV-001.1, GOV-001.2, GOV-002, GOV-002.1, GOV-002.2, GOV-003, GOV-003.1, GOV-003.2, GOV-003.3, GOV-004, GOV-004.1, GOV-004.2, GOV-004.3) |
+| **Pending** | 0 |
+| **Onda 1** | 9 complete, 0 pending |
+| **Onda 2** | 3 complete, 0 pending |
+
+---
+
+## 10. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
 | 1.0 | 2026-06-13 | Equipe LLC | Versão inicial. Tarefas de fundação, segurança (SEC-001, SEC-002, SEC-003) e estrutura de PRPs. |
+| 1.1 | 2026-07-30 | Equipe LLC | Adicionada seção 9 — Governance Conversion (metodologia). 4 PRPs criados. |

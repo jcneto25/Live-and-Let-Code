@@ -3,7 +3,9 @@
 
 import argparse
 import json
+import re
 import sys
+from pathlib import Path
 
 from llc_steps import REGISTRY, normalize_step
 
@@ -18,6 +20,33 @@ from .session import (
     update_index,
 )
 from .graph import build_dependency_context, load_dependency_graph
+
+
+GOV_DIR = Path("docs/governance")
+
+
+def load_open_govs() -> str:
+    """Carrega GOVs abertos e retorna como string formatada para o contexto."""
+    if not GOV_DIR.exists():
+        return ""
+    govs = []
+    for f in sorted(GOV_DIR.glob("GOV-*.md")):
+        if f.name == "GOV-TEMPLATE.md":
+            continue
+        text = f.read_text(encoding="utf-8")
+        m = re.search(r"\*\*Status\*\*:\s*(.+)", text)
+        status = m.group(1).strip().lower() if m else ""
+        if status == "open":
+            m_data = re.search(r"\*\*Data de abertura\*\*:\s*(.+)", text)
+            abertura = m_data.group(1).strip() if m_data else ""
+            m_area = re.search(r"^##\s*Área Afetada\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
+            area = m_area.group(1).strip().split("\n")[0].strip() if m_area else ""
+            m_sintoma = re.search(r"^##\s*Sintoma\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
+            sintoma = m_sintoma.group(1).strip()[:80] if m_sintoma else ""
+            govs.append(f"  - {f.name}: {sintoma} (aberto em {abertura}, área: {area})")
+    if not govs:
+        return ""
+    return "\n".join(govs)
 
 
 def main():
@@ -68,11 +97,18 @@ def main():
         else:
             logger.info("ℹ️  Nenhuma dependência em cascata para este step.")
 
+    gov_context = load_open_govs()
+    if gov_context:
+        logger.info(f"📋 {len(gov_context.split(chr(10)))} GOVs abertos carregados para contexto")
+    else:
+        logger.info("ℹ️  Nenhum GOV aberto encontrado")
+
     session_file = create_session_file(
         session_id=session_id, llc_step=args.step.number, llc_step_id=args.step.id,
         step_name=step_name, task_context=args.task, project=args.project, wave=args.wave,
         prev_session=prev_session, context_seed=context_seed,
-        dependency_context=dependency_context
+        dependency_context=dependency_context,
+        gov_context=gov_context,
     )
 
     update_index(session_id=session_id, llc_step=args.step.number,

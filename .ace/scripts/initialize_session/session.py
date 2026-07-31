@@ -69,7 +69,7 @@ def get_previous_session() -> Optional[SessionInfo]:
 
 
 def build_context_block(prev_session: Optional[SessionInfo], context_seed: Optional[str],
-                        dependency_context: str = "") -> str:
+                        dependency_context: str = "", gov_context: str = "") -> str:
     """Constrói o bloco de contexto usando lógica nativa Python (sem {{#if}} frágil)."""
     blocks = []
     if context_seed and prev_session:
@@ -86,6 +86,12 @@ def build_context_block(prev_session: Optional[SessionInfo], context_seed: Optio
             f"<dependencies>\n{dependency_context}\n</dependencies>"
         )
 
+    if gov_context:
+        blocks.append(
+            f"\n\n**GOVs abertos:**\n"
+            f"<govs>\n{gov_context}\n</govs>"
+        )
+
     return "\n".join(blocks)
 
 
@@ -93,7 +99,7 @@ def render_template(session_id: str, llc_step: float, llc_step_id: str,
                     step_name: str, task_context: str, project: str, wave: int,
                     prev_session: Optional[SessionInfo],
                     context_seed: Optional[str], status: str = "in_progress",
-                    dependency_context: str = "") -> str:
+                    dependency_context: str = "", gov_context: str = "") -> str:
     if not TEMPLATE_FILE.exists():
         logger.error(f"Template não encontrado: {TEMPLATE_FILE}")
         sys.exit(1)
@@ -101,7 +107,7 @@ def render_template(session_id: str, llc_step: float, llc_step_id: str,
     template = TEMPLATE_FILE.read_text(encoding='utf-8')
 
     prev_session_id = prev_session.session_id if prev_session else "null"
-    context_block = build_context_block(prev_session, context_seed, dependency_context)
+    context_block = build_context_block(prev_session, context_seed, dependency_context, gov_context)
 
     return (template
             .replace("{{session_id}}", session_id)
@@ -121,11 +127,12 @@ def create_session_file(session_id: str, llc_step: float, llc_step_id: str,
                         step_name: str, task_context: str, project: str, wave: int,
                         prev_session: Optional[SessionInfo],
                         context_seed: Optional[str], status: str = "in_progress",
-                        dependency_context: str = "") -> Path:
+                        dependency_context: str = "", gov_context: str = "") -> Path:
     content = render_template(session_id, llc_step, llc_step_id, step_name,
                               task_context, project, wave,
                               prev_session, context_seed, status,
-                              dependency_context=dependency_context)
+                              dependency_context=dependency_context,
+                              gov_context=gov_context)
     session_file = SESSIONS_DIR / f"{session_id}.md"
     if session_file.exists():
         raise RuntimeError(

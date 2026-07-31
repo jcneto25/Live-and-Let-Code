@@ -155,6 +155,16 @@ REGISTRY: dict[str, "StepSpec"] = {
         False,
         aliases=("arch-fitness", "arch", "fitness", "11b"),
     ),
+    # Pós-execução / pré-deploy (conversão de falhas estruturais em governança):
+    "11.4": _spec(
+        "11.4",
+        "Governance Conversion",
+        "llc-step-11-4-governance-conversion",
+        "11.4",
+        False,
+        False,
+        aliases=("gov-conversion", "governance", "gov"),
+    ),
 }
 
 # Mapa reverso de aliases -> id canônico (construído uma vez na importação).

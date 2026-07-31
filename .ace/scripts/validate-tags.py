@@ -34,6 +34,7 @@ SESSIONS_DIR = ACE_DIR / "sessions"
 BALANCED_TAGS = [
     "action_log", "action", "thinking", "learning_point",
     "gate_result", "blocker", "context_seed", "skill_feedback",
+    "govs",
     "file_delta", "description", "lines_changed", "result"
 ]
 

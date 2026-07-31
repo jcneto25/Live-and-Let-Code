@@ -125,7 +125,6 @@ fi
 echo ""
 echo "🔐 Verificando secrets hardcoded nos arquivos staged..."
 SECRET_ERRORS=0
-
 # Patterns de secrets (regex POSIX extended — compatível com grep -E)
 # Cada pattern cobre um tipo específico de secret comum
 SECRET_PATTERNS=(
@@ -219,6 +218,43 @@ if [ "$SECRET_ERRORS" -gt 0 ]; then
   # Para bloquear, descomente: SECRET_ERRORS=0; ERRORS=$((ERRORS + 1))
 else
   echo "✅ Nenhum secret detectado nos arquivos staged"
+fi
+
+# 9. Autoridade de Conversão (Step 11.4 — Governance Conversion)
+#    Mecanismos determinísticos zona 🔴 (hooks, fitness functions, gates, arch-config)
+#    só podem ser criados/alterados quando o commit referencia a decisão de conversão:
+#    um GOV em docs/governance/ ou um ADR em docs/architecture/adr/ no mesmo commit.
+#    Fundamento: CONTEXT.md §Autoridade de Conversão — a instalação do mecanismo é
+#    zona 🔴 e exige rastreabilidade da decisão humana. Proporcionalidade: o bypass
+#    (--no-verify) existe, mas deixa o aviso impresso no log do commit (auditável).
+echo ""
+echo "🛡️  Verificando Autoridade de Conversão (mecanismos zona 🔴)..."
+GOV_MECHANISMS_PATTERN="^(\.ace/scripts/(pre-commit|pre-commit-tests|llm-validation)\.sh|\.ace/scripts/fitness_functions/|\.ace/scripts/fitness-functions\.py|\.ace/config/(arch-config\.yaml|gates\.json)|\.pre-commit-config\.yaml)$"
+
+STAGED_ALL=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)
+if [ -n "$STAGED_ALL" ]; then
+  MECH_CHANGES=$(echo "$STAGED_ALL" | grep -E "$GOV_MECHANISMS_PATTERN" || true)
+  if [ -n "$MECH_CHANGES" ]; then
+    GOV_REFS=$(echo "$STAGED_ALL" | grep -E "^docs/(governance/GOV-|architecture/adr/)" || true)
+    if [ -z "$GOV_REFS" ]; then
+      echo "❌ Mecanismo(s) zona 🔴 alterado(s) sem rastreabilidade de conversão:"
+      echo "$MECH_CHANGES" | sed 's/^/      - /'
+      echo ""
+      echo "   Regra (CONTEXT.md §Autoridade de Conversão): hooks, fitness functions,"
+      echo "   gates e arch-config só mudam com decisão registrada. Inclua no mesmo commit"
+      echo "   um GOV (docs/governance/GOV-*.md) ou ADR (docs/architecture/adr/*) que"
+      echo "   justifique a alteração. Correções de emergência: git commit --no-verify"
+      echo "   (o aviso fica registrado no histórico do hook — auditável)."
+      ERRORS=$((ERRORS + 1))
+    else
+      echo "✅ Mecanismos zona 🔴 alterados com GOV/ADR no mesmo commit:"
+      echo "$GOV_REFS" | sed 's/^/      ↔ /'
+    fi
+  else
+    echo "✅ Nenhum mecanismo zona 🔴 no diff staged"
+  fi
+else
+  echo "   Nenhum arquivo staged — pulando"
 fi
 
 # Resultado final

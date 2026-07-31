@@ -25,10 +25,16 @@ from .graph import build_dependency_context, load_dependency_graph
 GOV_DIR = Path("docs/governance")
 
 
-def load_open_govs() -> str:
-    """Carrega GOVs abertos e retorna como string formatada para o contexto."""
+def load_open_govs(files: list[str] | None = None) -> str:
+    """Carrega GOVs abertos e retorna como string formatada para o contexto.
+
+    Se `files` for fornecido (injeção cirúrgica — artigo LLC Prioridade 4),
+    filtra GOVs cuja "Área Afetada" menciona algum dos caminhos alvo.
+    Sem `files`, retorna todos os GOVs abertos (comportamento original).
+    """
     if not GOV_DIR.exists():
         return ""
+    targets = [t.strip().lower() for t in (files or []) if t.strip()]
     govs = []
     for f in sorted(GOV_DIR.glob("GOV-*.md")):
         if f.name == "GOV-TEMPLATE.md":
@@ -36,14 +42,17 @@ def load_open_govs() -> str:
         text = f.read_text(encoding="utf-8")
         m = re.search(r"\*\*Status\*\*:\s*(.+)", text)
         status = m.group(1).strip().lower() if m else ""
-        if status == "open":
-            m_data = re.search(r"\*\*Data de abertura\*\*:\s*(.+)", text)
-            abertura = m_data.group(1).strip() if m_data else ""
-            m_area = re.search(r"^##\s*Área Afetada\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
-            area = m_area.group(1).strip().split("\n")[0].strip() if m_area else ""
-            m_sintoma = re.search(r"^##\s*Sintoma\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
-            sintoma = m_sintoma.group(1).strip()[:80] if m_sintoma else ""
-            govs.append(f"  - {f.name}: {sintoma} (aberto em {abertura}, área: {area})")
+        if status != "open":
+            continue
+        m_area = re.search(r"^##\s*Área Afetada\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
+        area = m_area.group(1).strip().split("\n")[0].strip() if m_area else ""
+        if targets and not any(t in area.lower() for t in targets):
+            continue
+        m_data = re.search(r"\*\*Data de abertura\*\*:\s*(.+)", text)
+        abertura = m_data.group(1).strip() if m_data else ""
+        m_sintoma = re.search(r"^##\s*Sintoma\s*$(.+?)(?=^##|\Z)", text, re.MULTILINE | re.DOTALL)
+        sintoma = m_sintoma.group(1).strip()[:80] if m_sintoma else ""
+        govs.append(f"  - {f.name}: {sintoma} (aberto em {abertura}, área: {area})")
     if not govs:
         return ""
     return "\n".join(govs)
@@ -62,6 +71,8 @@ def main():
     parser.add_argument("--no-worktree", action="store_true",
                         help="Desativa criacao automatica de git worktree (padrao: ativo p/ sessoes com --prp ou steps auto_worktree: 11, 11.1)")
     parser.add_argument("--tags", type=str, nargs="*", default=[], help="Tags da sessão")
+    parser.add_argument("--files", type=str, default=None,
+                        help="Caminhos alvo separados por vírgula (injeção cirúrgica: injeta apenas GOVs abertos cuja Área Afetada corresponde — artigo LLC P4)")
     parser.add_argument("--json", action="store_true", help="Output em JSON (para tool calls)")
     args = parser.parse_args()
 
@@ -97,11 +108,13 @@ def main():
         else:
             logger.info("ℹ️  Nenhuma dependência em cascata para este step.")
 
-    gov_context = load_open_govs()
+    target_files = [t.strip() for t in args.files.split(",")] if args.files else None
+    gov_context = load_open_govs(files=target_files)
     if gov_context:
-        logger.info(f"📋 {len(gov_context.split(chr(10)))} GOVs abertos carregados para contexto")
+        scope = "cirúrgica (files)" if target_files else "global"
+        logger.info(f"📋 {len(gov_context.split(chr(10)))} GOVs abertos carregados para contexto [{scope}]")
     else:
-        logger.info("ℹ️  Nenhum GOV aberto encontrado")
+        logger.info("ℹ️  Nenhum GOV aberto encontrado" + (f" para {args.files}" if target_files else ""))
 
     session_file = create_session_file(
         session_id=session_id, llc_step=args.step.number, llc_step_id=args.step.id,

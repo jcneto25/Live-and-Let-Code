@@ -209,6 +209,24 @@
       ],
       "timestamp": "2026-07-30T22:13:56.537795",
       "completed_at": "2026-07-30T22:21:00.000000"
+    },
+    {
+      "session_id": "2026-07-31-001",
+      "file": "2026-07-31-001.md",
+      "status": "in_progress",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [],
+      "timestamp": "2026-07-31T09:27:38.447896"
+    },
+    {
+      "session_id": "2026-07-31-002",
+      "file": "2026-07-31-002.md",
+      "status": "in_progress",
+      "llc_step": 0.5,
+      "llc_step_id": "0.5",
+      "tags": [],
+      "timestamp": "2026-07-31T10:42:39.157055"
     }
   ]
 }

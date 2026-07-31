@@ -304,6 +304,20 @@
         "Dominio nao importa infraestrutura em core modules?",
         "WARNs revisados e registrados em divida tecnica (se houver)?"
       ]
+    },
+    "11.4": {
+      "step": 11.4,
+      "label": "Governance Conversion",
+      "checklist": [
+        "Todas as falhas estruturais da wave classificadas (local vs estrutural)?",
+        "GOVs criados para cada falha estrutural (docs/governance/GOV-*.md)?",
+        "Mecanismos instalados (lints, fitness functions, ADRs, skills, hooks)?",
+        "GOVs addressed com Data de instalacao preenchida?",
+        "governance-metrics.py executado e metricas registradas no relatorio?",
+        "gov-tools.py check-recurrence executado (reincidencias investigadas)?",
+        "GOVs open restantes tem plano registrado para a proxima wave?",
+        "Instalacao de mecanismos zona RED teve validacao humana (Autoridade de Conversao)?"
+      ]
     }
   }
 }

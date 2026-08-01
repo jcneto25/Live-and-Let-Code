@@ -47,7 +47,11 @@ REQUIRED_ATTRS = {
 }
 
 VALID_VALUES = {
-    "action": {"type": ["git_commit", "file_create", "file_modify", "file_delete", "test_run", "tool_call"]},
+    # R4: file_read e user_response observados na prática nas sessões de
+    # 2026-07-27/28 (leitura de arquivos e respostas a perguntas do usuário
+    # dentro do action_log). Catalogados para não acusar ocurrence legítima.
+    "action": {"type": ["git_commit", "file_create", "file_modify", "file_delete",
+                         "file_read", "user_response", "test_run", "tool_call"]},
     "gate_result": {"decision": ["approved", "rejected", "conditional"]},
     "learning_point": {"priority": ["high", "medium", "low"]},
     "blocker": {"resolved": ["true", "false"]},

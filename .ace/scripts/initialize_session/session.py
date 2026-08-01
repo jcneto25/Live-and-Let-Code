@@ -38,8 +38,12 @@ def extract_context_seed(session_file: Path) -> Optional[str]:
     if not session_file.exists():
         return None
     content = session_file.read_text(encoding='utf-8')
-    match = re.search(r'<context_seed>(.*?)</context_seed>', content, re.DOTALL)
-    return match.group(1).strip() if match else None
+    # R1 fix: o arquivo pode conter o seed da sessao anterior (na secao
+    # ## Contexto) e o seed de encerramento (secao ## Encerramento).
+    # re.search retornaria o PRIMEIRO (seed antigo, errado para a nova
+    # sessao). Usamos o ULTIMO bloco — o seed mais recente.
+    matches = re.findall(r'<context_seed>(.*?)</context_seed>', content, re.DOTALL)
+    return matches[-1].strip() if matches else None
 
 
 def get_next_session_id() -> str:

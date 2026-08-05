@@ -151,11 +151,15 @@ python .ace/scripts/governance-metrics.py
 python .ace/scripts/governance-metrics.py --verbose --json
 ```
 
-Use `gov-tools.py` para listar o status atual:
+Use `gov-tools.py` para listar o status atual e avaliar transições:
 ```bash
 python .ace/scripts/gov-tools.py list
 python .ace/scripts/gov-tools.py list --status open
 python .ace/scripts/gov-tools.py list --status addressed
+
+# R5: addressed → closed exige 3 PRPs sem reincidência (check-recurrence)
+python .ace/scripts/gov-tools.py close GOV-001-slug.md           # dry-run (elegibilidade)
+python .ace/scripts/gov-tools.py close GOV-001-slug.md --confirm # aplica (decisão humana no gate)
 ```
 
 Ao final, gere um resumo:

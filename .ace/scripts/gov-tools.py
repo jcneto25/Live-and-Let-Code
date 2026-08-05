@@ -135,6 +135,66 @@ def cmd_impact(args: argparse.Namespace):
     print(f"\nTotal: {len(affected)} GOVs relacionados")
 
 
+# ── Command: close ──
+
+def cmd_close(args: argparse.Namespace):
+    """Transição addressed → closed (R5). Exige 3 PRPs sem reincidência.
+
+    Humano decide (gate 11.4); este comando apenas aplica a transição
+    quando os critérios estão satisfeitos. Sem --confirm, é dry-run.
+    """
+    target = GOV_DIR / args.gov_file
+    if not target.exists():
+        print(f"❌ GOV não encontrado: {args.gov_file}", file=sys.stderr)
+        return 1
+
+    text = target.read_text(encoding="utf-8")
+    status = (parse_gov_field(text, "Status") or "").lower()
+
+    if status == "closed":
+        print(f"❌ {args.gov_file} já está closed.", file=sys.stderr)
+        return 1
+    if status != "addressed":
+        print(f"❌ Transição exige status 'addressed' (atual: '{status}').", file=sys.stderr)
+        return 1
+
+    recurrence = parse_gov_field(text, "Status da Reincidência") or ""
+    import re as _re
+    m = _re.search(r"(\d+)\s*/\s*3", recurrence)
+    count = int(m.group(1)) if m else 0
+    if count < 3:
+        print(f"❌ Reincidência: {recurrence or 'não registrado'} — exige 3/3 PRPs sem reincidência.", file=sys.stderr)
+        return 1
+
+    if not args.confirm:
+        print(f"🔍 dry-run — {args.gov_file} elegível para closed (3/3 PRPs sem reincidência).")
+        print("   Reexecute com --confirm para aplicar.")
+        return 0
+
+    from datetime import date
+    today = date.today().isoformat()
+    new_text = text.replace("**Status**: addressed", "**Status**: closed")
+    # Insere Data de fechamento após Data de instalação (ou de Status, se não houver)
+    if "**Data de fechamento**" not in new_text:
+        anchor = "**Data de instalação**"
+        if anchor in new_text:
+            lines = new_text.split("\n")
+            out = []
+            for ln in lines:
+                out.append(ln)
+                if ln.startswith(anchor):
+                    out.append(f"**Data de fechamento**: {today}")
+            new_text = "\n".join(out)
+        else:
+            new_text = new_text.replace(
+                f"**Status**: closed",
+                f"**Status**: closed\n**Data de fechamento**: {today}"
+            )
+    target.write_text(new_text, encoding="utf-8")
+    print(f"✅ {args.gov_file} transicionado: addressed → closed em {today}")
+    return 0
+
+
 # ── Command: check-recurrence ──
 
 def cmd_check_recurrence(args: argparse.Namespace):
@@ -200,6 +260,13 @@ def main():
                                     help="Varre sessões ACE por reincidência")
     p_check.add_argument("--json", action="store_true", help="Output JSON")
 
+    # close (R5)
+    p_close = subparsers.add_parser("close",
+                                    help="Transição addressed → closed (exige 3 PRPs sem reincidência)")
+    p_close.add_argument("gov_file", help="Nome do arquivo GOV (ex.: GOV-001-slug.md)")
+    p_close.add_argument("--confirm", action="store_true",
+                         help="Aplica a transição (sem isso, é dry-run)")
+
     args = parser.parse_args()
 
     if args.command == "list":
@@ -208,6 +275,8 @@ def main():
         cmd_impact(args)
     elif args.command == "check-recurrence":
         cmd_check_recurrence(args)
+    elif args.command == "close":
+        return cmd_close(args)
 
     return 0
 

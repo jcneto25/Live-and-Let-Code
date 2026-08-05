@@ -37,6 +37,7 @@ BALANCED_TAGS = [
     "govs",
     "file_delta", "description", "lines_changed", "result"
 ]
+SELF_CLOSING_TAGS = {"gov_reference"}
 
 REQUIRED_ATTRS = {
     "action": ["type"],

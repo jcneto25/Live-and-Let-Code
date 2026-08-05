@@ -91,9 +91,17 @@ def build_context_block(prev_session: Optional[SessionInfo], context_seed: Optio
         )
 
     if gov_context:
+        # R3: emite <gov_reference> parseável por GOV (cada linha degov_context
+        # corresponde a um GOV; o id é o prefixo "GOV-NNN-slug" do nome do arquivo).
+        refs = []
+        for line in gov_context.split("\n"):
+            m = re.match(r"\s*-\s+(GOV-[\w-]+?)(?:\.md)?:", line)
+            if m:
+                refs.append(f'<gov_reference id="{m.group(1)}" status="open"/>')
+        refs_block = ("\n" + "\n".join(refs)) if refs else ""
         blocks.append(
             f"\n\n**GOVs abertos:**\n"
-            f"<govs>\n{gov_context}\n</govs>"
+            f"<govs>{refs_block}\n{gov_context}\n</govs>"
         )
 
     return "\n".join(blocks)

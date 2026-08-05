@@ -689,6 +689,7 @@ Cada sessão LLC produz um arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` que é **nu
 | `<blocker resolved="...">` | Impedimentos da sessao |
 | `<skill_feedback skill="..." priority="...">` | Sugestao de melhoria para um skill LLC. Consolidado em `memory/skill_feedback.md` |
 | `<govs>` | Container injetado no bloco Contexto da sessão com GOVs `open` (global ou filtrado por `--files`). Produzido por `initialize_session.load_open_govs()` — não é escrito pelo agente durante a sessão |
+| `<gov_reference id="..." status="..."/>` | Referência individual parseável a um GOV dentro de `<govs>`. Emitida automaticamente por `initialize_session` (self-closing). Permite ao agente/harness identificar GOVs específicos sem parsear texto livre |
 | `<context_seed>` | Estado comprimido para a proxima sessao (schema de 4 campos) |
 
 ### 8.5 Vantagens

@@ -8,9 +8,9 @@ adr: "0005"
 title: "Eval Harness — Medição de Eficiência e Corretude por Etapa do Pipeline"
 status: accepted
 date: 2026-08-05
+last_updated: 2026-08-05
 deciders:
   - jcneto25
-  - claude
 supersedes: null
 related:
   - ADR-0002   # Kanban exibe scores por card
@@ -197,6 +197,49 @@ CodeQuality = w1·pass_rate(testes) + w2·fitness_score(40 checks)
 - **Regressão:** cada run compara-se ao baseline do **mesmo step**; deltas negativos além de um limiar disparam alerta.
 - **Ranking:** steps são ordenados por `EfficiencyScore` e `ReworkWaste` para identificar gargalos de custo.
 
+#### Política de Warm-up de Baseline
+
+O LLC não possui dados históricos de tokens ou quality scores ao iniciar o Eval Harness. Sem dados suficientes, alertas de regressão produziriam ruído e falsas detecções. A política é:
+
+| Fase | Condição | Comportamento |
+|---|---|---|
+| **Coleta** | `run_count < N_MIN` (default: `5`) | Dados coletados, baseline calculado em modo observação. **Nenhum alerta de regressão emitido.** |
+| **Warm-up ativo** | `N_MIN ≤ run_count < N_STABLE` (default: `5–10`) | Alertas emitidos com tag `[baseline-unstable]` — informativo, não bloqueante. |
+| **Baseline estável** | `run_count ≥ N_STABLE` (default: `10`) | Alertas normais. Baseline considerado confiável. |
+
+**Decisão D11:** `N_MIN=5` e `N_STABLE=10` são os defaults, **configuráveis** via `.ace/config/gates.json → evals.baseline_warmup_min` e `evals.baseline_warmup_stable`. O arquivo de baseline persiste o `run_count` por step.
+
+**Tratamento de dados por nível de precisão (resolve ambiguidade de `EfficiencyScore`):**
+
+Dados coletados via nível 3 (estimativa por tokenizer) têm precisão ~70–80% vs. nível 1 (log nativo). Misturar os dois níveis no mesmo baseline distorce comparações. A política é:
+
+- O campo `source` do `<eval_metrics>` é persistido junto ao baseline.
+- `EfficiencyScore` **só compara runs do mesmo nível** entre si (nível 1 vs. nível 1; nível 3 vs. nível 3).
+- Runs de nível 3 recebem tag `[precision: estimated]` no relatório — não são excluídos, mas identificados.
+- Quando um step migra de nível 3 para nível 1 (ex.: cliente de IA adicionado), o baseline é **resetado** e o warm-up recomeça.
+
+**Formato do arquivo de baseline:**
+```yaml
+# .ace/evals/baselines/step-5.yaml
+step: "5"
+run_count: 7
+baseline_phase: "warmup"       # collecting | warmup | stable
+warmup_config:
+  n_min: 5
+  n_stable: 10
+by_precision_level:
+  level_1:
+    run_count: 3
+    quality_score_avg: 84.2
+    token_cost_avg: 14800
+    efficiency_score_avg: 20.1
+  level_3:
+    run_count: 4
+    quality_score_avg: 81.0
+    token_cost_avg: 15200       # estimativa — menor precisão
+    efficiency_score_avg: 19.4
+```
+
 ### 2.10 Camada 4 — Reporting e Integração
 
 | Consumidor | O Que Recebe |
@@ -248,6 +291,8 @@ CodeQuality = w1·pass_rate(testes) + w2·fitness_score(40 checks)
 | **D8** | Integração com gates | Eval roda **pré-gate** e informa o humano; não substitui a decisão |
 | **D9** | Implementação | Tool-agnostic própria (Python); sem framework externo de eval |
 | **D10** | Custo do judge | Roda em gates/amostragem; validação humana periódica dos judgments |
+| **D11** | Warm-up de baseline | `N_MIN=5` execuções antes de alertar; `N_STABLE=10` para baseline confiável; configurável em `gates.json` |
+| **D12** | Separação por nível de precisão | `EfficiencyScore` só compara runs do mesmo nível (1, 2 ou 3); baseline resetado ao migrar de nível |
 
 ---
 
@@ -328,6 +373,10 @@ CodeQuality = w1·pass_rate(testes) + w2·fitness_score(40 checks)
 - `EfficiencyScore` compara apenas contra baseline do mesmo step.
 - Regressão detectada quando delta negativo excede limiar.
 - `FirstPassRate` e `ReworkWaste` calculados corretamente.
+- **Warm-up:** nenhum alerta emitido se `run_count < N_MIN`.
+- **Warm-up ativo:** alertas com tag `[baseline-unstable]` se `N_MIN ≤ run_count < N_STABLE`.
+- **Separação por nível:** `EfficiencyScore` só compara runs do mesmo nível de precisão.
+- **Reset ao migrar de nível:** baseline resetado quando `source` muda de nível 3 para nível 1.
 
 **Determinismo:** mesma entrada → mesmo score (fixar seeds/entradas nos testes).
 

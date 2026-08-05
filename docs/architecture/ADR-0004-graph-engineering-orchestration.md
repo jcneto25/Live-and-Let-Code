@@ -8,9 +8,9 @@ adr: "0004"
 title: "Graph Engineering como Camada de Orquestração do Pipeline LLC"
 status: accepted
 date: 2026-08-05
+last_updated: 2026-08-05
 deciders:
   - jcneto25
-  - claude
 supersedes: null
 related:
   - ADR-0001
@@ -237,6 +237,54 @@ Toda visualização consome o grafo; nenhuma o muta:
 
 > **Integração com ADR-0002:** o `KanbanBoardBuilder` do Wizard passa a ser uma projeção do `GraphEngine`, não mais uma leitura direta de `index.json`. Isso torna o Kanban preciso (colunas = estados de nós; SLA = timestamps de estado). A mudança é interna ao builder; a UI do Kanban permanece idêntica.
 
+### 2.11 Domínios de `ready_nodes()` vs. Fitness Functions (sem conflito)
+
+O `GraphEngine` e o `fitness-functions.py` operam em **domínios distintos e consecutivos**, não concorrentes:
+
+| Sistema | Domínio | Pergunta que responde | Momento |
+|---|---|---|---|
+| `ready_nodes()` | **Elegibilidade de execução** | "As dependências de DAG estão satisfeitas?" | Antes de iniciar um step/PRP |
+| `fitness-functions.py --strict` | **Qualidade de merge** | "O código tem violações arquiteturais ou de coverage?" | Antes de fechar o gate de qualidade |
+
+Um nó pode estar `READY` no grafo e ainda assim falhar no gate de qualidade — isso é correto. O grafo libera *execução*, o fitness gate libera *merge*. `ready_nodes()` **nunca substitui nem bypassa** os gates de fitness. As duas camadas são sempre consecutivas.
+
+**Invariante do contrato de `ready_nodes()`:**
+```
+ready_nodes() → elegível para EXECUÇÃO.
+Nó em READY não implica aprovação de qualidade.
+Qualidade é responsabilidade dos gates de fitness (Gate 10.8, 11.3).
+Os dois sistemas são camadas consecutivas, nunca alternativas.
+```
+
+### 2.12 Modelagem do Fluxo Delta (Δ) no Grafo
+
+**Smart Skip → nó `SKIPPED`:**
+- Nós marcados via skip **permanecem no grafo** com estado `SKIPPED` — nunca removidos.
+- Para fins de dependência, `SKIPPED` é equivalente a `DONE`: sucessores ficam `READY`.
+- `impact_of(node_id)` propaga por descendentes de nós `SKIPPED` — análise de impacto funciona mesmo com skip parcial.
+
+**PRP Amendment → novo nó:**
+- PRPs criados via Amendment são adicionados como **novos nós** com `retry_of=None`.
+- Arestas `DEPENDS_ON` apontam para nós existentes que originaram o Amendment.
+- DAG permanece acíclico: novos nós só apontam para nós existentes.
+
+**Comportamento de `ready_nodes()` com grafo parcialmente skipped:**
+```python
+# deps satisfeitas = todas as deps em DONE ou SKIPPED
+deps_satisfied = all(
+    self.node_state(dep) in (NodeState.DONE, NodeState.SKIPPED)
+    for dep in node.depends_on
+)
+```
+
+**Teste obrigatório:**
+```python
+def test_ready_nodes_with_skipped_dependencies():
+    """Nós com todas as deps SKIPPED ficam READY (não bloqueados)."""
+    # Grafo: A → B → C, B marcado SKIPPED via Smart Skip
+    # C deve ficar READY
+```
+
 ### 2.9 Arquitetura e Estrutura de Arquivos
 
 ```
@@ -451,3 +499,35 @@ class KanbanBoardBuilder:
 **Próximo passo sugerido:** Especificar `llc_graph` em tasks TDD granulares (modelo → builder → engine → projeções), nos moldes da quebra da Fase 1A.
 
 ---
+
+## 10. Decisões de Aprovação — Questões Resolvidas
+
+As quatro questões levantadas durante a revisão foram incorporadas ao corpo do ADR. Registro explícito das resoluções:
+
+### Q1 — Fonte de verdade do estado (G4)
+
+**Questão:** o ADR não decidia se o grafo é derivado das sessões ACE ou se vira fonte primária.
+
+**Resolução (incorporada em D1 e P3):** o grafo é **estritamente derivado** das sessões ACE — nunca fonte primária. `.ace/sessions/*.md` é o único lugar onde fatos são escritos. `graph-state.yaml` (D8) é um cache reconstruível, análogo ao `index.json`, nunca mantido independentemente. Isso elimina o risco de duas fontes de verdade por construção, não por disciplina.
+
+### Q2 — Acoplamento ao Herdr em `parallel_frontier()`
+
+**Questão:** a formulação original tornava o grafo dependente do Herdr como consumidor específico.
+
+**Resolução (incorporada em D5 e §2.7):** `parallel_frontier()` retorna **dados puros** (lista de `GraphNode` com `auto_parallelizable=True`, independentes entre si). Não sabe que o Herdr existe. Qualquer runtime — Herdr, worktrees manuais, ou nenhuma ferramenta — pode consumir essa lista. O grafo não é acoplado a nenhum runtime específico.
+
+### Q3 — Conflito de oráculos: grafo vs. fitness functions
+
+**Questão:** `ready_nodes()` e `fitness-functions.py --strict` podem discordar sobre "pronto para avançar" — qual vence?
+
+**Resolução (nova seção §2.11):** os dois sistemas têm **domínios distintos e não sobrepostos**:
+- `ready_nodes()` decide **elegibilidade de execução** (dependências de DAG satisfeitas).
+- `fitness-functions.py --strict` decide **qualidade de merge** (violações arquiteturais, coverage).
+
+Um PRP pode estar `READY` no grafo (todas as dependências satisfeitas) e ainda assim falhar no gate de qualidade. Isso é o comportamento correto: o grafo libera a execução, o gate de qualidade libera o merge. Não há conflito — são camadas consecutivas, não alternativas. O `ready_nodes()` nunca substitui nem bypassa os gates de fitness.
+
+### Q4 — Fluxo Delta (Δ) não modelado como nó
+
+**Questão:** Smart Skip e PRP Amendment mudam a topologia do grafo em tempo de execução; `ready_nodes()` não tratava isso explicitamente.
+
+**Resolução (nova seção §2.12):** nós `SKIPPED` permanecem no grafo com estado `SKIPPED` — não são removidos. `ready_nodes()` trata `SKIPPED` como satisfeito para fins de dependência (equivalente a `DONE`). PRPs criados via PRP Amendment são adicionados como novos nós com `retry_of=None` e arestas `DEPENDS_ON` para os nós que os originaram. A topologia muda, mas o DAG permanece acíclico porque nós novos só apontam para nós existentes (nunca o contrário).

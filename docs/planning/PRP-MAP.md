@@ -1,0 +1,174 @@
+# Mapa de PRPs — LLC Fábrica Agêntica
+
+**Documento:** `docs/planning/PRP-MAP.md`
+**Versão:** 1.0.0 · **Data:** 2026-08-05 · **Status:** Referência ativa
+
+> Este documento é a fonte de verdade para o planejamento de implementação das novas
+> funcionalidades do LLC. Derivado dos ADRs 0002, 0004, 0005, 0006 e do
+> `factory-evolution.md` v0.2.0.
+
+---
+
+## Legenda
+
+| Símbolo | Significado |
+|---------|-------------|
+| ✅ | PRP criado e aprovado |
+| 📋 | PRP a criar |
+| 🔒 | Condicional — só inicia com evidência registrada em sessões ACE |
+| ⛔ | Fora do escopo (não fazer) |
+
+---
+
+## Trilha 0 — Governança (pré-requisito de tudo)
+
+**ADR de origem:** ADR-0006
+**Critério de saída da trilha:** `fitness-functions.py --check dependency-governance` passa.
+
+| PRP | Entrega | Esforço | Depende de | Status |
+|-----|---------|---------|------------|--------|
+| PRP-GOV-T1 | Criar `.ace/config/dependencies.yaml` com `click`, `pyyaml`, `textual`, `tiktoken` | 0,5d | ADR-0006 aceito | ✅ criado |
+| PRP-GOV-T2 | Retro-classificar todas as dependências em `.ace/scripts/` | 0,5d | PRP-GOV-T1 | ✅ criado |
+| PRP-GOV-T3 | Fitness function `dependency-governance` em `fitness-functions.py` (TDD) | 1d | PRP-GOV-T2 | ✅ criado |
+
+**Total: ~2 dias**
+
+---
+
+## Trilha 1 — Wizard TUI (ADR-0002)
+
+**ADR de origem:** ADR-0002
+**Critério de saída da trilha:** `llc wizard` completo com HITL, Kanban UI, métricas de fluxo.
+
+| PRP | Entrega | Esforço | Depende de | Status |
+|-----|---------|---------|------------|--------|
+| PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | ✅ criado |
+| PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | 📋 |
+| PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | 📋 |
+| PRP-WIZARD-1.1 | Kanban UI board (toggle K + SLA visual + WIP) | 2 sem | PRP-WIZARD-1A + PRP-EVALS-F1 | 📋 |
+| PRP-WIZARD-1.2 | Drag & drop backlog + `--export-flow-metrics` + temas | 1 sem | PRP-WIZARD-1.1 | 📋 |
+
+**Total: ~11 semanas**
+
+---
+
+## Trilha 2 — Eval Harness (ADR-0005)
+
+**ADR de origem:** ADR-0005
+**Entrega mínima de valor:** F1+F2 em ~2 semanas.
+
+| PRP | Entrega | Esforço | Depende de | Status |
+|-----|---------|---------|------------|--------|
+| PRP-EVALS-F1 | Instrumentação de tokens (3 níveis) + `<eval_metrics>` append-only | 1 sem | PRP-WIZARD-1A | 📋 |
+| PRP-EVALS-F2 | `CodeEvaluator` — agrega `pass_rate` + `fitness_score` + `coverage` | 1 sem | PRP-EVALS-F1 | 📋 |
+| PRP-EVALS-F3 | `DocJudge` — LLM-as-judge + rubrics YAML por step | 2 sem | PRP-EVALS-F2 | 📋 |
+| PRP-EVALS-F4 | Baselines + regressão (warm-up N_MIN=5/N_STABLE=10) | 1 sem | PRP-EVALS-F3 | 📋 |
+| PRP-EVALS-F5 | Dashboard Pareto (custo×qualidade) + ranking | 1 sem | PRP-EVALS-F4 | 📋 |
+
+**Total: ~6 semanas**
+
+---
+
+## Trilha 3 — Graph Engineering (ADR-0004)
+
+**ADR de origem:** ADR-0004
+**Critério de saída:** Kanban derivado do grafo; Smart Skip formal; `parallel_frontier()` agnóstico.
+
+| PRP | Entrega | Esforço | Depende de | Status |
+|-----|---------|---------|------------|--------|
+| PRP-GRAPH-1A | `model.py` + `builder.py` + `state.py` | 1 sem | PRP-WIZARD-1A | 📋 |
+| PRP-GRAPH-1B | `engine.py` — `ready_nodes()` + `impact_of()` + delta | 1,5 sem | PRP-GRAPH-1A | 📋 |
+| PRP-GRAPH-1C | `projections.py` — `to_kanban()` substitui `PipelineDataReader` no Wizard | 0,5 sem | PRP-GRAPH-1B + PRP-WIZARD-1.1 | 📋 |
+| PRP-GRAPH-2A | `parallel_frontier()` — dados puros agnósticos de runtime | 1 sem | PRP-GRAPH-1B | 📋 |
+| PRP-GRAPH-2B | `critical_path()` + métricas de gargalo | 0,5 sem | PRP-GRAPH-2A | 📋 |
+
+**Total: ~4,5 semanas**
+
+---
+
+## Trilha 4 — Wave Coordinator (Condicional)
+
+**Gate de entrada:** ≥3 sessões ACE com retrabalho documentado por `DEPENDENCY_MATRIX` estático.
+
+| PRP | Entrega | Esforço | Gate | Status |
+|-----|---------|---------|------|--------|
+| PRP-WAVE-COORD | `wave_coordinator.py` — polling + sugestão textual estritamente sugestiva | 1 sem | Ver acima | 🔒 |
+
+---
+
+## Trilha 5 — Herdr / Visibilidade Multi-Agente (Condicional)
+
+**Gate de entrada:** ≥4 semanas de uso da Fase 1 + dor multi-agente registrada em sessões ACE.
+
+| PRP | Entrega | Esforço | Gate | Status |
+|-----|---------|---------|------|--------|
+| PRP-HERDR-SKILL | Skill `llc-wave-observability.md` + feature detection + fallback | 2 sem | Ver acima | 🔒 |
+
+---
+
+## Grafo de Dependências
+
+```
+PRP-GOV-T1 ──► PRP-GOV-T2 ──► PRP-GOV-T3
+                                    │
+              ┌─────────────────────┤
+              │                     │
+              ▼                     ▼
+        PRP-WIZARD-1A          PRP-EVALS-F1 ──► PRP-EVALS-F2
+              │                     │                 │
+       ┌──────┤                     └─────────────────┤
+       │      │                                       ▼
+       │  PRP-WIZARD-1B                          PRP-EVALS-F3
+       │      │                                       │
+       │  PRP-WIZARD-1C                          PRP-EVALS-F4
+       │                                              │
+       ▼                                         PRP-EVALS-F5
+  PRP-WIZARD-1.1 ◄──── PRP-EVALS-F1
+       │
+  PRP-WIZARD-1.2
+       │
+  PRP-GRAPH-1A ──► PRP-GRAPH-1B ──► PRP-GRAPH-1C (refatora Wizard)
+                        │
+                   PRP-GRAPH-2A ──► PRP-GRAPH-2B
+                        │
+         🔒 PRP-WAVE-COORD (condicional)
+         🔒 PRP-HERDR-SKILL (condicional)
+```
+
+---
+
+## Caminho Crítico
+
+```
+GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → WIZARD-1.1 → GRAPH-1C
+```
+
+**Paralelismo imediato disponível após WIZARD-1A:**
+- WIZARD-1B/1C (HITL)
+- EVALS-F1 → F2 (instrumentação + code evaluator)
+- GRAPH-1A (modelo de grafo)
+
+---
+
+## Resumo Executivo
+
+| Trilha | PRPs | Esforço | Resultado |
+|--------|------|---------|-----------|
+| Governança | 3 | ~2d | ADR-0006 operacional |
+| Wizard | 5 | ~11 sem | Observabilidade + HITL + Kanban |
+| Evals | 5 | ~6 sem | Custo + qualidade + regressão |
+| Graph | 5 | ~4,5 sem | Coordenação reativa |
+| Wave Coord | 1 | 1 sem | Sugestão reativa (condicional) |
+| Herdr | 1 | 2 sem | Visibilidade multi-agente (condicional) |
+| **Total núcleo** | **18** | **~24 sem** | Fábrica agêntica base |
+
+---
+
+## Referências
+
+- `docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md`
+- `docs/architecture/ADR-0004-graph-engineering-orchestration.md`
+- `docs/architecture/ADR-0005-eval-harness.md`
+- `docs/architecture/ADR-0006-external-dependency-governance.md`
+- `docs/architecture/factory-evolution.md` v0.2.0
+- `docs/prps/PRP-WIZARD-1A.md` (PRP de referência para formato)

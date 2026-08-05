@@ -1,6 +1,6 @@
 ---
 name: executive-prd
-description: PRD Executivo do SGI — Documento gerencial que consolida objetivos, escopo, capacidades funcionais, diretrizes de governança e critérios de sucesso do produto.
+description: PRD Executivo — Documento gerencial que consolida objetivos, escopo, capacidades funcionais, diretrizes de governança e critérios de sucesso do produto.
 version: 1.0.0
 tags: [prd, executive, product-requirements, governance, llc-pipeline, sgi]
 ---

@@ -10,7 +10,9 @@
 > verificado** (11 testes verdes, fitness 41/41, `<eval_metrics>` append-only via
 > `finalize_session` dry-run end-to-end OK). **GRAPH-1A concluído** — pacote
 > `llc_graph` (model + builder + state, 21 testes, cobertura 96%, fitness 41/41).
-> **Tracks ativos agora:** EVALS-F2 (paralelo) e GRAPH-1B (próximo no caminho
+> **EVALS-F2 concluído** — `CodeEvaluator` (CodeQuality) + `aggregate.py`
+> (FirstPassRate/ReworkWaste, 14 testes, cobertura 95%, fitness 41/41).
+> **Tracks ativos agora:** EVALS-F3 (paralelo) e GRAPH-1B (próximo no caminho
 > crítico).
 
 > Este documento é a fonte de verdade para o planejamento de implementação das novas
@@ -84,7 +86,7 @@ dependência "Wizard MVP" era artificial — sessões ACE já existem hoje; as r
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
 | PRP-EVALS-F1 | Instrumentação de tokens (3 níveis) + `<eval_metrics>` append-only | 1 sem | PRP-ACE-TAGS ✅ + PRP-GOV-T3 (tiktoken N1 registrado) | ✅ done (2026-08-06) · 11 testes, fitness 41/41 |
-| PRP-EVALS-F2 | `CodeEvaluator` — agrega `pass_rate` + `fitness_score` + `coverage` | 1 sem | PRP-EVALS-F1 | 📋 |
+| PRP-EVALS-F2 | `CodeEvaluator` — agrega `pass_rate` + `fitness_score` + `coverage` | 1 sem | PRP-EVALS-F1 | ✅ done (2026-08-06) · 14 testes, cobertura 95%, fitness 41/41 |
 | PRP-EVALS-F3 | `DocJudge` — LLM-as-judge + rubrics YAML por step | 2 sem | PRP-EVALS-F2 | 📋 |
 | PRP-EVALS-F4 | Baselines + regressão (warm-up N_MIN=5/N_STABLE=10) | 1 sem | PRP-EVALS-F3 | 📋 |
 | PRP-EVALS-F5 | Dashboard Pareto (custo×qualidade) + ranking | 1 sem | PRP-EVALS-F4 | 📋 |
@@ -180,8 +182,8 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 - WIZARD-1B/1C (HITL)
 - GRAPH-1A (modelo de grafo)
 
-**Paralelismo ATIVO (2026-08-06 — WIZARD-1A/1B, EVALS-F1 e GRAPH-1A concluídos):**
-- **EVALS-F2** (Trilha 2 — `CodeEvaluator`: pass_rate + fitness_score + coverage; dep `PRP-EVALS-F1 ✅`)
+**Paralelismo ATIVO (2026-08-06 — WIZARD-1A/1B, EVALS-F1/F2 e GRAPH-1A concluídos):**
+- **EVALS-F3** (Trilha 2 — `DocJudge`: LLM-as-judge + rubrics YAML; dep `PRP-EVALS-F2 ✅`)
 - **GRAPH-1B** (Trilha 3 — `engine.py`: ready_nodes + impact_of; dep `PRP-GRAPH-1A ✅` — próximo no caminho crítico)
 - WIZARD-1C (HITL avançado — Artifact Review/Scope/rerun) após 1B ✅
 
@@ -201,7 +203,7 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 
 > **Narrativa de investimento (GOV-003/R12):** o **~24 sem** cobre o programa completo (incluindo Fase 2/3 condicionais — Wave Coordinator, Herdr). O horizonte **~12 sem** da factory-evolution (§4) representa o núcleo MVP de 1ª geração (Governança + Wizard MVP + Eval F1/F2 + Graph). As cifras são complementares: 24 sem = roadmap total, 12 sem = primeira entrega observável.
 
-> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 1/5 ✅** — EVALS-F1 entregue e verificado (11 testes, fitness 41/41, integração `<eval_metrics>` no finalize OK); **EVALS-F2 desbloqueado**. **Trilha 3 (Graph) 1/5 ✅** — GRAPH-1A entregue (21 testes, cobertura 96%, fitness 41/41); **GRAPH-1B desbloqueado**.
+> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 2/5 ✅** — EVALS-F1 ✅ (11 testes) e **EVALS-F2 ✅** (14 testes, cobertura 95%, fitness 41/41); **EVALS-F3 desbloqueado**. **Trilha 3 (Graph) 1/5 ✅** — GRAPH-1A entregue (21 testes, cobertura 96%, fitness 41/41); **GRAPH-1B desbloqueado**.
 
 ---
 

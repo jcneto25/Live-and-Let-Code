@@ -10,12 +10,14 @@
 
 ### 1.1 Por que este PRP existe?
 
-O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-graph.yaml`, `depends_on` no registry, `llc_wave.py`, `impact-analyzer.py`. Este PRP cria o pacote `llc_graph` unificando essas fontes em um modelo de grafo dirigido acíclico (DAG). É a fundação para o engine (PRP-GRAPH-1B) e para a refatoração do Kanban (PRP-GRAPH-1C).
+O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-graph.yaml`, ordem sequencial do `REGISTRY` de steps, `llc_wave.py`, `impact-analyzer.py`. Este PRP cria o pacote `llc_graph` unificando essas fontes em um modelo de grafo dirigido acíclico (DAG). É a fundação para o engine (PRP-GRAPH-1B) e para a integração do Kanban via adapter (PRP-GRAPH-1C).
+
+> **Nota (GOV-003 / R2):** `StepSpec` **não possui** campo `depends_on` (verificado em `llc_steps/models.py`). As arestas N1 do grafo são derivadas da **ordem sequencial do REGISTRY** (`StepSpec.number`) — zero mudança no harness.
 
 ### 1.2 O que é entregue
 
 - [ ] `llc_graph/model.py` — `GraphNode`, `GraphEdge`, `NodeKind`, `NodeState`, `EdgeKind`, `Graph`
-- [ ] `llc_graph/builder.py` — `GraphBuilder`: unifica `dependency-graph.yaml` + `depends_on` do registry + `gates.json`
+- [ ] `llc_graph/builder.py` — `GraphBuilder`: unifica `dependency-graph.yaml` + ordem sequencial do `REGISTRY` (`StepSpec.number`) + `gates.json`
 - [ ] `llc_graph/state.py` — `AceStateReader`: deriva `NodeState` das sessões ACE (`.ace/index.json`)
 - [ ] Suite de testes TDD com cobertura ≥ 85%
 
@@ -33,7 +35,7 @@ O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-gr
 |----|-----------|----------------------|------------|--------|----------|-----------------|
 | RF-G1A.1 | `GraphNode` é imutável (frozen dataclass) | **Dado** instância, **Quando** mutação tentada, **Então** `FrozenInstanceError` | Must | ⏳ | `tests/test_model.py` | `llc_graph/model.py` |
 | RF-G1A.2 | `GraphBuilder` marca gates com `requires_human=True` | **Dado** step com gate em `gates.json`, **Quando** `build()`, **Então** nó gate com `requires_human=True` | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
-| RF-G1A.3 | `GraphBuilder` unifica `dependency-graph.yaml` + `depends_on` | **Dado** as duas fontes, **Quando** `build()`, **Então** nenhuma dependência perdida | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
+| RF-G1A.3 | `GraphBuilder` deriva arestas N1 da ordem do `REGISTRY` e unifica `dependency-graph.yaml` | **Dado** REGISTRY com steps 0.5→1→2 e `dependency-graph.yaml` com artefatos, **Quando** `build()`, **Então** arestas N1 seguem `StepSpec.number` e nenhuma dependência do yaml é perdida | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
 | RF-G1A.4 | `GraphBuilder` detecta nós órfãos | **Dado** dependência apontando para nó inexistente, **Quando** `build()`, **Então** warning registrado | Should | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
 | RF-G1A.5 | `AceStateReader` deriva `NodeState.DONE` de sessão `completed` | **Dado** `index.json` com step completed, **Quando** `node_state("step-5")`, **Então** `NodeState.DONE` | Must | ⏳ | `tests/test_state.py` | `llc_graph/state.py` |
 | RF-G1A.6 | `AceStateReader` tolera `index.json` ausente | **Dado** arquivo ausente, **Quando** `node_state()`, **Então** retorna `NodeState.PENDING` sem exceção | Must | ⏳ | `tests/test_state.py` | `llc_graph/state.py` |

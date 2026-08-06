@@ -554,8 +554,8 @@ stub_patterns:
 │   ├── architecture/           # Arquitetura e ADRs
 │   │   ├── ARCHITECTURE.md     # Documento principal
 │   │   └── adr/                # ADRs em arquivos individuais
-│   │       ├── ADR-001-stack-principal.md
-│   │       ├── ADR-002-banco-de-dados.md
+│   │       ├── ADR-0001-stack-principal.md
+│   │       ├── ADR-0002-banco-de-dados.md
 │   │       └── ...
 │   ├── api/                    # NestJS backend
 │   │   ├── src/
@@ -644,11 +644,11 @@ estrutura:
 
 | ID | Data | Decisão | Status | Arquivo |
 |----|------|---------|--------|---------|
-| ADR-001 | {Data} | {Stack principal} | {Aprovado} | `adr/ADR-001-stack-principal.md` |
-| ADR-002 | {Data} | {Banco de dados} | {Aprovado} | `adr/ADR-002-banco-de-dados.md` |
-| ADR-003 | {Data} | {Autenticação} | {Aprovado} | `adr/ADR-003-autenticacao.md` |
-| ADR-004 | {Data} | {Comunicação entre módulos} | {Aprovado} | `adr/ADR-004-comunicacao-modulos.md` |
-| ADR-005 | {Data} | {Estratégia de deploy} | {Aprovado} | `adr/ADR-005-deploy.md` |
+| ADR-0001 | {Data} | {Stack principal} | {Aprovado} | `adr/ADR-0001-stack-principal.md` |
+| ADR-0002 | {Data} | {Banco de dados} | {Aprovado} | `adr/ADR-0002-banco-de-dados.md` |
+| ADR-0003 | {Data} | {Autenticação} | {Aprovado} | `adr/ADR-0003-autenticacao.md` |
+| ADR-0004 | {Data} | {Comunicação entre módulos} | {Aprovado} | `adr/ADR-0004-comunicacao-modulos.md` |
+| ADR-0005 | {Data} | {Estratégia de deploy} | {Aprovado} | `adr/ADR-0005-deploy.md` |
 
 ### ADRs Obrigatórios (mínimo 5)
 
@@ -927,7 +927,7 @@ graph LR
 | Versão | Data | Autor | Mudanças |
 |--------|------|-------|----------|
 | 0.1 | {Data} | {Autor} | Rascunho inicial |
-| 0.2 | {Data} | {Autor} | Adicionado ADR-003 (Auth0 vs Supabase) |
+| 0.2 | {Data} | {Autor} | Adicionado ADR-0003 (Auth0 vs Supabase) |
 | 1.0 | {Data} | {Autor} | Aprovado para implementação |
 
 ---

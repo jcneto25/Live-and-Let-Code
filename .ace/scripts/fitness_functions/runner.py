@@ -53,6 +53,7 @@ from .checks_ux import (
     check_no_hardcoded_strings,
     check_no_roach_motel,
 )
+from .checks_governance import check_dependency_governance
 from .config import severity_label
 
 
@@ -103,6 +104,8 @@ def run_checks(requested: list[str], config: dict, verbose: bool = False) -> dic
         "no_alert_without_recovery": check_no_alert_without_recovery,
         "no_roach_motel": check_no_roach_motel,
         "form_field_without_label": check_form_field_without_label,
+        # Governance checks (ADR-0006 / PRP-GOV-T3)
+        "dependency_governance": check_dependency_governance,
     }
 
     if "all" in requested:

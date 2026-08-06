@@ -74,9 +74,14 @@ class HITLCommand(ABC):
   <answer>{response}</answer>
 </user_response>
 
-<gate_result approved="true" waiver="true" timestamp="{iso}">
+<gate_result step="{step}" decision="approved" waiver="true" timestamp="{iso}">
   <waiver_note>{note_min_10_chars}</waiver_note>
 </gate_result>
+
+<!-- Emenda GOV-003/R1 (PRP-ACE-TAGS): step + decision obrigatórios (schema
+     validate-tags.py); waiver é atributo opcional. Formato anterior
+     (approved="/waiver=" sem step/decision) é rejeitado pelo validador. -->
+
 ```
 
 ---

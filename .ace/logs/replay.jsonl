@@ -11,3 +11,6 @@
 {"timestamp": "2026-07-31T10:42:39.175272", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-07-31T13:17:12.213974", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-07-31T14:10:38.942232", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
+{"timestamp": "2026-08-05T18:32:51.685390", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
+{"timestamp": "2026-08-05T18:38:35.265575", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
+{"timestamp": "2026-08-05T18:43:13.563316", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}

@@ -685,9 +685,13 @@ Cada sessão LLC produz um arquivo `.ace/sessions/YYYY-MM-DD-NNN.md` que é **nu
 | `<action type="...">` | Ação atômica: `git_commit`, `file_create`, `file_modify`, `file_delete`, `test_run`, `tool_call` |
 | `<thinking ref="...">` | Chain-of-thought que levou a uma decisão |
 | `<learning_point priority="...">` | Conhecimento consolidado (`high`/`medium`/`low`) |
-| `<gate_result>` | Decisao humana nos gates LLC |
+| `<gate_result step="..." decision="approved\|rejected\|conditional" waiver="true"?>` | Decisao humana nos gates LLC. `step`/`decision` obrigatórios; `waiver` opcional (+ `<waiver_note>`) |
 | `<blocker resolved="...">` | Impedimentos da sessao |
 | `<skill_feedback skill="..." priority="...">` | Sugestao de melhoria para um skill LLC. Consolidado em `memory/skill_feedback.md` |
+| `<task_completed id="..." prp="..." status="done\|partial">` | Tarefa/PRP concluído na sessão; refletido por `finalize_session.py` em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md` (Progress Reflection, AGENTS.md). Reconhecida no validador desde PRP-ACE-TAGS |
+| `<user_response type="question\|artifact_review\|scope">` | Resposta humana a prompt HITL durante execução (ADR-0002). Filhos: `<question>`, `<answer>` (para `type="question"`) |
+| `<waiver_note>` | Justificativa de waiver (mín. 10 chars) dentro de `<gate_result ... waiver="true">` (ADR-0002) |
+| `<eval_metrics timestamp="...">` | Métricas de custo da sessão (tokens in/out, custo, duração, retries, `source` level_1/2/3) — append-only, gravada por `finalize_session.py` (ADR-0005 / PRP-EVALS-F1) |
 | `<govs>` | Container injetado no bloco Contexto da sessão com GOVs `open` (global ou filtrado por `--files`). Produzido por `initialize_session.load_open_govs()` — não é escrito pelo agente durante a sessão |
 | `<gov_reference id="..." status="..."/>` | Referência individual parseável a um GOV dentro de `<govs>`. Emitida automaticamente por `initialize_session` (self-closing). Permite ao agente/harness identificar GOVs específicos sem parsear texto livre |
 | `<context_seed>` | Estado comprimido para a proxima sessao (schema de 4 campos) |

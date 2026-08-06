@@ -18,7 +18,7 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 - [ ] Tag `<eval_metrics>` append-only no arquivo de sessão ACE (sem tocar frontmatter)
 - [ ] `llc_evals/evaluators/efficiency_meter.py` — calcula `TokenCost` e `EfficiencyScore`
 - [ ] Estrutura de diretórios `.ace/evals/` (baselines/, results/, golden/)
-- [ ] Integração com `finalize_session.py` — trigger automático ao encerrar sessão
+- [ ] Integração com `finalize_session.py` — **o append de `<eval_metrics>` é executado pelo finalize** (escritor único preservado — GOV-003/R8); `instrument.py` apenas calcula o bloco e o entrega, nunca escreve no arquivo da sessão
 
 ### 1.3 O que NÃO está no escopo
 
@@ -35,7 +35,7 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 | RF-EF1.1 | Captura tokens via nível 1 (log nativo `.claude/`) | **Dado** log claude existente, **Quando** `instrument()`, **Então** `source="level_1"` e tokens precisos | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
 | RF-EF1.2 | Fallback para nível 2 (parsing de saída estruturada) | **Dado** log ausente mas output com usage block, **Quando** `instrument()`, **Então** `source="level_2"` | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
 | RF-EF1.3 | Fallback para nível 3 (estimativa tiktoken) | **Dado** nem log nem usage block, **Quando** `instrument()`, **Então** `source="level_3"` com estimativa | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
-| RF-EF1.4 | `<eval_metrics>` persiste append-only na sessão ACE | **Dado** sessão aberta, **Quando** `finalize_session.py`, **Então** bloco XML adicionado sem modificar frontmatter | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.4 | `<eval_metrics>` persiste append-only na sessão ACE — **escrita por `finalize_session.py`** (escritor único), nunca por `instrument.py` diretamente | **Dado** sessão aberta, **Quando** `finalize_session.py`, **Então** bloco XML adicionado sem modificar frontmatter **e** AST de `instrument.py` sem `open(..., "a")`/`write` em `sessions/` | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
 | RF-EF1.5 | `EfficiencyScore = QualityScore / log10(TokenCost)` calculado corretamente | **Dado** `QualityScore=86, TokenCost=15500`, **Quando** `efficiency_score()`, **Então** `≈18.9` | Must | ⏳ | `tests/test_efficiency_meter.py` | `llc_evals/evaluators/efficiency_meter.py` |
 | RF-EF1.6 | Dados nível 3 marcados com tag `precision: estimated` | **Dado** instrumentação nível 3, **Quando** resultado, **Então** campo `precision: "estimated"` presente | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
 
@@ -77,7 +77,14 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 ## 5. Dependências
 
 ### Bloqueado por
-- PRP-WIZARD-1A (sessões ACE existindo e sendo criadas pelo pipeline)
+- PRP-ACE-TAGS ✅ (taxonomia `<eval_metrics>` reconhecida pelo `validate-tags.py` — GOV-003/R1)
+- PRP-GOV-T3 (`tiktoken` N1 registrado na governança de dependências — fallback nível 3)
+
+> **Correção (GOV-003/R6):** a dependência original em PRP-WIZARD-1A era artificial —
+> sessões ACE já existem e são criadas pelo pipeline hoje, sem o Wizard. A integração
+> real com o Wizard é a **exibição** de scores no Kanban (PRP-WIZARD-1.1), que já
+> depende deste PRP — direção correta da seta. Este PRP pode rodar **em paralelo**
+> ao WIZARD-1A.
 
 ### Desbloqueia
 - PRP-EVALS-F2 (CodeEvaluator)

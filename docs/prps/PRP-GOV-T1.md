@@ -1,7 +1,7 @@
 # PRP: [GOV-T1] — Criar `.ace/config/dependencies.yaml` (SBOM inicial)
 
 > **ID:** PRP-GOV-T1 | **Trilha:** Governança | **Onda:** 0
-> **Owner:** jcneto25 | **Estimativa:** 0,5 dia | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 0,5 dia | **Status:** ✅ Done (2026-08-05)
 > **Prioridade:** Crítico — bloqueia todas as trilhas
 > **ADR de origem:** ADR-0006 §6 Task T1
 

@@ -224,3 +224,20 @@ def cleanup_orphan_worktrees() -> int:
                 )
                 removed += 1
     return removed
+
+
+# ── GOV-002 / R7: guarda anti sessão-placeholder ──
+
+def is_placeholder_task(task) -> bool:
+    """True se task é um sentinel manufaturado (padrão das órfãs GOV-002).
+
+    Placeholder = None/vazio/brancos, ou o padrão literal "Step N" produzido
+    historicamente por `task or f"Step {step}"` no harness (session.py:26).
+    Tarefas reais que *mencionam* steps (ex.: "Implementar Step 5") passam.
+
+    (GOV-002 Decisão item 2 / GOV-003 R7)
+    """
+    import re
+    if task is None or not str(task).strip():
+        return True
+    return bool(re.fullmatch(r"Step\s+\S+", str(task).strip()))

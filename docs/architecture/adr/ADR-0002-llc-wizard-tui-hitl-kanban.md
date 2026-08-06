@@ -64,7 +64,7 @@ Construir o **LLC Wizard** — uma TUI interativa com **Textual** (Python 3.10+,
 | # | Princípio |
 |---|---|
 | **P1** | Read-only sobre **estado do pipeline**; write-via-API para **decisões humanas auditáveis** |
-| **P2** | Integridade ACE preservada — sessões escritas apenas pelos scripts sancionados |
+| **P2** | Integridade ACE preservada — **frontmatter** escrito apenas por `initialize`/`finalize`; `UserDecisionWriter` é mutador sancionado **append-only** para tags HITL (AGENTS.md emendado — GOV-003/R8) |
 | **P3** | Feature parity com o CLI — tudo que `llc.py` faz, o Wizard faz |
 | **P4** | Graceful degradation — sem Textual ou sem cliente de IA, cai para fallback copia-cola |
 | **P5** | Single-project scope — 1 instância = 1 projeto = 1 pipeline |
@@ -155,10 +155,16 @@ Construir o **LLC Wizard** — uma TUI interativa com **Textual** (Python 3.10+,
 | Question Answer | Durante execução | `AnswerQuestionCommand` | `<user_response type="question">` |
 | Artifact Review | Durante step | `ReviewArtifactCommand` | `<user_response type="artifact_review">` |
 | Scope Confirmation | Antes do step | `ConfirmScopeCommand` | `<user_response type="scope">` |
-| Waiver | Gate com ressalva | `WaiveGateCommand` | `<gate_result waiver="true">` |
+| Waiver | Gate com ressalva | `WaiveGateCommand` | `<gate_result step decision waiver="true">` |
 | Multi-option Choice | Durante step | `AnswerQuestionCommand` (options) | `<user_response type="question">` |
 
 Toda decisão é serializada como tag XML **append-only** no arquivo de sessão (`.ace/sessions/{sid}.md`). O frontmatter permanece escrito exclusivamente pelos scripts sancionados.
+
+> **Nota (GOV-003/R8):** o `UserDecisionWriter` está formalmente sancionado no
+> AGENTS.md (*Critical Safeguard — mutadores permitidos*) como escritor
+> **append-only** de tags HITL. Isso resolve a aparente contradição entre o P2
+> original ("apenas scripts sancionados") e esta seção: o Writer passa a ser,
+> ele próprio, um mutador sancionado com escopo restrito.
 
 ### 2.5 Decisão Kanban Board
 
@@ -338,10 +344,18 @@ class PipelineDataSource(Protocol):
   <answer>Postgres</answer>
 </user_response>
 
-<gate_result approved="true" waiver="true" timestamp="2026-08-04T15:10:05">
+<gate_result step="5" decision="approved" waiver="true" timestamp="2026-08-04T15:10:05">
   <waiver_note>Performance aceitável porque...</waiver_note>
 </gate_result>
 ```
+
+> **Emenda (GOV-003 / R1):** formato de `<gate_result>` alinhado ao schema do
+> `validate-tags.py` — atributos obrigatórios `step` + `decision` (valores:
+> `approved`/`rejected`/`conditional`), com `waiver` como atributo **opcional**
+> (`true`/`false`). A versão original (`approved="true" waiver="true"` sem
+> `step`/`decision`) era rejeitada pelo validador que roda no pre-commit.
+> Tags reconhecidas pela taxonomia desde o PRP-ACE-TAGS: `user_response`
+> (+ filhos `question`/`answer`), `waiver_note`, `eval_metrics`, `task_completed`.
 
 ### 7.3 Configuração do Wizard
 

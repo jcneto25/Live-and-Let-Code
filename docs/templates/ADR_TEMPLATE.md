@@ -7,11 +7,11 @@ Architecture Decision Record Template (MADR - Markdown ADR).
 
 ## Formato do Arquivo
 
-**Nome:** `ADR-{NNN}-{titulo-kebab-case}.md`
+**Nome:** `ADR-{NNNN}-{titulo-kebab-case}.md`
 **Exemplos:**
-- `ADR-001-angular-nestjs-fullstack.md`
-- `ADR-008-repository-pattern.md`
-- `ADR-009-domain-layer-pure.md`
+- `ADR-0001-angular-nestjs-fullstack.md`
+- `ADR-0008-repository-pattern.md`
+- `ADR-0009-domain-layer-pure.md`
 
 ---
 
@@ -102,24 +102,24 @@ Esta decisão é enforceada pelas seguintes fitness functions:
 
 | ADR | Título Sugerido | Decisão Core |
 |-----|-----------------|--------------|
-| ADR-001 | Stack Frontend (Angular/React/Vue) | Framework + justificativa |
-| ADR-002 | Stack Backend (NestJS/Express/Fastify) | Framework + justificativa |
-| ADR-003 | Banco de Dados (PostgreSQL/MySQL/MongoDB) | SGBD + estratégia migração |
-| ADR-004 | Autenticação/Autorização (JWT/OIDC/Keycloak) | Estratégia auth |
-| ADR-005 | API First / OpenAPI / Contract Testing | Abordagem de contratos |
-| ADR-006 | Repository Pattern com Interfaces | **Obrigatório** (Step 5a) |
-| ADR-007 | Domain Layer Puro (Entities, VOs, Events, Errors) | **Obrigatório** (Step 5a) |
-| ADR-008 | Use Cases como Application Layer | **Obrigatório** (Step 5a) |
-| ADR-009 | Event Bus para Cross-Module Communication | **Obrigatório** (Step 5a) |
-| ADR-010 | Fitness Functions Automatizadas | **Obrigatório** (Step 5a) |
-| ADR-011 | Estratégia de Deploy / CI/CD | Pipeline + ambientes |
+| ADR-0001 | Stack Frontend (Angular/React/Vue) | Framework + justificativa |
+| ADR-0002 | Stack Backend (NestJS/Express/Fastify) | Framework + justificativa |
+| ADR-0003 | Banco de Dados (PostgreSQL/MySQL/MongoDB) | SGBD + estratégia migração |
+| ADR-0004 | Autenticação/Autorização (JWT/OIDC/Keycloak) | Estratégia auth |
+| ADR-0005 | API First / OpenAPI / Contract Testing | Abordagem de contratos |
+| ADR-0006 | Repository Pattern com Interfaces | **Obrigatório** (Step 5a) |
+| ADR-0007 | Domain Layer Puro (Entities, VOs, Events, Errors) | **Obrigatório** (Step 5a) |
+| ADR-0008 | Use Cases como Application Layer | **Obrigatório** (Step 5a) |
+| ADR-0009 | Event Bus para Cross-Module Communication | **Obrigatório** (Step 5a) |
+| ADR-0010 | Fitness Functions Automatizadas | **Obrigatório** (Step 5a) |
+| ADR-0011 | Estratégia de Deploy / CI/CD | Pipeline + ambientes |
 
 ---
 
-## Exemplo Preenchido: ADR-008-repository-pattern.md
+## Exemplo Preenchido: ADR-0008-repository-pattern.md
 
 ```markdown
-# ADR-008: Repository Pattern com Interfaces (Ports & Adapters)
+# ADR-0008: Repository Pattern com Interfaces (Ports & Adapters)
 
 ## Status
 Accepted
@@ -193,7 +193,7 @@ Implementaremos Repository Pattern com interfaces para todos os aggregate roots:
 
 | Campo | Valor |
 |-------|-------|
-| **ID** | ADR-008 |
+| **ID** | ADR-0008 |
 | **Data** | 2025-01-15 |
 | **Autor(es)** | Arquiteto LLC, Tech Lead |
 | **Revisores** | Time de Engenharia |
@@ -204,10 +204,10 @@ Implementaremos Repository Pattern com interfaces para todos os aggregate roots:
 
 ---
 
-## Exemplo Preenchido: ADR-009-domain-layer-pure.md
+## Exemplo Preenchido: ADR-0009-domain-layer-pure.md
 
 ```markdown
-# ADR-009: Domain Layer Puro (Entities, Value Objects, Domain Events, Domain Errors)
+# ADR-0009: Domain Layer Puro (Entities, Value Objects, Domain Events, Domain Errors)
 
 ## Status
 Accepted
@@ -287,22 +287,22 @@ Diretório de decisões arquiteturais seguindo formato [MADR](https://adr.github
 
 | ID | Título | Status | Data | Link |
 |----|--------|--------|------|------|
-| ADR-001 | Angular + NestJS Fullstack | Accepted | 2025-01-10 | [ADR-001](ADR-001-angular-nestjs-fullstack.md) |
-| ADR-002 | NestJS como Backend | Accepted | 2025-01-10 | [ADR-002](ADR-002-nestjs-backend.md) |
-| ADR-003 | PostgreSQL como Banco Principal | Accepted | 2025-01-10 | [ADR-003](ADR-003-postgresql.md) |
-| ADR-004 | RBAC + ABAC para Autorização | Accepted | 2025-01-10 | [ADR-004](ADR-004-rbac-abac.md) |
-| ADR-005 | API First com OpenAPI | Accepted | 2025-01-10 | [ADR-005](ADR-005-api-first-openapi.md) |
-| ADR-006 | JWT + MFA + Keycloak | Accepted | 2025-01-10 | [ADR-006](ADR-006-jwt-mfa-keycloak.md) |
-| ADR-007 | Docker Compose para Dev/Staging | Accepted | 2025-01-10 | [ADR-007](ADR-007-docker-compose.md) |
-| **ADR-008** | **Repository Pattern com Interfaces** | **Accepted** | **2025-01-15** | **[ADR-008](ADR-008-repository-pattern.md)** |
-| **ADR-009** | **Domain Layer Puro** | **Accepted** | **2025-01-15** | **[ADR-009](ADR-009-domain-layer-pure.md)** |
-| **ADR-010** | **Use Cases como Application Layer** | **Accepted** | **2025-01-15** | **[ADR-010](ADR-010-use-cases.md)** |
-| **ADR-011** | **Event Bus Cross-Module** | **Accepted** | **2025-01-15** | **[ADR-011](ADR-011-event-bus.md)** |
-| **ADR-012** | **Fitness Functions Automatizadas** | **Accepted** | **2025-01-15** | **[ADR-012](ADR-012-fitness-functions.md)** |
+| ADR-0001 | Angular + NestJS Fullstack | Accepted | 2025-01-10 | [ADR-0001](ADR-0001-angular-nestjs-fullstack.md) |
+| ADR-0002 | NestJS como Backend | Accepted | 2025-01-10 | [ADR-0002](ADR-0002-nestjs-backend.md) |
+| ADR-0003 | PostgreSQL como Banco Principal | Accepted | 2025-01-10 | [ADR-0003](ADR-0003-postgresql.md) |
+| ADR-0004 | RBAC + ABAC para Autorização | Accepted | 2025-01-10 | [ADR-0004](ADR-0004-rbac-abac.md) |
+| ADR-0005 | API First com OpenAPI | Accepted | 2025-01-10 | [ADR-0005](ADR-0005-api-first-openapi.md) |
+| ADR-0006 | JWT + MFA + Keycloak | Accepted | 2025-01-10 | [ADR-0006](ADR-0006-jwt-mfa-keycloak.md) |
+| ADR-0007 | Docker Compose para Dev/Staging | Accepted | 2025-01-10 | [ADR-0007](ADR-0007-docker-compose.md) |
+| **ADR-0008** | **Repository Pattern com Interfaces** | **Accepted** | **2025-01-15** | **[ADR-0008](ADR-0008-repository-pattern.md)** |
+| **ADR-0009** | **Domain Layer Puro** | **Accepted** | **2025-01-15** | **[ADR-0009](ADR-0009-domain-layer-pure.md)** |
+| **ADR-0010** | **Use Cases como Application Layer** | **Accepted** | **2025-01-15** | **[ADR-0010](ADR-0010-use-cases.md)** |
+| **ADR-0011** | **Event Bus Cross-Module** | **Accepted** | **2025-01-15** | **[ADR-0011](ADR-0011-event-bus.md)** |
+| **ADR-0012** | **Fitness Functions Automatizadas** | **Accepted** | **2025-01-15** | **[ADR-0012](ADR-0012-fitness-functions.md)** |
 
 ## Como Criar Novo ADR
 
-1. Copie `ADR_TEMPLATE.md` para `ADR-{NNN}-{titulo-kebab-case}.md`
+1. Copie `ADR_TEMPLATE.md` para `ADR-{NNNN}-{titulo-kebab-case}.md`
 2. Preencha todas as seções
 3. Atualize esta tabela
 4. Linke no `ARCHITECTURE.md` §8

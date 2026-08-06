@@ -17,13 +17,23 @@ SESSIONS_DIR = ACE_DIR / "sessions"
 
 def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
     """Inicializa sessao ACE. Retorna dict com session_id, context_seed, worktree_path."""
+    # GOV-002 Decisão item 2 / GOV-003 R7: falha explícita em vez de manufaturar
+    # task placeholder ("Step N") — padrão das sessões órfãs. O initialize_session
+    # repete a mesma guarda (defense in depth).
+    from initialize_session.session import is_placeholder_task
+    if is_placeholder_task(task):
+        print(f"❌ Sessão recusada (GOV-002): step {step} sem --task real.")
+        print('   Informe a tarefa: llc run --step N --task "Descrever a tarefa real".')
+        print("   Tasks placeholder (ex.: 'Step N') são proibidas.")
+        sys.exit(2)
+
     cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "initialize_session.py"),
         "--step",
         str(step),
         "--task",
-        task or f"Step {step}",
+        task,
         "--wave",
         str(wave),
         "--json",

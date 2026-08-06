@@ -12,6 +12,8 @@
 
 Com o modelo e o builder do PRP-GRAPH-1A, o grafo existe mas é estático. Este PRP entrega o `GraphEngine` — o scheduler read-only que responde "quais nós estão prontos para execução?" e "quais nós são afetados por uma mudança?". É a fundação para Smart Skip formal e para a futura coordenação reativa.
 
+> **Relação com o `impact-analyzer.py` (GOV-003/R11):** o `GraphEngine.impact_of()` e o `impact-analyzer.py` **coexistem**, não se substituem. O `impact-analyzer.py` opera no universo de **artefatos** (`docs/prps/`, `docs/planning/`) e cobre etapas pré-código; o `GraphEngine.impact_of()` opera no universo de **nós do DAG de steps ACE** (runtime). A migração/adoção gradual para Smart Skip (ver `llc-smart-skip.md`) deve manter o `impact-analyzer.py` como fonte para análise de artefatos documentais até que a ponte artefato↔node esteja formalizada no ADR-0004.
+
 ### 1.2 O que é entregue
 
 - [ ] `llc_graph/engine.py` — `GraphEngine` com `node_state()`, `ready_nodes()`, `impact_of()`

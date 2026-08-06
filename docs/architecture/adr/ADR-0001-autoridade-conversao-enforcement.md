@@ -1,4 +1,7 @@
-# ADR-001: Enforcement determinístico da Autoridade de Conversão via pre-commit
+# ADR-0001: Enforcement determinístico da Autoridade de Conversão via pre-commit
+
+> **Nota de renumeração (GOV-003/R9, 2026-08-05):** originalmente `ADR-001` (3 dígitos);
+> renumerado para o padrão de 4 dígitos adotado pelos ADRs 0002+.
 
 > **Status:** Aceito
 > **Data:** 2026-07-31

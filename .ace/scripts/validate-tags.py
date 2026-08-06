@@ -35,7 +35,11 @@ BALANCED_TAGS = [
     "action_log", "action", "thinking", "learning_point",
     "gate_result", "blocker", "context_seed", "skill_feedback",
     "govs",
-    "file_delta", "description", "lines_changed", "result"
+    "file_delta", "description", "lines_changed", "result",
+    # PRP-ACE-TAGS (GOV-003/R1): tags do ADR-0002 (HITL), ADR-0005 (Eval Harness)
+    # e AGENTS.md (Progress Reflection)
+    "user_response", "question", "answer", "waiver_note",
+    "eval_metrics", "task_completed",
 ]
 SELF_CLOSING_TAGS = {"gov_reference"}
 
@@ -44,7 +48,9 @@ REQUIRED_ATTRS = {
     "gate_result": ["step", "decision"],
     "learning_point": ["priority"],
     "blocker": ["resolved"],
-    "skill_feedback": ["skill"]
+    "skill_feedback": ["skill"],
+    "user_response": ["type"],
+    "task_completed": ["id", "status"],
 }
 
 VALID_VALUES = {
@@ -53,10 +59,15 @@ VALID_VALUES = {
     # dentro do action_log). Catalogados para não acusar ocurrence legítima.
     "action": {"type": ["git_commit", "file_create", "file_modify", "file_delete",
                          "file_read", "user_response", "test_run", "tool_call"]},
-    "gate_result": {"decision": ["approved", "rejected", "conditional"]},
+    # PRP-ACE-TAGS (GOV-003/R1): waiver é atributo OPCIONAL de gate_result —
+    # validado apenas quando presente (compatível com sessões existentes).
+    "gate_result": {"decision": ["approved", "rejected", "conditional"],
+                    "waiver": ["true", "false"]},
     "learning_point": {"priority": ["high", "medium", "low"]},
     "blocker": {"resolved": ["true", "false"]},
-    "skill_feedback": {"priority": ["high", "medium", "low"]}
+    "skill_feedback": {"priority": ["high", "medium", "low"]},
+    "user_response": {"type": ["question", "artifact_review", "scope"]},
+    "task_completed": {"status": ["done", "partial"]},
 }
 
 CONTEXT_SEED_FIELDS = ["state", "pending", "blockers", "next_action"]
@@ -84,10 +95,33 @@ def validate_yaml_front_matter(content: str, file_path: Path) -> list:
     return errors
 
 
+def _tag_opens(content: str, tag: str) -> list:
+    """Matches de abertura de <tag>, excluindo menções em prosa.
+
+    Sessões ACE são imutáveis (append-only): menções históricas como
+    '<task_completed> emitidos na época' (sessão 2026-07-31-001) não são tags.
+    Critério de tag real: tem atributos, OU fecha na mesma linha, OU está
+    sozinha na linha (abertura multiline). Menção em prosa = sem atributos,
+    sem </tag> na mesma linha e com texto após a tag na mesma linha.
+    (PRP-ACE-TAGS / GOV-003 R1)
+    """
+    opens = []
+    for m in re.finditer(f'<{tag}\\b([^>]*)>', content):
+        if m.group(1).strip():
+            opens.append(m)
+            continue
+        line_end = content.find('\n', m.end())
+        line_end = len(content) if line_end == -1 else line_end
+        rest_of_line = content[m.end():line_end]
+        if f'</{tag}>' in rest_of_line or not rest_of_line.strip():
+            opens.append(m)
+    return opens
+
+
 def validate_balanced_tags(content: str, file_path: Path) -> list:
     errors = []
     for tag in BALANCED_TAGS:
-        open_count = len(re.findall(f'<{tag}[\\s>]', content))
+        open_count = len(_tag_opens(content, tag))
         close_count = len(re.findall(f'</{tag}>', content))
         if open_count != close_count:
             line_num = 1
@@ -102,7 +136,7 @@ def validate_balanced_tags(content: str, file_path: Path) -> list:
 def validate_required_attributes(content: str, file_path: Path) -> list:
     errors = []
     for tag, attrs in REQUIRED_ATTRS.items():
-        for match in re.finditer(f'<{tag}\\b([^>]*)>', content):
+        for match in _tag_opens(content, tag):
             attrs_str = match.group(1)
             line_num = content[:match.start()].count('\n') + 1
             for attr in attrs:
@@ -115,7 +149,7 @@ def validate_required_attributes(content: str, file_path: Path) -> list:
 def validate_attribute_values(content: str, file_path: Path) -> list:
     errors = []
     for tag, attr_validations in VALID_VALUES.items():
-        for match in re.finditer(f'<{tag}\\b([^>]*)>', content):
+        for match in _tag_opens(content, tag):
             attrs_str = match.group(1)
             line_num = content[:match.start()].count('\n') + 1
             for attr, valid_values in attr_validations.items():
@@ -312,7 +346,7 @@ def fix_unbalanced_tags(file_path: Path) -> bool:
     content = file_path.read_text(encoding='utf-8')
     fixed = False
     for tag in BALANCED_TAGS:
-        open_count = len(re.findall(f'<{tag}[\\s>]', content))
+        open_count = len(_tag_opens(content, tag))
         close_count = len(re.findall(f'</{tag}>', content))
         if open_count > close_count:
             content += f"\n</{tag}>" * (open_count - close_count)

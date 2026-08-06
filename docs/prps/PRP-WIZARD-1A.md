@@ -18,7 +18,7 @@
 |-------|-------|
 | ID | ADR-0002 |
 | Decisão | Construir LLC Wizard — TUI interativa com Textual (Python 3.10+) |
-| Arquivo | `docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md` |
+| Arquivo | `docs/architecture/adr/ADR-0002-llc-wizard-tui-hitl-kanban.md` |
 
 ### 1.2 Por que este PRP existe?
 
@@ -54,7 +54,7 @@ O LLC opera exclusivamente via CLI (`llc.py`). O operador não tem visibilidade 
 | RF-W1A.2 | `StepInfo` é imutável (frozen dataclass) | **Dado** uma instância de `StepInfo`, **Quando** tentativa de mutação, **Então** lança `FrozenInstanceError` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
 | RF-W1A.3 | `PipelineStatus.progress_percent` conta só steps `in_pipeline` | **Dado** 2 steps completed + 1 pending + 1 excluded, **Quando** `progress_percent`, **Então** retorna ~66.6% | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
 | RF-W1A.4 | `PipelineDataReader` tolera `index.json` ausente | **Dado** `.ace/index.json` deletado, **Quando** `get_status()`, **Então** todos os steps retornam `pending` sem exceção | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.5 | `PipelineDataReader` parseia gates do `gates.json` | **Dado** `gate-1` em `gates.json` com 2 itens, **Quando** `get_gate_for_step("1")`, **Então** `GateInfo` com 2 `GateItem` e `all_required_met=False` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.5 | `PipelineDataReader` parseia gates do `gates.json` | **Dado** gate `"1"` em `gates.json` com 2 itens (strings), **Quando** `get_gate_for_step("1")`, **Então** `GateInfo` com 2 `GateItem` (`required=true` por default — §7.2) e `all_required_met=False` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
 | RF-W1A.6 | `KanbanCard.is_stale` respeita SLA configurável | **Dado** card em `AWAITING_HUMAN` há 31 min e SLA=30, **Quando** `is_stale(30)`, **Então** retorna `True` | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
 | RF-W1A.7 | `KanbanBoardBuilder.build()` mapeia steps para colunas corretas | **Dado** steps com status variados, **Quando** `build()`, **Então** cada step aparece na coluna correspondente ao seu status | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
 | RF-W1A.8 | `AWAITING_HUMAN` ordenado por tempo de espera (mais antigo no topo) | **Dado** 2 HITL pendentes com timestamps distintos, **Quando** `build()`, **Então** mais antigo é o primeiro na lista | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
@@ -153,8 +153,14 @@ N/A — componente de linha de comando, sem endpoints HTTP.
 |-------|------|:------------:|---------|
 | `id` | `str` | NOT NULL | N/A |
 | `description` | `str` | NOT NULL | N/A |
-| `required` | `bool` | NOT NULL | N/A |
+| `required` | `bool` | NOT NULL | `True` (ver regra abaixo) |
 | `checked` | `bool` | DEFAULT `False` | — |
+
+> **Regra `GateItem.required` (GOV-003/R4):** os checklists do `gates.json` são listas
+> de strings — não há `required` por item. **Default: todo item é `required=true`**;
+> `all_required_met` = todos os itens marcados. Extensão futura (não implementada no
+> MVP): prefixo `[opcional]` na string do checklist → `required=false`.
+> Chaves reais do `gates.json`: `"1"`, `"2"`, `"3.5"`, … (**sem** prefixo `gate-`).
 
 ### 7.3 `KanbanCard` (frozen dataclass)
 
@@ -202,6 +208,33 @@ class PipelineDataSource(Protocol):
 > recebe `PipelineDataSource`, não `PipelineDataReader` diretamente. Quando o ADR-0004
 > for implementado e o `GraphEngine` existir, basta criar um adapter que implemente
 > `PipelineDataSource` sobre o `GraphEngine` — sem tocar em `kanban.py` nem em `app.py`.
+> *(Confirmado pela estratégia adapter do GOV-003/R3 — ver PRP-GRAPH-1C.)*
+
+### 7.6 Derivação de `StepStatus` — fonte × estado (GOV-003/R4)
+
+Todo estado é **derivado em tempo real** de artefatos existentes — o Wizard nunca
+persiste estado (P1, read-only). Regras canônicas, em ordem de precedência:
+
+| # | `StepStatus` | Regra de derivação (primeira que casar vence) |
+|---|---|---|
+| 1 | `failed` | Última sessão do step com `status="completed"` no `index.json` **e** `<gate_result step="N" decision="rejected">` real (não-placeholder) no arquivo da sessão — gravado por `_record_gate_result()` no harness |
+| 2 | `completed` | Última sessão do step com `status="completed"` **e** (se o step tiver gate) `<gate_result decision="approved">` na sessão |
+| 3 | `gate_pending` | Sessão `in_progress` para o step **e** step possui gate em `gates.json` **e** nenhum `<gate_result>` real na sessão. No fluxo Wizard (RSK-W1A-04): runner já emitiu `CompletionEvent` |
+| 4 | `in_progress` | Sessão `in_progress` para o step, sem as condições de `gate_pending` |
+| 5 | `skipped` | Skip note presente em `docs/delta/skip-notes/step-{id}.md` (Smart Skip — gate auto-aprovado) |
+| 6 | `excluded` | `StepSpec.in_pipeline == False` no REGISTRY (`llc_steps`) — ex.: steps 0, 0.1, 0.2/0.3 (delta) |
+| 7 | `pending` | Nenhuma das anteriores (step em pipeline sem sessão registrada) |
+
+> **Limitação documentada (fluxo CLI puro):** no CLI, o gate roda sincronamente no mesmo
+> processo — `gate_pending` só é *observável* enquanto o processo aguarda `input()`.
+> Fora do Wizard, `gate_pending` degrada para `in_progress` (mesma leitura, sem falso
+> negativo). No fluxo Wizard, o gate é da TUI: `gate_pending` = `CompletionEvent`
+> recebido + ausência de `<gate_result>` na sessão.
+
+> **Nota de governança:** a config do Wizard (`wizard.hitl_sla_minutes`, ADR-0002 §2.5/§7.3)
+> será adicionada a `.ace/config/gates.json` — arquivo coberto pela **Autoridade de
+> Conversão** (GOV-001/ADR-0001 §9 do pre-commit): o commit que a introduzir deve
+> carregar GOV/ADR (ADR-0002 já cobre esta decisão).
 
 ---
 
@@ -382,6 +415,7 @@ def make_gates():
 - [ ] Cobertura conforme RNF-W1A.1 e RNF-W1A.2
 - [ ] `fitness-functions.py --all --strict` com 0 CRITICAL
 - [ ] `data.py` exporta `PipelineDataSource` Protocol (DIP preparatório para ADR-0004)
+- [ ] Cada regra de precedência da tabela de derivação `StepStatus` (§7.6) coberta por teste (7 regras, incl. degradação `gate_pending`→`in_progress` fora do Wizard)
 - [ ] `dependencies.yaml` atualizado com `textual` registrado (ADR-0006)
 
 ### Processo

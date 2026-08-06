@@ -1,9 +1,9 @@
 # GOV-002: Sessões ACE criadas por caminhos não-operacionais
 
-**Status**: open
+**Status**: addressed
 **Data de abertura**: 2026-07-31
-**Data de instalação**: (pendente)
-**Data de fechamento**: (pendente)
+**Data de instalação**: 2026-08-05
+**Data de fechamento**: (pendente — 3 PRPs sem reincidência após instalação)
 **Step de origem**: 11.4 (auditoria contínua do pacote GOV)
 **PRP relacionado**: PRP-GOV-004
 
@@ -60,6 +60,15 @@ Ambos — controle determinístico agora, arquitetural na próxima wave:
 - Remoção manual documentada (compromisso de higiene, precedente em f90894b)
 - Taxonomia canônica: sessão órfã = `project: ""` + `task_context` igual a
   `Step N` literal + zero actions + zero tags
+- **Fail-fast (instalado em 2026-08-05, sessão 2026-08-05-004 — Decisão item 2):**
+  - `initialize_session/session.py::is_placeholder_task()` — detecta sentinel
+    (`Step N` literal, vazio, None)
+  - `initialize_session/cli.py` — recusa com `exit 2` + mensagem pedindo `--task`
+    real, **antes** de criar qualquer arquivo (camada determinística)
+  - `llc_harness/session.py::session_start()` — mesma guarda antes de invocar o
+    subprocesso; **removida** a manufatura `task or f"Step {step}"` (a causa raiz)
+  - Evidência: `test_session_task_guard.py` (15 testes); suite completa após o fix
+    criou **zero** órfãs (antes: 3 por execução)
 
 ## Área Afetada
 
@@ -72,5 +81,14 @@ Ambos — controle determinístico agora, arquitetural na próxima wave:
 
 ## Status da Reincidência
 
-2 ocorrências documentadas neste GOV (11:08 e 13:17/14:10). Transição para closed
-exige 3 PRPs sem nova sessão órfã.
+3 ocorrências documentadas:
+1. 2026-07-31 11:08 (removida na sessão 31-001)
+2. 2026-07-31 13:17 e 14:10 (descobertas na sessão 31-004)
+3. **2026-08-05** — sessões `2026-08-05-004/005/006` criadas durante `pytest .ace/scripts/`
+   (suite completa dispara o caminho `llm_fallback` do `llc.py` com defaults de docstring).
+   Removidas na sessão 2026-08-05-003 conforme o controle deste GOV (Decisão item 1).
+
+A 3ª reincidência confirmou que o controle manual não bastava. O fix arquitetural
+(Decisão item 2) foi **instalado em 2026-08-05** (ver *Mecanismo Instalado*).
+Contagem reiniciada: **0/3 PRPs sem nova sessão órfã desde a instalação** —
+transição para closed após 3 PRPs executados sem reincidência.

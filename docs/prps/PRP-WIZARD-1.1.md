@@ -46,6 +46,19 @@ O PRP-WIZARD-1A entrega o modelo de dados Kanban (`KanbanCard`, `KanbanBoardBuil
 
 ---
 
+## 2.1 Fonte de dados dos cards N2 (ADR-0007 / GOV-003 R5)
+
+Cards de PRPs paralelos (múltiplos `RUNNING`) são derivados do **campo `prp` em
+`.ace/index.json`** — gravado por `update_index()` quando a sessão é iniciada com
+`--prp` (já implementado; **zero mudança de código**). Regras:
+
+- **Agrupamento:** sessões com o mesmo valor de `prp` formam o card N2 daquele PRP.
+- **Coluna:** derivada do `status` da sessão + `<gate_result>` (mesma tabela de
+  derivação do PRP-WIZARD-1A §7.6, aplicada por sessão-PRP).
+- **Corroboração opcional:** `git worktree list` (convenção `prp-{id}/wave-{n}`)
+  confirma cards `RUNNING` — fallback de leitura, nunca fonte primária.
+- **Degradação graciosa:** sem sessões com `prp`, o board exibe apenas cards N1.
+
 ## 3. Dependências
 
 ### Bloqueado por
@@ -64,7 +77,7 @@ O PRP-WIZARD-1A entrega o modelo de dados Kanban (`KanbanCard`, `KanbanBoardBuil
 - [ ] Toggle `K` funcional — Pipeline ↔ Kanban sem crash
 - [ ] SLA configurable via `gates.json → wizard.hitl_sla_minutes`
 - [ ] `SKIPPED` colapsada por padrão (D1 do ADR-0002)
-- [ ] Múltiplos cards `RUNNING` renderizados corretamente (N2 — PRPs em worktrees)
+- [ ] Múltiplos cards `RUNNING` renderizados corretamente (N2 — derivados do campo `prp` no `index.json`, §2.1 / ADR-0007)
 - [ ] Scores de eval exibidos apenas se `PRP-EVALS-F1` dados disponíveis (graceful ausência)
 - [ ] `fitness-functions.py --all --strict` verde
 - [ ] Sessão ACE registrada

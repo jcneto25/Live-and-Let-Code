@@ -1,7 +1,7 @@
 # PRP: [GOV-T3] — Fitness Function `dependency-governance` (TDD)
 
 > **ID:** PRP-GOV-T3 | **Trilha:** Governança | **Onda:** 0
-> **Owner:** jcneto25 | **Estimativa:** 1 dia | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 1 dia | **Status:** ✅ Done (2026-08-05)
 > **Prioridade:** Crítico | **ADR de origem:** ADR-0006 §5.1 + §6 Task T3
 
 ---
@@ -108,8 +108,14 @@ def check_dependency_governance(root: Path) -> list:
 
 ## 5. Definition of Done
 
-- [ ] `fitness-functions.py --check dependency-governance` passa sem erros no repositório atual
-- [ ] Teste de regressão RED: adicionar import não registrado → check retorna CRITICAL
-- [ ] Todos os 5 RFs com testes verdes
-- [ ] `fitness-functions.py --all --strict` continua passando (sem regressões nos checks existentes)
-- [ ] Sessão ACE registrada
+- [x] `fitness-functions.py --check-governance` passa sem erros no repositório atual ✅ (2026-08-05)
+- [x] Teste de regressão RED: adicionar import não registrado → check retorna CRITICAL ✅ (verificado com `unregistered_lib_xyz`)
+- [x] Todos os 5 RFs com testes verdes ✅ (15 testes em `test_fitness_dependency_governance.py`)
+- [x] `fitness-functions.py --all --strict` continua passando ✅ (40/41 — único alerta é `module_coverage` pré-existente, sem arquivo de cobertura)
+- [x] Sessão ACE registrada ✅ (2026-08-05-011)
+
+> **Nota de implementação (2026-08-05):** a flag real é `--check-governance` (o CLI do
+> fitness-functions usa flags específicas por check — não há `--check <nome>` genérico).
+> Escopo da varredura: `.ace/scripts/**/*.py` exceto `test_*.py` (governança de produção;
+> `pytest` registrado como dev em GOV-T2). Núcleo testável em
+> `checks_governance._check_dependency_governance(root)`.

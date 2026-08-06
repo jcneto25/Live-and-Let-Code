@@ -240,6 +240,195 @@
       "llc_step_id": "11.4",
       "tags": [],
       "timestamp": "2026-07-31T15:16:49.305832"
+    },
+    {
+      "session_id": "2026-08-05-001",
+      "file": "2026-08-05-001.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
+      ],
+      "timestamp": "2026-08-05T18:18:53.325925",
+      "completed_at": "2026-08-05T18:20:24.295850"
+    },
+    {
+      "session_id": "2026-08-05-002",
+      "file": "2026-08-05-002.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/architecture/ADR-0004-graph-engineering-orchestration.md",
+        "docs/prps/PRP-GRAPH-1A.md",
+        "docs/prps/PRP-GRAPH-1C.md"
+      ],
+      "timestamp": "2026-08-05T18:23:12.605390",
+      "completed_at": "2026-08-05T18:28:06.866649"
+    },
+    {
+      "session_id": "2026-08-05-003",
+      "file": "2026-08-05-003.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        ".ace/scripts/test_validate_tags.py",
+        ".ace/scripts/validate-tags.py",
+        ".ace/sessions/2026-08-05-004.md, -005.md, -006.md",
+        "docs/governance/GOV-002-sessoes-orfas-harness-fallback.md",
+        ".vscode/settings.json",
+        "docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md",
+        "llc-pipeline-design.md",
+        "docs/prps/PRP-ACE-TAGS.md",
+        "docs/prps/PRP-WIZARD-1B.md",
+        "docs/planning/PRP-MAP.md",
+        "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
+      ],
+      "timestamp": "2026-08-05T18:29:40.216726",
+      "completed_at": "2026-08-05T18:53:26.567601"
+    },
+    {
+      "session_id": "2026-08-05-004",
+      "file": "2026-08-05-004.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        ".ace/scripts/test_session_task_guard.py",
+        ".ace/scripts/initialize_session/session.py",
+        ".ace/scripts/initialize_session/cli.py",
+        ".ace/scripts/llc_harness/session.py",
+        "docs/governance/GOV-002-sessoes-orfas-harness-fallback.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-05T18:54:55.866862",
+      "completed_at": "2026-08-05T19:04:41.263433"
+    },
+    {
+      "session_id": "2026-08-05-005",
+      "file": "2026-08-05-005.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/planning/PRP-MAP.md",
+        "docs/prps/PRP-EVALS-F1.md"
+      ],
+      "timestamp": "2026-08-05T19:06:04.884336",
+      "completed_at": "2026-08-05T19:10:38.238053"
+    },
+    {
+      "session_id": "2026-08-05-006",
+      "file": "2026-08-05-006.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/prps/PRP-WIZARD-1A.md"
+      ],
+      "timestamp": "2026-08-05T19:11:53.776770",
+      "completed_at": "2026-08-05T19:13:52.642217"
+    },
+    {
+      "session_id": "2026-08-05-007",
+      "file": "2026-08-05-007.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/architecture/adr/ADR-0007-ace-index-prp-field.md",
+        "docs/prps/PRP-WIZARD-1.1.md"
+      ],
+      "timestamp": "2026-08-05T19:14:48.288683",
+      "completed_at": "2026-08-05T19:16:29.083113"
+    },
+    {
+      "session_id": "2026-08-05-008",
+      "file": "2026-08-05-008.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "AGENTS.md",
+        "docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md",
+        "docs/prps/PRP-EVALS-F1.md",
+        "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
+      ],
+      "timestamp": "2026-08-05T19:17:22.717839",
+      "completed_at": "2026-08-05T19:19:11.065199"
+    },
+    {
+      "session_id": "2026-08-05-009",
+      "file": "2026-08-05-009.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        ".ace/config/dependencies.yaml",
+        "docs/prps/PRP-GOV-T1.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-05T19:20:10.575760",
+      "completed_at": "2026-08-05T19:21:20.059985"
+    },
+    {
+      "session_id": "2026-08-05-010",
+      "file": "2026-08-05-010.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        ".ace/config/dependencies.yaml",
+        "docs/prps/PRP-GOV-T2.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-05T19:22:14.449738",
+      "completed_at": "2026-08-05T19:24:09.970136"
+    },
+    {
+      "session_id": "2026-08-05-011",
+      "file": "2026-08-05-011.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        ".ace/scripts/test_fitness_dependency_governance.py",
+        ".ace/scripts/fitness_functions/checks_governance.py",
+        ".ace/scripts/fitness_functions/runner.py",
+        ".ace/scripts/fitness_functions/cli.py",
+        "docs/prps/PRP-GOV-T3.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-05T19:25:19.452417",
+      "completed_at": "2026-08-05T19:30:41.884336"
+    },
+    {
+      "session_id": "2026-08-05-012",
+      "file": "2026-08-05-012.md",
+      "status": "completed",
+      "llc_step": 11.4,
+      "llc_step_id": "11.4",
+      "tags": [
+        "docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md → docs/architecture/adr/ADR-0002-llc-wizard-tui-hitl-kanban.md",
+        "docs/architecture/ADR-0004-graph-engineering-orchestration.md → docs/architecture/adr/ADR-0004-graph-engineering-orchestration.md",
+        "docs/architecture/ADR-0005-eval-harness.md → docs/architecture/adr/ADR-0005-eval-harness.md",
+        "docs/architecture/ADR-0006-external-dependency-governance.md → docs/architecture/adr/ADR-0006-external-dependency-governance.md",
+        "docs/architecture/ADR-0001-autoridade-conversao-enforcement.md → docs/architecture/adr/ADR-0001-autoridade-conversao-enforcement.md",
+        "ADR-001 → ADR-0001",
+        "docs/architecture/adr/ADR-0001-autoreitetade-conversao-enforcement.md",
+        "docs/planning/PRP-MAP.md",
+        "docs/prps/PRP-WIZARD-1A.md",
+        "docs/architecture/ARCHITECTURE_TEMPLATE.md, docs/skills/llc-step-5.md, docs/templates/ADR_TEMPLATE.md, docs/templates/ARCHITECTURE_PATTERNS_TEMPLATE.md, docs/templates/FITNESS_FUNCTION_TEMPLATE.md",
+        "docs/architecture/factory-evolution.md",
+        "AGENTS.md",
+        "docs/prps/PRP-GRAPH-1B.md",
+        "docs/architecture/adr/ADR-0004-graph-engineering-orchestration.md",
+        "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
+      ],
+      "timestamp": "2026-08-05T19:32:27.891424",
+      "completed_at": "2026-08-05T19:40:23.375419"
     }
   ]
 }

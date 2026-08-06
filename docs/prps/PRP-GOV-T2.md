@@ -1,7 +1,7 @@
 # PRP: [GOV-T2] — Retro-classificar dependências existentes em `.ace/scripts/`
 
 > **ID:** PRP-GOV-T2 | **Trilha:** Governança | **Onda:** 0
-> **Owner:** jcneto25 | **Estimativa:** 0,5 dia | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 0,5 dia | **Status:** ✅ Done (2026-08-05)
 > **Prioridade:** Crítico | **ADR de origem:** ADR-0006 §6 Task T2
 
 ---

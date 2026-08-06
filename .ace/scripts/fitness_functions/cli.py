@@ -78,6 +78,12 @@ def main():
         action="store_true",
         help="UX: hardcoded strings, confirmshaming, alerts, roach motel, labels",
     )
+    # Governance checks (ADR-0006 / PRP-GOV-T3)
+    parser.add_argument(
+        "--check-governance",
+        action="store_true",
+        help="Governance: dependências registradas, pinadas, licenciadas, revisadas, fora do caminho crítico",
+    )
     parser.add_argument("--json", action="store_true", help="Output em JSON")
     parser.add_argument(
         "--strict", action="store_true", help="Exit code 1 se violacao ou bloqueio"
@@ -163,6 +169,10 @@ def main():
                 "form_field_without_label",
             ]
         )
+
+    # Governance
+    if args.check_governance:
+        requested.append("dependency_governance")
 
     if not requested:
         parser.print_help()

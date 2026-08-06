@@ -1,6 +1,6 @@
 # 📋 Sumário Executivo: Evolução do LLC para Fábrica Agêntica
 
-**Documento:** `docs/roadmap/factory-evolution.md` v0.2.0 · **Data:** 2026-08-05 · **Status:** Proposto · **Audiência:** Decisores técnicos e de produto
+**Documento:** `docs/architecture/factory-evolution.md` v0.2.0 · **Data:** 2026-08-05 · **Status:** Proposto · **Audiência:** Decisores técnicos e de produto
 
 ---
 
@@ -54,6 +54,8 @@ Evoluir o LLC para uma **fábrica agêntica** significa entregar essas capacidad
 | **Fase 2 (condicional)** | 2 semanas | Evidência de dor registrada | Paralelismo observável |
 | **Total do núcleo** | **~12 semanas** | — | Fábrica agentica base |
 
+> **Narrativa de investimento (GOV-003/R12):** o **~12 semanas** acima corresponde ao **núcleo de 1ª geração** — primeiro horizonte observável (Governança + Wizard MVP + Eval F1/F2 + Graph Engineering). O **~24 semanas** no PRP-MAP (linha "Total núcleo" = 18 PRPs) cobre o **programa completo**, adicionando Fase 2/3 condicionais (Wave Coordinator, Herdr/multi-agente) que podem ser postergadas sem reescrever o núcleo. As duas cifras não conflitam: 12 sem = entrega incremental, 24 sem = roadmap total.
+
 ---
 
 ## 5. Riscos Principais e Mitigações
@@ -84,14 +86,14 @@ Evoluir o LLC para uma **fábrica agêntica** significa entregar essas capacidad
 
 ---
 
-**Referências técnicas completas:** ADR-0002, ADR-0004, ADR-0005, ADR-0006 · `docs/roadmap/factory-evolution.md` v0.2.0
+**Referências técnicas completas:** ADR-0002, ADR-0004, ADR-0005, ADR-0006 · `docs/architecture/factory-evolution.md` v0.2.0
 
 ---
 
 
 # LLC → Fábrica Agêntica: Proposta de Evolução Incremental
 
-**Arquivo:** `docs/roadmap/factory-evolution.md`
+**Arquivo:** `docs/architecture/factory-evolution.md`
 
 ```yaml
 ---
@@ -100,7 +102,7 @@ version: 0.2.0
 status: revised
 date: 2026-08-05
 supersedes: factory-evolution.md v0.1.0
-alignment: llc-pipeline-design.md v1.8.0
+alignment: llc-pipeline-design.md v1.9.0
 related_adrs:
   - ADR-0002   # Wizard TUI (Fase 1)
   - ADR-0004   # Graph Engineering (Fase 3)
@@ -126,7 +128,7 @@ related_adrs:
 
 O termo "fábrica agêntica" é ambíguo o suficiente para justificar qualquer arquitetura. Antes de escolher ferramentas, é preciso decompor a ambição em capacidades independentemente testáveis:
 
-| Capacidade | Pergunta que resolve | O LLC v1.8.0 já resolve? |
+| Capacidade | Pergunta que resolve | O LLC v1.9.0 já resolve? |
 |---|---|---|
 | **Paralelismo de execução** | PRPs independentes rodam ao mesmo tempo sem colidir? | ✅ **Sim** — git worktrees automáticos (`initialize_session.py`, convenção `prp-{id}/wave-{n}`) |
 | **Visibilidade de execução** | O operador vê, em tempo real, o que cada agente está fazendo? | ❌ Não — `.ace/index.json` é lido, não observado |
@@ -289,7 +291,7 @@ Fase 3 (wave_coordinator.py — sugestão reativa)
 
 | Campo | Valor |
 |---|---|
-| Documento | `docs/roadmap/factory-evolution.md` v0.2.0 |
+| Documento | `docs/architecture/factory-evolution.md` v0.2.0 |
 | Depende de | `llc-pipeline-design.md` §1.5 (Thin Harness), §8 (ACE), §9 (Impact Analysis) |
 | Implementado por | ADR-0002 (Fase 1), ADR-0005 (Evals), ADR-0004 (Fase 3), ADR-0006 (Fase 2) |
 | Não modifica | Schema de tags ACE, formato de `<gate_result>`, `dependency-graph.yaml` |

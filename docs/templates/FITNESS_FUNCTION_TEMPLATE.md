@@ -43,7 +43,7 @@ rules:
       - "**/domain/**"
     message: "Domain layer não pode importar Prisma client ou PrismaService"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "no-prisma-in-use-cases"
     type: "import_pattern"
@@ -53,7 +53,7 @@ rules:
       - "**/use-cases/**"
     message: "Use Cases não podem injetar PrismaService diretamente"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "no-infrastructure-in-domain"
     type: "import_pattern"
@@ -62,7 +62,7 @@ rules:
       - "**/domain/**"
     message: "Domain não pode importar de infrastructure"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "no-cross-module-imports-domain"
     type: "import_pattern"
@@ -76,7 +76,7 @@ rules:
       - "**/dto/**"
     message: "Domain não pode importar de módulos irmãos (exceto shared)"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "no-cross-module-imports-application"
     type: "import_pattern"
@@ -90,7 +90,7 @@ rules:
       - "**/dto/**"
     message: "Application não pode importar de módulos irmãos (exceto shared)"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   # --- Repository Pattern Compliance ---
   - name: "repository-interface-exists"
@@ -98,14 +98,14 @@ rules:
     path: "**/domain/repositories/I*Repository.ts"
     message: "Cada aggregate root deve ter interface de repository em domain/repositories/"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "repository-impl-exists"
     type: "file_exists"
     path: "**/infrastructure/repositories/Prisma*Repository.ts"
     message: "Cada interface deve ter implementação Prisma em infrastructure/repositories/"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "repository-binding-in-module"
     type: "pattern_in_file"
@@ -114,7 +114,7 @@ rules:
       - "**/*.module.ts"
     message: "Module deve ter binding DI: { provide: I{Nome}Repository, useClass: Prisma{Nome}Repository }"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "service-injects-interface"
     type: "import_pattern"
@@ -126,14 +126,14 @@ rules:
       - "**/*.service.ts"  # negated check via separate rule
     message: "Services/Use Cases devem injetar interface do repository"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   - name: "mapper-exists"
     type: "file_exists"
     path: "**/infrastructure/mappers/*.mapper.ts"
     message: "Cada aggregate root deve ter Mapper em infrastructure/mappers/"
     severity: "error"
-    adr: "ADR-008"
+    adr: "ADR-0008"
 
   # --- Use Case Compliance ---
   - name: "use-case-naming"
@@ -143,7 +143,7 @@ rules:
       - "**/application/use-cases/**"
     message: "Use Cases devem terminar com sufixo UseCase (arquivo: .use-case.ts)"
     severity: "error"
-    adr: "ADR-010"
+    adr: "ADR-0010"
 
   - name: "use-case-injects-ports-only"
     type: "import_pattern"
@@ -152,7 +152,7 @@ rules:
       - "**/application/use-cases/**"
     message: "Use Cases não podem injetar PrismaService, Controllers ou Services de infraestrutura"
     severity: "error"
-    adr: "ADR-010"
+    adr: "ADR-0010"
 
   - name: "use-case-returns-result-or-promise"
     type: "class_structure"
@@ -161,7 +161,7 @@ rules:
       - "**/application/use-cases/**/*.use-case.ts"
     message: "Use Case deve ter método execute(input) retornando Promise<Output>"
     severity: "error"
-    adr: "ADR-010"
+    adr: "ADR-0010"
 
   - name: "use-case-emits-events"
     type: "pattern_in_file"
@@ -171,7 +171,7 @@ rules:
     # Note: nem todo use case emite events, mas os que mutam estado devem
     message: "Use Cases que mutam estado devem emitir domain events via eventEmitter.emit()"
     severity: "warning"
-    adr: "ADR-011"
+    adr: "ADR-0011"
 
   # --- Domain Layer Purity ---
   - name: "entity-no-framework"
@@ -181,7 +181,7 @@ rules:
       - "**/domain/entities/**/*.entity.ts"
     message: "Entities não podem ter decorators (@Entity, @Injectable, @Module, etc.)"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   - name: "entity-no-prisma"
     type: "import_pattern"
@@ -190,7 +190,7 @@ rules:
       - "**/domain/**"
     message: "Domain layer não pode importar tipos Prisma"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   - name: "vo-immutable"
     type: "class_structure"
@@ -199,7 +199,7 @@ rules:
       - "**/domain/value-objects/**/*.vo.ts"
     message: "Value Objects devem ter propriedades readonly"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   - name: "vo-factory-validation"
     type: "class_structure"
@@ -208,7 +208,7 @@ rules:
       - "**/domain/value-objects/**/*.vo.ts"
     message: "Value Objects devem ter método static criar() retornando Result"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   - name: "domain-event-structure"
     type: "class_structure"
@@ -217,7 +217,7 @@ rules:
       - "**/domain/events/**/*.event.ts"
     message: "Domain Events devem extender DomainEvent base com aggregateId, occurredAt, eventId"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   - name: "domain-error-typed"
     type: "class_structure"
@@ -226,7 +226,7 @@ rules:
       - "**/domain/errors/**/*.error.ts"
     message: "Domain Errors devem extender DomainError base com code único"
     severity: "error"
-    adr: "ADR-009"
+    adr: "ADR-0009"
 
   # --- Event Bus Compliance ---
   - name: "event-emitter-configured"
@@ -235,7 +235,7 @@ rules:
     pattern: "EventEmitterModule\\.forRoot\\(\\)"
     message: "EventEmitterModule deve ser registrado no AppModule"
     severity: "error"
-    adr: "ADR-011"
+    adr: "ADR-0011"
 
   - name: "handlers-use-onevent"
     type: "class_structure"
@@ -244,7 +244,7 @@ rules:
       - "**/handlers/**/*.handler.ts"
     message: "Event handlers devem usar decorator @OnEvent('event.name')"
     severity: "error"
-    adr: "ADR-011"
+    adr: "ADR-0011"
 
   - name: "modules-dont-import-each-other"
     type: "import_pattern"
@@ -257,7 +257,7 @@ rules:
       - "**/common/**"
     message: "Modules não devem importar outros modules de negócio (use eventos)"
     severity: "error"
-    adr: "ADR-011"
+    adr: "ADR-0011"
 
 event_bus:
   library: "@nestjs/event-emitter"

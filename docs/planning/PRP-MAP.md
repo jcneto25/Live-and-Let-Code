@@ -27,11 +27,13 @@
 
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
-| PRP-GOV-T1 | Criar `.ace/config/dependencies.yaml` com `click`, `pyyaml`, `textual`, `tiktoken` | 0,5d | ADR-0006 aceito | ✅ criado |
-| PRP-GOV-T2 | Retro-classificar todas as dependências em `.ace/scripts/` | 0,5d | PRP-GOV-T1 | ✅ criado |
-| PRP-GOV-T3 | Fitness function `dependency-governance` em `fitness-functions.py` (TDD) | 1d | PRP-GOV-T2 | ✅ criado |
+| PRP-ACE-TAGS | Taxonomia de tags ACE no `validate-tags.py` (`user_response`, `eval_metrics`, `task_completed`, `waiver`) + emendas ADR-0002 §7.2 e pipeline-design §8.4 | 2d | GOV-003 (R1) | ✅ done (2026-08-05) |
+| GOV-002 fix (R7) | Fail-fast anti sessão-placeholder: `is_placeholder_task()` + guarda em `initialize_session/cli.py` e `llc_harness/session.py` (era bloqueio de WIZARD-1A — GOV-003/R7; ver também PRP-GOV-004 para o ciclo de vida GOV no harness) | 0,5d | GOV-002 Decisão item 2 | ✅ done (2026-08-05) |
+| PRP-GOV-T1 | Criar `.ace/config/dependencies.yaml` com `click`, `pyyaml`, `textual`, `tiktoken` | 0,5d | ADR-0006 aceito | ✅ done (2026-08-05) |
+| PRP-GOV-T2 | Retro-classificar todas as dependências em `.ace/scripts/` | 0,5d | PRP-GOV-T1 | ✅ done (2026-08-05) |
+| PRP-GOV-T3 | Fitness function `dependency-governance` em `fitness-functions.py` (TDD) | 1d | PRP-GOV-T2 | ✅ done (2026-08-05) |
 
-**Total: ~2 dias**
+**Total: ~4 dias** (inclui PRP-ACE-TAGS, originado do GOV-003/R1 — pré-requisito de WIZARD-1B e EVALS-F1)
 
 ---
 
@@ -54,12 +56,14 @@
 
 ## Trilha 2 — Eval Harness (ADR-0005)
 
-**ADR de origem:** ADR-0005
-**Entrega mínima de valor:** F1+F2 em ~2 semanas.
+**ADR de origem:** ADR-0005 (transversal — não é pré-requisito de nenhum ADR, mas enriquece todos)
+**Entrega mínima de valor:** F1+F2 em ~2 semanas, **em paralelo ao WIZARD-1A** (GOV-003/R6: a
+dependência "Wizard MVP" era artificial — sessões ACE já existem hoje; as reais são a taxonomia
+`<eval_metrics>` do PRP-ACE-TAGS e o registro do `tiktoken` na governança).
 
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
-| PRP-EVALS-F1 | Instrumentação de tokens (3 níveis) + `<eval_metrics>` append-only | 1 sem | PRP-WIZARD-1A | 📋 |
+| PRP-EVALS-F1 | Instrumentação de tokens (3 níveis) + `<eval_metrics>` append-only | 1 sem | PRP-ACE-TAGS ✅ + PRP-GOV-T3 (tiktoken N1 registrado) | 📋 |
 | PRP-EVALS-F2 | `CodeEvaluator` — agrega `pass_rate` + `fitness_score` + `coverage` | 1 sem | PRP-EVALS-F1 | 📋 |
 | PRP-EVALS-F3 | `DocJudge` — LLM-as-judge + rubrics YAML por step | 2 sem | PRP-EVALS-F2 | 📋 |
 | PRP-EVALS-F4 | Baselines + regressão (warm-up N_MIN=5/N_STABLE=10) | 1 sem | PRP-EVALS-F3 | 📋 |
@@ -140,12 +144,20 @@ PRP-GOV-T1 ──► PRP-GOV-T2 ──► PRP-GOV-T3
 ## Caminho Crítico
 
 ```
-GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → WIZARD-1.1 → GRAPH-1C
+GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1C
 ```
+
+> **Correção (GOV-003/R6):** o caminho anterior omitia GRAPH-1A (1 sem) e GRAPH-1B
+> (1,5 sem), pré-requisitos de GRAPH-1C. Comparando as cadeias pós-WIZARD-1A:
+> via WIZARD-1.1 = 2 sem; via GRAPH-1A→1B = 2,5 sem — **a cadeia Graph domina**
+> o caminho crítico até GRAPH-1C.
+
+**Paralelismo imediato disponível após GOV-T3 (+ PRP-ACE-TAGS ✅):**
+- WIZARD-1A (Trilha 1)
+- EVALS-F1 → F2 (Trilha 2 — transversal, não depende do Wizard)
 
 **Paralelismo imediato disponível após WIZARD-1A:**
 - WIZARD-1B/1C (HITL)
-- EVALS-F1 → F2 (instrumentação + code evaluator)
 - GRAPH-1A (modelo de grafo)
 
 ---
@@ -162,13 +174,15 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → WIZARD-1.1 → GRAPH-1C
 | Herdr | 1 | 2 sem | Visibilidade multi-agente (condicional) |
 | **Total núcleo** | **18** | **~24 sem** | Fábrica agêntica base |
 
+> **Narrativa de investimento (GOV-003/R12):** o **~24 sem** cobre o programa completo (incluindo Fase 2/3 condicionais — Wave Coordinator, Herdr). O horizonte **~12 sem** da factory-evolution (§4) representa o núcleo MVP de 1ª geração (Governança + Wizard MVP + Eval F1/F2 + Graph). As cifras são complementares: 24 sem = roadmap total, 12 sem = primeira entrega observável.
+
 ---
 
 ## Referências
 
-- `docs/architecture/ADR-0002-llc-wizard-tui-hitl-kanban.md`
-- `docs/architecture/ADR-0004-graph-engineering-orchestration.md`
-- `docs/architecture/ADR-0005-eval-harness.md`
-- `docs/architecture/ADR-0006-external-dependency-governance.md`
+- `docs/architecture/adr/ADR-0002-llc-wizard-tui-hitl-kanban.md`
+- `docs/architecture/adr/ADR-0004-graph-engineering-orchestration.md`
+- `docs/architecture/adr/ADR-0005-eval-harness.md`
+- `docs/architecture/adr/ADR-0006-external-dependency-governance.md`
 - `docs/architecture/factory-evolution.md` v0.2.0
 - `docs/prps/PRP-WIZARD-1A.md` (PRP de referência para formato)

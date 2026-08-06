@@ -42,8 +42,12 @@ O LLC já possui múltiplos mecanismos com natureza de grafo, porém **fragmenta
 | `EXECUTION_WAVES_TEMPLATE.md` | Topological sort manual | Waves definidas à mão |
 | `impact-analyzer.py` | Propagação de mudanças | Heurístico, desconectado do scheduler |
 | Smart Skip (`llc-smart-skip.md`) | Skip por impacto | Não usa propagação formal |
-| `step.depends_on` no registry | Arestas implícitas | Não unificadas com PRPs |
+| Ordem sequencial do `REGISTRY` (`StepSpec.number`) | Arestas implícitas N1 (steps em sequência) | Não formalizadas como grafo |
 | `llc_wave.py` | Paralelismo agrupado | Agrupamento manual, não derivado |
+
+> **Errata (GOV-003 / R2):** a versão original desta tabela citava "`step.depends_on` no registry" como fonte de arestas. Verificação contra `llc_steps/models.py` mostrou que `StepSpec` **não possui** campo `depends_on` — as arestas N1 são derivadas da **ordem sequencial** do REGISTRY (`StepSpec.number`), sem nenhuma mudança no harness.
+
+> **Errata (GOV-003 / R11):** a linha "`impact-analyzer.py` — Heurístico, desconectado do scheduler" **não** implica substituição. O `GraphEngine.impact_of()` (PRP-GRAPH-1B) opera no universo de **nós do DAG de steps ACE** (runtime); o `impact-analyzer.py` opera no universo de **artefatos** (`docs/prps/`, `docs/planning/`) e cobre etapas pré-código. A resolução é **coexistência** com migração gradual para Smart Skip, mantendo o `impact-analyzer.py` como fonte para análise de artefatos documentais até que a ponte artefato↔node seja formalizada.
 
 **Diagnóstico:** o LLC tem ~60% dos ingredientes de um grafo, mas o pipeline ainda é operado como lista sequencial e o paralelismo é definido manualmente. Não há um modelo único que una dependências de steps e de PRPs, nem um scheduler que derive "o que pode rodar agora" dessas dependências.
 
@@ -84,15 +88,15 @@ Adotar **graph engineering** como camada de orquestração do LLC: um modelo de 
 
 A decisão arquitetural mais importante é a separação entre **estrutura** e **estado**:
 
-- **Estrutura do grafo** (nós + arestas): declarada em `dependency-graph.yaml` + `depends_on` do registry de steps. Relativamente estática por projeto.
+- **Estrutura do grafo** (nós + arestas): derivada de `dependency-graph.yaml` (N2 — PRPs/artefatos) + **ordem sequencial do `REGISTRY`** (`StepSpec.number` — N1, steps) + `gates.json` (nós de gate). Relativamente estática por projeto.
 - **Estado do grafo** (status de cada nó): **derivado em tempo real** das sessões ACE (`.ace/index.json` + `.ace/sessions/`). Nunca persistido como fonte primária.
 
 Consequência direta: o grafo é uma **lente** que organiza estrutura + estado. Se o cache de estado ficar inconsistente, ele é reconstruído a partir das sessões ACE — que permanecem a fonte de verdade. Isso preserva integridade ACE (P3) e elimina dessincronização.
 
 ```
-ESTRUTURA (declarada)                ESTADO (derivado)
+ESTRUTURA (declarada/derivada)       ESTADO (derivado)
 dependency-graph.yaml      ──┐
-registry.depends_on        ──┼──►  GRAFO  ◄──  sessões ACE (.ace/index.json)
+REGISTRY (ordem numérica)  ──┼──►  GRAFO  ◄──  sessões ACE (.ace/index.json)
 gates.json                 ──┘        │
                                        ├──► Projeção: Kanban (ADR-0002)
                                        ├──► Projeção: ready_nodes / frontier
@@ -235,7 +239,7 @@ Toda visualização consome o grafo; nenhuma o muta:
 | **Critical Path View** | `critical_path()` | Dashboard de fábrica (Fase 3) |
 | **Parallel Frontier** | `parallel_frontier()` | Herdr (ADR-0003) |
 
-> **Integração com ADR-0002:** o `KanbanBoardBuilder` do Wizard passa a ser uma projeção do `GraphEngine`, não mais uma leitura direta de `index.json`. Isso torna o Kanban preciso (colunas = estados de nós; SLA = timestamps de estado). A mudança é interna ao builder; a UI do Kanban permanece idêntica.
+> **Integração com ADR-0002 (emendado — GOV-003 / R3):** o Kanban do Wizard passa a ser alimentado por um **adapter** `GraphPipelineDataSource` — uma implementação do Protocol `PipelineDataSource` (ADR-0002 §7.1/D6/P7) sobre o `GraphEngine`. O `KanbanBoardBuilder` **não é refatorado**: continua recebendo o Protocol; o que muda é apenas a implementação injetada (`PipelineDataReader` → `GraphPipelineDataSource`). Zero mudança em `kanban.py`/`app.py`; a UI do Kanban permanece idêntica.
 
 ### 2.11 Domínios de `ready_nodes()` vs. Fitness Functions (sem conflito)
 
@@ -292,7 +296,7 @@ def test_ready_nodes_with_skipped_dependencies():
 ├── llc_graph/                     # NOVO pacote
 │   ├── __init__.py
 │   ├── model.py                   # NodeKind, NodeState, EdgeKind, GraphNode, GraphEdge, Graph
-│   ├── builder.py                 # GraphBuilder: unifica dependency-graph.yaml + depends_on
+│   ├── builder.py                 # GraphBuilder: unifica dependency-graph.yaml + ordem do REGISTRY + gates.json
 │   ├── engine.py                  # GraphEngine (scheduler read-only)
 │   ├── state.py                   # AceStateReader: deriva NodeState de sessões ACE
 │   ├── projections.py             # to_kanban(), to_impact_map(), to_critical_path()
@@ -313,12 +317,12 @@ def test_ready_nodes_with_skipped_dependencies():
 | # | Decisão | Valor |
 |---|---|---|
 | **D1** | Fonte de verdade do **estado** | Sessões ACE (grafo é projeção derivada) |
-| **D2** | Fonte da **estrutura** | `dependency-graph.yaml` + `depends_on` do registry + `gates.json` |
+| **D2** | Fonte da **estrutura** | `dependency-graph.yaml` (N2) + **ordem sequencial do `REGISTRY`** (`StepSpec.number`, N1) + `gates.json` (gates) — zero mudança no harness |
 | **D3** | Gates/HITL | Nunca auto-avançados (`requires_human` estaciona em `AWAITING_HUMAN`) |
 | **D4** | Rework | Nova instância + aresta `REWORK` (DAG preservado) |
 | **D5** | Granularidade | Dois níveis: N1 pipeline (steps) + N2 execução (PRPs) |
 | **D6** | Implementação MVP | Python puro (dataclasses + adjacência); **sem** networkx/framework externo |
-| **D7** | Projeções | Read-only; Kanban do ADR-0002 vira projeção do grafo |
+| **D7** | Projeções | Read-only; Kanban do ADR-0002 vira projeção do grafo **via adapter `GraphPipelineDataSource`** (Protocol `PipelineDataSource` preservado — sem refactor do builder) |
 | **D8** | Cache de estado | Opcional em `.ace/graph-state.yaml`, sempre reconstruível a partir de ACE |
 
 ---
@@ -339,7 +343,7 @@ def test_ready_nodes_with_skipped_dependencies():
 
 - **Complexidade conceitual:** equipe precisa internalizar modelo de grafo (mitigado por documentação e projeções visuais).
 - **Superfície de teste ampliada:** novo pacote `llc_graph` exige cobertura ≥ 85%.
-- **Refatoração do Kanban:** `KanbanBoardBuilder` (ADR-0002) precisa ser adaptado para projetar do grafo.
+- **Implementação do adapter:** `GraphPipelineDataSource` precisa cobrir todo o Protocol `PipelineDataSource` sobre o `GraphEngine` (paridade com `PipelineDataReader` verificada por teste).
 - **Dois níveis de granularidade** exigem cuidado para não dessincronizar N1 e N2.
 
 ### 3.3 Riscos e Mitigações
@@ -393,7 +397,7 @@ def test_ready_nodes_with_skipped_dependencies():
 
 **`model.py`:** imutabilidade de `GraphNode`; validação de `depends_on`; `retry_of` consistente.
 
-**`builder.py`:** unifica `dependency-graph.yaml` + `depends_on`; marca `requires_human` para gates; detecta nós órfãos.
+**`builder.py`:** unifica `dependency-graph.yaml` + ordem sequencial do `REGISTRY` + `gates.json`; marca `requires_human` para gates; detecta nós órfãos.
 
 **`engine.py` (crítico):**
 - `ready_nodes()` retorna apenas nós com deps satisfeitas.
@@ -467,22 +471,36 @@ nodes:
   prp-001: { state: running, since: "2026-08-05T09:30:00" }
 ```
 
-### 8.3 Contrato de Integração Kanban (ADR-0002)
+### 8.3 Contrato de Integração Kanban (ADR-0002) — emendado GOV-003 / R3
+
+> **Errata:** a versão original desta seção mostrava o `KanbanBoardBuilder` **refatorado** para receber `GraphEngine` diretamente. Isso contradiz ADR-0002 D6/P7 (o builder depende do Protocol `PipelineDataSource`). A estratégia correta é o **adapter**: `GraphPipelineDataSource` implementa o Protocol sobre o `GraphEngine` e é injetado no builder **sem nenhuma mudança em `kanban.py`/`app.py`**.
 
 ```python
-# llc_wizard/kanban.py — KanbanBoardBuilder passa a projetar do grafo
-class KanbanBoardBuilder:
+# llc_graph/projections.py — adapter: GraphEngine atrás do Protocol estável
+class GraphPipelineDataSource:
+    """Implementa PipelineDataSource (ADR-0002 §7.1) sobre o GraphEngine.
+
+    O KanbanBoardBuilder continua dependendo do Protocol — zero mudança
+    no Wizard. A migração é apenas na implementação injetada:
+    PipelineDataReader -> GraphPipelineDataSource."""
+
     def __init__(self, engine: GraphEngine):
         self.engine = engine
 
-    def build(self):
-        board = {col: [] for col in KanbanColumn}
-        for node in self.engine.graph.nodes:
-            state = self.engine.node_state(node.id)
-            col = NODE_STATE_TO_COLUMN[state]
-            board[col].append(self._to_card(node, state))
-        board[AWAITING_HUMAN].sort(key=lambda c: c.entered_column_at)  # SLA
-        return board
+    def get_status(self) -> "PipelineStatus":
+        steps = [
+            self._to_step_info(node, self.engine.node_state(node.id))
+            for node in self.engine.graph.nodes
+            if node.kind == NodeKind.STEP
+        ]
+        return PipelineStatus(steps=steps)
+
+    def get_gate_for_step(self, step_id: str) -> Optional["GateInfo"]: ...
+    def get_status_since(self, step_id: str) -> datetime: ...
+    def get_pending_hitl(self) -> list["PendingHITL"]: ...
+
+# llc_wizard/app.py — única linha que muda no Wizard: a implementação injetada
+builder = KanbanBoardBuilder(GraphPipelineDataSource(engine))  # antes: PipelineDataReader(...)
 ```
 
 ---
@@ -531,3 +549,19 @@ Um PRP pode estar `READY` no grafo (todas as dependências satisfeitas) e ainda 
 **Questão:** Smart Skip e PRP Amendment mudam a topologia do grafo em tempo de execução; `ready_nodes()` não tratava isso explicitamente.
 
 **Resolução (nova seção §2.12):** nós `SKIPPED` permanecem no grafo com estado `SKIPPED` — não são removidos. `ready_nodes()` trata `SKIPPED` como satisfeito para fins de dependência (equivalente a `DONE`). PRPs criados via PRP Amendment são adicionados como novos nós com `retry_of=None` e arestas `DEPENDS_ON` para os nós que os originaram. A topologia muda, mas o DAG permanece acíclico porque nós novos só apontam para nós existentes (nunca o contrário).
+
+---
+
+## 11. Emendas Pós-Aprovação
+
+### E1 — GOV-003 / R2 (2026-08-05): Fonte da estrutura do grafo
+
+**Problema:** este ADR citava "`step.depends_on` no registry" como fonte de arestas (§1.1, §2.2, D2, §2.9, §5.3). Verificação contra `llc_steps/models.py` (auditoria GOV-003) mostrou que `StepSpec` **não possui** campo `depends_on`.
+
+**Emenda aplicada:** arestas N1 são derivadas da **ordem sequencial do `REGISTRY`** (`StepSpec.number`) + `gates.json` (nós de gate) + `dependency-graph.yaml` (N2). Zero mudança no harness — preserva §2.9 ("llc_harness/llc_steps intocados").
+
+### E2 — GOV-003 / R3 (2026-08-05): Integração Kanban via adapter
+
+**Problema:** §8.3 original mostrava `KanbanBoardBuilder` refatorado para receber `GraphEngine` — contradição com ADR-0002 D6/P7 (builder depende do Protocol `PipelineDataSource`; migração "sem tocar kanban.py").
+
+**Emenda aplicada:** integração via **adapter** `GraphPipelineDataSource` (implementa `PipelineDataSource` sobre `GraphEngine`), injetado no builder sem refactor. Seções afetadas: §2.8, D7, §3.2, §8.3.

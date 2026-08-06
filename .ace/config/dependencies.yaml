@@ -1,0 +1,78 @@
+# SBOM simplificado do LLC — Governança de Dependências Externas (ADR-0006)
+# Criado por PRP-GOV-T1 (2026-08-05). Regras:
+# - Toda dependência N1+ DEVE estar registrada aqui (fitness: dependency-governance, GOV-T3)
+# - Versão SEMPRE pinada (nunca latest) · licença verificada na fonte
+# - Revisão trimestral (review_interval_days) + gatilhos de reavaliação imediata (ADR-0006 §2.7)
+version: 1
+updated_at: "2026-08-05"
+review_interval_days: 90
+
+# N0 (stdlib, isentos — RF-GOV2.3/GOV-T2, inventário 2026-08-05):
+# argparse, builtins, collections, dataclasses, datetime, fnmatch, hashlib,
+# importlib, io, json, logging, os, pathlib, re, shutil, statistics,
+# subprocess, sys, time, typing, unicodedata, unittest, uuid
+#
+# Nota GOV-T2: o import `observability` em test_observability.py:51 referencia
+# módulo first-party AUSENTE (teste quebrado pré-existente) — não é dependência
+# externa; não registrado. Fix do teste é débito técnico fora do escopo T2.
+
+dependencies:
+  - name: click
+    version: ">=8.0,<9.0"            # instalado/verificado: 8.3.3
+    level: 1
+    license: BSD-3-Clause            # verificado via importlib.metadata (2026-08-05)
+    bus_factor: community
+    purpose: "CLI framework do llc.py e llc_wizard"
+    critical_path: true
+    fallback: "N/A — click é o backbone do CLI; remover exigiria reescrever o CLI (dependência pré-política, registrada com honestidade de acoplamento)"
+    last_reviewed: "2026-08-05"
+    next_review: "2026-11-05"
+
+  - name: pyyaml
+    version: ">=6.0,<7.0"            # instalado/verificado: 6.0.3
+    level: 1
+    license: MIT                     # verificado via importlib.metadata (2026-08-05)
+    bus_factor: community
+    purpose: "Leitura de dependency-graph.yaml e gates.json"
+    critical_path: false
+    fallback: "json stdlib para configs simples; yaml apenas para artefatos declarativos"
+    last_reviewed: "2026-08-05"
+    next_review: "2026-11-05"
+
+  - name: textual
+    version: ">=0.80.0,<1.0"         # pin do ADR-0002 (não instalado ainda — Wizard pendente)
+    level: 1
+    license: MIT                     # avaliado no ADR-0006 §8.3; re-verificar na instalação (GOV-T2)
+    bus_factor: community
+    purpose: "TUI do Wizard (ADR-0002)"
+    critical_path: false
+    fallback: "CLI puro llc run/pipeline — Wizard não carrega mas harness funciona"
+    degradation_test: "test_select_runner_falls_back_when_no_agent (PRP-WIZARD-1A Task 3.4)"
+    last_reviewed: "2026-08-05"
+    next_review: "2026-11-05"
+    notes: "0.x — API instável; pin rigoroso obrigatório. Registro preemptivo: instalação ocorre no PRP-WIZARD-1A"
+
+  - name: tiktoken
+    version: ">=0.7.0,<1.0"          # instalado/verificado: 0.13.0
+    level: 1
+    license: MIT                     # verificado via importlib.metadata (2026-08-05)
+    bus_factor: "organization (OpenAI)"
+    purpose: "Fallback nível 3 para estimativa de tokens (ADR-0005 §2.5 / PRP-EVALS-F1)"
+    critical_path: false
+    optional: true
+    fallback: "Estimativa por contagem de palavras × fator heurístico (nível 3 degradado)"
+    last_reviewed: "2026-08-05"
+    next_review: "2026-11-05"
+
+  - name: pytest
+    version: ">=8.0,<10.0"           # adicionado por GOV-T2 (import em 10 arquivos de teste)
+    level: 1
+    license: MIT
+    bus_factor: community
+    purpose: "Test runner (somente arquivos test_*.py — nunca em código de produção)"
+    critical_path: false
+    optional: true
+    dev_only: true
+    fallback: "Testes não rodam — execução do pipeline não afetada (unittest stdlib como fallback parcial)"
+    last_reviewed: "2026-08-05"
+    next_review: "2026-11-05"

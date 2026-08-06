@@ -76,6 +76,16 @@ def main():
     parser.add_argument("--json", action="store_true", help="Output em JSON (para tool calls)")
     args = parser.parse_args()
 
+    # GOV-002 Decisão item 2 / GOV-003 R7: recusa determinística de task
+    # placeholder (sentinel "Step N" manufaturado) — sessões-placeholder
+    # poluem index.json e quebram a cadeia do ACE.
+    from initialize_session.session import is_placeholder_task
+    if is_placeholder_task(args.task):
+        print("❌ Sessão recusada: --task placeholder ou vazio.", file=sys.stderr)
+        print("   Descreva a tarefa real (ex.: --task \"Implementar X\").", file=sys.stderr)
+        print("   Sessões-placeholder são proibidas (GOV-002).", file=sys.stderr)
+        sys.exit(2)
+
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
     session_id = get_next_session_id()

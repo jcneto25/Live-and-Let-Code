@@ -143,19 +143,19 @@ Você está executando a skill `llc-step-5` do pipeline LLC. Seu objetivo é def
 - Executa threat modeling check (6 perguntas obrigatórias por feature)
 - Gera 4 safe code templates (piiEncryption, secureStorage, parameterizedQueries, entitlementValidation)
 - Configura 5 fitness functions de segurança (`--check-security`)
-- Gera: `.ace/arch-config.yaml` expandido com `security_rules`, `docs/architecture/adr/ADR-018-secure-by-design.md`
+- Gera: `.ace/arch-config.yaml` expandido com `security_rules`, `docs/architecture/adr/ADR-0018-secure-by-design.md`
 - **Gate 5d** — obrigatório antes do Step 6
 
 > ⚠️ **Não prossiga para o Step 6 sem completar o Step 5d.** As regras de Secure-by-Design são injetadas em toda sessão subsequente de geração de código.
 
 ### 11. Saída
 - `docs/architecture/ARCHITECTURE.md` — documento principal (preencher template expandido)
-- `docs/architecture/adr/ADR-001-*.md` a `ADR-005-*.md` — ADRs individuais (Step 5)
-- `docs/architecture/adr/ADR-008-*.md` a `ADR-011-*.md` — ADRs de padrões (Step 5a)
+- `docs/architecture/adr/ADR-0001-*.md` a `ADR-0005-*.md` — ADRs individuais (Step 5)
+- `docs/architecture/adr/ADR-0008-*.md` a `ADR-0011-*.md` — ADRs de padrões (Step 5a)
 - `.ace/arch-config.yaml` — configuração das fitness functions (Step 5a)
 - `docs/api/openapi.yaml` — spec OpenAPI com REST semantics, paginação, versionamento (Step 5b)
 - ADRs de decisões de Clean Code (Step 5c)
-- `docs/architecture/adr/ADR-018-secure-by-design.md` — 10 hard gates, threat modeling, safe code templates (Step 5d)
+- `docs/architecture/adr/ADR-0018-secure-by-design.md` — 10 hard gates, threat modeling, safe code templates (Step 5d)
 - `.ace/arch-config.yaml` expandido com `security_rules` (Step 5d)
 
 ---

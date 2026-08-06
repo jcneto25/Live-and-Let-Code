@@ -43,6 +43,8 @@ next_action: ..." --json
 **Mutadores sancionados (os ÚNICOS permitidos sobre `.ace/sessions/`):**
 - **Criar:** `initialize_session.py` (e SOMENTE ele). Computa o próximo ID livre (`max+1`) e **recusa overwrite por construção** — levanta `RuntimeError` se o arquivo já existir.
 - **Encerrar:** `finalize_session.py` (atualiza `<context_seed>`, `status` e `tags` — mutação sancionada).
+- **Append HITL (ADR-0002, GOV-003/R8):** `llc_wizard/decisions.py::UserDecisionWriter` — **somente append** de tags de decisão humana (`<user_response>`, `<gate_result>`) na sessão aberta. **Nunca** frontmatter, nunca reescrita de conteúdo existente. *(Vigente a partir de PRP-WIZARD-1B.)*
+- **Append eval (ADR-0005, GOV-003/R8):** `<eval_metrics>` é gravada **por** `finalize_session.py` no encerramento — `llc_evals/instrument.py` apenas calcula o bloco e o entrega; o escritor do arquivo permanece único (finalize). *(Vigente a partir de PRP-EVALS-F1.)*
 
 **Regras obrigatórias:**
 1. **NUNCA** use `write_file`/`Edit` para criar ou modificar arquivos em `.ace/sessions/` diretamente.
@@ -482,6 +484,7 @@ Senior Software Architect and Reviewer. Maintain a secure, scalable, and well-st
 - [ ] Dominio isolado? `domain/` sem imports de infraestrutura
 - [ ] Use cases com `execute(dto)` em vez de services CRUD genéricos?
 - [ ] Eventos para comunicacao cross-module (quando aplicavel)?
+- [ ] Nova dependência externa adicionada? Passou pelo `dependency-admission` (GOV-003/R10): registrada em `.ace/config/dependencies.yaml` com licença, versão pinada e revisão humana; `python .ace/scripts/fitness-functions.py --check-governance` verde
 - [ ] `<task_completed>` emitidos para tarefas feitas? O status em `TASKS.md`/`EXECUTION_WAVES.md`/`PLAN.md` reflete o trabalho (aplicado pelo `finalize_session.py`)?
 - [ ] Gate LLC da etapa atual registrado? `<gate_result step="N" decision="approved">`
 

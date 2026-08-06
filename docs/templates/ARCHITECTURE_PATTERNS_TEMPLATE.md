@@ -474,10 +474,10 @@ export abstract class DomainEvent {
 
 | ADR | Título | Status |
 |-----|--------|--------|
-| ADR-008 | Repository Pattern com Interfaces | Proposed |
-| ADR-009 | Domain Layer Puro (Entities, VOs, Events, Errors) | Proposed |
-| ADR-010 | Use Cases como Application Layer | Proposed |
-| ADR-011 | Event Bus para Cross-Module Communication | Proposed |
+| ADR-0008 | Repository Pattern com Interfaces | Proposed |
+| ADR-0009 | Domain Layer Puro (Entities, VOs, Events, Errors) | Proposed |
+| ADR-0010 | Use Cases como Application Layer | Proposed |
+| ADR-0011 | Event Bus para Cross-Module Communication | Proposed |
 
 ---
 

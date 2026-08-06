@@ -429,6 +429,27 @@
       ],
       "timestamp": "2026-08-05T19:32:27.891424",
       "completed_at": "2026-08-05T19:40:23.375419"
+    },
+    {
+      "session_id": "2026-08-05-013",
+      "file": "2026-08-05-013.md",
+      "status": "in_progress",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [],
+      "timestamp": "2026-08-05T22:08:59.886317"
+    },
+    {
+      "session_id": "2026-08-05-014",
+      "file": "2026-08-05-014.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        ".ace/scripts/llc_wave/parsing.py"
+      ],
+      "timestamp": "2026-08-05T22:09:03.190618",
+      "completed_at": "2026-08-05T22:10:47.735202"
     }
   ]
 }

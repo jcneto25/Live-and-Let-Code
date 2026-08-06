@@ -157,15 +157,18 @@ def _find_tasks_in_section(section: str) -> list[str]:
     return sorted(task_ids)
 
 
-def parse_tasks(filepath: Path = TASKS_FILE) -> dict[str, PrpInfo]:
-    """Parse TASKS.md e retorna mapping PRP → PrpInfo.
-
-    Extrai PRPs de headings `#### PRP-NNN: ...` e tasks
+def parse_tasks(filepath: Path | None = None) -> dict[str, PrpInfo]:
+    """Extrai PRPs de headings `#### PRP-NNN: ...` e tasks
     de checkboxes/tabelas no corpo de cada seção.
 
     Também retorna tarefas de fundação (secão 3) e segurança (seção 4)
     como pseudo-PRPs (PRP-FDN, PRP-SEC).
+
+    `filepath` é resolvido em call-time (não def-time): um `None` lê o
+    `TASKS_FILE` atual do módulo, permitindo monkeypatch em testes.
     """
+    if filepath is None:
+        filepath = TASKS_FILE
     if not filepath.exists():
         logger.warning(f"Arquivo nao encontrado: {filepath}")
         return {}

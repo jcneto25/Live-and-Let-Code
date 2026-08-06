@@ -12,9 +12,11 @@ review_interval_days: 90
 # importlib, io, json, logging, os, pathlib, re, shutil, statistics,
 # subprocess, sys, time, typing, unicodedata, unittest, uuid
 #
-# Nota GOV-T2: o import `observability` em test_observability.py:51 referencia
+# Nota GOV-T2: o import `observability` em test_observability.py:51 referenciava
 # módulo first-party AUSENTE (teste quebrado pré-existente) — não é dependência
-# externa; não registrado. Fix do teste é débito técnico fora do escopo T2.
+# externa; não registrado. **Fixado em 2026-08-06 (sessão 009):** implementado
+# `.ace/scripts/observability.py` (somente stdlib — N0), saldando o débito; as 6
+# falhas de test_observability.py foram resolvidas.
 
 dependencies:
   - name: click

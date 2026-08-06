@@ -2,6 +2,7 @@
 """finalize_session — geração e gravação do context_seed."""
 
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -87,3 +88,35 @@ def update_session_status(session_file: Path, status: str, dry_run: bool = False
     if not dry_run:
         session_file.write_text(new_content, encoding='utf-8')
     logger.info(f"✅ status do arquivo da sessão atualizado: {status}")
+
+
+def append_eval_metrics(session_file: Path, step: Optional[str] = None,
+                        dry_run: bool = False) -> bool:
+    """Append do bloco `<eval_metrics>` na sessão (RF-EF1.4 / GOV-003/R8).
+
+    Escritor único = `finalize_session` (este módulo é mutador sancionado).
+    `instrument.py` apenas produz o bloco — NUNCA grava na sessão. Best-effort:
+    se `llc_evals` estiver indisponível, loga e retorna False (sem quebrar o
+    finalize). Nível 3 (estimativa) usa o corpo da sessão como base (P5/EF1.6).
+    """
+    try:
+        from llc_evals import instrument
+    except Exception:  # noqa: BLE001
+        logger.info("ℹ️  <eval_metrics> ignorado (llc_evals indisponível)")
+        return False
+    try:
+        body = session_file.read_text(encoding="utf-8") if session_file.exists() else ""
+        metrics = instrument.capture_tokens(input_text=body)  # level_3 fallback
+        block = instrument.build_eval_metrics(
+            metrics,
+            step=step or "",
+            timestamp=datetime.now().isoformat(timespec="seconds"),
+        )
+    except Exception as exc:  # noqa: BLE001 — degradação graciosa
+        logger.warning(f"⚠️  <eval_metrics> não gerado: {exc}")
+        return False
+    if not dry_run:
+        with open(session_file, "a", encoding="utf-8") as fh:
+            fh.write("\n" + block + "\n")
+    logger.info("✅ <eval_metrics> appendado na sessão (append-only)")
+    return True

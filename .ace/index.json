@@ -564,6 +564,27 @@
       ],
       "timestamp": "2026-08-06T09:44:54.597462",
       "completed_at": "2026-08-06T09:45:55.263731"
+    },
+    {
+      "session_id": "2026-08-06-011",
+      "file": "2026-08-06-011.md",
+      "status": "completed",
+      "llc_step": 10.8,
+      "llc_step_id": "10.8",
+      "tags": [
+        ".ace/scripts/llc_evals/instrument.py",
+        ".ace/scripts/llc_evals/evaluators/efficiency_meter.py",
+        ".ace/scripts/llc_evals/evaluators/__init__.py",
+        ".ace/scripts/llc_evals/tests/test_instrument.py",
+        ".ace/scripts/llc_evals/tests/test_efficiency_meter.py",
+        ".ace/evals/",
+        ".ace/scripts/finalize_session/context.py",
+        ".ace/scripts/finalize_session/cli.py",
+        "docs/prps/PRP-EVALS-F1.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-06T09:50:08.413345",
+      "completed_at": "2026-08-06T10:09:44.853461"
     }
   ]
 }

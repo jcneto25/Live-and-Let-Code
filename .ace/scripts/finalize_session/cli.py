@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import re
 import sys
 
 from .paths import INDEX_FILE, SESSIONS_DIR, logger
@@ -16,6 +17,7 @@ from .extract import (
     extract_task_completions,
 )
 from .context import (
+    append_eval_metrics,
     build_context_seed,
     update_session_status,
     write_context_seed,
@@ -90,6 +92,11 @@ def main():
     feedback_saved = save_skill_feedback(skill_feedback, session_id, dry_run=args.dry_run)
     tasks_updated = update_planning_docs(completed_tasks, dry_run=args.dry_run)
     update_index(session_id, status="completed", files_touched=files_touched, dry_run=args.dry_run)
+
+    # PRP-EVALS-F1 RF-EF1.4: <eval_metrics> append-only (escritor único = finalize)
+    step_match = re.search(r'llc_step_id:\s*"?([^"\n]+)"?', content)
+    append_eval_metrics(session_file, step=step_match.group(1).strip() if step_match else None,
+                        dry_run=args.dry_run)
 
     gate_decision = None
     for g in gates:

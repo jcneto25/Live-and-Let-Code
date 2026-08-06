@@ -1,7 +1,7 @@
 # PRP: [GRAPH-1B] — `engine.py`: ready_nodes() + impact_of() + Smart Skip Delta
 
 > **ID:** PRP-GRAPH-1B | **Trilha:** Graph Engineering | **Onda:** 2
-> **Owner:** jcneto25 | **Estimativa:** 1,5 semanas | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 1,5 semanas | **Status:** ✅ Done (2026-08-06)
 > **Prioridade:** Médio | **ADR de origem:** ADR-0004 §2.7, §2.11, §2.12
 
 ---
@@ -16,10 +16,10 @@ Com o modelo e o builder do PRP-GRAPH-1A, o grafo existe mas é estático. Este 
 
 ### 1.2 O que é entregue
 
-- [ ] `llc_graph/engine.py` — `GraphEngine` com `node_state()`, `ready_nodes()`, `impact_of()`
-- [ ] Tratamento correto do fluxo delta (Smart Skip: `SKIPPED` equivale a `DONE` para dependências)
-- [ ] Teste obrigatório do caso delta: nó com deps `SKIPPED` fica `READY`
-- [ ] Invariante documentado: `ready_nodes()` nunca substitui gates de fitness
+- [x] `llc_graph/engine.py` — `GraphEngine` com `node_state()`, `ready_nodes()`, `impact_of()`
+- [x] Tratamento correto do fluxo delta (Smart Skip: `SKIPPED` equivale a `DONE` para dependências)
+- [x] Teste obrigatório do caso delta: nó com deps `SKIPPED` fica `READY`
+- [x] Invariante documentado: `ready_nodes()` nunca substitui gates de fitness
 
 ### 1.3 O que NÃO está no escopo
 
@@ -33,13 +33,13 @@ Com o modelo e o builder do PRP-GRAPH-1A, o grafo existe mas é estático. Este 
 
 | ID | Requisito | Critério de Aceitação | Prioridade | Status | Teste(s) | Arquivo(s) impl |
 |----|-----------|----------------------|------------|--------|----------|-----------------|
-| RF-G1B.1 | `ready_nodes()` retorna nós com todas as deps `DONE` | **Dado** A→B, A=DONE, **Quando** `ready_nodes()`, **Então** B está na lista | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.2 | `ready_nodes()` **nunca** auto-avança `requires_human=True` | **Dado** gate com deps satisfeitas, **Quando** `ready_nodes()`, **Então** gate retornado como `AWAITING_HUMAN`, nunca `READY` para auto-execução | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.3 | `SKIPPED` equivale a `DONE` para fins de dependência | **Dado** A→B→C, B=SKIPPED via Smart Skip, **Quando** `ready_nodes()`, **Então** C está `READY` | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.4 | `impact_of(node_id)` propaga para todos os descendentes | **Dado** A→B→C, **Quando** `impact_of("A")`, **Então** `{"B", "C"}` retornado | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.5 | `impact_of()` é puro (sem side-effects) | **Dado** chamadas múltiplas, **Quando** `impact_of()` N vezes, **Então** estado do grafo inalterado | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.6 | Rework cria nova instância sem ciclo no DAG | **Dado** step-5 com `retry_of`, **Quando** `ready_nodes()`, **Então** step-5-retry-1 aparece, step-5 original não reaparece | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
-| RF-G1B.7 | Determinismo: mesmo estado ACE → mesmo resultado | **Dado** estado ACE fixo, **Quando** `ready_nodes()` chamado N vezes, **Então** resultado idêntico | Must | ⏳ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.1 | `ready_nodes()` retorna nós com todas as deps `DONE` | **Dado** A→B, A=DONE, **Quando** `ready_nodes()`, **Então** B está na lista | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.2 | `ready_nodes()` **nunca** auto-avança `requires_human=True` | **Dado** gate com deps satisfeitas, **Quando** `ready_nodes()`, **Então** gate retornado como `AWAITING_HUMAN`, nunca `READY` para auto-execução | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.3 | `SKIPPED` equivale a `DONE` para fins de dependência | **Dado** A→B→C, B=SKIPPED via Smart Skip, **Quando** `ready_nodes()`, **Então** C está `READY` | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.4 | `impact_of(node_id)` propaga para todos os descendentes | **Dado** A→B→C, **Quando** `impact_of("A")`, **Então** `{"B", "C"}` retornado | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.5 | `impact_of()` é puro (sem side-effects) | **Dado** chamadas múltiplas, **Quando** `impact_of()` N vezes, **Então** estado do grafo inalterado | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.6 | Rework cria nova instância sem ciclo no DAG | **Dado** step-5 com `retry_of`, **Quando** `ready_nodes()`, **Então** step-5-retry-1 aparece, step-5 original não reaparece | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
+| RF-G1B.7 | Determinismo: mesmo estado ACE → mesmo resultado | **Dado** estado ACE fixo, **Quando** `ready_nodes()` chamado N vezes, **Então** resultado idêntico | Must | ✅ | `tests/test_engine.py` | `llc_graph/engine.py` |
 
 ---
 
@@ -68,10 +68,32 @@ Com o modelo e o builder do PRP-GRAPH-1A, o grafo existe mas é estático. Este 
 
 ## 5. Definition of Done
 
-- [ ] Todos os 7 RF com testes verdes
-- [ ] Teste explícito do caso delta (RF-G1B.3) com comentário explicativo
-- [ ] `ready_nodes()` nunca retorna nó `requires_human` como auto-executável (RF-G1B.2 — crítico)
-- [ ] `impact_of()` puro — sem efeitos colaterais
-- [ ] Cobertura ≥ 85% em `engine.py`
-- [ ] `fitness-functions.py --all --strict` verde
-- [ ] Sessão ACE registrada
+- [x] Todos os 7 RF com testes verdes
+- [x] Teste explícito do caso delta (RF-G1B.3) com comentário explicativo
+- [x] `ready_nodes()` nunca retorna nó `requires_human` como auto-executável (RF-G1B.2 — crítico)
+- [x] `impact_of()` puro — sem efeitos colaterais
+- [x] Cobertura ≥ 85% em `engine.py` *(91% na suite do pacote — engine 89%, state 91%, TOTAL 96%)*
+- [x] `fitness-functions.py --all --strict` verde
+- [x] Sessão ACE registrada
+
+---
+
+## 7. Nota de Execução (2026-08-06)
+
+Entregue via TDD (sessão ACE `2026-08-06-014`, step 10.9 — Domain Modeling):
+
+- **`llc_graph/engine.py`** — `GraphEngine` com `node_state()` (precedência: ACE real →
+  `<gate_result>` real da sessão do step gateado → deps → `READY`/`AWAITING_HUMAN`),
+  `ready_nodes()` (determinístico, ordenado por id) e `impact_of()` (BFS descendente
+  sobre todas as arestas — conservador p/ Smart Skip).
+- **Contrato BLOCKS (ADR-0004 §2.4)** implementado: sucessor de gate não fica `READY`
+  enquanto o gate não for aprovado; a aprovação é lida de `<gate_result decision="approved">`
+  no `.md` da sessão (placeholders em comentários HTML ignorados) — espelha o padrão de
+  `llc_wizard/data.py` sem importá-lo (DIP).
+- **Descoberta de design:** a estrutura do DAG vive nas **arestas** (o `GraphBuilder` não
+  popula `depends_on` de steps/gates — só de retries). `_deps_satisfied()` unifica
+  `node.depends_on` + sources de arestas de entrada (DEPENDS_ON/REWORK/BLOCKS).
+- **Suporte (`state.py`):** mapeamento `status: "skipped"` → `NodeState.SKIPPED`
+  (delta flow, ADR-0004 §2.12) — 2 linhas + 1 teste.
+- **13 testes novos** (12 engine + 1 state); suite do pacote 34 verdes.
+  Suite completa **383 passed**, fitness **41/41**, DIP sem imports de `llc_wizard`/`llc_harness`.

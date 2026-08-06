@@ -606,6 +606,24 @@
       "timestamp": "2026-08-06T10:15:55.747210",
       "prp": "PRP-GRAPH-1A",
       "completed_at": "2026-08-06T10:24:22.976383"
+    },
+    {
+      "session_id": "2026-08-06-013",
+      "file": "2026-08-06-013.md",
+      "status": "completed",
+      "llc_step": 10.8,
+      "llc_step_id": "10.8",
+      "tags": [
+        ".ace/scripts/llc_evals/evaluators/code_evaluator.py",
+        ".ace/scripts/llc_evals/aggregate.py",
+        ".ace/scripts/llc_evals/tests/test_code_evaluator.py",
+        ".ace/scripts/llc_evals/tests/test_aggregate.py",
+        "docs/prps/PRP-EVALS-F2.md",
+        "docs/planning/PRP-MAP.md"
+      ],
+      "timestamp": "2026-08-06T10:30:56.629655",
+      "prp": "PRP-EVALS-F2",
+      "completed_at": "2026-08-06T10:34:20.376576"
     }
   ]
 }

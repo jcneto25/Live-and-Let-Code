@@ -508,6 +508,69 @@ def delta_plan():
             print(f"  ✨ {p}")
 
 
+@cli.group()
+def eval():
+    """Comandos de avaliação (Evals) — Pareto de custo×qualidade (PRP-EVALS-F5).
+
+    Dashboard Pareto: ranking de steps por EfficiencyScore e ReworkWaste,
+    gerado a partir dos baselines e resultados persistidos em .ace/evals/.
+    """
+    pass
+
+
+@eval.command("report")
+@click.option(
+    "--output",
+    "-o",
+    default=None,
+    help="Diretório de saída (default: .ace/evals/results)",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Exibe o resumo em JSON (além do Markdown)",
+)
+def eval_report(output, as_json):
+    """Gera o relatório Pareto Markdown (RF-EF5.3).
+
+    Lê baselines (.ace/evals/baselines/) e resultados (.ace/evals/results/)
+    e escreve report-{date}.md em .ace/evals/results/ (ou --output).
+    """
+    import json as _json
+    from pathlib import Path as _Path
+
+    from llc_evals.report import build_eval_summary, generate_report
+
+    root = _Path.cwd()
+    baselines_dir = root / ".ace" / "evals" / "baselines"
+    results_dir = root / ".ace" / "evals" / "results"
+    out_dir = _Path(output) if output else results_dir
+
+    path = generate_report(
+        baselines_dir=baselines_dir,
+        results_dir=results_dir,
+        output_dir=out_dir,
+    )
+    click.echo(f"\n📊 Eval Report gerado: {path}")
+
+    summary = build_eval_summary(
+        baselines_dir=baselines_dir, results_dir=results_dir,
+    )
+    click.echo(f"   Steps com baseline: {summary['steps_analyzed']}")
+    if summary["worst_efficiency"]:
+        w = summary["worst_efficiency"]
+        click.echo(f"   🔻 Pior eficiência: step {w['step']} "
+                   f"(eff {w['efficiency_score']:g}, fase {w['phase']})")
+    if summary["highest_rework_waste"]:
+        r = summary["highest_rework_waste"]
+        click.echo(f"   🔻 Maior rework: step {r['step']} "
+                   f"({r['rework_waste'] * 100:.0f}% tokens em retries)")
+
+    if as_json:
+        click.echo(_json.dumps(summary, indent=2, ensure_ascii=False))
+
+
 @cli.command()
 @click.option(
     "--from",

@@ -136,6 +136,27 @@ def main():
     alerts.extend(trend_alerts)
 
     fitness_result = None
+    eval_summary = None
+    try:
+        from llc_evals.report import build_eval_summary
+
+        root = Path.cwd()
+        bdir = root / ".ace" / "evals" / "baselines"
+        rdir = root / ".ace" / "evals" / "results"
+        if bdir.exists() or rdir.exists():
+            eval_summary = build_eval_summary(
+                baselines_dir=bdir, results_dir=rdir,
+            )
+    except Exception as e:  # noqa: BLE001 — seção eval é best-effort
+        alerts.append({
+            "severity": "warning",
+            "metric": "Eval Summary",
+            "value": "erro",
+            "threshold": "—",
+            "message": f"Nao foi possivel gerar o resumo de evals: {e}",
+            "action": "Verificar se llc_evals esta instalado e .ace/evals/ existe.",
+        })
+
     if args.fitness:
         try:
             fitness_script = SCRIPTS_DIR / "fitness-functions.py"
@@ -187,6 +208,8 @@ def main():
         result["coverage"] = coverage
     if fitness_result:
         result["fitness"] = fitness_result
+    if eval_summary and eval_summary.get("steps_analyzed"):
+        result["eval_summary"] = eval_summary
 
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -248,6 +271,22 @@ def main():
                         print(f"      {'🔴' if sev == 'block' else '🟡'} {v.get('module', v.get('detail', ''))}")
                 else:
                     print("OK")
+
+        if eval_summary and eval_summary.get("steps_analyzed"):
+            print(f"\n📊 Eval Summary (Pareto custo×qualidade):")
+            print(f"   Steps analisados: {eval_summary['steps_analyzed']}")
+            w = eval_summary.get("worst_efficiency")
+            if w:
+                print(
+                    f"   🔻 Pior eficiência: step {w['step']} "
+                    f"(eff {w['efficiency_score']:g}, fase {w['phase']})"
+                )
+            r = eval_summary.get("highest_rework_waste")
+            if r:
+                print(
+                    f"   🔻 Maior rework: step {r['step']} "
+                    f"({r['rework_waste'] * 100:.0f}% tokens em retries)"
+                )
 
         print(f"\n⚠️  Alertas:")
 

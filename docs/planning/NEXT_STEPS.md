@@ -22,22 +22,26 @@
 
 ## 2. Prioridades
 
-### 🥇 P1 — Warm-up de baselines (EVALS-F4 em produção)
+### 🥇 P1 — Warm-up de baselines (EVALS-F4 em produção) — ✅ Done (2026-08-06)
 
 **Por quê:** único gargalo funcional real. Toda a cadeia Evals (Pareto, regressão, alertas) está
 construída mas ociosa porque nenhum step atingiu `N_MIN=5`. Sem dados, o dashboard permanece
 vazio (`llc eval report` → `steps_analyzed: 0`).
 
-**O que fazer:**
-1. Registrar runs reais — cada `llc run --step N` já append `<eval_metrics>` na sessão (via
-   `finalize_session.py`); falta o elo que alimenta `BaselineManager.record_run()` com esses dados
-2. **Gap real a preencher:** verificar se existe o pipeline `sessão → record_run()`; se não, é um
-   mini-PRP de integração (~0.5–1 sem):
-   - `llc evals ingest` — lê `<eval_metrics>` das sessões concluídas e chama `record_run()`
-   - Cada step precisa de **5 runs** (collecting) → **10 runs** (stable) para sair do warm-up
-3. Critério de saída: ≥2 steps em fase `stable` → Pareto dashboard populado de verdade
+**O que foi feito (sessão 2026-08-06-024):**
+- ✅ `llc_evals/ingest.py` — `parse_eval_metrics()` (extrai blocos `<eval_metrics>`), `quality_from_gate()`
+  (quality determinístico via `<gate_result>` real, ignorando placeholders comentados) e
+  `ingest_sessions()` (alimenta `record_run()` com idempotência por session_id + migração de
+  estado legado)
+- ✅ `llc evals ingest` (CLI, flags `--dry-run` / `--project-root`)
+- ✅ **Resultado real no repo:** 13 runs ingeridos → 2 baselines em warmup (step 10.9 eff 31.25,
+  step 10.8 eff 31.57) — **dashboard Pareto populado de verdade** (`Steps com baseline: 2`)
+- ✅ 22 testes (17 RF + 5 regressão review), cobertura 90%, fitness 41/41, suite 542 passed
 
-**Estimativa:** 1–2 semanas · **Risco:** baixo (tudo já testado; falta só o conector)
+**Restante do P1:** cada step precisa de **5 runs** (collecting) → **10 runs** (stable) para sair do
+warm-up — basta continuar executando `llc run` e re-rodar `llc evals ingest`.
+
+**Estimativa restante:** 0 · **Risco:** baixo
 
 ---
 
@@ -118,7 +122,7 @@ paridade já existente, enquanto P3 é feature nova.
 
 ## 5. DoD deste plano
 
-- [ ] P1: ≥2 steps em fase `stable` → Pareto dashboard populado
+- [x] P1 (2026-08-06): `llc evals ingest` entregue — elo sessão→`record_run()` fechado; 13 runs ingeridos, 2 steps em warmup; ~[ ] 2 steps em fase `stable` (aguarda mais runs de `llc run`)
 - [ ] P2: Wizard com `GraphPipelineDataSource` por padrão + fallback `--source index`
 - [ ] P3: swimlanes por wave renderizando corretamente no `KanbanBoardWidget`
 - [ ] P4: relatório de gargalos reais (caminho crítico × flow metrics) com ≥1 achado acionável

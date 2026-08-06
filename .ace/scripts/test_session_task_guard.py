@@ -19,7 +19,12 @@ from llc_harness import session as harness_session
 
 class TestIsPlaceholderTask:
     @pytest.mark.parametrize("task", ["Step 0.5", "Step 11", "Step 11.4",
-                                      "", "   ", None])
+                                      "", "   ", None,
+                                      # GOV-002 reincidência 3.3 (2026-08-06):
+                                      # "tarefa"/"task"/"smoke" passaram pelo sentinel
+                                      # antigo (só pegava "Step N"). Endurecer:
+                                      "tarefa", "Tarefa", "task", "TODO",
+                                      "smoke", "placeholder", "x", "tbd"])
     def test_placeholders_detected(self, task):
         assert is_placeholder_task(task)
 
@@ -28,6 +33,9 @@ class TestIsPlaceholderTask:
         "Implementar Step 5 do pipeline",   # contém "Step", mas não é o sentinel
         "step 0.5 greenfield",               # case diferente não é o padrão f"Step {step}"
         "Step",                              # sem número — não é o padrão manufaturado
+        "Implementar autenticação de usuários",  # descritivo: não é placeholder
+        "Refatorar módulo de pagamentos",
+        "task runner do pipeline",           # contém "task" mas é descritivo
     ])
     def test_real_tasks_accepted(self, task):
         assert not is_placeholder_task(task)

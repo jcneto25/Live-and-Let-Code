@@ -76,8 +76,24 @@ Ambos — controle determinístico agora, arquitetural na próxima wave:
 
 ## Validação Posterior
 
-`python -c "import json; d=json.load(open('.ace/index.json')); assert all(s['project'] for s in d['sessions'])"`
-— toda sessão registrada deve ter `project` não-vazio.
+Verificação de higiene (frontmatter-taxonomy, compatível com o schema de
+`index.json` — que não armazena `project`):
+
+```bash
+python3 - <<'PY'
+import json, re
+for s in json.load(open('.ace/index.json'))['sessions']:
+    t = open('.ace/sessions/'+s['file']).read()
+    proj = re.search(r'project:\s*"([^"]*)"', t); proj = proj.group(1) if proj else '?'
+    nd = len(re.findall(r'<file_delta>', t))
+    st = re.search(r'status:\s*"(\w+)"', t); st = st.group(1) if st else '?'
+    assert not (proj == '' and nd == 0 and st == 'in_progress'), s['file']
+print('OK: 0 sessoes orfa-placeholder indexadas')
+PY
+```
+
+Nenhuma sessão órfã-placeholder (`project: ""` + zero `<file_delta>` + `in_progress`
+eterno) deve permanecer em `index.json`.
 
 ## Status da Reincidência
 
@@ -87,8 +103,18 @@ Ambos — controle determinístico agora, arquitetural na próxima wave:
 3. **2026-08-05** — sessões `2026-08-05-004/005/006` criadas durante `pytest .ace/scripts/`
    (suite completa dispara o caminho `llm_fallback` do `llc.py` com defaults de docstring).
    Removidas na sessão 2026-08-05-003 conforme o controle deste GOV (Decisão item 1).
+4. **2026-08-06** — sessões `2026-08-06-005/006` (`task: "tarefa"`, `project: ""`, zero actions)
+   criadas fora do fix: o sentinel `is_placeholder_task` só pegava `"Step N"`/vazio, então
+   `"tarefa"` passou. Removidas na sessão 2026-08-06-008 e o sentinel foi **endurecido**
+   (ver *Mecanismo Instalado* — agora rejeita token-placeholder genérico case-insensitive
+   via `_PLACEHOLDER_TOKENS`: `tarefa`, `task`, `smoke`, `todo`, `x`, `tbd`...).
 
 A 3ª reincidência confirmou que o controle manual não bastava. O fix arquitetural
 (Decisão item 2) foi **instalado em 2026-08-05** (ver *Mecanismo Instalado*).
-Contagem reiniciada: **0/3 PRPs sem nova sessão órfã desde a instalação** —
+A 4ª reincidência (08-06, `"tarefa"`) fechou a lacuna do sentinel: **endurecido
+em 2026-08-06** (sessão 008) para tokens-placeholder genéricos, com testes
+`test_session_task_guard.py` ampliados. **Concomitantemente, 12 sessões órfãs
+históricas (07-07/07-10/07-27 + 08-06-005/006) foram removidas** (10 via `git rm`
++ 2 untracked), reconciliados `index.json` (drift `2026-08-05-018` → completed).
+Contagem reiniciada: **0/3 PRPs sem nova sessão órfã desde 2026-08-06** —
 transição para closed após 3 PRPs executados sem reincidência.

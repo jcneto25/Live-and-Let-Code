@@ -231,13 +231,29 @@ def cleanup_orphan_worktrees() -> int:
 def is_placeholder_task(task) -> bool:
     """True se task é um sentinel manufaturado (padrão das órfãs GOV-002).
 
-    Placeholder = None/vazio/brancos, ou o padrão literal "Step N" produzido
-    historicamente por `task or f"Step {step}"` no harness (session.py:26).
-    Tarefas reais que *mencionam* steps (ex.: "Implementar Step 5") passam.
+    Placeholder = None/vazio/brancos, o padrão literal "Step N" produzido
+    historicamente por `task or f"Step {step}"` no harness (session.py:26),
+    ou um token-placeholder genérico como toda a task (case-insensitive).
+    Tarefas reais que *mencionam* steps (ex.: "Implementar Step 5") ou que
+    contêm a palavra "task" em contexto descritivo passam.
 
-    (GOV-002 Decisão item 2 / GOV-003 R7)
+    (GOV-002 Decisão item 2 / GOV-003 R7 — endurecido 2026-08-06 por causa da
+    reincidência 3.3: "tarefa"/"task"/"smoke" passavam pelo sentinel antigo.)
     """
     import re
     if task is None or not str(task).strip():
         return True
-    return bool(re.fullmatch(r"Step\s+\S+", str(task).strip()))
+    t = str(task).strip()
+    if re.fullmatch(r"Step\s+\S+", t):
+        return True
+    # Tokens-placeholder genéricos — somente quando TODA a task é o token
+    # (match exato, case-insensitive). "tarefa", "Task", "TODO", "smoke"... →
+    # órfãs GOV-002. Task descritiva (ex.: "task runner do pipeline") passa.
+    return t.lower() in _PLACEHOLDER_TOKENS
+
+
+# Tokens que, sozinhos, caracterizam sessão-placeholder (GOV-002 reincidência 3.3).
+_PLACEHOLDER_TOKENS = {
+    "tarefa", "task", "todo", "smoke", "test", "testing", "placeholder",
+    "tbd", "wip", "x", "fix", "n/a", "none",
+}

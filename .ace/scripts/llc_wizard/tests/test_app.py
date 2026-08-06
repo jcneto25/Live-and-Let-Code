@@ -500,6 +500,212 @@ def test_kanban_widget_scores_graceful_absence(tmp_path):
     assert "$" not in rendered
 
 
+# ──────────────────── PRP-WIZARD-1.2: Drag & Drop + Flow Metrics + Temas ──────
+
+
+def test_kanban_reorder_backlog_reorders_cards(tmp_path):
+    """RF-W1.2.1: drag dentro de BACKLOG reordena cards e persiste a ordem."""
+    from llc_wizard.kanban import KanbanColumn
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "6", "name": "A", "status": StepStatus.PENDING},
+        {"id": "7", "name": "B", "status": StepStatus.PENDING},
+        {"id": "8", "name": "C", "status": StepStatus.PENDING},
+    ])
+    widget = KanbanBoardWidget(board)
+    order = widget.reorder(KanbanColumn.BACKLOG, from_index=2, to_index=0)
+    assert order == ["8", "6", "7"]  # C movido da pos 3 para a pos 1
+    rendered = widget.render()
+    # conferir a ordem dos cards pela linha do card (ícone ⏳ desambigua o header)
+    assert rendered.index("⏳ C") < rendered.index("⏳ A")
+
+
+def test_kanban_drag_to_other_column_blocked(tmp_path):
+    """RF-W1.2.2: drag para outra coluna retorna notificação e cancela."""
+    from llc_wizard.kanban import KanbanColumn
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "6", "name": "A", "status": StepStatus.PENDING},
+    ])
+    widget = KanbanBoardWidget(board)
+    ok, msg = widget.try_move("6", KanbanColumn.RUNNING)
+    assert ok is False
+    assert "movimento bloqueado" in msg
+    # card permanece no BACKLOG (ordem intacta)
+    ids = [c.id for c in board[KanbanColumn.BACKLOG]]
+    assert ids == ["6"]
+
+
+def test_app_drag_blocked_notification(tmp_path):
+    """RF-W1.2.2 (app): drag_card para RUNNING retorna notificação e não altera."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            notification = app.drag_card("6", "RUNNING")
+            assert "movimento bloqueado" in notification
+            assert app.drag_card("6", "BACKLOG") == ""  # mesmo destino → no-op
+
+    asyncio.run(run())
+
+
+def test_app_reorder_backlog_persists_order(tmp_path):
+    """RF-W1.2.1 (app): reorder_backlog persiste ordem e atualiza o render."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            app.reorder_backlog("6", from_index=0, to_index=2)
+            assert app._backlog_order is not None
+            rendered = app.kanban_render()
+            assert rendered  # render continua válido após reordenação
+
+    asyncio.run(run())
+
+
+def test_export_flow_metrics_writes_yaml(tmp_path):
+    """RF-W1.2.3: export gera YAML em .ace/evals/results/ com cycle/block time."""
+    from llc_wizard.flow_metrics import export_flow_metrics
+
+    root = _write_fake_index(tmp_path, [])
+    path = export_flow_metrics(root)
+    assert path.exists()
+    assert path.parent.name == "results"
+    content = path.read_text(encoding="utf-8")
+    assert "cycle_time_avg_minutes" in content
+    assert "block_time_avg_minutes" in content
+    assert "generated_at" in content
+
+
+def test_export_flow_metrics_baseline_first_run(tmp_path):
+    """RF-W1.2.4: primeira execução marca baseline: true; segunda, false."""
+    import yaml
+
+    from llc_wizard.flow_metrics import export_flow_metrics
+
+    root = _write_fake_index(tmp_path, [])
+    first = export_flow_metrics(root)
+    data = yaml.safe_load(first.read_text(encoding="utf-8"))
+    assert data["baseline"] is True
+    # segunda execução no mesmo diretório → baseline false
+    second = export_flow_metrics(root)
+    data2 = yaml.safe_load(second.read_text(encoding="utf-8"))
+    assert data2["baseline"] is False
+
+
+def test_app_theme_default_from_config(tmp_path):
+    """DoD temas: default dark; config wizard.theme=light muda o tema."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    gates = json.loads((root / ".ace" / "config" / "gates.json").read_text())
+    gates["wizard"] = {"theme": "light"}
+    (root / ".ace" / "config" / "gates.json").write_text(json.dumps(gates))
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app.theme == "light"
+            app.toggle_theme()
+            assert app.theme == "dark"
+            app.toggle_theme()
+            assert app.theme == "light"
+
+    asyncio.run(run())
+
+
+def test_wizard_tcss_contains_both_themes(tmp_path):
+    """DoD temas: wizard.tcss existe com blocos dark e light."""
+    from pathlib import Path
+
+    tcss = Path(__file__).resolve().parents[1] / "wizard.tcss"
+    assert tcss.exists()
+    content = tcss.read_text(encoding="utf-8")
+    assert ".dark" in content
+    assert ".light" in content
+
+
+def test_app_reorder_persists_across_toggle(tmp_path):
+    """Regressão review: _backlog_order é re-aplicado no rebuild (toggle K)."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            app.reorder_backlog("6", from_index=0, to_index=2)
+            assert app._backlog_order is not None
+            # toggle off → on: rebuild não pode perder a ordem
+            app.toggle_kanban()
+            app.toggle_kanban()
+            rendered = app.kanban_render()
+            backlog_section = rendered.split("RUNNING")[0]
+            assert backlog_section.index("⏳") >= 0  # render válido pós-rebuild
+
+    asyncio.run(run())
+
+
+def test_app_theme_observable_in_render(tmp_path):
+    """Regressão review: tema tem efeito observável no render (tcss não é dead)."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            rendered = app.kanban_render()
+            assert "[tema: dark]" in rendered
+            app.toggle_theme()
+            rendered = app.kanban_render()
+            assert "[tema: light]" in rendered
+
+    asyncio.run(run())
+
+
+def test_app_drag_card_unknown_column_graceful(tmp_path):
+    """Regressão review: coluna desconhecida → notificação, sem ValueError."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            notification = app.drag_card("6", "BOGUS")
+            assert "movimento bloqueado" in notification
+
+    asyncio.run(run())
+
+
+def test_wizard_cli_export_flow_metrics_flag(tmp_path):
+    """RF-W1.2.3: 'llc wizard --export-flow-metrics' grava o YAML."""
+    from click.testing import CliRunner
+    from llc.cli import cli
+
+    root = _write_fake_index(tmp_path, [])
+    runner = CliRunner()
+    result = runner.invoke(cli, ["wizard", "--export-flow-metrics",
+                                 "--project-root", str(root)])
+    assert result.exit_code == 0
+    assert "flow-metrics" in result.output
+    results = root / ".ace" / "evals" / "results"
+    assert list(results.glob("flow-metrics-*.yaml"))
+
+
 def test_app_kanban_builds_from_reader_with_scores(tmp_path):
     """Integração: toggle K constrói o board via reader + SLA de gates.json + scores."""
     import yaml

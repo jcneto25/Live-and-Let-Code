@@ -53,11 +53,13 @@ class KanbanBoardWidget:
         sla_minutes: int = 30,
         wip_limits: dict[str, int | None] | None = None,
         scores: dict[str, dict] | None = None,
+        theme: str = "dark",
     ):
         self.board = board
         self.sla_minutes = sla_minutes
         self.wip_limits = {**_DEFAULT_WIP_LIMITS, **(wip_limits or {})}
         self.scores = scores or {}
+        self.theme = theme if theme in ("dark", "light") else "dark"
 
     # ── Cabeçalho (WIP total / Block Time / Stale count) ───────────────────
     def header(self) -> str:
@@ -108,9 +110,49 @@ class KanbanBoardWidget:
                 line += f" ({' '.join(parts)})"
         return line + stale
 
+    # ── PRP-WIZARD-1.2: Drag & Drop (RF-W1.2.1/.2) ──────────────────────────
+    def reorder(self, column: KanbanColumn, from_index: int,
+                to_index: int) -> list[str]:
+        """Reordena um card dentro de uma coluna (RF-W1.2.1).
+
+        Única exceção ao movimento state-driven (ADR-0002 §2.5 D5): reordenação
+        de prioridade dentro do BACKLOG. Muta a lista da coluna por design
+        (drag & drop é a mutação sancionada do board; `render()` continua puro)
+        e retorna a nova ordem de ids dos cards (persistida pelo app na
+        sessão). No-op se os índices forem inválidos.
+        """
+        cards = self.board.get(column, [])
+        if not (0 <= from_index < len(cards) and 0 <= to_index < len(cards)):
+            return [c.id for c in cards]
+        card = cards.pop(from_index)
+        cards.insert(to_index, card)
+        return [c.id for c in cards]
+
+    def try_move(self, card_id: str, target: KanbanColumn) -> tuple[bool, str]:
+        """Tenta mover um card para outra coluna (RF-W1.2.2).
+
+        Movimentos state-driven para fora do BACKLOG são bloqueados por design
+        (ADR-0002 §2.5): retorna (False, notificação) e o board permanece
+        intacto. Movimento BACKLOG → BACKLOG (mesma coluna) é permitido como
+        no-op.
+        """
+        for column in _COLUMN_ORDER:
+            cards = self.board.get(column, [])
+            if any(c.id == card_id for c in cards):
+                if column is KanbanColumn.BACKLOG and target is not KanbanColumn.BACKLOG:
+                    return (False,
+                            f"movimento bloqueado: {card_id} permanece no BACKLOG "
+                            "(drag só reordena prioridade dentro do BACKLOG)")
+                if column is target:
+                    return True, ""
+                return (False,
+                        f"movimento bloqueado: {column.value} → {target.value} "
+                        "não é permitido (fluxo é state-driven)")
+        return False, f"movimento bloqueado: card {card_id} não encontrado"
+
     def render(self) -> str:
         """Renderiza o board completo (RF-W1.1.1-10)."""
-        lines = [self.header(), ""]
+        lines = [self.header(), f"[tema: {self.theme}]", ""]
         for column in _COLUMN_ORDER:
             if self._collapsed(column):
                 # colapsada: apenas o cabeçalho com marcador ▸ (conteúdo oculto)

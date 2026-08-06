@@ -23,8 +23,9 @@ from llc_wizard.decisions import (
     PromptRequest,
     RealtimePromptCollector,
 )
+from llc_wizard.flow_metrics import export_flow_metrics
 from llc_wizard.kanban_board import KanbanBoardWidget
-from llc_wizard.kanban import KanbanBoardBuilder
+from llc_wizard.kanban import KanbanBoardBuilder, KanbanColumn
 from llc_wizard.screens import FailureRecoveryScreen
 from llc_wizard.widgets.decision_modal import DecisionModal
 
@@ -59,6 +60,8 @@ class WizardApp:
         self._selected_step: str | None = None
         self._kanban_mode: bool = False
         self._kanban_widget: KanbanBoardWidget | None = None
+        self._backlog_order: list[str] | None = None
+        self.theme = self._load_theme()
 
     def _build(self):
         status = self.reader.get_status()
@@ -173,10 +176,19 @@ class WizardApp:
         sla = self._load_sla_minutes()
         builder = KanbanBoardBuilder(self.reader, sla_minutes=sla)
         board = builder.build()
+        # RF-W1.2.1: reordenação de prioridade persistida é re-aplicada no
+        # rebuild (toggle K não perde o drag & drop — fix review)
+        if self._backlog_order:
+            backlog = board.get(KanbanColumn.BACKLOG, [])
+            by_id = {c.id: c for c in backlog}
+            ordered = [by_id[cid] for cid in self._backlog_order if cid in by_id]
+            ordered += [c for c in backlog if c.id not in self._backlog_order]
+            board[KanbanColumn.BACKLOG] = ordered
         self._kanban_widget = KanbanBoardWidget(
             board,
             sla_minutes=sla,
             scores=self._load_eval_scores(),
+            theme=self.theme,
         )
         self._panels["kanban-board"] = SimpleWidget(
             "kanban-board", self._kanban_widget.render()
@@ -187,6 +199,85 @@ class WizardApp:
         if self._kanban_widget is None:
             self._build_kanban()
         return self._kanban_widget.render()
+
+    # ── PRP-WIZARD-1.2: Drag & Drop (RF-W1.2.1/.2) ──────────────────────────
+    def drag_card(self, card_id: str, target_column: str) -> str:
+        """Tenta arrastar um card para outra coluna (RF-W1.2.2).
+
+        Retorna notificação de bloqueio ("movimento bloqueado...") quando o
+        destino está fora do BACKLOG — o board permanece intacto. BACKLOG →
+        BACKLOG é no-op (retorna ""). Coluna desconhecida também é bloqueada
+        (graceful — fix review).
+        """
+        try:
+            target = KanbanColumn(target_column)
+        except ValueError:
+            return f"movimento bloqueado: coluna desconhecida '{target_column}'"
+        if self._kanban_widget is None:
+            self._build_kanban()
+        ok, msg = self._kanban_widget.try_move(card_id, target)
+        if ok:
+            self._sync_kanban_panel()
+            return ""
+        return msg
+
+    def reorder_backlog(self, card_id: str, from_index: int,
+                        to_index: int) -> list[str]:
+        """Reordena um card dentro do BACKLOG (RF-W1.2.1).
+
+        Persiste a nova ordem na sessão do app (`_backlog_order`) e atualiza o
+        painel. Retorna a nova ordem de ids.
+        """
+        if self._kanban_widget is None:
+            self._build_kanban()
+        order = self._kanban_widget.reorder(
+            KanbanColumn.BACKLOG, from_index, to_index)
+        self._backlog_order = order
+        self._sync_kanban_panel()
+        return order
+
+    def _sync_kanban_panel(self) -> None:
+        """Atualiza o painel kanban-board após uma mutação do board."""
+        self._panels["kanban-board"]._text = self._kanban_widget.render()
+
+    # ── PRP-WIZARD-1.2: Export de métricas de fluxo (RF-W1.2.3/.4) ───────────
+    def export_flow_metrics(self, results_dir=None) -> Path:
+        """Exporta flow metrics para .ace/evals/results/ (RF-W1.2.3).
+
+        Baseline é marcado apenas na primeira execução (RF-W1.2.4).
+        """
+        return export_flow_metrics(
+            self.project_root, source=self.reader, results_dir=results_dir)
+
+    # ── PRP-WIZARD-1.2: Temas dark/light (DoD) ───────────────────────────────
+    def _load_theme(self) -> str:
+        """Tema inicial: gates.json → wizard.theme (default "dark")."""
+        import json
+
+        path = self.project_root / ".ace" / "config" / "gates.json"
+        if not path.exists():
+            return "dark"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return "dark"
+        wizard_cfg = data.get("wizard", {}) if isinstance(data, dict) else {}
+        if not isinstance(wizard_cfg, dict):
+            return "dark"
+        theme = wizard_cfg.get("theme", "dark")
+        return theme if theme in ("dark", "light") else "dark"
+
+    def toggle_theme(self) -> str:
+        """Alterna tema dark ↔ light (DoD temas). Retorna o novo tema.
+
+        O tema é aplicado ao widget Kanban (render reflete o tema ativo) e o
+        painel é re-sincronizado se já montado (fix review — tcss não é dead).
+        """
+        self.theme = "light" if self.theme == "dark" else "dark"
+        if self._kanban_widget is not None:
+            self._kanban_widget.theme = self.theme
+            self._sync_kanban_panel()
+        return self.theme
 
     # ── PRP-WIZARD-1C: Artifact Review (RF-W1C.1) ───────────────────────────
     def show_artifact_review(self, review: ArtifactReview) -> None:

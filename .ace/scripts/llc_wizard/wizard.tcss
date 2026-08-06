@@ -1,0 +1,75 @@
+/* wizard.tcss — temas dark/light do Wizard (PRP-WIZARD-1.2, DoD).
+   Aplicado via Textual CSS; o seletor raiz alterna entre `.dark` e `.light`
+   conforme a config `wizard.theme` em .ace/config/gates.json. */
+
+.dark {
+    background: #0d1117;
+    color: #c9d1d9;
+    border: round #30363d;
+}
+
+.dark #sidebar {
+    background: #161b22;
+    color: #8b949e;
+}
+
+.dark #context-panel {
+    background: #161b22;
+    color: #e6edf3;
+    border: round #30363d;
+}
+
+.dark #output-panel {
+    background: #0d1117;
+    color: #c9d1d9;
+}
+
+.dark #kanban-board {
+    background: #161b22;
+    color: #c9d1d9;
+}
+
+.dark .card-stale {
+    color: #f85149;
+    text-style: bold;
+}
+
+.dark .card-wip-over {
+    color: #d29922;
+}
+
+.light {
+    background: #f6f8fa;
+    color: #24292f;
+    border: round #d0d7de;
+}
+
+.light #sidebar {
+    background: #ffffff;
+    color: #57606a;
+}
+
+.light #context-panel {
+    background: #ffffff;
+    color: #24292f;
+    border: round #d0d7de;
+}
+
+.light #output-panel {
+    background: #f6f8fa;
+    color: #24292f;
+}
+
+.light #kanban-board {
+    background: #ffffff;
+    color: #24292f;
+}
+
+.light .card-stale {
+    color: #cf222e;
+    text-style: bold;
+}
+
+.light .card-wip-over {
+    color: #9a6700;
+}

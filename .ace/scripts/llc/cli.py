@@ -589,12 +589,26 @@ def eval_report(output, as_json):
     default=None,
     help="Raiz do projeto (default: diretorio atual)",
 )
-def wizard(from_step, auto_approve, project_root):
+@click.option(
+    "--export-flow-metrics",
+    is_flag=True,
+    help="Exporta flow metrics (cycle/block time) para .ace/evals/results/ (RF-W1.2.3)",
+)
+def wizard(from_step, auto_approve, project_root, export_flow_metrics):
     """Inicia a TUI do Wizard (PRP-WIZARD-1A).
 
     Requer `textual` instalado; caso contrario, exibe a instrucao de instalacao
-    e o prompt copy-paste (FallbackRunner).
+    e o prompt copy-paste (FallbackRunner). Com `--export-flow-metrics`, gera
+    o YAML de métricas de fluxo (RF-W1.2.3) sem abrir a TUI.
     """
+    if export_flow_metrics:
+        from llc_wizard.flow_metrics import export_flow_metrics as _export
+
+        root = Path(project_root) if project_root else Path.cwd()
+        path = _export(root)
+        click.echo(f"✅ Flow metrics exportadas: {path}")
+        return
+
     try:
         import textual  # noqa: F401
     except ImportError:

@@ -46,7 +46,7 @@
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
 | PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | ✅ done (2026-08-06) · waiver item saída `--from 0` (gates interativas) → PRP-WIZARD-1B (DD-W1A-01) |
-| PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | 📋 |
+| PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | ✅ done (2026-08-06) |
 | PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | 📋 |
 | PRP-WIZARD-1.1 | Kanban UI board (toggle K + SLA visual + WIP) | 2 sem | PRP-WIZARD-1A + PRP-EVALS-F1 | 📋 |
 | PRP-WIZARD-1.2 | Drag & drop backlog + `--export-flow-metrics` + temas | 1 sem | PRP-WIZARD-1.1 | 📋 |

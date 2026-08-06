@@ -4,12 +4,17 @@ Monta o layout com tres paineis: #sidebar (steps), #context-panel (gate) e
 #output-panel. Nesta fase (WP4) o app e somente-leitura de apresentacao:
 le o estado via PipelineDataReader e deriva o progresso via PipelineStatus.
 Nunca escreve frontmatter em .ace/sessions/ (RF-W1A.15).
+
+PRP-WIZARD-1B: integra HITL real — o app possui um RealtimePromptCollector,
+roteia prompts pendentes para um DecisionModal e executa steps com feedback.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
 from llc_wizard.data import GateInfo, GateItem, PipelineDataReader, StepStatus
+from llc_wizard.decisions import PromptRequest, RealtimePromptCollector
+from llc_wizard.widgets.decision_modal import DecisionModal
 
 STATUS_ICON = {
     StepStatus.PENDING: "⏳",
@@ -33,6 +38,7 @@ class WizardApp:
     def __init__(self, project_root: Path):
         self.project_root = Path(project_root)
         self.reader = PipelineDataReader(self.project_root)
+        self.collector = RealtimePromptCollector()
         self._panels = {}
         self._gate_approved = False
         self._screen_stack: list[str] = []
@@ -65,6 +71,31 @@ class WizardApp:
     def reject_gate(self, step_id: str) -> None:
         """Registra rejeicao e empilha FailureRecoveryScreen (SPEC 6.1)."""
         self._screen_stack.append("FailureRecoveryScreen")
+
+    def open_prompt_modal(self, prompt: PromptRequest) -> DecisionModal:
+        """Abre um DecisionModal para um prompt pendente (RF-W1B.6).
+
+        O modal usa o collector compartilhado: ao confirmar, submit_response()
+        libera o request_input() do lado do agente/step.
+        """
+        modal = DecisionModal(prompt=prompt, collector=self.collector)
+        self._screen_stack.append(f"DecisionModal:{prompt.prompt_id}")
+        return modal
+
+    async def run_step_with_hitl(self, step_id: str, task: str = "", runner=None):
+        """Executa um step capturando output e roteando HITL.
+
+        Usa o runner injetado, ou o runner selecionado (HarnessRunner quando há
+        agente no PATH, senão FallbackRunner), repassando os eventos para a UI.
+        Durante a execução, o collector coleta prompts que o app roteia para
+        DecisionModal.
+        """
+        if runner is None:
+            from llc_wizard.runner import select_runner
+
+            runner = select_runner(step_id, task)
+        async for event in runner.run_step():
+            yield event
 
 
 class _WizardPilot:

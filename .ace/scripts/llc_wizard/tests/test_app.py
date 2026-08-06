@@ -252,3 +252,113 @@ def test_wizard_does_not_write_to_sessions_dir():
             violations.append(str(src))
 
     assert not violations, f"Escrita em sessions/ detectada: {violations}"
+
+# ─────────────────────── PRP-WIZARD-1B: HITL Widgets ───────────────────────
+
+
+def test_decision_modal_renders_prompt_and_accepts_response():
+    """RF-W1B.6: DecisionModal renderiza prompt e aceita resposta."""
+    from llc_wizard.decisions import PromptRequest, RealtimePromptCollector
+    from llc_wizard.widgets.decision_modal import DecisionModal
+
+    collector = RealtimePromptCollector()
+    prompt = PromptRequest(prompt_id="q-1", text="Qual escopo?", step_id="5")
+    modal = DecisionModal(prompt=prompt, collector=collector)
+
+    rendered = modal.render()
+    assert "Qual escopo?" in rendered
+
+    modal.set_response("Apenas steps 1-5")
+    modal.confirm()
+    assert collector.pending_prompts == []  # prompt respondido/liberado
+
+
+def test_decision_modal_shows_options():
+    """RF-W1B.6: modal exibe opções quando o prompt as define."""
+    from llc_wizard.decisions import PromptRequest, RealtimePromptCollector
+    from llc_wizard.widgets.decision_modal import DecisionModal
+
+    collector = RealtimePromptCollector()
+    prompt = PromptRequest(
+        prompt_id="q-2", text="Metodo de deploy?", step_id="3",
+        options=["docker", "kubernetes", "bare-metal"],
+    )
+    modal = DecisionModal(prompt=prompt, collector=collector)
+    rendered = modal.render()
+    for opt in ("docker", "kubernetes", "bare-metal"):
+        assert opt in rendered
+
+
+def test_prompt_widget_lists_pending_prompts():
+    """RF: prompt_widgets renderiza prompts pendentes do collector."""
+    from llc_wizard.decisions import PromptRequest, RealtimePromptCollector
+    from llc_wizard.widgets.prompt_widgets import PendingPromptsWidget
+
+    collector = RealtimePromptCollector()
+    import asyncio
+
+    async def run():
+        asyncio.create_task(collector.request_input(
+            PromptRequest(prompt_id="p1", text="Pergunta A", step_id="5")))
+        asyncio.create_task(collector.request_input(
+            PromptRequest(prompt_id="p2", text="Pergunta B", step_id="6")))
+        await asyncio.sleep(0.02)
+        widget = PendingPromptsWidget(collector)
+        rendered = str(widget.render())
+        assert "Pergunta A" in rendered
+        assert "Pergunta B" in rendered
+
+    asyncio.run(run())
+
+
+def test_wizard_app_routes_prompt_during_step_execution(tmp_path):
+    """RF-W1B (integração): WizardApp roteia prompt HITL durante execução do step."""
+    from llc_wizard.decisions import PromptRequest
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            prompt = PromptRequest(prompt_id="q-5", text="Pergunta do step 5",
+                                   step_id="5")
+            # coletor registra o prompt (task em background)
+            task = asyncio.create_task(app.collector.request_input(prompt))
+            await asyncio.sleep(0.02)
+            # app abre modal para o prompt pendente e roteia a resposta
+            modal = app.open_prompt_modal(app.collector.pending_prompts[0])
+            rendered = modal.render()
+            assert "Pergunta do step 5" in rendered
+            modal.set_response("respondido")
+            modal.confirm()
+            result = await task
+            assert result == "respondido"
+
+    asyncio.run(run())
+
+
+def test_wizard_app_executes_step_with_hitl(tmp_path):
+    """RF-W1B (integração): run_step_with_hitl captura output e completa o step."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    from llc_wizard.runner import CompletionEvent, OutputEvent
+
+    class FakeRunner:
+        async def run_step(self):
+            yield OutputEvent(text="step 5 iniciado")
+            yield CompletionEvent(step_id="5", success=True, output="ok")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            events = [ev async for ev in app.run_step_with_hitl("5", "tarefa",
+                                                                runner=FakeRunner())]
+            has_output = any(isinstance(e, OutputEvent) for e in events)
+            has_done = any(isinstance(e, CompletionEvent) and e.success
+                           for e in events)
+            assert has_output and has_done
+
+    asyncio.run(run())

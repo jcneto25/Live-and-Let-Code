@@ -20,3 +20,7 @@ A causa raiz das orfas GOV-002 nao era o llm_fallback em si, mas a manufatura si
 ## 2026-08-05-011
 
 Trilha 0 do PRP-MAP completa em 1 dia (ACE-TAGS, GOV-002 fix, GOV-T1/T2/T3): politica ADR-0006 agora e enforced deterministicamente — qualquer dependencia nao registrada, nao pinada, sem licenca ou N2/N3 no caminho critico bloqueia via fitness-functions --check-governance.
+
+## 2026-08-06-009
+
+observability.py estava AUSENTE como módulo first-party (GOV-T2/R2) — causa das 6 falhas pré-existentes de test_observability.py. Implementado com somente stdlib para satisfazer o contrato do teste: sessions (total==completed+in_progress+other), worktrees, gates.failing (decision=rejected), govs (open/addressed/closed), waves; build_report() com SESSIONS_DIR monkeypatchável.

@@ -225,11 +225,94 @@ def test_successor_ready_after_gate_approved(tmp_path):
     assert "step-6" in ready
 
 
+def test_step_with_rejected_gate_is_failed(tmp_path):
+    """Paridade §7.6: step completed + gate rejeitado → FAILED (não DONE).
+
+    Regressão (revisão GRAPH-1C): o engine retornava DONE para o step sem
+    consultar a decisão do gate — o reader mostra FAILED (rework).
+    """
+    _write_session(tmp_path, "s-5", "rejected")
+    engine = _make_engine(tmp_path, _graph_with_gate(), [
+        {"session_id": "s-5", "llc_step_id": "5", "status": "completed",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.node_state("step-5") == NodeState.FAILED
+    assert engine.node_state("gate-5") == NodeState.FAILED
+    assert engine.node_state("step-6") == NodeState.PENDING  # BLOCKS mantém
+
+
+def test_step_with_approved_gate_stays_done(tmp_path):
+    """Paridade §7.6: completed + gate aprovado → DONE (inalterado)."""
+    _write_session(tmp_path, "s-5", "approved")
+    engine = _make_engine(tmp_path, _graph_with_gate(), [
+        {"session_id": "s-5", "llc_step_id": "5", "status": "completed",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.node_state("step-5") == NodeState.DONE
+    assert engine.node_state("gate-5") == NodeState.DONE
+    assert engine.node_state("step-6") == NodeState.READY
+
+
+def test_step_gate_decision_helper(tmp_path):
+    """step_gate_decision() expõe a decisão do gate do step (paridade §7.6)."""
+    _write_session(tmp_path, "s-5", "rejected")
+    engine = _make_engine(tmp_path, _graph_with_gate(), [
+        {"session_id": "s-5", "llc_step_id": "5", "status": "completed",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.step_gate_decision("5") == "rejected"
+    assert engine.step_gate_decision("6") is None  # step sem gate
+    assert engine.step_gate_decision("999") is None  # step inexistente
+
+
 def test_node_state_unknown_node_raises(tmp_path):
     """node_state em nó fora do grafo → KeyError (contrato fail-fast)."""
     engine = _make_engine(tmp_path, _simple_chain(), [])
     with pytest.raises(KeyError):
         engine.node_state("step-999")
+
+
+# ── RF-G1C.5: session_timestamp (SLA do Kanban) ──────────────────────────────
+
+def test_session_timestamp_active_session(tmp_path):
+    """RF-G1C.5: timestamp real da sessão ativa (in_progress)."""
+    import datetime as dt
+
+    engine = _make_engine(tmp_path, _simple_chain(), [
+        {"session_id": "s-1", "llc_step_id": "1", "status": "in_progress",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.session_timestamp("1") == dt.datetime(2026, 8, 6, 10, 0, 0)
+
+
+def test_session_timestamp_ignores_skipped_only(tmp_path):
+    """Sessão apenas skipped não conta como ativa → epoch."""
+    import datetime as dt
+
+    engine = _make_engine(tmp_path, _simple_chain(), [
+        {"session_id": "s-1", "llc_step_id": "1", "status": "skipped",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.session_timestamp("1") == dt.datetime.fromtimestamp(0)
+
+
+def test_session_timestamp_missing_index_epoch(tmp_path):
+    """index.json ausente → epoch, sem exceção."""
+    import datetime as dt
+
+    engine = _make_engine(tmp_path, _simple_chain(), [])
+    assert engine.session_timestamp("1") == dt.datetime.fromtimestamp(0)
+
+
+def test_session_timestamp_invalid_ts_epoch(tmp_path):
+    """Timestamp malformado → epoch, sem exceção."""
+    import datetime as dt
+
+    engine = _make_engine(tmp_path, _simple_chain(), [
+        {"session_id": "s-1", "llc_step_id": "1", "status": "completed",
+         "timestamp": "nao-iso"},
+    ])
+    assert engine.session_timestamp("1") == dt.datetime.fromtimestamp(0)
 
 
 def test_gate_approved_in_builder_graph(tmp_path):

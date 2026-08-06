@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 from llc_graph.model import (
@@ -56,6 +57,12 @@ class GraphEngine:
         base = self.state_reader.node_state(node_id)
         if base in (NodeState.DONE, NodeState.FAILED, NodeState.SKIPPED,
                     NodeState.RUNNING):
+            # Paridade PipelineDataReader §7.6 (GOV-003/R4): step cuja sessão
+            # completou mas o gate foi REJEITADO é FAILED (rework), não DONE.
+            if node.kind == NodeKind.STEP and base is NodeState.DONE:
+                gate = self._gate_for_step(node.id)
+                if gate is not None and self._gate_decision(gate) == "rejected":
+                    return NodeState.FAILED
             return base
         if node.kind == NodeKind.GATE:
             decision = self._gate_decision(node)
@@ -162,6 +169,31 @@ class GraphEngine:
             return node.depends_on[0]
         return None
 
+    def _gate_for_step(self, step_id: str) -> GraphNode | None:
+        """Nó GATE que gateia o step (inverso de `_gated_step`).
+
+        Usado na paridade §7.6: o engine precisa saber se o step tem gate e
+        qual a decisão real dele — sem duplicar a estrutura do DAG.
+        """
+        for node in self.graph.nodes.values():
+            if node.kind == NodeKind.GATE and self._gated_step(node) == step_id:
+                return node
+        return None
+
+    def step_gate_decision(self, step_id: str) -> str | None:
+        """Decisão real do gate que gateia o step (paridade §7.6).
+
+        O adapter GraphPipelineDataSource usa isto para mapear sessão
+        in_progress + gate sem decisão → GATE_PENDING, espelhando o reader.
+        """
+        step_node = self.graph.node(f"step-{step_id}")
+        if step_node is None:
+            return None
+        gate = self._gate_for_step(step_node.id)
+        if gate is None:
+            return None
+        return self._gate_decision(gate)
+
     def _latest_session_for(self, step_id: str) -> dict | None:
         """Sessão mais recente do step (llc_step_id) no .ace/index.json."""
         index_path = self.root / ".ace" / "index.json"
@@ -178,3 +210,31 @@ class GraphEngine:
         if not sessions:
             return None
         return max(sessions, key=lambda s: s.get("timestamp", ""))
+
+    def session_timestamp(self, step_id: str) -> datetime:
+        """Timestamp da última sessão ATIVA do step (RF-G1C.5 / SLA Kanban).
+
+        Espelha PipelineDataReader.get_status_since (filtro por status ativos)
+        para paridade de SLA no Kanban (RF-G1C.4). Epoch se não houver sessão
+        ativa ou o timestamp for inválido.
+        """
+        index_path = self.root / ".ace" / "index.json"
+        if not index_path.exists():
+            return datetime.fromtimestamp(0)
+        try:
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return datetime.fromtimestamp(0)
+        sessions = [
+            s for s in data.get("sessions", [])
+            if str(s.get("llc_step_id", "")) == step_id
+            and s.get("status") in ("in_progress", "completed", "failed")
+        ]
+        if not sessions:
+            return datetime.fromtimestamp(0)
+        latest = max(sessions, key=lambda s: s.get("timestamp", ""))
+        ts = latest.get("timestamp", "")
+        try:
+            return datetime.fromisoformat(ts)
+        except (ValueError, TypeError):
+            return datetime.fromtimestamp(0)

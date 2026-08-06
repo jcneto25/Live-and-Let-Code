@@ -2,10 +2,10 @@
 
 > **ID:** PRP-WIZARD-1A | **Fase:** Fase 1 — Observabilidade | **Onda:** 1
 > **Owner:** jcneto25 | **Reviewer:** jcneto25
-> **Estimativa:** ~15 dias-homem | **Status:** 🔄 Em andamento (WP1–WP5 done) | **Última atualização:** 2026-08-05
+> **Estimativa:** ~15 dias-homem | **Status:** ✅ Done (2026-08-06) | **Última atualização:** 2026-08-06
 > **Prioridade:** Crítico
 > **Complexidade:** Alta
-> **Criado em:** 2026-08-05 | **Última atualização:** 2026-08-05 | **Versão:** v1.0
+> **Criado em:** 2026-08-05 | **Última atualização:** 2026-08-06 | **Versão:** v1.0
 > **ADR de origem:** ADR-0002 (aceito em 2026-08-04)
 
 ---
@@ -374,6 +374,7 @@ def make_gates():
 | Data | Decisão | Alternativa | Por que esta | Quem |
 |------|---------|-------------|-------------|------|
 | 2026-08-05 | `KanbanBoardBuilder` recebe `PipelineDataSource` Protocol, não `PipelineDataReader` diretamente | Injetar `PipelineDataReader` diretamente | Evita retrabalho na Fase 3 quando `GraphEngine` substituir o reader | jcneto25 |
+| 2026-08-06 | **Waiver (fechamento 1A):** item de saída §12 `llc wizard --from 0 executa pipeline com gates interativas` deferido para PRP-WIZARD-1B — o MVP arranca a TUI e exibe o prompt copy-paste (FallbackRunner), mas o HITL interativo real (`decisions.py`/`commands.py`/`RealtimePromptCollector`) pertence ao 1B | Implementar o gate interativo em 1A | Escopo 1A encerra no MVP (conforme §1.4 / DD-W1A-01); fechar 1A desbloqueia 1B/GRAPH-1A e EVALS-F1 (paralelo) | jcneto25 |
 | 2026-08-05 | WIP limit `RUNNING=1` aplica ao nível N1 (pipeline macro); múltiplos cards `RUNNING` permitidos no nível N2 (PRPs em worktrees) | WIP=1 global | Paralelismo via worktrees já existe (ADR-0004 fato); bloquear a visualização seria regressão | jcneto25 |
 
 ### 11.1 Dívida Técnica
@@ -391,7 +392,7 @@ def make_gates():
 
 - [x] Todas as 21 tasks com ciclos RED→GREEN→REFACTOR — saída de teste exibida em cada ciclo
 - [x] `pytest .ace/scripts/llc_wizard/tests/ -v --cov=llc_wizard` → ≥ 85% (`data.py`, `kanban.py`), ≥ 80% (`runner.py`)
-- [ ] `llc wizard --from 0` executa pipeline com gates interativas; fallback funcional
+- [x] `llc wizard --from 0` executa pipeline com gates interativas; fallback funcional *(waiver → PRP-WIZARD-1B / DD-W1A-01: MVP 1A arranca a TUI + prompt copy-paste; HITL interativo real em 1B)*
 - [x] `fitness-functions.py --all --strict` verde (DIP, CQS, sem flags em assinaturas públicas)
 - [x] Nenhuma alteração em `llc_harness/`, `llc_steps/`, `llc_delta/`, `llc_wave/`
 - [x] Frontmatter de sessões escrito apenas pelos scripts sancionados (Task 5.2 verde)

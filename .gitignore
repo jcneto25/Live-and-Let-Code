@@ -16,3 +16,11 @@ __pycache__/
 # version-controlled source of truth.
 .ace/security/*
 !.ace/security/.gitkeep
+
+# Test coverage analysis — ephemeral machine-generated output (regularamente validado por fitness module_coverage)
+coverage/
+
+# pytest-cov local artifacts
+.coverage
+coverage.lcov
+coverage.lcov.*

@@ -76,3 +76,29 @@ dependencies:
     fallback: "Testes não rodam — execução do pipeline não afetada (unittest stdlib como fallback parcial)"
     last_reviewed: "2026-08-05"
     next_review: "2026-11-05"
+
+  - name: pytest-cov
+    version: ">=6.0,<8.0"            # instalado/verificado: 7.1.0
+    level: 1
+    license: MIT
+    bus_factor: community
+    purpose: "Cobertura de testes do llc_wizard (RNF-W1A.1/2) e alimenta fitness module_coverage"
+    critical_path: false
+    optional: true
+    dev_only: true
+    fallback: "pytest --cov indisponível — cobertura não medida (RNFs bloqueadas)"
+    last_reviewed: "2026-08-06"
+    next_review: "2026-11-06"
+
+  - name: coverage
+    version: ">=7.0,<8.0"            # instalado/verificado: 7.15.3 (transitiva do pytest-cov)
+    level: 1
+    license: Apache-2.0
+    bus_factor: community
+    purpose: "Backend de medição do pytest-cov; gera coverage/lcov.info para fitness module_coverage"
+    critical_path: false
+    optional: true
+    dev_only: true
+    fallback: "Sem coverage — module_coverage reporta Nenhum arquivo"
+    last_reviewed: "2026-08-06"
+    next_review: "2026-11-06"

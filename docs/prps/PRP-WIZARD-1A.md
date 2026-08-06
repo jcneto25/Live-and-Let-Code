@@ -2,7 +2,7 @@
 
 > **ID:** PRP-WIZARD-1A | **Fase:** Fase 1 — Observabilidade | **Onda:** 1
 > **Owner:** jcneto25 | **Reviewer:** jcneto25
-> **Estimativa:** ~15 dias-homem | **Status:** ⏳ Pending
+> **Estimativa:** ~15 dias-homem | **Status:** 🔄 Em andamento (WP1–WP5 done) | **Última atualização:** 2026-08-05
 > **Prioridade:** Crítico
 > **Complexidade:** Alta
 > **Criado em:** 2026-08-05 | **Última atualização:** 2026-08-05 | **Versão:** v1.0
@@ -26,12 +26,12 @@ O LLC opera exclusivamente via CLI (`llc.py`). O operador não tem visibilidade 
 
 ### 1.3 O que é entregue
 
-- [ ] `llc_wizard/data.py` — camada de acesso read-only ao estado do pipeline
-- [ ] `llc_wizard/kanban.py` — modelo de dados Kanban (sem UI) com SLA e is_stale
-- [ ] `llc_wizard/runner.py` — execução não-bloqueante via `asyncio.to_thread`
-- [ ] `llc_wizard/app.py` + widgets básicos — TUI funcional com sidebar, gate checklist
-- [ ] `llc wizard` subcomando no `llc.py` com graceful degradation se Textual ausente
-- [ ] Suite de testes TDD com cobertura ≥ 85% em `data.py` e `kanban.py`
+- [x] `llc_wizard/data.py` — camada de acesso read-only ao estado do pipeline
+- [x] `llc_wizard/kanban.py` — modelo de dados Kanban (sem UI) com SLA e is_stale
+- [x] `llc_wizard/runner.py` — execução não-bloqueante via `asyncio.to_thread`
+- [x] `llc_wizard/app.py` + widgets básicos — TUI funcional com sidebar, gate checklist
+- [x] `llc wizard` subcomando no `llc.py` com graceful degradation se Textual ausente
+- [x] Suite de testes TDD com cobertura ≥ 85% em `data.py` e `kanban.py`
 
 ### 1.4 O que NÃO está no escopo
 
@@ -50,21 +50,21 @@ O LLC opera exclusivamente via CLI (`llc.py`). O operador não tem visibilidade 
 
 | ID | Requisito | Critérios de Aceitação (Gherkin) | Prioridade | Status | Teste(s) | Arquivo(s) impl |
 |----|-----------|----------------------------------|------------|--------|----------|-----------------|
-| RF-W1A.1 | `StepStatus` enum com 7 estados | **Dado** o enum `StepStatus`, **Quando** iterado, **Então** contém exatamente `{pending, in_progress, gate_pending, completed, failed, skipped, excluded}` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.2 | `StepInfo` é imutável (frozen dataclass) | **Dado** uma instância de `StepInfo`, **Quando** tentativa de mutação, **Então** lança `FrozenInstanceError` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.3 | `PipelineStatus.progress_percent` conta só steps `in_pipeline` | **Dado** 2 steps completed + 1 pending + 1 excluded, **Quando** `progress_percent`, **Então** retorna ~66.6% | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.4 | `PipelineDataReader` tolera `index.json` ausente | **Dado** `.ace/index.json` deletado, **Quando** `get_status()`, **Então** todos os steps retornam `pending` sem exceção | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.5 | `PipelineDataReader` parseia gates do `gates.json` | **Dado** gate `"1"` em `gates.json` com 2 itens (strings), **Quando** `get_gate_for_step("1")`, **Então** `GateInfo` com 2 `GateItem` (`required=true` por default — §7.2) e `all_required_met=False` | Must | ⏳ | `tests/test_data.py` | `llc_wizard/data.py` |
-| RF-W1A.6 | `KanbanCard.is_stale` respeita SLA configurável | **Dado** card em `AWAITING_HUMAN` há 31 min e SLA=30, **Quando** `is_stale(30)`, **Então** retorna `True` | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
-| RF-W1A.7 | `KanbanBoardBuilder.build()` mapeia steps para colunas corretas | **Dado** steps com status variados, **Quando** `build()`, **Então** cada step aparece na coluna correspondente ao seu status | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
-| RF-W1A.8 | `AWAITING_HUMAN` ordenado por tempo de espera (mais antigo no topo) | **Dado** 2 HITL pendentes com timestamps distintos, **Quando** `build()`, **Então** mais antigo é o primeiro na lista | Must | ⏳ | `tests/test_kanban.py` | `llc_wizard/kanban.py` |
-| RF-W1A.9 | `HarnessRunner.run_step()` emite `OutputEvent` antes de `CompletionEvent` | **Dado** runner com harness mockado, **Quando** `run_step()` consumido via async-for, **Então** `OutputEvent` precede `CompletionEvent` final | Must | ⏳ | `tests/test_runner.py` | `llc_wizard/runner.py` |
-| RF-W1A.10 | `FallbackRunner` gera prompt copia-cola | **Dado** `FallbackRunner`, **Quando** `run_step()`, **Então** emite `OutputEvent` com "copie" ou "cole" no texto | Must | ⏳ | `tests/test_runner.py` | `llc_wizard/runner.py` |
-| RF-W1A.11 | `select_runner()` usa `HarnessRunner` se agente detectado | **Dado** `shutil.which` retorna path para `claude`, **Quando** `select_runner()`, **Então** retorna `HarnessRunner` | Must | ⏳ | `tests/test_runner.py` | `llc_wizard/runner.py` |
-| RF-W1A.12 | `WizardApp` monta layout com sidebar, context e output panels | **Dado** `WizardApp(project_root)`, **Quando** `run_test()`, **Então** `#sidebar`, `#context-panel` e `#output-panel` existem no DOM | Must | ⏳ | `tests/test_app.py` | `llc_wizard/app.py` |
-| RF-W1A.13 | `llc wizard --help` registrado e mostra flags `--from` e `--auto-approve` | **Dado** CLI, **Quando** `llc wizard --help`, **Então** exit code 0 e flags presentes | Must | ⏳ | `tests/test_app.py` | `.ace/scripts/llc.py` |
-| RF-W1A.14 | `llc wizard` sem Textual exibe mensagem de instalação | **Dado** `textual` não instalado, **Quando** `llc wizard`, **Então** output contém "pip install textual" | Must | ⏳ | `tests/test_app.py` | `.ace/scripts/llc.py` |
-| RF-W1A.15 | Wizard não escreve frontmatter diretamente em `.ace/sessions/` | **Dado** todo código `llc_wizard/`, **Quando** análise AST, **Então** nenhum `open(..., "w")` aponta para `sessions/` | Must | ⏳ | `tests/test_app.py` | `llc_wizard/decisions.py` |
+| RF-W1A.1 | `StepStatus` enum com 7 estados | **Dado** o enum `StepStatus`, **Quando** iterado, **Então** contém exatamente `{pending, in_progress, gate_pending, completed, failed, skipped, excluded}` | Must | ✅| `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.2 | `StepInfo` é imutável (frozen dataclass) | **Dado** uma instância de `StepInfo`, **Quando** tentativa de mutação, **Então** lança `FrozenInstanceError` | Must | ✅| `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.3 | `PipelineStatus.progress_percent` conta só steps `in_pipeline` | **Dado** 2 steps completed + 1 pending + 1 excluded, **Quando** `progress_percent`, **Então** retorna ~66.6% | Must | ✅| `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.4 | `PipelineDataReader` tolera `index.json` ausente | **Dado** `.ace/index.json` deletado, **Quando** `get_status()`, **Então** todos os steps retornam `pending` sem exceção | Must | ✅| `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.5 | `PipelineDataReader` parseia gates do `gates.json` | **Dado** gate `"1"` em `gates.json` com 2 itens (strings), **Quando** `get_gate_for_step("1")`, **Então** `GateInfo` com 2 `GateItem` (`required=true` por default — §7.2) e `all_required_met=False` | Must | ✅| `tests/test_data.py` | `llc_wizard/data.py` |
+| RF-W1A.6 | `KanbanCard.is_stale` respeita SLA configurável | **Dado** card em `AWAITING_HUMAN` há 31 min e SLA=30, **Quando** `is_stale(30)`, **Então** retorna `True` | Must | ✅| `tests/test_kanban.py` | `llc_wizard/kanban.py` |
+| RF-W1A.7 | `KanbanBoardBuilder.build()` mapeia steps para colunas corretas | **Dado** steps com status variados, **Quando** `build()`, **Então** cada step aparece na coluna correspondente ao seu status | Must | ✅| `tests/test_kanban.py` | `llc_wizard/kanban.py` |
+| RF-W1A.8 | `AWAITING_HUMAN` ordenado por tempo de espera (mais antigo no topo) | **Dado** 2 HITL pendentes com timestamps distintos, **Quando** `build()`, **Então** mais antigo é o primeiro na lista | Must | ✅| `tests/test_kanban.py` | `llc_wizard/kanban.py` |
+| RF-W1A.9 | `@HarnessRunner.run_step()` emite `OutputEvent` antes de `CompletionEvent` | **Dado** runner com harness mock simulado, **Quando** `run_step()` consumido via async-for, **Então** `OutputEvent` precede `CompletionEvent` final | Must | ✅| `tests/test_runner.py` | `llc_wizard/runner.py` |
+| RF-W1A.10 | `FallbackRunner` gera prompt copia-cola | **Dado** `FallbackRunner`, **Quando** `run_step()`, **Então** emite `OutputEvent` com "copie" ou "cole" no texto | Must | ✅| `tests/test_runner.py` | `llc_wizard/runner.py` |
+| RF-W1A.11 | `select_runner()` usa `HarnessRunner` se agente detectado | **Dado** `shutil.which` retorna path para `claude`, **Quando** `select_runner()`, **Então** retorna `HarnessRunner` | Must | ✅| `tests/test_runner.py` | `llc_wizard/runner.py` |
+| RF-W1A.12 | `WizardApp` monta layout com sidebar, context e output panels | **Dado** `WizardApp(project_root)`, **Quando** `run_test()`, **Então** `#sidebar`, `#context-panel` e `#output-panel` existem no DOM | Must | ✅| `tests/test_app.py` | `llc_wizard/app.py` |
+| RF-W1A.13 | `llc wizard --help` registrado e mostra flags `--from` e `--auto-approve` | **Dado** CLI, **Quando** `llc wizard --help`, **Então** exit code 0 e flags presentes | Must | ✅| `tests/test_app.py` | `.ace/scripts/llc.py` |
+| RF-W1A.14 | `llc wizard` sem Textual exibe mensagem de instalação | **Dado** `textual` não instalado, **Quando** `llc wizard`, **Então** output contém "pip install textual" | Must | ✅| `tests/test_app.py` | `.ace/scripts/llc.py` |
+| RF-W1A.15 | Wizard não escreve frontmatter diretamente em `.ace/sessions/` | **Dado** todo código `llc_wizard/`, **Quando** análise AST, **Então** nenhum `open(..., "w")` aponta para `sessions/` | Must | ✅| `tests/test_app.py` | `llc_wizard/decisions.py` |
 
 ---
 
@@ -72,14 +72,14 @@ O LLC opera exclusivamente via CLI (`llc.py`). O operador não tem visibilidade 
 
 | ID | Requisito | Métrica | Como verificar | Status |
 |----|-----------|---------|----------------|--------|
-| RNF-W1A.1 | Cobertura `data.py` e `kanban.py` | ≥ 85% | `pytest --cov=llc_wizard --cov-report=term` | ⏳ |
-| RNF-W1A.2 | Cobertura `runner.py` | ≥ 80% | `pytest --cov=llc_wizard` | ⏳ |
-| RNF-W1A.3 | Startup da TUI | < 2s | Medido via `time llc wizard` | ⏳ |
-| RNF-W1A.4 | Crash-free sessions | ≥ 99% | Ausência de exceções não tratadas em `test_app.py` | ⏳ |
-| RNF-W1A.5 | `fitness-functions.py --all --strict` verde | 0 CRITICAL | `python .ace/scripts/fitness-functions.py --all --strict` | ⏳ |
-| RNF-W1A.6 | Harness existente intocado | Sem modificações | `git diff .ace/scripts/llc_harness/ .ace/scripts/llc_steps/` = vazio | ⏳ |
-| RNF-W1A.7 | `runner.py` nunca bloqueia event loop | Sem `time.sleep` ou I/O síncrono fora de executor | Review de código + lint customizado | ⏳ |
-| RNF-W1A.8 | `data.py` interface compatível com futura `GraphEngine` | `PipelineDataSource` Protocol definido desde o WP1 | Code review contra ADR-0004 §2.3 contrato | ⏳ |
+| RNF-W1A.1 | Cobertura `data.py` e `kanban.py` | ≥ 85% | `pytest --cov=llc_wizard --cov-report=term` | ✅ |
+| RNF-W1A.2 | Cobertura `runner.py` | ≥ 80% | `pytest --cov=llc_wizard` | ✅ |
+| RNF-W1A.3 | Startup da TUI | < 2s | Medido via `time llc wizard` | ✅ |
+| RNF-W1A.4 | Crash-free sessions | ≥ 99% | Ausência de exceções não tratadas em `test_app.py` | ✅ |
+| RNF-W1A.5 | `fitness-functions.py --all --strict` verde | 0 CRITICAL | `python .ace/scripts/fitness-functions.py --all --strict` | ✅ |
+| RNF-W1A.6 | Harness existente intocado | Sem modificações | `git diff .ace/scripts/llc_harness/ .ace/scripts/llc_steps/` = vazio | ✅ |
+| RNF-W1A.7 | `runner.py` nunca bloqueia event loop | Sem `time.sleep` ou I/O síncrono fora de executor | Review de código + lint customizado | ✅ |
+| RNF-W1A.8 | `data.py` interface compatível com futura `GraphEngine` | `PipelineDataSource` Protocol definido desde o WP1 | Code review contra ADR-0004 §2.3 contrato | ✅ |
 
 ---
 
@@ -376,18 +376,27 @@ def make_gates():
 | 2026-08-05 | `KanbanBoardBuilder` recebe `PipelineDataSource` Protocol, não `PipelineDataReader` diretamente | Injetar `PipelineDataReader` diretamente | Evita retrabalho na Fase 3 quando `GraphEngine` substituir o reader | jcneto25 |
 | 2026-08-05 | WIP limit `RUNNING=1` aplica ao nível N1 (pipeline macro); múltiplos cards `RUNNING` permitidos no nível N2 (PRPs em worktrees) | WIP=1 global | Paralelismo via worktrees já existe (ADR-0004 fato); bloquear a visualização seria regressão | jcneto25 |
 
+### 11.1 Dívida Técnica
+
+| ID | Dívida | Impacto | Mitigação | Origem |
+|----|--------|---------|-----------|--------|
+| DD-W1A-01 | `llc wizard --from 0` não executa pipeline com gates interativas no estado 1A | Gate de saída §12 fica ⏳; MVP só arranca a TUI e mostra o prompt, sem HITL real | Destrava no PRP-WIZARD-1B (`decisions.py`/`commands.py`/`RealtimePromptCollector`) | Sessões 018–019 |
+| DD-W1A-02 | `prp_verify.py` reporta WARN `coverage_not_generated` | Sinal falso de cobertura ausente para o verifier do Step 11.2 | Cobertura real validada (96%, data 91%): gerar `coverage/coverage-final.json` (formato Istanbul) só se CI JS surgir; hoje o pytest-cov + `lcov.info` é a fonte | Sessão 2026-08-06-002 |
+| DD-W1A-03 | `validate-tags.py` e `pre-commit.sh` duplicam a contagem de tags com regras distintas (prosa vs atributos) | Pre-commit pode rejeitar sessão que `validate-tags.py` aceita (ex.: menção de `<gate_result>` em prosa) | `pre-commit.sh` já alinhado com âncora `\b` e `grep -cE`; migração futura: delegar a checagem ao `validate-tags.py` | Sessão 2026-08-06-002 |
+| DD-W1A-04 | Sessões órfãs de teste `2026-07-09-*` (fixtures 5.2) eram resíduo sem índice | Pre-commit bloqueado (baseline) | Removidas via `git rm` (precedente 1e1b693); baseline limpo | pré-existente |
+
 ---
 
 ## 12. Gate de Saída da Fase 1A
 
-- [ ] Todas as 21 tasks com ciclos RED→GREEN→REFACTOR — saída de teste exibida em cada ciclo
-- [ ] `pytest .ace/scripts/llc_wizard/tests/ -v --cov=llc_wizard` → ≥ 85% (`data.py`, `kanban.py`), ≥ 80% (`runner.py`)
+- [x] Todas as 21 tasks com ciclos RED→GREEN→REFACTOR — saída de teste exibida em cada ciclo
+- [x] `pytest .ace/scripts/llc_wizard/tests/ -v --cov=llc_wizard` → ≥ 85% (`data.py`, `kanban.py`), ≥ 80% (`runner.py`)
 - [ ] `llc wizard --from 0` executa pipeline com gates interativas; fallback funcional
-- [ ] `fitness-functions.py --all --strict` verde (DIP, CQS, sem flags em assinaturas públicas)
-- [ ] Nenhuma alteração em `llc_harness/`, `llc_steps/`, `llc_delta/`, `llc_wave/`
-- [ ] Frontmatter de sessões escrito apenas pelos scripts sancionados (Task 5.2 verde)
-- [ ] `PipelineDataSource` Protocol definido e `KanbanBoardBuilder` recebe a interface, não a implementação concreta
-- [ ] Sessão ACE registrada para o trabalho da Fase 1A
+- [x] `fitness-functions.py --all --strict` verde (DIP, CQS, sem flags em assinaturas públicas)
+- [x] Nenhuma alteração em `llc_harness/`, `llc_steps/`, `llc_delta/`, `llc_wave/`
+- [x] Frontmatter de sessões escrito apenas pelos scripts sancionados (Task 5.2 verde)
+- [x] `PipelineDataSource` Protocol definido e `KanbanBoardBuilder` recebe a interface, não a implementação concreta
+- [x] Sessão ACE registrada para o trabalho da Fase 1A
 
 ---
 
@@ -407,18 +416,18 @@ def make_gates():
 ## 14. Definition of Done
 
 ### Funcional
-- [ ] Todos os RF da §2 implementados e verificados por `prp_verify.py`
-- [ ] Component Spec (§6) implementado — todos os estados com testes
+- [x] Todos os RF da §2 implementados e verificados por `prp_verify.py`
+- [x] Component Spec (§6) implementado — todos os estados com testes
 
 ### Técnico
-- [ ] Todos os testes da §9 verdes
-- [ ] Cobertura conforme RNF-W1A.1 e RNF-W1A.2
-- [ ] `fitness-functions.py --all --strict` com 0 CRITICAL
-- [ ] `data.py` exporta `PipelineDataSource` Protocol (DIP preparatório para ADR-0004)
-- [ ] Cada regra de precedência da tabela de derivação `StepStatus` (§7.6) coberta por teste (7 regras, incl. degradação `gate_pending`→`in_progress` fora do Wizard)
-- [ ] `dependencies.yaml` atualizado com `textual` registrado (ADR-0006)
+- [x] Todos os testes da §9 verdes
+- [x] Cobertura conforme RNF-W1A.1 e RNF-W1A.2
+- [x] `fitness-functions.py --all --strict` com 0 CRITICAL
+- [x] `data.py` exporta `PipelineDataSource` Protocol (DIP preparatório para ADR-0004)
+- [x] Cada regra de precedência da tabela de derivação `StepStatus` (§7.6) coberta por teste (7 regras, incl. degradação `gate_pending`→`in_progress` fora do Wizard)
+- [x] `dependencies.yaml` atualizado com `textual` registrado (ADR-0006)
 
 ### Processo
-- [ ] Sessão ACE aberta com `initialize_session.py` antes do primeiro commit de código
-- [ ] `<task_completed>` emitidos para cada WP finalizado
-- [ ] `finalize_session.py` executado ao final com `context_seed` atualizado
+- [x] Sessão ACE aberta com `initialize_session.py` antes do primeiro commit de código
+- [x] `<task_completed>` emitidos para cada WP finalizado
+- [x] `finalize_session.py` executado ao final com `context_seed` atualizado

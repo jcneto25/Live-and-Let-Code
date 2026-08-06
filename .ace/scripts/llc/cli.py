@@ -508,5 +508,64 @@ def delta_plan():
             print(f"  ✨ {p}")
 
 
+@cli.command()
+@click.option(
+    "--from",
+    "from_step",
+    default=None,
+    help="Step inicial do wizard (ex: 0.5)",
+)
+@click.option(
+    "--auto-approve",
+    is_flag=True,
+    help="Aprova gates automaticamente (sem HITL)",
+)
+@click.option(
+    "--project-root",
+    "project_root",
+    default=None,
+    help="Raiz do projeto (default: diretorio atual)",
+)
+def wizard(from_step, auto_approve, project_root):
+    """Inicia a TUI do Wizard (PRP-WIZARD-1A).
+
+    Requer `textual` instalado; caso contrario, exibe a instrucao de instalacao
+    e o prompt copy-paste (FallbackRunner).
+    """
+    try:
+        import textual  # noqa: F401
+    except ImportError:
+        click.echo(
+            "O Wizard requer a dependencia `textual`.\n"
+            "Instale com: pip install textual\n"
+            "Enquanto isso, rode os steps manualmente:"
+        )
+        from llc_wizard.runner import select_runner
+
+        runner = select_runner(step_id=str(from_step or ""), task="")
+        for event in _run_runner(runner):
+            click.echo(event.text if hasattr(event, "text") else "")
+        return
+
+    from llc_wizard.app import WizardApp
+
+    app = WizardApp(project_root=Path(project_root) if project_root else Path.cwd())
+    click.echo("Iniciando Wizard (TUI)...")
+    click.echo(f"  from: {from_step or 'inicio'} · auto-approve: {auto_approve}")
+
+
+def _run_runner(runner):
+    """Auxiliar: consome eventos de um runner (sincrono p/ CLI)."""
+    import asyncio
+
+    async def _consume():
+        out = []
+        async for ev in runner.run_step():
+            out.append(ev)
+        return out
+
+    return asyncio.run(_consume())
+
+
 if __name__ == "__main__":
     cli()

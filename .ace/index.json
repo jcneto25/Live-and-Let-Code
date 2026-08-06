@@ -433,11 +433,12 @@
     {
       "session_id": "2026-08-05-013",
       "file": "2026-08-05-013.md",
-      "status": "in_progress",
+      "status": "completed",
       "llc_step": 10.9,
       "llc_step_id": "10.9",
       "tags": [],
-      "timestamp": "2026-08-05T22:08:59.886317"
+      "timestamp": "2026-08-05T22:08:59.886317",
+      "completed_at": "2026-08-05T23:22:49.318166"
     },
     {
       "session_id": "2026-08-05-014",
@@ -450,6 +451,124 @@
       ],
       "timestamp": "2026-08-05T22:09:03.190618",
       "completed_at": "2026-08-05T22:10:47.735202"
+    },
+    {
+      "session_id": "2026-08-05-015",
+      "file": "2026-08-05-015.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        "docs/planning/PRP-MAP.md",
+        ".ace/scripts/llc_wizard/{__init__,data}.py + tests/{conftest,__init__,test_data}.py",
+        ".ace/scripts/llc_wizard/data.py",
+        ".ace/scripts/llc_wizard/tests/conftest.py",
+        ".ace/scripts/llc_wizard/tests/test_data.py"
+      ],
+      "timestamp": "2026-08-05T22:28:48.643291",
+      "completed_at": "2026-08-05T22:49:59.187548"
+    },
+    {
+      "session_id": "2026-08-05-016",
+      "file": "2026-08-05-016.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        ".ace/scripts/llc_wizard/kanban.py + tests/test_kanban.py"
+      ],
+      "timestamp": "2026-08-05T22:56:22.853303",
+      "completed_at": "2026-08-05T23:07:04.002064"
+    },
+    {
+      "session_id": "2026-08-05-017",
+      "file": "2026-08-05-017.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        ".ace/scripts/llc_wizard/runner.py",
+        ".ace/scripts/llc_wizard/tests/test_runner.py"
+      ],
+      "timestamp": "2026-08-05T23:24:42.169523",
+      "completed_at": "2026-08-05T23:27:11.581826"
+    },
+    {
+      "session_id": "2026-08-05-018",
+      "file": "2026-08-05-018.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        ".ace/scripts/llc_wizard/app.py",
+        ".ace/scripts/llc_wizard/tests/test_app.py"
+      ],
+      "timestamp": "2026-08-05T23:27:30.058887",
+      "completed_at": "2026-08-05T23:42:23.471747"
+    },
+    {
+      "session_id": "2026-08-05-018",
+      "file": "2026-08-05-018.md",
+      "status": "in_progress",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [],
+      "timestamp": "2026-08-05T23:28:50.508125"
+    },
+    {
+      "session_id": "2026-08-05-019",
+      "file": "2026-08-05-019.md",
+      "status": "completed",
+      "llc_step": 10.9,
+      "llc_step_id": "10.9",
+      "tags": [
+        ".ace/scripts/llc/cli.py",
+        ".ace/scripts/llc_wizard/tests/test_app.py"
+      ],
+      "timestamp": "2026-08-05T23:50:18.363613",
+      "completed_at": "2026-08-06T00:04:41.383655"
+    },
+    {
+      "session_id": "2026-08-06-001",
+      "file": "2026-08-06-001.md",
+      "status": "completed",
+      "llc_step": 10.8,
+      "llc_step_id": "10.8",
+      "tags": [
+        ".gitignore",
+        ".ace/config/dependencies.yaml"
+      ],
+      "timestamp": "2026-08-06T00:06:59.503777",
+      "completed_at": "2026-08-06T00:11:18.184192"
+    },
+    {
+      "session_id": "2026-08-06-002",
+      "file": "2026-08-06-002.md",
+      "status": "completed",
+      "llc_step": 11.2,
+      "llc_step_id": "11.2",
+      "tags": [
+        "docs/skills/llc-step-11-2-prp-verify.md",
+        ".ace/scripts/llc_wizard/data.py",
+        ".ace/scripts/llc_wizard/tests/test_data.py"
+      ],
+      "timestamp": "2026-08-06T00:12:06.576032",
+      "completed_at": "2026-08-06T00:23:27.729837"
+    },
+    {
+      "session_id": "2026-08-06-003",
+      "file": "2026-08-06-003.md",
+      "status": "completed",
+      "llc_step": 11.2,
+      "llc_step_id": "11.2",
+      "tags": [
+        "docs/architecture/adr/ADR-0008-precommit-tag-count-fix.md",
+        "docs/prps/PRP-WIZARD-1A.md",
+        ".ace/scripts/pre-commit.sh",
+        ".ace/index.json"
+      ],
+      "timestamp": "2026-08-06T08:08:00.855951",
+      "completed_at": "2026-08-06T08:11:30.141813"
     }
   ]
 }

@@ -14,6 +14,7 @@
 | Símbolo | Significado |
 |---------|-------------|
 | ✅ | PRP criado e aprovado |
+| 🔄 | Em implementação (sessão ACE aberta) |
 | 📋 | PRP a criar |
 | 🔒 | Condicional — só inicia com evidência registrada em sessões ACE |
 | ⛔ | Fora do escopo (não fazer) |
@@ -44,7 +45,7 @@
 
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
-| PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | ✅ criado |
+| PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | 🔄 em andamento (2026-08-05) · WP1–WP5 done |
 | PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | 📋 |
 | PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | 📋 |
 | PRP-WIZARD-1.1 | Kanban UI board (toggle K + SLA visual + WIP) | 2 sem | PRP-WIZARD-1A + PRP-EVALS-F1 | 📋 |

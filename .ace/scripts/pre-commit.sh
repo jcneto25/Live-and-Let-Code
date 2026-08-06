@@ -89,9 +89,9 @@ for session_file in "$SESSIONS"/*.md; do
   [ -f "$session_file" ] || continue
   filename=$(basename "$session_file")
   
-  for tag in action action_log thinking learning_point gate_result blocker context_seed; do
-    open_count=$(grep -c "<$tag" "$session_file" 2>/dev/null || echo 0)
-    close_count=$(grep -c "</$tag>" "$session_file" 2>/dev/null || echo 0)
+for tag in action action_log thinking learning_point gate_result blocker context_seed; do
+    open_count=$(grep -cE "<$tag\b" "$session_file" 2>/dev/null || true)
+    close_count=$(grep -c "</$tag>" "$session_file" 2>/dev/null || true)
     
     if [ "$open_count" -ne "$close_count" ]; then
       echo "❌ $filename — tags <$tag> desbalanceadas (abre: $open_count, fecha: $close_count)"

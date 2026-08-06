@@ -111,7 +111,7 @@ dependência "Wizard MVP" era artificial — sessões ACE já existem hoje; as r
 | PRP-GRAPH-1A | `model.py` + `builder.py` + `state.py` | 1 sem | PRP-WIZARD-1A | ✅ done (2026-08-06) · 21 testes, cobertura 96%, fitness 41/41 |
 | PRP-GRAPH-1B | `engine.py` — `ready_nodes()` + `impact_of()` + delta | 1,5 sem | PRP-GRAPH-1A | ✅ done (2026-08-06) · 13 testes, cobertura 96%, fitness 41/41 |
 | PRP-GRAPH-1C | `projections.py` — `to_kanban()` substitui `PipelineDataReader` no Wizard | 0,5 sem | PRP-GRAPH-1B + PRP-WIZARD-1.1 | ✅ done (2026-08-06) · 22 testes, cobertura 96%, fitness 41/41 |
-| PRP-GRAPH-2A | `parallel_frontier()` — dados puros agnósticos de runtime | 1 sem | PRP-GRAPH-1B | 📋 |
+| PRP-GRAPH-2A | `parallel_frontier()` — dados puros agnósticos de runtime | 1 sem | PRP-GRAPH-1B | ✅ done (2026-08-06) · 7 testes, cobertura 97%, fitness 41/41 |
 | PRP-GRAPH-2B | `critical_path()` + métricas de gargalo | 0,5 sem | PRP-GRAPH-2A | 📋 |
 
 **Total: ~4,5 semanas**
@@ -209,7 +209,7 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 
 > **Narrativa de investimento (GOV-003/R12):** o **~24 sem** cobre o programa completo (incluindo Fase 2/3 condicionais — Wave Coordinator, Herdr). O horizonte **~12 sem** da factory-evolution (§4) representa o núcleo MVP de 1ª geração (Governança + Wizard MVP + Eval F1/F2 + Graph). As cifras são complementares: 24 sem = roadmap total, 12 sem = primeira entrega observável.
 
-> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 4/5 ✅** — EVALS-F1 ✅ (11 testes), **EVALS-F2 ✅** (14 testes, cobertura 95%), **EVALS-F3 ✅** (15 testes, cobertura 95%, fitness 41/41) e **EVALS-F4 ✅** (17 testes, cobertura 96%, fitness 41/41); **EVALS-F5 desbloqueado**. **Trilha 3 (Graph) 3/5 ✅** — GRAPH-1A (21 testes), **GRAPH-1B ✅** (13 testes) e **GRAPH-1C ✅** (22 testes, cobertura 96%, fitness 41/41); **GRAPH-2A/2B desbloqueados**.
+> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 4/5 ✅** — EVALS-F1 ✅ (11 testes), **EVALS-F2 ✅** (14 testes, cobertura 95%), **EVALS-F3 ✅** (15 testes, cobertura 95%, fitness 41/41) e **EVALS-F4 ✅** (17 testes, cobertura 96%, fitness 41/41); **EVALS-F5 desbloqueado**. **Trilha 3 (Graph) 4/5 ✅** — GRAPH-1A (21 testes), **GRAPH-1B ✅** (13 testes), **GRAPH-1C ✅** (22 testes, cobertura 96%, fitness 41/41) e **GRAPH-2A ✅** (7 testes, cobertura 97%, fitness 41/41); **GRAPH-2B desbloqueado**.
 
 ---
 

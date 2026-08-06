@@ -1,4 +1,4 @@
-"""Testes para llc_wizard.app — RF-W1A.12 (WP4, FTDD) e PRP-WIZARD-1C.
+"""Testes para llc_wizard.app — RF-W1A.12 (WP4, FTDD), PRP-WIZARD-1C e PRP-WIZARD-1.1.
 
 SPEC WizardApp (estado initial — §6.1):
 - WizardApp(project_root) monta layout com tres paineis:
@@ -10,12 +10,18 @@ PRP-WIZARD-1C (RF-W1C.1/.3/.4/.5):
 - Scope Confirmation bloqueia início do step
 - FailureRecoveryScreen com 3 opções + rerun automático
 
+PRP-WIZARD-1.1 (RF-W1.1.1 a W1.1.10, FTDD):
+- KanbanBoardWidget: 6 colunas, WIP, SLA, scores, SKIPPED colapsada
+- Toggle K preserva seleção
+
 Testes headless: usam run_test() do pilot textual (sem terminal real).
 """
 import asyncio
 import json
 
 import pytest
+
+from llc_wizard.data import StepStatus
 
 textual = pytest.importorskip("textual")
 
@@ -304,6 +310,279 @@ def test_app_artifact_review_shows_in_output_panel(tmp_path):
             rendered = app.query_one("#output-panel").render()
             assert "docs/prps/PRP-WIZARD-1C.md" in rendered
             assert "approved" in rendered
+
+    asyncio.run(run())
+
+
+# ──────────────────── PRP-WIZARD-1.1: Kanban UI (FTDD) ─────────────────────
+
+
+def _board_from_steps(steps, since=None):
+    """Board completo via KanbanBoardBuilder com steps dados (N1)."""
+    from datetime import datetime as _dt
+
+    from llc_wizard.data import StepInfo, StepStatus
+    from llc_wizard.kanban import KanbanBoardBuilder
+
+    infos = [StepInfo(**s, in_pipeline=True) for s in steps]
+
+    class Fake:
+        def get_status(self):
+            from llc_wizard.data import PipelineStatus
+
+            return PipelineStatus(steps=infos)
+
+        def get_status_since(self, step_id):
+            return (since or {}).get(step_id, _dt.fromtimestamp(0))
+
+        def get_pending_hitl(self):
+            return []
+
+    return KanbanBoardBuilder(Fake(), sla_minutes=30).build()
+
+
+def test_kanban_widget_renders_six_columns(tmp_path):
+    """RF-W1.1.1: board inicial — 6 colunas, SKIPPED colapsada."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+    from llc_wizard.kanban import KanbanColumn
+
+    board = _board_from_steps([
+        {"id": "1", "name": "Visao", "status": StepStatus.COMPLETED},
+        {"id": "2", "name": "Specs", "status": StepStatus.IN_PROGRESS},
+    ])
+    widget = KanbanBoardWidget(board)
+    rendered = widget.render()
+    for col in KanbanColumn:
+        assert col.value in rendered
+    assert "SKIPPED" in rendered and "▸" in rendered  # colapsada (D1 ADR-0002)
+
+
+def test_kanban_widget_running_card_icon(tmp_path):
+    """RF-W1.1.2: card RUNNING mostra nome + ícone 🔄."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+    from llc_wizard.kanban import KanbanColumn
+
+    board = _board_from_steps([
+        {"id": "2", "name": "Specs", "status": StepStatus.IN_PROGRESS},
+    ])
+    widget = KanbanBoardWidget(board)
+    rendered = widget.render()
+    assert "Specs" in rendered
+    assert "🔄" in rendered
+
+
+def test_kanban_widget_awaiting_human_icon(tmp_path):
+    """RF-W1.1.3: card AWAITING_HUMAN mostra ícone ⚠️."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "3", "name": "PRDs", "status": StepStatus.GATE_PENDING},
+    ])
+    rendered = KanbanBoardWidget(board).render()
+    assert "⚠️" in rendered
+
+
+def test_kanban_widget_stale_card_marked(tmp_path):
+    """RF-W1.1.4: card AWAITING_HUMAN > SLA recebe card-stale."""
+    from datetime import datetime, timedelta
+
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    since = {"3": datetime.now() - timedelta(minutes=45)}
+    board = _board_from_steps([
+        {"id": "3", "name": "PRDs", "status": StepStatus.GATE_PENDING},
+    ], since=since)
+    rendered = KanbanBoardWidget(board).render()
+    assert "card-stale" in rendered
+
+
+def test_kanban_widget_done_after_approval(tmp_path):
+    """RF-W1.1.5: card DONE após aprovação do gate."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+    from llc_wizard.kanban import KanbanColumn
+
+    board = _board_from_steps([
+        {"id": "1", "name": "Visao", "status": StepStatus.COMPLETED},
+    ])
+    rendered = KanbanBoardWidget(board).render()
+    assert "✅" in rendered
+    assert board[KanbanColumn.DONE]  # card está na coluna DONE
+
+
+def test_kanban_widget_rework_after_rejection(tmp_path):
+    """RF-W1.1.6: card REWORK após rejeição do gate."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+    from llc_wizard.kanban import KanbanColumn
+
+    board = _board_from_steps([
+        {"id": "4", "name": "Planejamento", "status": StepStatus.FAILED},
+    ])
+    rendered = KanbanBoardWidget(board).render()
+    assert "❌" in rendered
+    assert board[KanbanColumn.REWORK]  # card na coluna REWORK
+
+
+def test_kanban_widget_skipped_collapsed_marker(tmp_path):
+    """RF-W1.1.7: coluna SKIPPED colapsada — apenas marcador ▸."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "9", "name": "Delta", "status": StepStatus.SKIPPED},
+    ])
+    rendered = KanbanBoardWidget(board).render()
+    assert "SKIPPED" in rendered and "▸" in rendered
+    # conteúdo da coluna oculto quando colapsada
+    assert "Delta" not in rendered
+
+
+def test_kanban_widget_wip_limit_indicator(tmp_path):
+    """RF-W1.1.8: REWORK com 3 cards mostra indicador de WIP (limite 2)."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "4", "name": "A", "status": StepStatus.FAILED},
+        {"id": "5", "name": "B", "status": StepStatus.FAILED},
+        {"id": "6", "name": "C", "status": StepStatus.FAILED},
+    ])
+    widget = KanbanBoardWidget(board, wip_limits={"REWORK": 2})
+    rendered = widget.render()
+    assert "3/2" in rendered  # 3 cards, limite 2
+    assert "WIP" in rendered
+
+
+def test_app_toggle_kanban_preserves_selection(tmp_path):
+    """RF-W1.1.9: toggle K preserva o step selecionado antes do toggle."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.select_step("5")
+            assert app._selected_step == "5"
+            app.toggle_kanban()
+            assert app._kanban_mode is True
+            app.toggle_kanban()
+            assert app._kanban_mode is False
+            assert app._selected_step == "5"  # seleção preservada
+
+    asyncio.run(run())
+
+
+def test_kanban_widget_scores_on_card(tmp_path):
+    """RF-W1.1.10: Q:86 T:15500 visível no card quando dados de eval existem.
+
+    token_cost_avg é TOKENS (não dólares) — exibimos como `T:` (fix review).
+    """
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "2", "name": "Specs", "status": StepStatus.IN_PROGRESS},
+    ])
+    widget = KanbanBoardWidget(
+        board, scores={"2": {"quality_score": 86, "tokens": 15500}})
+    rendered = widget.render()
+    assert "Q:86" in rendered
+    assert "T:15500" in rendered
+    assert "$" not in rendered
+
+
+def test_kanban_widget_scores_graceful_absence(tmp_path):
+    """Scores ausentes → sem crash e sem linha de score no card."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "2", "name": "Specs", "status": StepStatus.IN_PROGRESS},
+    ])
+    rendered = KanbanBoardWidget(board).render()
+    assert "Q:" not in rendered
+    assert "$" not in rendered
+
+
+def test_app_kanban_builds_from_reader_with_scores(tmp_path):
+    """Integração: toggle K constrói o board via reader + SLA de gates.json + scores."""
+    import yaml
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    # SLA configurável + baseline de eval com score
+    gates = json.loads((root / ".ace" / "config" / "gates.json").read_text())
+    gates["wizard"] = {"hitl_sla_minutes": 15}
+    (root / ".ace" / "config" / "gates.json").write_text(json.dumps(gates))
+    baselines = root / ".ace" / "evals" / "baselines"
+    baselines.mkdir(parents=True)
+    (baselines / "step-2.yaml").write_text(yaml.safe_dump({
+        "active_precision": "level_3",
+        "by_precision_level": {
+            "level_3": {"quality_score_avg": 86.0, "token_cost_avg": 15500.0,
+                         "run_count": 5},
+        },
+    }), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app._load_sla_minutes() == 15
+            app.toggle_kanban()
+            rendered = app.kanban_render()
+            assert "Kanban" in rendered
+            scores = app._load_eval_scores()
+            assert "2" in scores
+            assert scores["2"]["quality_score"] == 86.0
+
+    asyncio.run(run())
+
+
+def test_app_load_sla_default_when_missing(tmp_path):
+    """gates.json sem wizard.hitl_sla_minutes → default 30 (sem crash)."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            assert pilot.app._load_sla_minutes() == 30
+
+    asyncio.run(run())
+
+
+def test_app_sla_tolerates_non_dict_wizard_config(tmp_path):
+    """Regressão (review): wizard config não-dict → default 30, sem crash."""
+    import json as _json
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    gates = _json.loads((root / ".ace" / "config" / "gates.json").read_text())
+    gates["wizard"] = "não-dict"
+    (root / ".ace" / "config" / "gates.json").write_text(_json.dumps(gates))
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            assert pilot.app._load_sla_minutes() == 30
+
+    asyncio.run(run())
+
+
+def test_app_eval_scores_tolerates_malformed_baseline(tmp_path):
+    """Regressão (review): baseline com by_precision_level não-dict → sem crash."""
+    import yaml
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    baselines = root / ".ace" / "evals" / "baselines"
+    baselines.mkdir(parents=True)
+    (baselines / "step-2.yaml").write_text(yaml.safe_dump({
+        "active_precision": "level_3",
+        "by_precision_level": ["corrompido"],
+    }), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            assert pilot.app._load_eval_scores() == {}
 
     asyncio.run(run())
 

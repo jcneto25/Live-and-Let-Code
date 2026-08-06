@@ -23,6 +23,8 @@ from llc_wizard.decisions import (
     PromptRequest,
     RealtimePromptCollector,
 )
+from llc_wizard.kanban_board import KanbanBoardWidget
+from llc_wizard.kanban import KanbanBoardBuilder
 from llc_wizard.screens import FailureRecoveryScreen
 from llc_wizard.widgets.decision_modal import DecisionModal
 
@@ -54,6 +56,9 @@ class WizardApp:
         self._screen_stack: list[str] = []
         self._pending_scopes: dict[str, str] = {}  # step_id → escopo proposto
         self._recovery_screens: dict[str, FailureRecoveryScreen] = {}
+        self._selected_step: str | None = None
+        self._kanban_mode: bool = False
+        self._kanban_widget: KanbanBoardWidget | None = None
 
     def _build(self):
         status = self.reader.get_status()
@@ -93,6 +98,95 @@ class WizardApp:
         screen = FailureRecoveryScreen(step_id=step_id)
         self._recovery_screens[step_id] = screen
         self._screen_stack.append("FailureRecoveryScreen")
+
+    # ── PRP-WIZARD-1.1: Kanban UI (toggle K) ───────────────────────────────
+    def select_step(self, step_id: str) -> None:
+        """Seleciona um step (preservado entre toggles Pipeline ↔ Kanban)."""
+        self._selected_step = step_id
+
+    def toggle_kanban(self) -> None:
+        """Toggle K: alterna modo Pipeline ↔ Kanban sem perder a seleção.
+
+        RF-W1.1.9: o step selecionado antes do toggle é mantido.
+        """
+        self._kanban_mode = not self._kanban_mode
+        if self._kanban_mode:
+            self._build_kanban()
+
+    def _load_sla_minutes(self) -> int:
+        """SLA humano do Kanban: gates.json → wizard.hitl_sla_minutes (default 30)."""
+        import json
+
+        path = self.project_root / ".ace" / "config" / "gates.json"
+        if not path.exists():
+            return 30
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return 30
+        wizard_cfg = data.get("wizard", {}) if isinstance(data, dict) else {}
+        if not isinstance(wizard_cfg, dict):  # config não-dict → default
+            return 30
+        value = wizard_cfg.get("hitl_sla_minutes", 30)
+        return int(value) if isinstance(value, (int, float)) else 30
+
+    def _load_eval_scores(self) -> dict[str, dict]:
+        """Scores de eval por step (PRP-EVALS-F1/F2) — gracefoso se ausentes.
+
+        Lê .ace/evals/baselines/step-*.yaml (quality_score_avg) e estima o
+        custo via token_cost_avg. Nunca lança: dados ausentes → {}.
+        """
+        import yaml
+
+        baselines_dir = self.project_root / ".ace" / "evals" / "baselines"
+        scores: dict[str, dict] = {}
+        if not baselines_dir.is_dir():
+            return scores
+        for path in sorted(baselines_dir.glob("step-*.yaml")):
+            try:
+                data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            except (yaml.YAMLError, OSError, AttributeError, TypeError):
+                continue
+            if not isinstance(data, dict):
+                continue
+            step_id = path.stem[len("step-"):]
+            active = data.get("active_precision") or ""
+            levels = data.get("by_precision_level")
+            if not isinstance(levels, dict):
+                continue
+            bucket = levels.get(active)
+            if not isinstance(bucket, dict):
+                continue
+            q = bucket.get("quality_score_avg")
+            if q is None:
+                continue
+            tokens = bucket.get("token_cost_avg")
+            scores[step_id] = {
+                "quality_score": float(q),
+                # token_cost_avg é TOKENS, não dólares — exibimos como T:
+                "tokens": float(tokens) if tokens is not None else 0.0,
+            }
+        return scores
+
+    def _build_kanban(self) -> None:
+        """Constrói o board Kanban a partir do PipelineDataReader (N1)."""
+        sla = self._load_sla_minutes()
+        builder = KanbanBoardBuilder(self.reader, sla_minutes=sla)
+        board = builder.build()
+        self._kanban_widget = KanbanBoardWidget(
+            board,
+            sla_minutes=sla,
+            scores=self._load_eval_scores(),
+        )
+        self._panels["kanban-board"] = SimpleWidget(
+            "kanban-board", self._kanban_widget.render()
+        )
+
+    def kanban_render(self) -> str:
+        """Render do board Kanban (vazio se o modo ainda não foi ativado)."""
+        if self._kanban_widget is None:
+            self._build_kanban()
+        return self._kanban_widget.render()
 
     # ── PRP-WIZARD-1C: Artifact Review (RF-W1C.1) ───────────────────────────
     def show_artifact_review(self, review: ArtifactReview) -> None:

@@ -1,7 +1,13 @@
 # Mapa de PRPs — LLC Fábrica Agêntica
 
 **Documento:** `docs/planning/PRP-MAP.md`
-**Versão:** 1.0.0 · **Data:** 2026-08-05 · **Status:** Referência ativa
+**Versão:** 1.1.0 · **Data:** 2026-08-06 · **Status:** Referência ativa
+
+> **Atualização 2026-08-06:** WIZARD-1A e WIZARD-1B concluídos (1B resolveu o
+> DD-W1A-01 da 1A). Cleanup de governança GOV-002 executado (12 sessões órfãs
+> removidas, sentinel `is_placeholder_task` endurecido, drift de índice
+> reconciliado) e débito `observability.py` (R2) saldo. **Tracks ativos agora:**
+> EVALS-F1 (paralelo) e GRAPH-1A (próximo no caminho crítico).
 
 > Este documento é a fonte de verdade para o planejamento de implementação das novas
 > funcionalidades do LLC. Derivado dos ADRs 0002, 0004, 0005, 0006 e do
@@ -36,6 +42,15 @@
 
 **Total: ~4 dias** (inclui PRP-ACE-TAGS, originado do GOV-003/R1 — pré-requisito de WIZARD-1B e EVALS-F1)
 
+> **Progresso de governança (2026-08-06, fora de PRP — higiene):** GOV-002 teve
+> reincidência com sessões `"tarefa"` (08-06-005/006), que escaparam do sentinel
+> `"Step N"`-only. O guard `is_placeholder_task()` foi **endurecido** (token-placeholder
+> genérico case-insensitive, TDD 26 passed), **12 sessões órfãs históricas foram
+> removidas**, drift de `index.json` reconciliado, e o módulo first-party ausente
+> **`observability.py` (R2) foi implementado** (saldo do débito; `test_observability`
+> 6 passed). Governança segue verde (`fitness --check dependency-governance`).
+
+
 ---
 
 ## Trilha 1 — Wizard TUI (ADR-0002)
@@ -46,7 +61,7 @@
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
 | PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | ✅ done (2026-08-06) · waiver item saída `--from 0` (gates interativas) → PRP-WIZARD-1B (DD-W1A-01) |
-| PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | ✅ done (2026-08-06) |
+| PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | ✅ done (2026-08-06) · **saldou o DD-W1A-01 da 1A** (exit gate `--from 0` / gates interativas) |
 | PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | 📋 |
 | PRP-WIZARD-1.1 | Kanban UI board (toggle K + SLA visual + WIP) | 2 sem | PRP-WIZARD-1A + PRP-EVALS-F1 | 📋 |
 | PRP-WIZARD-1.2 | Drag & drop backlog + `--export-flow-metrics` + temas | 1 sem | PRP-WIZARD-1.1 | 📋 |
@@ -81,7 +96,7 @@ dependência "Wizard MVP" era artificial — sessões ACE já existem hoje; as r
 
 | PRP | Entrega | Esforço | Depende de | Status |
 |-----|---------|---------|------------|--------|
-| PRP-GRAPH-1A | `model.py` + `builder.py` + `state.py` | 1 sem | PRP-WIZARD-1A | 📋 |
+| PRP-GRAPH-1A | `model.py` + `builder.py` + `state.py` | 1 sem | PRP-WIZARD-1A | 📋 · **desbloqueado** (único pré-req ✅ desde 2026-08-06) |
 | PRP-GRAPH-1B | `engine.py` — `ready_nodes()` + `impact_of()` + delta | 1,5 sem | PRP-GRAPH-1A | 📋 |
 | PRP-GRAPH-1C | `projections.py` — `to_kanban()` substitui `PipelineDataReader` no Wizard | 0,5 sem | PRP-GRAPH-1B + PRP-WIZARD-1.1 | 📋 |
 | PRP-GRAPH-2A | `parallel_frontier()` — dados puros agnósticos de runtime | 1 sem | PRP-GRAPH-1B | 📋 |
@@ -161,6 +176,11 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 - WIZARD-1B/1C (HITL)
 - GRAPH-1A (modelo de grafo)
 
+**Paralelismo ATIVO (2026-08-06 — WIZARD-1A e 1B concluídos):**
+- **EVALS-F1** (Trilha 2 — transversal; deps `PRP-ACE-TAGS ✅` + `PRP-GOV-T3 ✅`)
+- **GRAPH-1A** (Trilha 3 — próximo node do caminho crítico; pré-req `PRP-WIZARD-1A ✅`)
+- WIZARD-1C (HITL avançado — Artifact Review/Scope/rerun) após 1B ✅
+
 ---
 
 ## Resumo Executivo
@@ -176,6 +196,8 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 | **Total núcleo** | **18** | **~24 sem** | Fábrica agêntica base |
 
 > **Narrativa de investimento (GOV-003/R12):** o **~24 sem** cobre o programa completo (incluindo Fase 2/3 condicionais — Wave Coordinator, Herdr). O horizonte **~12 sem** da factory-evolution (§4) representa o núcleo MVP de 1ª geração (Governança + Wizard MVP + Eval F1/F2 + Graph). As cifras são complementares: 24 sem = roadmap total, 12 sem = primeira entrega observável.
+
+> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilhas 2 (Evals) e 3 (Graph) ainda 📋**, mas **EVALS-F1 e GRAPH-1A já estão desbloqueados** e constituem o paralelismo ativo proposto.
 
 ---
 

@@ -74,7 +74,7 @@
 |-----|---------|---------|------------|--------|
 | PRP-WIZARD-1A | `data.py` + `kanban.py` + `runner.py` + `app.py` MVP + CLI `llc wizard` | 4 sem | PRP-GOV-T3 | ✅ done (2026-08-06) · waiver item saída `--from 0` (gates interativas) → PRP-WIZARD-1B (DD-W1A-01) |
 | PRP-WIZARD-1B | HITL: `decisions.py` + `commands.py` + `RealtimePromptCollector` | 2 sem | PRP-WIZARD-1A | ✅ done (2026-08-06) · **saldou o DD-W1A-01 da 1A** (exit gate `--from 0` / gates interativas) |
-| PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | 📋 |
+| PRP-WIZARD-1C | Artifact Review + Scope Confirmation + rerun automático | 2 sem | PRP-WIZARD-1B | ✅ done (2026-08-06) · 8 testes, cobertura 97%, fitness 41/41 |
 | PRP-WIZARD-1.1 | Kanban UI board (toggle K + SLA visual + WIP) | 2 sem | PRP-WIZARD-1A + PRP-EVALS-F1 | 📋 |
 | PRP-WIZARD-1.2 | Drag & drop backlog + `--export-flow-metrics` + temas | 1 sem | PRP-WIZARD-1.1 | 📋 |
 
@@ -209,7 +209,7 @@ GOV-T1 → GOV-T2 → GOV-T3 → WIZARD-1A → GRAPH-1A → GRAPH-1B → GRAPH-1
 
 > **Narrativa de investimento (GOV-003/R12):** o **~24 sem** cobre o programa completo (incluindo Fase 2/3 condicionais — Wave Coordinator, Herdr). O horizonte **~12 sem** da factory-evolution (§4) representa o núcleo MVP de 1ª geração (Governança + Wizard MVP + Eval F1/F2 + Graph). As cifras são complementares: 24 sem = roadmap total, 12 sem = primeira entrega observável.
 
-> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 2/5 ✅** — WIZARD-1A e 1B entregues (61 + 61 testes, fitness 41/41); **WIZARD-1C, 1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 5/5 ✅ COMPLETA** — EVALS-F1 ✅ (11 testes), **EVALS-F2 ✅** (14 testes, cobertura 95%), **EVALS-F3 ✅** (15 testes, cobertura 95%, fitness 41/41), **EVALS-F4 ✅** (17 testes, cobertura 96%, fitness 41/41) e **EVALS-F5 ✅** (8 testes, cobertura 96%, fitness 41/41 — dashboard Pareto `llc eval --report` + Eval Summary no code-health); **Trilha Evals concluída**. **Trilha 3 (Graph) 5/5 ✅ COMPLETA** — GRAPH-1A (21 testes), **GRAPH-1B ✅** (13 testes), **GRAPH-1C ✅** (22 testes, cobertura 96%, fitness 41/41), **GRAPH-2A ✅** (7 testes, cobertura 97%, fitness 41/41) e **GRAPH-2B ✅** (10 testes, cobertura 97%, fitness 41/41 — `critical_path()` Kahn O(V+E) com pesos SKIPPED/GATE + `to_critical_path`/`to_impact_map`); **Trilha Graph concluída — caminho crítico zerado**.
+> **Progresso real (2026-08-06):** **Trilha 0 (Governança) ✅ e Trilha 1 (Wizard) 3/5 ✅** — WIZARD-1A ✅ (61 testes), **WIZARD-1B ✅** (61 testes, fitness 41/41) e **WIZARD-1C ✅** (8 testes, cobertura 97%, fitness 41/41 — `FailureRecoveryScreen` real com 3 opções, `approved`/`feedback` no artifact_review, scope blocking, rerun sem sair da TUI); **WIZARD-1.1 e 1.2 pendentes**. **Trilha 2 (Evals) 5/5 ✅ COMPLETA** — EVALS-F1 ✅ (11 testes), **EVALS-F2 ✅** (14 testes, cobertura 95%), **EVALS-F3 ✅** (15 testes, cobertura 95%, fitness 41/41), **EVALS-F4 ✅** (17 testes, cobertura 96%, fitness 41/41) e **EVALS-F5 ✅** (8 testes, cobertura 96%, fitness 41/41 — dashboard Pareto `llc eval --report` + Eval Summary no code-health); **Trilha Evals concluída**. **Trilha 3 (Graph) 5/5 ✅ COMPLETA** — GRAPH-1A (21 testes), **GRAPH-1B ✅** (13 testes), **GRAPH-1C ✅** (22 testes, cobertura 96%, fitness 41/41), **GRAPH-2A ✅** (7 testes, cobertura 97%, fitness 41/41) e **GRAPH-2B ✅** (10 testes, cobertura 97%, fitness 41/41 — `critical_path()` Kahn O(V+E) com pesos SKIPPED/GATE + `to_critical_path`/`to_impact_map`); **Trilha Graph concluída — caminho crítico zerado**.
 
 ---
 

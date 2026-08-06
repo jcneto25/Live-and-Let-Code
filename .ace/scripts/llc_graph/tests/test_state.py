@@ -74,3 +74,17 @@ def test_node_state_latest_session_wins(tmp_path):
     ])
     reader = AceStateReader(project_root=tmp_path)
     assert reader.node_state("step-5") == NodeState.DONE
+
+
+def test_node_state_skipped_session(tmp_path):
+    """PRP-GRAPH-1B (delta flow / ADR-0004 §2.12): status skipped → SKIPPED.
+
+    Smart Skip marca nós com estado SKIPPED (permanecem no grafo); para fins
+    de dependência SKIPPED equivale a DONE (RF-G1B.3).
+    """
+    _write_index(tmp_path, [
+        {"session_id": "s-skip", "llc_step_id": "5", "status": "skipped",
+         "timestamp": "2026-08-06T09:00:00"},
+    ])
+    reader = AceStateReader(project_root=tmp_path)
+    assert reader.node_state("step-5") == NodeState.SKIPPED

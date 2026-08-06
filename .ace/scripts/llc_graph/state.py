@@ -56,4 +56,8 @@ class AceStateReader:
             return NodeState.FAILED
         if status in ("in_progress", "running"):
             return NodeState.RUNNING
+        if status in ("skipped", "skip"):
+            # Delta flow (ADR-0004 §2.12): Smart Skip marca o nó SKIPPED;
+            # permanece no grafo e equivale a DONE para dependências.
+            return NodeState.SKIPPED
         return NodeState.PENDING

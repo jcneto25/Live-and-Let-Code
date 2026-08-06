@@ -90,6 +90,37 @@ class GraphEngine:
         ]
         return sorted(ready, key=lambda n: n.id)
 
+    def parallel_frontier(self) -> list[GraphNode]:
+        """Nós elegíveis para execução simultânea (ADR-0004 §2.7, Q2).
+
+        Retorna DADOS puros agnósticos de runtime (PRP-GRAPH-2A):
+        - todos têm auto_parallelizable=True (RF-G2A.1)
+        - nenhum par tem aresta entre si — mutuamente independentes (RF-G2A.2)
+        - subconjunto de ready_nodes() (RF-G2A.3)
+        - nenhum requires_human=True (RF-G2A.4)
+        - determinístico e sem side-effects (CQS — RF-G2A.5)
+
+        Este método NÃO executa nada, NÃO invoca runtime e NÃO sabe que
+        Herdr, worktrees ou qualquer ferramenta existe (Q2). O consumidor
+        decide o que fazer com a lista.
+
+        Seleção gulosa determinística: itera os candidatos na ordem estável
+        de ready_nodes() (por id) e inclui cada nó se não tiver aresta com
+        nenhum já selecionado — garante independência mútua por construção.
+        """
+        candidates = [
+            n for n in self.ready_nodes()
+            if n.auto_parallelizable and not n.requires_human
+        ]
+        frontier: list[GraphNode] = []
+        for node in candidates:
+            if all(
+                not self._has_edge_between(node.id, other.id)
+                for other in frontier
+            ):
+                frontier.append(node)
+        return frontier
+
     def impact_of(self, node_id: str) -> set[str]:
         """Propagação descendente: todos os nós afetados por mudança em node_id.
 
@@ -110,6 +141,18 @@ class GraphEngine:
         return affected
 
     # ── Suporte interno ────────────────────────────────────────────────────
+    def _has_edge_between(self, a: str, b: str) -> bool:
+        """True se existe aresta entre a e b (qualquer kind, qualquer direção).
+
+        Independência mútua (RF-G2A.2): dois nós com aresta entre si
+        (DEPENDS_ON/PRODUCES/BLOCKS/REWORK) NUNCA podem estar juntos na
+        frontier — rodar em paralelo violaria a ordem do DAG.
+        """
+        return any(
+            (e.source == a and e.target == b) or (e.source == b and e.target == a)
+            for e in self.graph.edges
+        )
+
     def _deps_satisfied(self, node: GraphNode) -> bool:
         """Deps satisfeitas = toda dependência em DONE|SKIPPED (§2.12).
 

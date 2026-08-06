@@ -7,10 +7,21 @@ from .paths import logger
 
 
 def _strip_comments(content: str) -> str:
-    """Remove comentários HTML (placeholders <!-- <tag> --> do template) para que
-    os extratores não capturem tags fantasmas de aprendizados/bloqueadores/gate/
-    tarefas/feedback que ainda não foram preenchidas."""
-    return re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+    """Remove conteúdo que NÃO é tag real da sessão atual.
+
+    1. Comentários HTML (placeholders <!-- <tag> --> do template) — evita
+       tags fantasmas de aprendizados/bloqueadores/gate/tarefas/feedback
+       ainda não preenchidas.
+    2. Blocos <context_seed>...</context_seed> — metadados de estado
+       (sessão anterior no Contexto, placeholders no Encerramento). Podem
+       conter texto com tags literais (ex.: descrição de action que citava
+       `<action_log>`/`<action>`), que poluiriam a extração com fantasma
+       [type=?] — bug observado na sessão 2026-08-06-018.
+    """
+    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+    content = re.sub(r'<context_seed>.*?</context_seed>', '', content,
+                     flags=re.DOTALL)
+    return content
 
 
 def extract_all_tags(content: str, tag: str) -> list[dict]:

@@ -353,3 +353,155 @@ def test_gate_approved_in_builder_graph(tmp_path):
     assert engine.node_state("step-1") == NodeState.READY   # BLOCKS liberado
     ready = {n.id for n in engine.ready_nodes()}
     assert "step-1" in ready
+
+
+# ── PRP-GRAPH-2A: parallel_frontier() (ADR-0004 §2.7, Q2) ────────────────────
+# RF-G2A.1-2A.5 — dados puros agnósticos de runtime: auto_parallelizable,
+# independentes entre si, subset de ready_nodes, sem requires_human, puro.
+
+def _graph_with_prps() -> Graph:
+    """PRPs (auto_parallelizable=True) + step com gate (não paralelizável).
+
+    prp-001 → prp-002 (DEPENDS_ON); prp-003 independente.
+    step-5 (com gate) → gate-5 → BLOCKS step-6 — nenhum auto_parallelizable.
+    """
+    g = Graph()
+    for pid in ("prp-001", "prp-002", "prp-003"):
+        g.add_node(GraphNode(id=pid, kind=NodeKind.PRP, requires_human=False,
+                             auto_parallelizable=True))
+    g.add_edge(GraphEdge(source="prp-001", target="prp-002",
+                         kind=EdgeKind.DEPENDS_ON))
+    g.add_node(GraphNode(id="step-5", kind=NodeKind.STEP, requires_human=False,
+                         auto_parallelizable=False))
+    g.add_node(GraphNode(id="gate-5", kind=NodeKind.GATE, requires_human=True,
+                         auto_parallelizable=False))
+    g.add_node(GraphNode(id="step-6", kind=NodeKind.STEP, requires_human=False,
+                         auto_parallelizable=False))
+    g.add_edge(GraphEdge(source="step-5", target="gate-5", kind=EdgeKind.DEPENDS_ON))
+    g.add_edge(GraphEdge(source="gate-5", target="step-6", kind=EdgeKind.BLOCKS))
+    return g
+
+
+def _has_edge_between(graph: Graph, a: str, b: str) -> bool:
+    """True se existe aresta (qualquer direção/kind) entre a e b."""
+    return any(
+        (e.source == a and e.target == b) or (e.source == b and e.target == a)
+        for e in graph.edges
+    )
+
+
+# ── RF-G2A.1: apenas auto_parallelizable=True ────────────────────────────────
+def test_parallel_frontier_only_auto_parallelizable(tmp_path):
+    """RF-G2A.1: frontier contém apenas nós auto_parallelizable=True.
+
+    No grafo do PRP, só PRPs são auto_parallelizable — steps com gate e
+    gates (requires_human) ficam de fora.
+    """
+    engine = _make_engine(tmp_path, _graph_with_prps(), [])
+    frontier = engine.parallel_frontier()
+    assert frontier, "deve haver candidatos auto_parallelizable prontos"
+    assert all(n.auto_parallelizable for n in frontier)
+    assert all(n.id not in ("step-5", "gate-5", "step-6") for n in frontier)
+
+
+# ── RF-G2A.2: independência mútua (crítico) ──────────────────────────────────
+def test_parallel_frontier_nodes_mutually_independent(tmp_path):
+    """RF-G2A.2: nenhum par da frontier tem aresta entre si (qualquer kind)."""
+    engine = _make_engine(tmp_path, _graph_with_prps(), [])
+    frontier = engine.parallel_frontier()
+    ids = [n.id for n in frontier]
+    for i, a in enumerate(ids):
+        for b in ids[i + 1:]:
+            assert not _has_edge_between(engine.graph, a, b), \
+                f"{a} e {b} têm aresta entre si — não são independentes"
+
+
+def test_parallel_frontier_dependent_prps_never_together(tmp_path):
+    """RF-G2A.2: prp-001 → prp-002 nunca aparecem juntos na frontier.
+
+    prp-002 depende de prp-001 (não satisfeita) → PENDING, fora da frontier;
+    a frontier contém apenas prp-001 e prp-003 (raízes independentes).
+    """
+    engine = _make_engine(tmp_path, _graph_with_prps(), [])
+    frontier_ids = {n.id for n in engine.parallel_frontier()}
+    assert "prp-001" in frontier_ids
+    assert "prp-003" in frontier_ids
+    assert not ({"prp-001", "prp-002"} <= frontier_ids)
+
+
+# ── RF-G2A.3: subset de ready_nodes() ────────────────────────────────────────
+def test_parallel_frontier_subset_of_ready_nodes(tmp_path):
+    """RF-G2A.3: todo elemento da frontier também está em ready_nodes()."""
+    engine = _make_engine(tmp_path, _graph_with_prps(), [])
+    ready_ids = {n.id for n in engine.ready_nodes()}
+    frontier_ids = {n.id for n in engine.parallel_frontier()}
+    assert frontier_ids <= ready_ids
+    assert frontier_ids, "frontier não pode ser vazia quando há candidatos"
+
+
+# ── RF-G2A.4: requires_human nunca na frontier ───────────────────────────────
+def test_parallel_frontier_excludes_requires_human(tmp_path):
+    """RF-G2A.4: gate AWAITING_HUMAN (requires_human) nunca na frontier.
+
+    step-5 completed → gate-5 estaciona na fila do humano; apesar de estar
+    em ready_nodes() (AWAITING_HUMAN), NÃO é auto_parallelizable nem
+    auto-executável — a frontier o exclui.
+    """
+    engine = _make_engine(tmp_path, _graph_with_prps(), [
+        {"session_id": "s-5", "llc_step_id": "5", "status": "completed",
+         "timestamp": "2026-08-06T10:00:00"},
+    ])
+    assert engine.node_state("gate-5") == NodeState.AWAITING_HUMAN
+    assert "gate-5" in {n.id for n in engine.ready_nodes()}
+    frontier = engine.parallel_frontier()
+    assert all(not n.requires_human for n in frontier)
+    assert all(n.id != "gate-5" for n in frontier)
+
+
+# ── RF-G2A.5: puro e determinístico (CQS) ────────────────────────────────────
+def test_parallel_frontier_pure_and_deterministic(tmp_path):
+    """RF-G2A.5: N chamadas → mesmo resultado e grafo inalterado (CQS)."""
+    engine = _make_engine(tmp_path, _graph_with_prps(), [])
+    nodes_before = dict(engine.graph.nodes)
+    edges_before = list(engine.graph.edges)
+    first = [(n.id, n.auto_parallelizable) for n in engine.parallel_frontier()]
+    for _ in range(5):
+        again = [(n.id, n.auto_parallelizable) for n in engine.parallel_frontier()]
+        assert again == first
+    assert engine.graph.nodes == nodes_before
+    assert engine.graph.edges == edges_before
+
+
+# ── Integração com GraphBuilder (grafo real N1+N2) ───────────────────────────
+def test_parallel_frontier_with_builder_graph(tmp_path):
+    """Frontier no grafo do builder: PRPs N2 independentes entram, gates não."""
+    import json as _json
+
+    from llc_steps.models import _spec
+
+    registry = {
+        "0.5": _spec("0.5", "Visão", "llc-step-0-5", "1", True, False),
+        "1": _spec("1", "7 Especificações", "llc-step-1", None, True, False),
+    }
+    # dependency-graph.yaml com 2 artefatos independentes (PRPs N2)
+    yaml_path = tmp_path / ".ace" / "dependency-graph.yaml"
+    yaml_path.parent.mkdir(parents=True, exist_ok=True)
+    yaml_path.write_text("""\
+artifacts:
+  prp-alpha:
+    depends_on: []
+    path: docs/prps/PRP-ALPHA.md
+  prp-beta:
+    depends_on: []
+    path: docs/prps/PRP-BETA.md
+""", encoding="utf-8")
+    builder = GraphBuilder(project_root=tmp_path, registry=registry)
+    graph = builder.build()
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    frontier_ids = {n.id for n in engine.parallel_frontier()}
+    assert "prp-alpha" in frontier_ids
+    assert "prp-beta" in frontier_ids
+    assert all("gate" not in nid for nid in frontier_ids)
+    # ambos independentes entre si
+    assert not _has_edge_between(graph, "prp-alpha", "prp-beta")

@@ -518,6 +518,48 @@ def eval():
     pass
 
 
+@eval.command("ingest")
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Apenas calcula os runs sem gravar baselines/estado",
+)
+@click.option(
+    "--project-root",
+    "project_root",
+    default=None,
+    help="Raiz do projeto (default: diretorio atual)",
+)
+def eval_ingest(dry_run, project_root):
+    """Alimenta baselines a partir das sessões ACE (P1 pos-roadmap).
+
+    Lê `<eval_metrics>` de `.ace/sessions/*.md` (appendado pelo
+    finalize_session) e chama `BaselineManager.record_run()` — o elo que
+    faltava para popular `.ace/evals/baselines/` (EVALS-F4 warm-up).
+    Idempotente: re-execução não duplica runs.
+    """
+    from pathlib import Path as _Path
+
+    from llc_evals.ingest import ingest_sessions
+
+    root = _Path(project_root) if project_root else _Path.cwd()
+    summary = ingest_sessions(
+        sessions_dir=root / ".ace" / "sessions",
+        baselines_dir=root / ".ace" / "evals" / "baselines",
+        dry_run=dry_run,
+    )
+    mode = "dry-run" if dry_run else "ok"
+    click.echo(
+        f"\n📥 Eval Ingest [{mode}]: {summary['runs_recorded']} runs "
+        f"({summary['blocks_found']} blocos, {summary['sessions_scanned']} sessões)"
+    )
+    click.echo(f"   Baselines: {root / '.ace' / 'evals' / 'baselines'}")
+    if summary["errors"]:
+        click.echo(f"   ⚠️  {len(summary['errors'])} erro(s) (ver detalhes no ingest)")
+    else:
+        click.echo("   ✅ Sem erros")
+
+
 @eval.command("report")
 @click.option(
     "--output",

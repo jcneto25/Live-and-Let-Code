@@ -1,0 +1,14 @@
+step: '10.9'
+run_count: 8
+baseline_phase: warmup
+warmup_config:
+  n_min: 5
+  n_stable: 10
+active_precision: level_3
+by_precision_level:
+  level_3:
+    run_count: 8
+    quality_score_avg: 100.0
+    token_cost_avg: 1598.75
+    efficiency_score_avg: 31.2484
+    precision: estimated

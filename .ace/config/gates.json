@@ -319,5 +319,9 @@
         "Instalacao de mecanismos zona RED teve validacao humana (Autoridade de Conversao)?"
       ]
     }
+  },
+  "evals": {
+    "baseline_warmup_min": 5,
+    "baseline_warmup_stable": 10
   }
 }

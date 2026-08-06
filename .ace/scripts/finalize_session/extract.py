@@ -15,7 +15,10 @@ def _strip_comments(content: str) -> str:
 
 def extract_all_tags(content: str, tag: str) -> list[dict]:
     content = _strip_comments(content)
-    pattern = f'<{tag}([^>]*)>(.*?)</{tag}>'
+    # \b evita casar tags-filhas/container (ex.: <action_log> não é <action>),
+    # o que engolia o primeiro <action> real num fantasma [type=?] (bug latente
+    # descoberto na sessão 2026-08-06-017 — o seed perdia o 1º action).
+    pattern = f'<{tag}\\b([^>]*)>(.*?)</{tag}>'
     matches = re.findall(pattern, content, re.DOTALL)
     results = []
     for attrs_str, body in matches:

@@ -1,0 +1,18 @@
+step: "2"
+artifact: "PRD"
+dimensions:
+  - name: completude
+    weight: 25
+    criterion: "Todas as seções do template de PRD estão preenchidas?"
+  - name: rastreabilidade
+    weight: 25
+    criterion: "Cada requisito traça até um módulo da Visão (Step 0.5)?"
+  - name: testabilidade
+    weight: 20
+    criterion: "Os requisitos são verificáveis e mensuráveis?"
+  - name: clareza
+    weight: 15
+    criterion: "Linguagem não ambígua, sem contradições internas?"
+  - name: alinhamento_negocio
+    weight: 15
+    criterion: "Reflete os objetivos da Visão Estratégica?"

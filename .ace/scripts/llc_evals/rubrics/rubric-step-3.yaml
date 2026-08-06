@@ -1,0 +1,18 @@
+step: "3"
+artifact: "PRP (Proposta de Implementação)"
+dimensions:
+  - name: completude
+    weight: 25
+    criterion: "Todas as seções do template de PRP estão preenchidas?"
+  - name: rastreabilidade
+    weight: 25
+    criterion: "O PRP traça para os PRDs/specs que o originaram (upstream)?"
+  - name: escopo
+    weight: 20
+    criterion: "O escopo é preciso, com o que NÃO está incluso?"
+  - name: estimativa
+    weight: 15
+    criterion: "A estimativa de esforço é realista e justificada?"
+  - name: criterios_aceitacao
+    weight: 15
+    criterion: "Critérios de aceitação (RF) são verificáveis e testáveis?"

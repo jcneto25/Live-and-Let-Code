@@ -643,6 +643,24 @@
       "timestamp": "2026-08-06T13:07:53.164335",
       "prp": "PRP-GRAPH-1B",
       "completed_at": "2026-08-06T13:16:13.066459"
+    },
+    {
+      "session_id": "2026-08-06-015",
+      "file": "2026-08-06-015.md",
+      "status": "completed",
+      "llc_step": 10.8,
+      "llc_step_id": "10.8",
+      "tags": [
+        "llc_evals/evaluators/doc_judge.py",
+        "llc_evals/tests/test_doc_judge.py",
+        "llc_evals/rubrics/rubric-step-{0.5,1,2,3,5}.yaml",
+        "docs/prps/PRP-EVALS-F3.md",
+        "docs/planning/PRP-MAP.md",
+        "llc_evals/evaluators/doc_judge.py + tests/test_doc_judge.py"
+      ],
+      "timestamp": "2026-08-06T13:21:17.303090",
+      "prp": "PRP-EVALS-F3",
+      "completed_at": "2026-08-06T13:29:37.589579"
     }
   ]
 }

@@ -1,0 +1,18 @@
+step: "0.5"
+artifact: "Visão Estratégica e de Negócio"
+dimensions:
+  - name: completude
+    weight: 25
+    criterion: "Todas as seções do template de Visão Estratégica estão preenchidas?"
+  - name: clareza_estrategica
+    weight: 25
+    criterion: "A visão é clara, sem ambiguidade e comunica o objetivo do produto?"
+  - name: alinhamento_negocio
+    weight: 20
+    criterion: "A visão reflete os objetivos de negócio e o valor para o usuário?"
+  - name: escopo
+    weight: 15
+    criterion: "O escopo é bem delimitado, com o que NÃO está incluso?"
+  - name: metricas_sucesso
+    weight: 15
+    criterion: "Define métricas de sucesso verificáveis e mensuráveis?"

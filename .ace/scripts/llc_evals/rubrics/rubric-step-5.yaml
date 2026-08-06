@@ -1,0 +1,18 @@
+step: "5"
+artifact: "Arquitetura (ADR + plano técnico)"
+dimensions:
+  - name: rastreabilidade
+    weight: 25
+    criterion: "A decisão arquitetural traça até os requisitos (RNF/RF) que a motivam?"
+  - name: tradeoffs
+    weight: 25
+    criterion: "Alternativas consideradas e trade-offs documentados explicitamente?"
+  - name: aderencia_padroes
+    weight: 20
+    criterion: "A solução segue os padrões e princípios do projeto (Clean Arch, DIP, DDD)?"
+  - name: conformidade_ace
+    weight: 15
+    criterion: "A arquitetura preserva a integridade ACE e a tool-agnosticidade?"
+  - name: implementabilidade
+    weight: 15
+    criterion: "A decisão é implementável com o stack atual, sem dependências novas injustificadas?"

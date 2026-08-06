@@ -1,0 +1,18 @@
+step: "1"
+artifact: "Especificações (Glossário, Perfis, RF, RNF, Regras, Módulos)"
+dimensions:
+  - name: completude
+    weight: 25
+    criterion: "Todas as especificações do step 1 estão preenchidas conforme templates?"
+  - name: rastreabilidade
+    weight: 25
+    criterion: "Cada especificação traça até a Visão Estratégica (Step 0.5)?"
+  - name: testabilidade
+    weight: 20
+    criterion: "Os requisitos são verificáveis, mensuráveis e sem ambiguidade?"
+  - name: consistencia
+    weight: 15
+    criterion: "Não há contradições internas entre as especificações?"
+  - name: glossario
+    weight: 15
+    criterion: "Termos de negócio definidos de forma única e consistente?"

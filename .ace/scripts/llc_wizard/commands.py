@@ -99,12 +99,21 @@ class AnswerQuestionCommand(HITLCommand):
 
 @dataclass(frozen=True)
 class ReviewArtifactCommand(HITLCommand):
-    """Artifact Review — grava <user_response type="artifact_review">."""
+    """Artifact Review — grava <user_response type="artifact_review"> (RF-W1C.2).
+
+    Rejeição (approved=False) exige pelo menos um item de `feedback` —
+    revisão sem justificativa não é auditável (ADR-0002 §2.4).
+    """
 
     review: ArtifactReview
 
     def validate(self) -> bool:
-        return bool(self.review.artifact.strip() and self.review.verdict.strip())
+        if not (self.review.artifact.strip() and self.review.verdict.strip()):
+            return False
+        if not self.review.approved:
+            # rejeição exige >= 1 item de feedback NÃO-vazio (auditabilidade)
+            return any(str(item).strip() for item in self.review.feedback)
+        return True
 
     async def execute(self, writer: UserDecisionWriter) -> None:
         if self.validate():

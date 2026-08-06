@@ -40,10 +40,17 @@ class QuestionAnswer:
 
 @dataclass(frozen=True)
 class ArtifactReview:
-    """Veredicto humano sobre um artefato gerado (HITL durante step)."""
+    """Veredicto humano sobre um artefato gerado (HITL durante step).
+
+    PRP-WIZARD-1C (RF-W1C.2): `approved` explícito (true/false) e `feedback`
+    com itens quando rejeitado — persiste `approved="false"` + `<feedback>`
+    no XML. `verdict` mantém o resumo textual para compatibilidade.
+    """
 
     artifact: str
     verdict: str
+    approved: bool = True
+    feedback: list[str] = field(default_factory=list)
     comments: str = ""
     timestamp: str | None = None
 
@@ -117,17 +124,24 @@ class UserDecisionWriter:
         self._append(block)
 
     def submit_artifact_review(self, r: ArtifactReview) -> None:
-        """Grava <user_response type="artifact_review">."""
+        """Grava <user_response type="artifact_review"> (RF-W1C.2).
+
+        Atributo `approved="true|false"`; rejeição persiste itens de
+        `feedback` como tags <feedback> (append-only, frontmatter intocado).
+        """
         ts = r.timestamp or _now()
         artifact = _xml_escape(r.artifact)
         verdict = _xml_escape(r.verdict)
         comments = _xml_escape(r.comments)
+        approved = "true" if r.approved else "false"
         block = (
             f'<user_response type="artifact_review" artifact="{artifact}" '
-            f'verdict="{verdict}" timestamp="{ts}">\n'
+            f'verdict="{verdict}" approved="{approved}" timestamp="{ts}">\n'
             f"  <comments>{comments}</comments>\n"
-            "</user_response>"
         )
+        for item in r.feedback:
+            block += f"  <feedback>{_xml_escape(item)}</feedback>\n"
+        block += "</user_response>"
         self._append(block)
 
     def submit_scope_confirmation(self, s: ScopeConfirmation) -> None:

@@ -1,9 +1,14 @@
-"""Testes para llc_wizard.app — RF-W1A.12 (WP4, FTDD).
+"""Testes para llc_wizard.app — RF-W1A.12 (WP4, FTDD) e PRP-WIZARD-1C.
 
 SPEC WizardApp (estado initial — §6.1):
 - WizardApp(project_root) monta layout com tres paineis:
     #sidebar (lista de steps), #context-panel, #output-panel
 - run_test() (pilot textual) deve expor os IDs no DOM.
+
+PRP-WIZARD-1C (RF-W1C.1/.3/.4/.5):
+- Artifact Review apresenta artefato no painel
+- Scope Confirmation bloqueia início do step
+- FailureRecoveryScreen com 3 opções + rerun automático
 
 Testes headless: usam run_test() do pilot textual (sem terminal real).
 """
@@ -155,6 +160,150 @@ def test_reject_gate_stacks_failure_screen(tmp_path):
         async with WizardApp(project_root=root).run_test() as pilot:
             pilot.app.reject_gate("5")
             assert pilot.app._screen_stack[-1] == "FailureRecoveryScreen"
+
+    asyncio.run(run())
+
+
+# ─────────────────────── PRP-WIZARD-1C: HITL avançado ───────────────────────
+
+
+def test_failure_recovery_screen_offers_three_options():
+    """RF-W1C.5: tela de recovery renderiza 3 opções com atalhos."""
+    from llc_wizard.screens.failure_recovery import (
+        FailureRecoveryAction,
+        FailureRecoveryScreen,
+    )
+
+    screen = FailureRecoveryScreen(step_id="5")
+    rendered = screen.render()
+    assert "re-executar" in rendered
+    assert "pular" in rendered
+    assert "encerrar" in rendered
+    # atalhos de teclado visíveis
+    for key in ("[r]", "[s]", "[q]"):
+        assert key in rendered
+    # ações expostas por chave
+    assert screen.action_for("r") is FailureRecoveryAction.RERUN
+    assert screen.action_for("s") is FailureRecoveryAction.SKIP
+    assert screen.action_for("q") is FailureRecoveryAction.QUIT
+
+
+def test_failure_recovery_unknown_key_returns_none():
+    """RF-W1C.5: tecla desconhecida → nenhuma ação (sem crash)."""
+    from llc_wizard.screens.failure_recovery import FailureRecoveryScreen
+
+    screen = FailureRecoveryScreen(step_id="5")
+    assert screen.action_for("x") is None
+
+
+def test_app_rerun_step_restarts_without_leaving_tui(tmp_path):
+    """RF-W1C.4: rerun reinicia o step sem sair da TUI (mesmo app)."""
+    from llc_wizard.app import WizardApp
+    from llc_wizard.runner import CompletionEvent
+
+    root = _write_fake_index(tmp_path, [])
+    calls = {"n": 0}
+
+    class CountingRunner:
+        async def run_step(self):
+            calls["n"] += 1
+            yield CompletionEvent(step_id="5", success=True, output="ok")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.reject_gate("5")
+            assert app._screen_stack[-1] == "FailureRecoveryScreen"
+            # rerun a partir da tela de recovery — sem sair do app
+            await app.rerun_step("5", runner=CountingRunner())
+            assert calls["n"] == 1
+            # screen de recovery desempilhada após rerun
+            assert "FailureRecoveryScreen" not in app._screen_stack
+
+    asyncio.run(run())
+
+
+def test_app_rerun_removes_recovery_not_top_of_stack(tmp_path):
+    """Regressão (review): rerun remove a recovery mesmo com modal acima."""
+    from llc_wizard.app import WizardApp
+    from llc_wizard.runner import CompletionEvent
+
+    root = _write_fake_index(tmp_path, [])
+
+    class EmptyRunner:
+        async def run_step(self):
+            yield CompletionEvent(step_id="5", success=True, output="ok")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.reject_gate("5")
+            app._screen_stack.append("DecisionModal:q-9")  # modal acima
+            await app.rerun_step("5", runner=EmptyRunner())
+            # recovery removida, modal preservado
+            assert "FailureRecoveryScreen" not in app._screen_stack
+            assert "DecisionModal:q-9" in app._screen_stack
+
+    asyncio.run(run())
+
+
+def test_app_artifact_review_survives_rebuild(tmp_path):
+    """Regressão (review): review não se perde se o painel for (re)montado."""
+    from llc_wizard.app import WizardApp
+    from llc_wizard.decisions import ArtifactReview
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            # review antes da montagem dos painéis
+            app.show_artifact_review(ArtifactReview(
+                artifact="docs/prps/PRP-WIZARD-1C.md", verdict="rejected",
+                approved=False, feedback=["Falta DoD"]))
+            app._panels = app._build()
+            rendered = app.query_one("#output-panel").render()
+            assert "docs/prps/PRP-WIZARD-1C.md" in rendered
+            assert "Falta DoD" in rendered
+
+
+def test_app_scope_confirmation_blocks_step_start(tmp_path):
+    """RF-W1C.3: escopo pendente bloqueia início do step."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            # sem escopo pendente → step pode iniciar
+            assert app.can_start_step("5") is True
+            # escopo pendente → bloqueia
+            app.set_pending_scope("5", "Steps 1-5")
+            assert app.can_start_step("5") is False
+            # confirmação humana libera
+            app.confirm_scope("5")
+            assert app.can_start_step("5") is True
+
+    asyncio.run(run())
+
+
+def test_app_artifact_review_shows_in_output_panel(tmp_path):
+    """RF-W1C.1: conteúdo do artefato visível no painel de output."""
+    from llc_wizard.app import WizardApp
+    from llc_wizard.decisions import ArtifactReview
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            review = ArtifactReview(
+                artifact="docs/prps/PRP-WIZARD-1C.md", verdict="approved")
+            app.show_artifact_review(review)
+            rendered = app.query_one("#output-panel").render()
+            assert "docs/prps/PRP-WIZARD-1C.md" in rendered
+            assert "approved" in rendered
 
     asyncio.run(run())
 

@@ -7,13 +7,23 @@ Nunca escreve frontmatter em .ace/sessions/ (RF-W1A.15).
 
 PRP-WIZARD-1B: integra HITL real — o app possui um RealtimePromptCollector,
 roteia prompts pendentes para um DecisionModal e executa steps com feedback.
+
+PRP-WIZARD-1C: fecha o ciclo HITL avançado — Artifact Review apresenta o
+artefato no painel de output (RF-W1C.1), Scope Confirmation bloqueia o início
+do step até confirmação humana (RF-W1C.3) e a FailureRecoveryScreen real
+(3 opções) suporta rerun automático sem sair da TUI (RF-W1C.4/5).
 """
 from __future__ import annotations
 
 from pathlib import Path
 
 from llc_wizard.data import GateInfo, GateItem, PipelineDataReader, StepStatus
-from llc_wizard.decisions import PromptRequest, RealtimePromptCollector
+from llc_wizard.decisions import (
+    ArtifactReview,
+    PromptRequest,
+    RealtimePromptCollector,
+)
+from llc_wizard.screens import FailureRecoveryScreen
 from llc_wizard.widgets.decision_modal import DecisionModal
 
 STATUS_ICON = {
@@ -42,6 +52,8 @@ class WizardApp:
         self._panels = {}
         self._gate_approved = False
         self._screen_stack: list[str] = []
+        self._pending_scopes: dict[str, str] = {}  # step_id → escopo proposto
+        self._recovery_screens: dict[str, FailureRecoveryScreen] = {}
 
     def _build(self):
         status = self.reader.get_status()
@@ -51,7 +63,10 @@ class WizardApp:
         self._progress = SimpleWidget("progress-bar",
                                       f"{status.progress_percent:.0f}% ({status.progress_percent:.0f}/{len(status.steps)})")
         self._context = SimpleWidget("context-panel", "Contexto vazio")
-        self._output = SimpleWidget("output-panel", "Aguardando execucao")
+        self._output = SimpleWidget(
+            "output-panel",
+            getattr(self, "_output_text", None) or "Aguardando execucao",
+        )
         return {"sidebar": self._sidebar, "context-panel": self._context,
                 "output-panel": self._output, "progress-bar": self._progress}
 
@@ -69,8 +84,66 @@ class WizardApp:
         self._screen_stack.append("GateApprovedScreen")
 
     def reject_gate(self, step_id: str) -> None:
-        """Registra rejeicao e empilha FailureRecoveryScreen (SPEC 6.1)."""
+        """Registra rejeicao e empilha FailureRecoveryScreen real (SPEC 6.1).
+
+        PRP-WIZARD-1C: a tela agora é o objeto concreto com 3 opções
+        (re-executar / pular / encerrar) e atalhos de teclado (RF-W1C.5).
+        Mantém o nome no stack por compatibilidade com o contrato do 1A.
+        """
+        screen = FailureRecoveryScreen(step_id=step_id)
+        self._recovery_screens[step_id] = screen
         self._screen_stack.append("FailureRecoveryScreen")
+
+    # ── PRP-WIZARD-1C: Artifact Review (RF-W1C.1) ───────────────────────────
+    def show_artifact_review(self, review: ArtifactReview) -> None:
+        """Apresenta o artefato no painel de output para revisão humana.
+
+        RF-W1C.1: conteúdo do artefato (caminho + veredito) visível no
+        #output-panel; o humano decide aprovar ou rejeitar com feedback
+        (que persiste via ReviewArtifactCommand — RF-W1C.2).
+        """
+        status = "approved" if review.approved else "rejected"
+        text = (
+            f"📄 Artifact Review\nArtefato: {review.artifact}\n"
+            f"Veredito: {status}"
+        )
+        if review.feedback:
+            text += "\nFeedback:\n" + "\n".join(
+                f"  - {item}" for item in review.feedback
+            )
+        self._output_text = text
+        if "output-panel" in self._panels:
+            self._panels["output-panel"]._text = text
+
+    # ── PRP-WIZARD-1C: Scope Confirmation (RF-W1C.3) ────────────────────────
+    def set_pending_scope(self, step_id: str, scope: str) -> None:
+        """Registra escopo proposto pendente — bloqueia início do step."""
+        self._pending_scopes[step_id] = scope
+
+    def confirm_scope(self, step_id: str) -> None:
+        """Confirmação humana libera o step para iniciar."""
+        self._pending_scopes.pop(step_id, None)
+
+    def can_start_step(self, step_id: str) -> bool:
+        """Step pode iniciar? Falso enquanto houver escopo pendente (RF-W1C.3)."""
+        return step_id not in self._pending_scopes
+
+    # ── PRP-WIZARD-1C: Rerun automático (RF-W1C.4) ──────────────────────────
+    async def rerun_step(self, step_id: str, runner=None):
+        """Re-executa o step a partir da FailureRecoveryScreen, sem sair da TUI.
+
+        RF-W1C.4: após rejeição de gate, "re-executar" reinicia o step no
+        mesmo app. Desempilha a tela de recovery e reutiliza o runner
+        injetado (ou selecionado) — mesmo fluxo de run_step_with_hitl.
+        """
+        if "FailureRecoveryScreen" in self._screen_stack:
+            # remove a entrada específica (não o topo) — um DecisionModal pode
+            # ter sido empilhado depois da rejeição (fix review WIZARD-1C)
+            self._screen_stack.remove("FailureRecoveryScreen")
+        self._recovery_screens.pop(step_id, None)
+        async for _event in self.run_step_with_hitl(step_id, runner=runner):
+            pass  # consuma os eventos — o rerun é síncrono do ponto de vista
+            # do chamador (awaits até o step concluir ou pedir HITL novamente)
 
     def open_prompt_modal(self, prompt: PromptRequest) -> DecisionModal:
         """Abre um DecisionModal para um prompt pendente (RF-W1B.6).

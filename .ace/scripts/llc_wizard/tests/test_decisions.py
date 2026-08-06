@@ -79,6 +79,62 @@ def test_writer_gate_decision_with_waiver_note(make_sessions_file):
     assert "<waiver_note>Nota longa doi</waiver_note>" in content
 
 
+# ─────────────── PRP-WIZARD-1C: Artifact Review + Scope ─────────────────────
+
+
+def test_writer_artifact_review_rejected_with_feedback(make_sessions_file):
+    """RF-W1C.2: review rejeitada persiste approved=false + itens de feedback."""
+    from llc_wizard.decisions import ArtifactReview, UserDecisionWriter
+
+    sf = make_sessions_file()
+    writer = UserDecisionWriter(sf)
+    writer.submit_artifact_review(
+        ArtifactReview(
+            artifact="docs/prps/PRP-X.md",
+            verdict="rejected",
+            approved=False,
+            feedback=["RF-01 incompleto", "Falta estimativa de esforço"],
+        )
+    )
+
+    content = sf.read_text(encoding="utf-8")
+    assert '<user_response type="artifact_review"' in content
+    assert 'approved="false"' in content
+    assert "<feedback>RF-01 incompleto</feedback>" in content
+    assert "<feedback>Falta estimativa de esforço</feedback>" in content
+    assert content.startswith("linha-inicial\n")
+
+
+def test_writer_artifact_review_approved_flag_true(make_sessions_file):
+    """RF-W1C.2: approved=true quando o humano aprova o artefato."""
+    from llc_wizard.decisions import ArtifactReview, UserDecisionWriter
+
+    sf = make_sessions_file()
+    writer = UserDecisionWriter(sf)
+    writer.submit_artifact_review(
+        ArtifactReview(artifact="docs/prps/PRP-X.md", verdict="approved")
+    )
+
+    content = sf.read_text(encoding="utf-8")
+    assert 'approved="true"' in content
+    assert "<feedback>" not in content  # sem feedback quando aprovado
+
+
+def test_writer_scope_confirmation_rejected_blocks(make_sessions_file):
+    """RF-W1C.3: scope rejeitada persiste confirmed=false."""
+    from llc_wizard.decisions import ScopeConfirmation, UserDecisionWriter
+
+    sf = make_sessions_file()
+    writer = UserDecisionWriter(sf)
+    writer.submit_scope_confirmation(
+        ScopeConfirmation(step_id="5", scope="Steps 1-5", confirmed=False)
+    )
+
+    content = sf.read_text(encoding="utf-8")
+    assert '<user_response type="scope"' in content
+    assert 'confirmed="false"' in content
+
+
 # ────────────────────────── RealtimePromptCollector ──────────────────────────
 
 

@@ -122,3 +122,63 @@ def test_confirm_scope_executes_writer():
     assert cmd.validate() is True
     asyncio.run(cmd.execute(writer))
     assert writer.calls[0][0] == "scope"
+
+
+# ─────────────── PRP-WIZARD-1C: Artifact Review + Scope ─────────────────────
+
+
+def test_review_artifact_rejection_requires_feedback():
+    """RF-W1C.2: rejeição sem feedback não passa na validação."""
+    from llc_wizard.commands import ReviewArtifactCommand
+    from llc_wizard.decisions import ArtifactReview
+
+    no_feedback = ReviewArtifactCommand(ArtifactReview(
+        artifact="docs/prps/PRP-X.md", verdict="rejected", approved=False))
+    assert no_feedback.validate() is False
+
+    with_feedback = ReviewArtifactCommand(ArtifactReview(
+        artifact="docs/prps/PRP-X.md", verdict="rejected", approved=False,
+        feedback=["RF-01 incompleto"]))
+    assert with_feedback.validate() is True
+
+
+def test_review_artifact_approved_needs_no_feedback():
+    """RF-W1C.2: aprovação é válida sem feedback."""
+    from llc_wizard.commands import ReviewArtifactCommand
+    from llc_wizard.decisions import ArtifactReview
+
+    cmd = ReviewArtifactCommand(ArtifactReview(
+        artifact="docs/prps/PRP-X.md", verdict="approved"))
+    assert cmd.validate() is True
+
+
+def test_review_artifact_whitespace_feedback_rejected():
+    """Regressão (review): feedback só-com-espaços não é feedback válido."""
+    from llc_wizard.commands import ReviewArtifactCommand
+    from llc_wizard.decisions import ArtifactReview
+
+    blank = ReviewArtifactCommand(ArtifactReview(
+        artifact="docs/prps/PRP-X.md", verdict="rejected", approved=False,
+        feedback=["   "]))
+    assert blank.validate() is False
+
+    empty_str = ReviewArtifactCommand(ArtifactReview(
+        artifact="docs/prps/PRP-X.md", verdict="rejected", approved=False,
+        feedback=[""]))
+    assert empty_str.validate() is False
+
+
+def test_confirm_scope_rejection_valid():
+    """RF-W1C.3: rejeição de escopo (confirmed=False) é válida e persiste."""
+    import asyncio
+
+    from llc_wizard.commands import ConfirmScopeCommand
+    from llc_wizard.decisions import ScopeConfirmation
+
+    cmd = ConfirmScopeCommand(ScopeConfirmation(
+        step_id="5", scope="Escopo restrito", confirmed=False))
+    assert cmd.validate() is True
+    writer = FakeWriter()
+    asyncio.run(cmd.execute(writer))
+    assert writer.calls[0][0] == "scope"
+    assert writer.calls[0][1].confirmed is False

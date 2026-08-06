@@ -1,7 +1,7 @@
 # PRP: [GRAPH-1A] — `llc_graph`: model.py + builder.py + state.py
 
 > **ID:** PRP-GRAPH-1A | **Trilha:** Graph Engineering | **Onda:** 2
-> **Owner:** jcneto25 | **Estimativa:** 1 semana | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 1 semana | **Status:** ✅ Done (2026-08-06)
 > **Prioridade:** Médio | **ADR de origem:** ADR-0004 §2.3, §2.9
 
 ---
@@ -16,10 +16,10 @@ O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-gr
 
 ### 1.2 O que é entregue
 
-- [ ] `llc_graph/model.py` — `GraphNode`, `GraphEdge`, `NodeKind`, `NodeState`, `EdgeKind`, `Graph`
-- [ ] `llc_graph/builder.py` — `GraphBuilder`: unifica `dependency-graph.yaml` + ordem sequencial do `REGISTRY` (`StepSpec.number`) + `gates.json`
-- [ ] `llc_graph/state.py` — `AceStateReader`: deriva `NodeState` das sessões ACE (`.ace/index.json`)
-- [ ] Suite de testes TDD com cobertura ≥ 85%
+- [x] `llc_graph/model.py` — `GraphNode`, `GraphEdge`, `NodeKind`, `NodeState`, `EdgeKind`, `Graph`
+- [x] `llc_graph/builder.py` — `GraphBuilder`: unifica `dependency-graph.yaml` + ordem sequencial do `REGISTRY` (`StepSpec.number`) + `gates.json`
+- [x] `llc_graph/state.py` — `AceStateReader`: deriva `NodeState` das sessões ACE (`.ace/index.json`)
+- [x] Suite de testes TDD com cobertura ≥ 85%
 
 ### 1.3 O que NÃO está no escopo
 
@@ -33,13 +33,13 @@ O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-gr
 
 | ID | Requisito | Critério de Aceitação | Prioridade | Status | Teste(s) | Arquivo(s) impl |
 |----|-----------|----------------------|------------|--------|----------|-----------------|
-| RF-G1A.1 | `GraphNode` é imutável (frozen dataclass) | **Dado** instância, **Quando** mutação tentada, **Então** `FrozenInstanceError` | Must | ⏳ | `tests/test_model.py` | `llc_graph/model.py` |
-| RF-G1A.2 | `GraphBuilder` marca gates com `requires_human=True` | **Dado** step com gate em `gates.json`, **Quando** `build()`, **Então** nó gate com `requires_human=True` | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
-| RF-G1A.3 | `GraphBuilder` deriva arestas N1 da ordem do `REGISTRY` e unifica `dependency-graph.yaml` | **Dado** REGISTRY com steps 0.5→1→2 e `dependency-graph.yaml` com artefatos, **Quando** `build()`, **Então** arestas N1 seguem `StepSpec.number` e nenhuma dependência do yaml é perdida | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
-| RF-G1A.4 | `GraphBuilder` detecta nós órfãos | **Dado** dependência apontando para nó inexistente, **Quando** `build()`, **Então** warning registrado | Should | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
-| RF-G1A.5 | `AceStateReader` deriva `NodeState.DONE` de sessão `completed` | **Dado** `index.json` com step completed, **Quando** `node_state("step-5")`, **Então** `NodeState.DONE` | Must | ⏳ | `tests/test_state.py` | `llc_graph/state.py` |
-| RF-G1A.6 | `AceStateReader` tolera `index.json` ausente | **Dado** arquivo ausente, **Quando** `node_state()`, **Então** retorna `NodeState.PENDING` sem exceção | Must | ⏳ | `tests/test_state.py` | `llc_graph/state.py` |
-| RF-G1A.7 | Rework cria nova instância com `retry_of` preenchido | **Dado** gate rejeitado, **Quando** `add_rework_node()`, **Então** novo nó com `retry_of="step-5"` e aresta `REWORK` | Must | ⏳ | `tests/test_builder.py` | `llc_graph/builder.py` |
+| RF-G1A.1 | `GraphNode` é imutável (frozen dataclass) | **Dado** instância, **Quando** mutação tentada, **Então** `FrozenInstanceError` | Must | ✅ | `tests/test_model.py` | `llc_graph/model.py` |
+| RF-G1A.2 | `GraphBuilder` marca gates com `requires_human=True` | **Dado** step com gate em `gates.json`, **Quando** `build()`, **Então** nó gate com `requires_human=True` | Must | ✅ | `tests/test_builder.py` | `llc_graph/builder.py` |
+| RF-G1A.3 | `GraphBuilder` deriva arestas N1 da ordem do `REGISTRY` e unifica `dependency-graph.yaml` | **Dado** REGISTRY com steps 0.5→1→2 e `dependency-graph.yaml` com artefatos, **Quando** `build()`, **Então** arestas N1 seguem `StepSpec.number` e nenhuma dependência do yaml é perdida | Must | ✅ | `tests/test_builder.py` | `llc_graph/builder.py` |
+| RF-G1A.4 | `GraphBuilder` detecta nós órfãos | **Dado** dependência apontando para nó inexistente, **Quando** `build()`, **Então** warning registrado | Should | ✅ | `tests/test_builder.py` | `llc_graph/builder.py` |
+| RF-G1A.5 | `AceStateReader` deriva `NodeState.DONE` de sessão `completed` | **Dado** `index.json` com step completed, **Quando** `node_state("step-5")`, **Então** `NodeState.DONE` | Must | ✅ | `tests/test_state.py` | `llc_graph/state.py` |
+| RF-G1A.6 | `AceStateReader` tolera `index.json` ausente | **Dado** arquivo ausente, **Quando** `node_state()`, **Então** retorna `NodeState.PENDING` sem exceção | Must | ✅ | `tests/test_state.py` | `llc_graph/state.py` |
+| RF-G1A.7 | Rework cria nova instância com `retry_of` preenchido | **Dado** gate rejeitado, **Quando** `add_rework_node()`, **Então** novo nó com `retry_of="step-5"` e aresta `REWORK` | Must | ✅ | `tests/test_builder.py` | `llc_graph/builder.py` |
 
 ---
 
@@ -71,10 +71,15 @@ O LLC tem ~60% dos ingredientes de um grafo mas tudo fragmentado: `dependency-gr
 
 ## 5. Definition of Done
 
-- [ ] Todos os 7 RF com testes verdes
-- [ ] `llc_graph` não importa de `llc_wizard` nem de `llc_harness` (DIP)
-- [ ] `GraphNode` e `GraphEdge` frozen (imutáveis)
-- [ ] Cobertura ≥ 85% em `model.py`, `builder.py`, `state.py`
-- [ ] Harness existente intocado
-- [ ] `fitness-functions.py --all --strict` verde
-- [ ] Sessão ACE registrada
+- [x] Todos os 7 RF com testes verdes
+- [x] `llc_graph` não importa de `llc_wizard` nem de `llc_harness` (DIP)
+- [x] `GraphNode` e `GraphEdge` frozen (imutáveis)
+- [x] Cobertura ≥ 85% em `model.py`, `builder.py`, `state.py`
+- [x] Harness existente intocado
+- [x] `fitness-functions.py --all --strict` verde
+- [x] Sessão ACE registrada
+
+> **Nota de execução (2026-08-06):** implementado em sessão 2026-08-06-012
+> (step 10.9). 21 testes verdes; cobertura `model.py` 100%, `builder.py` 90%,
+> `state.py` 88% (TOTAL 96%); fitness 41/41; suite geral 356 passed. Rework
+> testado com `retry_of` + aresta `REWORK` sem criar ciclo (D4/§2.5).

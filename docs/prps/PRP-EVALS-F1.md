@@ -1,7 +1,7 @@
 # PRP: [EVALS-F1] — Instrumentação de Tokens e Custo por Sessão ACE
 
 > **ID:** PRP-EVALS-F1 | **Trilha:** Evals | **Onda:** 1
-> **Owner:** jcneto25 | **Estimativa:** 1 semana | **Status:** ⏳ Pending
+> **Owner:** jcneto25 | **Estimativa:** 1 semana | **Status:** ✅ Done (2026-08-06)
 > **Prioridade:** Alto | **ADR de origem:** ADR-0005 §2.5, §2.1 P1
 
 ---
@@ -14,11 +14,11 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 
 ### 1.2 O que é entregue
 
-- [ ] `llc_evals/instrument.py` — captura em 3 níveis com `source` registrado
-- [ ] Tag `<eval_metrics>` append-only no arquivo de sessão ACE (sem tocar frontmatter)
-- [ ] `llc_evals/evaluators/efficiency_meter.py` — calcula `TokenCost` e `EfficiencyScore`
-- [ ] Estrutura de diretórios `.ace/evals/` (baselines/, results/, golden/)
-- [ ] Integração com `finalize_session.py` — **o append de `<eval_metrics>` é executado pelo finalize** (escritor único preservado — GOV-003/R8); `instrument.py` apenas calcula o bloco e o entrega, nunca escreve no arquivo da sessão
+- [x] `llc_evals/instrument.py` — captura em 3 níveis com `source` registrado
+- [x] Tag `<eval_metrics>` append-only no arquivo de sessão ACE (sem tocar frontmatter)
+- [x] `llc_evals/evaluators/efficiency_meter.py` — calcula `TokenCost` e `EfficiencyScore`
+- [x] Estrutura de diretórios `.ace/evals/` (baselines/, results/, golden/)
+- [x] Integração com `finalize_session.py` — **o append de `<eval_metrics>` é executado pelo finalize** (escritor único preservado — GOV-003/R8); `instrument.py` apenas calcula o bloco e o entrega, nunca escreve no arquivo da sessão
 
 ### 1.3 O que NÃO está no escopo
 
@@ -32,12 +32,12 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 
 | ID | Requisito | Critério de Aceitação | Prioridade | Status | Teste(s) | Arquivo(s) impl |
 |----|-----------|----------------------|------------|--------|----------|-----------------|
-| RF-EF1.1 | Captura tokens via nível 1 (log nativo `.claude/`) | **Dado** log claude existente, **Quando** `instrument()`, **Então** `source="level_1"` e tokens precisos | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
-| RF-EF1.2 | Fallback para nível 2 (parsing de saída estruturada) | **Dado** log ausente mas output com usage block, **Quando** `instrument()`, **Então** `source="level_2"` | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
-| RF-EF1.3 | Fallback para nível 3 (estimativa tiktoken) | **Dado** nem log nem usage block, **Quando** `instrument()`, **Então** `source="level_3"` com estimativa | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
-| RF-EF1.4 | `<eval_metrics>` persiste append-only na sessão ACE — **escrita por `finalize_session.py`** (escritor único), nunca por `instrument.py` diretamente | **Dado** sessão aberta, **Quando** `finalize_session.py`, **Então** bloco XML adicionado sem modificar frontmatter **e** AST de `instrument.py` sem `open(..., "a")`/`write` em `sessions/` | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
-| RF-EF1.5 | `EfficiencyScore = QualityScore / log10(TokenCost)` calculado corretamente | **Dado** `QualityScore=86, TokenCost=15500`, **Quando** `efficiency_score()`, **Então** `≈18.9` | Must | ⏳ | `tests/test_efficiency_meter.py` | `llc_evals/evaluators/efficiency_meter.py` |
-| RF-EF1.6 | Dados nível 3 marcados com tag `precision: estimated` | **Dado** instrumentação nível 3, **Quando** resultado, **Então** campo `precision: "estimated"` presente | Must | ⏳ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.1 | Captura tokens via nível 1 (log nativo `.claude/`) | **Dado** log claude existente, **Quando** `instrument()`, **Então** `source="level_1"` e tokens precisos | Must | ✅ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.2 | Fallback para nível 2 (parsing de saída estruturada) | **Dado** log ausente mas output com usage block, **Quando** `instrument()`, **Então** `source="level_2"` | Must | ✅ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.3 | Fallback para nível 3 (estimativa tiktoken) | **Dado** nem log nem usage block, **Quando** `instrument()`, **Então** `source="level_3"` com estimativa | Must | ✅ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.4 | `<eval_metrics>` persiste append-only na sessão ACE — **escrita por `finalize_session.py`** (escritor único), nunca por `instrument.py` diretamente | **Dado** sessão aberta, **Quando** `finalize_session.py`, **Então** bloco XML adicionado sem modificar frontmatter **e** AST de `instrument.py` sem `open(..., "a")`/`write` em `sessions/` | Must | ✅ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
+| RF-EF1.5 | `EfficiencyScore = QualityScore / log10(TokenCost)` calculado corretamente | **Dado** `QualityScore=86, TokenCost=15500`, **Quando** `efficiency_score()`, **Então** `≈20.5` *(ver nota §6: o exemplo "≈18.9" dos PRP/ADR era erro aritmético)* | Must | ✅ | `tests/test_efficiency_meter.py` | `llc_evals/evaluators/efficiency_meter.py` |
+| RF-EF1.6 | Dados nível 3 marcados com tag `precision: estimated` | **Dado** instrumentação nível 3, **Quando** resultado, **Então** campo `precision: "estimated"` presente | Must | ✅ | `tests/test_instrument.py` | `llc_evals/instrument.py` |
 
 ---
 
@@ -94,10 +94,16 @@ Sem capturar tokens e custo por step, nenhuma análise de eficiência é possív
 
 ## 6. Definition of Done
 
-- [ ] Todos os 6 RF com testes verdes
-- [ ] Captura funcional em pelo menos nível 3 (tiktoken como fallback universal)
-- [ ] `<eval_metrics>` não toca frontmatter da sessão ACE
-- [ ] `.ace/evals/` estrutura criada
-- [ ] Dados nível 3 identificados como `precision: estimated`
-- [ ] `fitness-functions.py --all --strict` verde
-- [ ] Sessão ACE registrada
+- [x] Todos os 6 RF com testes verdes
+- [x] Captura funcional em pelo menos nível 3 (tiktoken como fallback universal)
+- [x] `<eval_metrics>` não toca frontmatter da sessão ACE
+- [x] `.ace/evals/` estrutura criada
+- [x] Dados nível 3 identificados como `precision: estimated`
+- [x] `fitness-functions.py --all --strict` verde
+- [x] Sessão ACE registrada
+
+> **Nota de correção (2026-08-06):** o exemplo da RF-EF1.5 e do ADR §8.3 citava
+> `EfficiencyScore ≈ 18.9` para `QualityScore=86, TokenCost=15500`, mas a fórmula
+> do ADR §2.3 (`QualityScore / log10(TokenCost)`) dá **86/log10(15500) ≈ 20.5**
+> (o `18.9` é erro aritmético propagado entre os dois documentos). O `efficiency_meter`
+> implementa a **fórmula do ADR §2.3 corretamente** (fonte de verdade).

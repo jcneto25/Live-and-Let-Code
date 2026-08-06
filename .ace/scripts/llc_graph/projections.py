@@ -144,13 +144,24 @@ class GraphPipelineDataSource:
             return {}
 
 
-# ── Stubs — implementados em PRP-GRAPH-2B ────────────────────────────────────
+# ── Projeções — PRP-GRAPH-2B ────────────────────────────────────────────────
 
 def to_impact_map(engine: GraphEngine, node_id: str) -> dict:
-    """Projeção de impacto → PRP-GRAPH-2B (stub por enquanto)."""
-    raise NotImplementedError("to_impact_map → PRP-GRAPH-2B")
+    """Projeção de impacto (ADR-0004 §2.8): nó + afetados ordenados.
+
+    Query pura sobre `impact_of` — consumido pelo Delta Δ.0 / Smart Skip.
+    Determinístico: `affected` ordenado por id (RF-G2B.3 parity).
+    """
+    return {
+        "node": node_id,
+        "affected": sorted(engine.impact_of(node_id)),
+    }
 
 
 def to_critical_path(engine: GraphEngine) -> list:
-    """Projeção de caminho crítico → PRP-GRAPH-2B (stub por enquanto)."""
-    raise NotImplementedError("to_critical_path → PRP-GRAPH-2B")
+    """Projeção do caminho crítico (ADR-0004 §2.8, RF-G2B.4).
+
+    Retorna a lista de node_ids do caminho, em ordem topológica.
+    Query pura — delega ao engine.critical_path().
+    """
+    return [n.id for n in engine.critical_path()]

@@ -331,13 +331,54 @@ def test_adapter_pending_hitl_empty(tmp_path):
     assert fixture["adapter"].get_pending_hitl() == []
 
 
-# ── Stubs (PRP-GRAPH-2B) ─────────────────────────────────────────────────────
+# ── Projeções (PRP-GRAPH-2B) ────────────────────────────────────────────────
 
-def test_to_impact_map_is_stub():
-    with pytest.raises(NotImplementedError):
-        to_impact_map(None, "step-5")
+def _graph_with_branches() -> Graph:
+    """Grafo: A→B→C (3 nós) e A→D→E→F→G→H (6 nós) — caminho crítico = 6."""
+    from llc_graph.model import Graph, GraphEdge, GraphNode, NodeKind, EdgeKind
+
+    def _step(nid):
+        return GraphNode(id=nid, kind=NodeKind.STEP,
+                         requires_human=False, auto_parallelizable=False)
+
+    graph = Graph()
+    for nid in ("step-a", "step-b", "step-c", "step-d", "step-e",
+                "step-f", "step-g", "step-h"):
+        graph.add_node(_step(nid))
+    for s, t in [("step-a", "step-b"), ("step-b", "step-c"),
+                 ("step-a", "step-d"), ("step-d", "step-e"),
+                 ("step-e", "step-f"), ("step-f", "step-g"),
+                 ("step-g", "step-h")]:
+        graph.add_edge(GraphEdge(source=s, target=t, kind=EdgeKind.DEPENDS_ON))
+    return graph
 
 
-def test_to_critical_path_is_stub():
-    with pytest.raises(NotImplementedError):
-        to_critical_path(None)
+def test_to_critical_path_returns_ordered_ids(tmp_path):
+    """RF-G2B.4: to_critical_path(engine) → lista de node_ids em ordem."""
+    engine = GraphEngine(graph=_graph_with_branches(), project_root=tmp_path)
+    ids = to_critical_path(engine)
+    assert ids == ["step-a", "step-d", "step-e", "step-f", "step-g",
+                   "step-h"]
+
+
+def test_to_critical_path_empty(tmp_path):
+    from llc_graph.model import Graph
+
+    engine = GraphEngine(graph=Graph(), project_root=tmp_path)
+    assert to_critical_path(engine) == []
+
+
+def test_to_impact_map_affected_sorted(tmp_path):
+    """to_impact_map: nó + afetados ordenados (determinístico)."""
+    engine = GraphEngine(graph=_graph_with_branches(), project_root=tmp_path)
+    result = to_impact_map(engine, "step-a")
+    assert result["node"] == "step-a"
+    assert "step-b" in result["affected"]
+    assert "step-h" in result["affected"]
+    assert result["affected"] == sorted(result["affected"])
+
+
+def test_to_impact_map_unknown_node(tmp_path):
+    engine = GraphEngine(graph=_graph_with_branches(), project_root=tmp_path)
+    with pytest.raises(KeyError):
+        to_impact_map(engine, "step-zzz")

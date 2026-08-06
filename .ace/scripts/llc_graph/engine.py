@@ -13,6 +13,7 @@ coordenação reativa. NUNCA escreve no disco — projeções são queries puras
 """
 from __future__ import annotations
 
+import heapq
 import json
 import re
 from datetime import datetime
@@ -120,6 +121,102 @@ class GraphEngine:
             ):
                 frontier.append(node)
         return frontier
+
+    # Pesos do caminho crítico (PRP-GRAPH-2B §3 — estimativa determinística)
+    _STEP_WEIGHT = 1.0       # uma unidade de trabalho
+    _GATE_WEIGHT = 2.0       # espera humana (estimada; histórico ACE é futuro)
+    _SKIPPED_WEIGHT = 0.0    # não contribui para a duração
+
+    def critical_path(self) -> list[GraphNode]:
+        """Caminho crítico do DAG — sequência que determina a duração total
+        (ADR-0004 §2.7: responde 'onde está o gargalo?').
+
+        Algoritmo: topological sort (Kahn) + relaxação de arestas — O(V+E),
+        NUNCA O(V²) (PRP-GRAPH-2B §5). Pesos:
+        - SKIPPED → 0 (não contribui para o comprimento)
+        - GATE → 2.0 (tempo médio de espera humana, estimado)
+        - demais → 1.0 (unidade de trabalho)
+
+        Query pura (CQS): não muta grafo nem sessões; determinístico
+        (ordenação estável por id e desempate por menor id).
+
+        Retorna a lista de GraphNode do caminho, em ordem topológica
+        (RF-G2B.1/2/3). Vazio se o grafo for vazio.
+        """
+        if not self.graph.nodes:
+            return []
+        topo = self._topological_order()
+        # dist[v] = maior peso acumulado até v; prev[v] = nó anterior no caminho
+        # dist[v] = peso acumulado do caminho que termina em v, SEM contar o
+        # peso de v (adicionado quando v é processado no loop — cada peso
+        # conta exatamente uma vez). prev[v] = nó anterior no caminho.
+        dist: dict[str, float] = {nid: 0.0 for nid in topo}
+        prev: dict[str, str | None] = {nid: None for nid in topo}
+        for nid in topo:
+            dist[nid] += self._path_weight(self.graph.nodes[nid])
+            for succ in sorted(self.graph.successors(nid)):
+                if succ not in dist:
+                    continue
+                # NÃO adicionar peso(succ) aqui — seria double-count (o peso
+                # de succ entra quando succ é processado). cand = acumulado
+                # até nid (que já inclui nid); o peso de succ soma depois.
+                cand = dist[nid]
+                # empate: mantém o predecessor de menor id (determinístico)
+                if cand > dist[succ] or (
+                    cand == dist[succ]
+                    and (prev[succ] is None or nid < prev[succ])
+                ):
+                    dist[succ] = cand
+                    prev[succ] = nid
+        # fim do caminho: maior dist; desempate determinístico por id
+        end = max(topo, key=lambda n: (dist[n], n))
+        path: list[GraphNode] = []
+        cur: str | None = end
+        while cur is not None:
+            path.append(self.graph.nodes[cur])
+            cur = prev[cur]
+        path.reverse()
+        return path
+
+    def _topological_order(self) -> list[str]:
+        """Ordenação topológica (Kahn) do DAG, determinística por id.
+
+        O(V+E) com fila min-heap por id (determinística, nunca O(V²)).
+        Arestas para nós inexistentes são ignoradas (tolerância).
+        """
+        in_degree = {nid: 0 for nid in self.graph.nodes}
+        adj: dict[str, list[str]] = {nid: [] for nid in self.graph.nodes}
+        for edge in self.graph.edges:
+            if edge.source in in_degree and edge.target in in_degree:
+                adj[edge.source].append(edge.target)
+                in_degree[edge.target] += 1
+        # min-heap por id → ordem topológica determinística independente da
+        # ordem de inserção do grafo (RF-G2B.3: puro e determinístico).
+        queue = [nid for nid, deg in in_degree.items() if deg == 0]
+        heapq.heapify(queue)
+        order: list[str] = []
+        while queue:
+            nid = heapq.heappop(queue)
+            order.append(nid)
+            for succ in adj[nid]:
+                in_degree[succ] -= 1
+                if in_degree[succ] == 0:
+                    heapq.heappush(queue, succ)
+        # Ciclo → todos os nós restantes têm in_degree > 0. Grafo é DAG por
+        # construção (ADR-0004 §2.5); ciclo seria violação de invariante.
+        if len(order) != len(self.graph.nodes):
+            raise ValueError(
+                "Grafo contém ciclo — invariante DAG violado (ADR-0004 §2.5)"
+            )
+        return order
+
+    def _path_weight(self, node: GraphNode) -> float:
+        """Peso do nó no caminho crítico (PRP-GRAPH-2B §3)."""
+        if self.node_state(node.id) is NodeState.SKIPPED:
+            return self._SKIPPED_WEIGHT
+        if node.kind is NodeKind.GATE:
+            return self._GATE_WEIGHT
+        return self._STEP_WEIGHT
 
     def impact_of(self, node_id: str) -> set[str]:
         """Propagação descendente: todos os nós afetados por mudança em node_id.

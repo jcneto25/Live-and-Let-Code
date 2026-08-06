@@ -1,4 +1,5 @@
-"""Testes para llc_graph.engine — RF-G1B.1 a G1B.7 do PRP-GRAPH-1B.
+"""Testes para llc_graph.engine — RF-G1B.1 a G1B.7 do PRP-GRAPH-1B
+e RF-G2B.1 a G2B.3 do PRP-GRAPH-2B.
 
 GraphEngine é o scheduler read-only (ADR-0004 §2.7): deriva estado e
 elegibilidade de execução a partir do grafo + sessões ACE. Nunca muta
@@ -382,6 +383,17 @@ def _graph_with_prps() -> Graph:
     return g
 
 
+def _make_graph(nodes: list[GraphNode], edges: list[tuple[str, str]]) -> Graph:
+    """Grafo puro manual: nós + arestas DEPENDS_ON."""
+    graph = Graph()
+    for n in nodes:
+        graph.add_node(n)
+    for source, target in edges:
+        graph.add_edge(GraphEdge(source=source, target=target,
+                                 kind=EdgeKind.DEPENDS_ON))
+    return graph
+
+
 def _has_edge_between(graph: Graph, a: str, b: str) -> bool:
     """True se existe aresta (qualquer direção/kind) entre a e b."""
     return any(
@@ -505,3 +517,151 @@ artifacts:
     assert all("gate" not in nid for nid in frontier_ids)
     # ambos independentes entre si
     assert not _has_edge_between(graph, "prp-alpha", "prp-beta")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# critical_path() — PRP-GRAPH-2B (RF-G2B.1 a G2B.3)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _step(nid: str) -> GraphNode:
+    return GraphNode(id=nid, kind=NodeKind.STEP,
+                     requires_human=False, auto_parallelizable=False)
+
+
+def _gate(nid: str) -> GraphNode:
+    return GraphNode(id=nid, kind=NodeKind.GATE,
+                     requires_human=True, auto_parallelizable=False)
+
+
+def test_critical_path_longest_branch(tmp_path):
+    """RF-G2B.1: entre dois caminhos (3 e 6 nós), retorna o de comprimento 6."""
+    # A → B → C (3 nós) e A → D → E → F → G → H (6 nós)
+    nodes = [_step("step-a"), _step("step-b"), _step("step-c"),
+             _step("step-d"), _step("step-e"), _step("step-f"),
+             _step("step-g"), _step("step-h")]
+    edges = [("step-a", "step-b"), ("step-b", "step-c"),
+             ("step-a", "step-d"), ("step-d", "step-e"),
+             ("step-e", "step-f"), ("step-f", "step-g"),
+             ("step-g", "step-h")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    path = engine.critical_path()
+    ids = [n.id for n in path]
+    assert len(path) == 6
+    assert ids == ["step-a", "step-d", "step-e", "step-f", "step-g",
+                   "step-h"]
+
+
+def test_critical_path_includes_gates(tmp_path):
+    """RF-G2B.2: gates entram no caminho crítico (têm custo de espera).
+
+    Gate tem peso > 1 (espera humana), então A → gate → C vence A → B → C.
+    """
+    nodes = [_step("step-a"), _step("step-b"), _step("step-c"),
+             _gate("gate-a")]
+    edges = [("step-a", "step-b"), ("step-b", "step-c"),
+             ("step-a", "gate-a"), ("gate-a", "step-c")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    path = engine.critical_path()
+    ids = [n.id for n in path]
+    assert "gate-a" in ids  # gate incluído por seu peso
+    assert ids[0] == "step-a" and ids[-1] == "step-c"
+    assert ids.index("gate-a") > ids.index("step-a")
+
+
+def test_critical_path_skipped_weight_zero(tmp_path):
+    """Nós SKIPPED têm peso 0 — não alongam o caminho crítico."""
+    _write_index(tmp_path, [
+        {"session_id": "s1", "llc_step_id": "1", "status": "skipped",
+         "timestamp": "2026-08-01T00:00:00"},
+        {"session_id": "s2", "llc_step_id": "2", "status": "skipped",
+         "timestamp": "2026-08-01T00:00:00"},
+        {"session_id": "s3", "llc_step_id": "3", "status": "skipped",
+         "timestamp": "2026-08-01T00:00:00"},
+    ])
+    # Cadeia longa de SKIPPED (step-1..3, peso 0) vs. caminho com nó ativo
+    # step-1 → step-x (peso 1). A cadeia skipped não alonga o caminho crítico.
+    nodes = [_step("step-1"), _step("step-2"), _step("step-3"),
+             _step("step-x")]
+    edges = [("step-1", "step-2"), ("step-2", "step-3"),
+             ("step-1", "step-x")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    path = engine.critical_path()
+    ids = [n.id for n in path]
+    # peso: step-1→step-2→step-3 = 0; step-1→step-x = 1 → este é o crítico
+    assert ids == ["step-1", "step-x"]
+
+
+def test_critical_path_pure_and_deterministic(tmp_path):
+    """RF-G2B.3: pureza — múltiplas chamadas, mesmo resultado, estado inalterado."""
+    nodes = [_step("step-a"), _step("step-b"), _step("step-c"), _step("step-d")]
+    edges = [("step-a", "step-b"), ("step-b", "step-c"),
+             ("step-b", "step-d")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    nodes_before = dict(engine.graph.nodes)
+    edges_before = list(engine.graph.edges)
+    first = [n.id for n in engine.critical_path()]
+    for _ in range(5):
+        assert [n.id for n in engine.critical_path()] == first
+    assert engine.graph.nodes == nodes_before
+    assert engine.graph.edges == edges_before
+
+
+def test_critical_path_empty_graph(tmp_path):
+    """Grafo vazio → caminho vazio."""
+    engine = GraphEngine(graph=Graph(), project_root=tmp_path)
+    assert engine.critical_path() == []
+
+
+def test_critical_path_single_node(tmp_path):
+    """Grafo com um único nó → o próprio nó."""
+    graph = _make_graph([_step("step-a")], [])
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+    assert [n.id for n in engine.critical_path()] == ["step-a"]
+
+
+def test_critical_path_cycle_raises(tmp_path):
+    """Ciclo viola o invariante DAG (ADR-0004 §2.5) → ValueError claro."""
+    nodes = [_step("step-a"), _step("step-b"), _step("step-c")]
+    edges = [("step-a", "step-b"), ("step-b", "step-c"),
+             ("step-c", "step-a")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+    with pytest.raises(ValueError, match="ciclo"):
+        engine.critical_path()
+
+
+def test_critical_path_double_count_regression(tmp_path):
+    """Regressão (review): pesos contam exatamente uma vez por nó.
+
+    Bug: `cand = dist[nid] + weight(succ)` somava o peso de succ na
+    relaxação E de novo quando succ era processado — double-count que
+    inflava dist e trocava a escolha do caminho quando gates/skipped
+    misturados empatavam. Fix: `cand = dist[nid]` (peso de succ entra
+    apenas no processamento).
+
+    Cenário: gate-a→gate-b (peso 2+2=4) vs step-k→x→y→z com k SKIPPED
+    (peso 0+1+1+1=3). Correto: gates vencem (4 > 3). Com double-count,
+    a cadeia skipped inflava para 6 e empatava, trocando a escolha.
+    """
+    _write_index(tmp_path, [
+        {"session_id": "sk", "llc_step_id": "k", "status": "skipped",
+         "timestamp": "2026-08-01T00:00:00"},
+    ])
+    nodes = [_gate("gate-a"), _gate("gate-b"),
+             _step("step-k"), _step("step-x"), _step("step-y"),
+             _step("step-z")]
+    edges = [("gate-a", "gate-b"), ("step-k", "step-x"),
+             ("step-x", "step-y"), ("step-y", "step-z")]
+    graph = _make_graph(nodes, edges)
+    engine = GraphEngine(graph=graph, project_root=tmp_path)
+
+    path = [n.id for n in engine.critical_path()]
+    assert path == ["gate-a", "gate-b"]  # 4 > 3 — gates, não a cadeia skipped

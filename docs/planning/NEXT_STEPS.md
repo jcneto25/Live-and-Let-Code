@@ -1,6 +1,6 @@
 # Próximos Passos — Pós-Roadmap PRP (100% entregue)
 
-> **Data:** 2026-08-06 · **Status:** 📋 Plano — nenhum item iniciado
+> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ · P3/P4 pendentes
 > **Contexto:** Roadmap núcleo (Governança + Wizard 5/5 + Evals 5/5 + Graph 5/5) 100% entregue.
 > **Referências:** `PRP-MAP.md`, `DELIVERY_SUMMARY.md`, `factory-evolution.md` v0.2.0
 
@@ -14,7 +14,7 @@
 | `BaselineManager` (EVALS-F4) com `DEFAULT_WARMUP = {n_min: 5, n_stable: 10}` | ✅ construído, **ocioso** |
 | `.ace/evals/baselines/` | **vazio** — nenhuma execução real registrada |
 | `GraphPipelineDataSource` (GRAPH-1C) implementa o Protocol | ✅ existe |
-| `WizardApp` (`app.py:53`) | ainda usa `PipelineDataReader` |
+| `WizardApp` (default) | ✅ `GraphPipelineDataSource` (GraphEngine) — fallback `--source index` |
 | `flow_metrics.py` (WIZARD-1.2) grava YAML | ✅ grava, **ninguém consome** |
 | Trilhas 4 (Wave Coordinator) e 5 (Herdr) | 🔒 condicionais — gates não atingidos |
 
@@ -45,22 +45,43 @@ warm-up — basta continuar executando `llc run` e re-rodar `llc evals ingest`.
 
 ---
 
-### 🥈 P2 — Integração Graph → Wizard definitiva
+### 🥈 P2 — Integração Graph → Wizard definitiva — ✅ Done (2026-08-07)
 
-**Por quê:** GRAPH-1C entregou o adapter com paridade §7.6 100%, mas o Wizard ainda usa
-`PipelineDataReader`. É o "último metro" do investimento em Graph — trocar a fonte dá acesso a
+**Por quê:** GRAPH-1C entregou o adapter com paridade §7.6 100%, mas o Wizard ainda usava
+`PipelineDataReader`. Era o "último metro" do investimento em Graph — trocar a fonte dá acesso a
 `ready_nodes()`, `critical_path()`, `parallel_frontier()` dentro da TUI.
 
-**O que fazer:**
-1. Trocar `app.py:53` (`PipelineDataReader`) pelo `GraphPipelineDataSource` + `GraphEngine` como fonte
-2. Benefícios colaterais: coluna BACKLOG pode usar `ready_nodes()` (RF-W1A.7); exibir
-   `critical_path()` no board
-3. **Cuidado (DIP):** manter o Protocol `PipelineDataSource` como contrato — a troca é transparente
-   para `KanbanBoardBuilder` e `flow_metrics.py`
-4. Manter `PipelineDataReader` como fallback (feature flag `--source graph|index`)
+**O que foi feito (sessão 2026-08-07-001):**
+- ✅ `llc_wizard/data.py::build_data_source(project_root, source='graph')` — factory do Protocol:
+  `graph` (default) = `GraphPipelineDataSource` sobre `GraphBuilder` + `GraphEngine`; `index` =
+  `PipelineDataReader` (fallback explícito); fonte desconhecida → `ValueError`; import lazy de
+  `llc_graph` (sem ciclo de módulos — adapter importa tipos de `llc_wizard.data`, ADR-0004 §8.3)
+- ✅ `WizardApp(project_root, source='graph')` — default graph, atributo `source_name`;
+  `KanbanBoardBuilder`/`flow_metrics.py` intocados (Protocol preservado — DIP ✓)
+- ✅ CLI `llc wizard --source graph|index` (click.Choice, default graph); `--export-flow-metrics`
+  respeita a fonte
+- ✅ **Fix review — paridade de FORMA:** `GraphPipelineDataSource.get_status()` agora itera o
+  REGISTRY (binding dinâmico de `llc_wizard.data` para monkeypatch) e inclui steps `EXCLUDED`
+  (`in_pipeline=False`) — a sidebar não perde os 🚫 ao trocar para graph; degradação graciosa:
+  erro inesperado no build do grafo → warning + fallback para o reader (TUI nunca abre sem board)
+- ✅ **Smoke no repo real:** 23 steps, 30.4% progress, board populado, `--source graph` export OK
+- ✅ 13 testes novos (6 data + 6 app + 1 projections), 562 full suite, fitness 41/41, cobertura 97%
 
-**Estimativa:** 1 semana · **Risco:** médio (regressão de paridade — mitigada pelos testes de
-paridade §7.6 do GRAPH-1C)
+**Próximo uso (colateral):** `ready_nodes()`/`critical_path()`/`parallel_frontier()` disponíveis
+na TUI para P3/P4 — o Wizard já roda sobre o grafo.
+
+**Estimativa:** 1 semana → entregue · **Risco:** médio (mitigado — paridade testada)
+
+---
+
+### 🥈 P2b — Consumir GraphEngine na TUI (colateral do P2, opcional)
+
+**O que fazer (benefícios colaterais já desbloqueados pelo P2):**
+- Coluna BACKLOG pode usar `ready_nodes()` (RF-W1A.7) como sugestão de próximo step
+- Exibir `critical_path()` no board (steps que determinam a duração total)
+- **Recomendação:** entrar junto com o P3 (swimlanes) para não abrir outra frente de UI
+
+**Estimativa:** 0.5 semana · **Risco:** baixo
 
 ---
 
@@ -108,9 +129,9 @@ os dois. O valor real está em "quais steps bloqueiam o caminho crítico E estã
 ## 4. Sequência recomendada
 
 ```
-Semana 1-2:  P1 Warm-up baselines (desbloqueia toda a cadeia Evals)
-Semana 3:    P2 Graph→Wizard (consolida investimento Graph)
-Semana 4:    P3 WIZARD-2.0 swimlanes (feature UI)
+Semana 1-2:  P1 Warm-up baselines (desbloqueia toda a cadeia Evals) ✅
+Semana 3:    P2 Graph→Wizard (consolida investimento Graph) ✅
+Semana 4:    P3 WIZARD-2.0 swimlanes (feature UI)  ← próximo
 Em paralelo: P4 pode entrar quando P1 gerar dados reais
 ```
 
@@ -123,7 +144,9 @@ paridade já existente, enquanto P3 é feature nova.
 ## 5. DoD deste plano
 
 - [x] P1 (2026-08-06): `llc evals ingest` entregue — elo sessão→`record_run()` fechado; 13 runs ingeridos, 2 steps em warmup; ~[ ] 2 steps em fase `stable` (aguarda mais runs de `llc run`)
-- [ ] P2: Wizard com `GraphPipelineDataSource` por padrão + fallback `--source index`
+- [x] P2 (2026-08-07): Wizard com `GraphPipelineDataSource` por padrão + fallback `--source index`
+      — `build_data_source` factory, CLI `--source`, paridade de forma (EXCLUDED) + fallback
+      defensivo, 13 testes, 562 suite, fitness 41/41, cobertura 97%
 - [ ] P3: swimlanes por wave renderizando corretamente no `KanbanBoardWidget`
 - [ ] P4: relatório de gargalos reais (caminho crítico × flow metrics) com ≥1 achado acionável
 - [ ] Todos os itens: TDD/FTDD, cobertura ≥85%, `fitness-functions.py --all --strict` verde,

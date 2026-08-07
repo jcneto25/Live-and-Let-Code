@@ -393,6 +393,23 @@ def test_to_critical_path_returns_ordered_ids(tmp_path):
                    "step-h"]
 
 
+def test_adapter_critical_step_ids_strips_prefix(tmp_path):
+    """P2b: critical_step_ids() → ids de steps no caminho crítico, sem 'step-'."""
+    engine = GraphEngine(graph=_graph_with_branches(), project_root=tmp_path)
+    adapter = GraphPipelineDataSource(engine)
+    ids = adapter.critical_step_ids()
+    assert ids == ["a", "d", "e", "f", "g", "h"]
+    assert all("step-" not in i for i in ids)
+
+
+def test_adapter_critical_step_ids_empty_graph(tmp_path):
+    """P2b: grafo vazio → lista vazia (sem crash)."""
+    from llc_graph.model import Graph
+
+    engine = GraphEngine(graph=Graph(), project_root=tmp_path)
+    assert GraphPipelineDataSource(engine).critical_step_ids() == []
+
+
 def test_to_critical_path_empty(tmp_path):
     from llc_graph.model import Graph
 

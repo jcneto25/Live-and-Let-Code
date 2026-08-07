@@ -165,6 +165,21 @@ class GraphPipelineDataSource:
     def get_pending_hitl(self) -> list[PendingHITL]:
         return []
 
+    def critical_step_ids(self) -> list[str]:
+        """Ids dos steps no caminho crítico do grafo (P2b / ADR-0004 §2.7).
+
+        `critical_path()` retorna nós (STEP + GATE + artefatos); aqui filtramos
+        apenas `NodeKind.STEP` e removemos o prefixo `step-` — os ids resultam
+        nos `step_id` dos cards do Kanban. Método específico do adapter
+        (não faz parte do Protocol) — o Wizard acessa via duck-typing; a fonte
+        `index` simplesmente não o expõe (sem marcador, comportamento atual).
+        """
+        return [
+            n.id[len("step-"):]
+            for n in self.engine.critical_path()
+            if n.kind is NodeKind.STEP and n.id.startswith("step-")
+        ]
+
     def _load_gates(self) -> dict:
         path = Path(self.engine.root) / ".ace" / "config" / "gates.json"
         if not path.exists():

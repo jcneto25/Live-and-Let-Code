@@ -54,12 +54,15 @@ class KanbanBoardWidget:
         wip_limits: dict[str, int | None] | None = None,
         scores: dict[str, dict] | None = None,
         theme: str = "dark",
+        critical_ids: set[str] | None = None,
     ):
         self.board = board
         self.sla_minutes = sla_minutes
         self.wip_limits = {**_DEFAULT_WIP_LIMITS, **(wip_limits or {})}
         self.scores = scores or {}
         self.theme = theme if theme in ("dark", "light") else "dark"
+        # P2b: steps no caminho crítico (ADR-0004 §2.7) ganham marcador 🔺
+        self.critical_ids = set(critical_ids or ())
 
     # ── Cabeçalho (WIP total / Block Time / Stale count) ───────────────────
     def header(self) -> str:
@@ -93,9 +96,12 @@ class KanbanBoardWidget:
         return column is KanbanColumn.SKIPPED
 
     def _card_line(self, card: KanbanCard) -> str:
-        """Linha do card: ícone + título (+ score de eval se disponível)."""
+        """Linha do card: ícone + título (+ 🔺 crítico + score de eval)."""
         icon = _COLUMN_ICON.get(card.column, "•")
         line = f"  {icon} {card.title}"
+        # P2b: step no caminho crítico do grafo (ADR-0004 §2.7)
+        if (card.step_id or card.id) in self.critical_ids:
+            line += " 🔺"
         stale = " card-stale" if card.is_stale(self.sla_minutes) else ""
         score = self.scores.get(card.step_id or card.id)
         if score:

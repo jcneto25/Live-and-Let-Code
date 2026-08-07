@@ -887,6 +887,128 @@ def test_wizard_does_not_write_to_sessions_dir():
 
     assert not violations, f"Escrita em sessions/ detectada: {violations}"
 
+# ─────────────────── P2b pos-roadmap: critical_path() highlight ──────────
+
+
+def _board_two_pending():
+    """Board: 2 steps PENDING (BACKLOG) + 1 COMPLETED (DONE) p/ teste crítico."""
+    from llc_wizard.data import StepStatus
+
+    return _board_from_steps([
+        {"id": "6", "name": "Arquitetura", "status": StepStatus.PENDING},
+        {"id": "7", "name": "Design System", "status": StepStatus.PENDING},
+        {"id": "10.8", "name": "Test Coverage", "status": StepStatus.COMPLETED},
+    ])
+
+
+def test_kanban_widget_highlights_critical_step(tmp_path):
+    """P2b: card do step no caminho crítico recebe marcador 🔺."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_two_pending()
+    rendered = KanbanBoardWidget(board, critical_ids={"7"}).render()
+    assert "Arquitetura 🔺" not in rendered      # 6 fora do caminho crítico
+    assert "Design System 🔺" in rendered        # 7 no caminho crítico
+
+
+def test_kanban_widget_no_critical_ids_no_marker(tmp_path):
+    """P2b: sem critical_ids → nenhum marcador (paridade com comportamento atual)."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_two_pending()
+    rendered = KanbanBoardWidget(board).render()
+    assert "🔺" not in rendered
+
+
+def test_kanban_widget_critical_marker_in_done_column(tmp_path):
+    """P2b: step crítico também é marcado quando já está em DONE."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_two_pending()
+    rendered = KanbanBoardWidget(board, critical_ids={"10.8"}).render()
+    assert "Test Coverage 🔺" in rendered
+
+
+def test_app_critical_ids_from_graph_source(tmp_path):
+    """P2b: app com fonte graph expõe critical_ids não-vazios via reader."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app.reader is not None
+            # duck-typed: o reader graph tem critical_step_ids()
+            ids = app.reader.critical_step_ids()
+            assert isinstance(ids, list)
+            assert all(isinstance(i, str) for i in ids)
+
+    asyncio.run(run())
+
+
+def test_app_kanban_render_includes_critical_marker(tmp_path):
+    """P2b: render do board (fonte graph) inclui o marcador 🔺 p/ steps críticos."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            rendered = app.kanban_render()
+            critical = app.reader.critical_step_ids()
+            if critical:  # pipeline serial → ao menos um step no caminho crítico
+                assert "🔺" in rendered
+
+    asyncio.run(run())
+
+
+def test_app_critical_ids_exclude_completed_steps(tmp_path):
+    """P2b (fix review): steps DONE saem do caminho crítico restante.
+
+    Em pipeline serial o caminho crítico inclui todos os steps; destacar só o
+    que falta fazer preserva o sinal visual (não ilumina card já concluído).
+    """
+    import json as _json
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    # step 3 concluído → fora do crítico restante; step 5 pendente → dentro
+    sessions = [{"session_id": "s-3", "llc_step_id": "3",
+                 "status": "completed", "timestamp": "2026-08-06T09:00:00"}]
+    (root / ".ace" / "index.json").write_text(
+        _json.dumps({"sessions": sessions}), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            ids = app._critical_step_ids()
+            assert "3" not in ids          # completado → sem 🔺
+            assert ids                    # demais steps seguem no crítico
+            assert any(i != "3" for i in ids)
+
+    asyncio.run(run())
+
+
+def test_app_index_source_no_critical_marker(tmp_path):
+    """P2b (fix review): fonte index (sem critical_step_ids) → nenhum 🔺."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root, source="index").run_test() as pilot:
+            app = pilot.app
+            assert app._critical_step_ids() == set()
+            app.toggle_kanban()
+            assert "🔺" not in app.kanban_render()
+
+    asyncio.run(run())
+
+
 # ─────────────────── P2 pos-roadmap: fonte GraphEngine (graph) ─────────────
 
 

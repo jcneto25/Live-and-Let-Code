@@ -174,6 +174,32 @@ class WizardApp:
             }
         return scores
 
+    def _critical_step_ids(self) -> set[str]:
+        """Steps no caminho crítico RESTANTE (P2b) — duck-typed sobre a fonte.
+
+        A fonte graph (`GraphPipelineDataSource`) expõe `critical_step_ids()`;
+        a fonte index não — retorna vazio (sem marcador 🔺). Filtra apenas
+        steps TERMINAIS não concluídos (não-DONE/SKIPPED/EXCLUDED): em pipeline
+        serial o caminho crítico inclui todos os steps; destacar apenas o que
+        falta fazer preserva o sinal visual (fix review P2b).
+        """
+        fn = getattr(self.reader, "critical_step_ids", None)
+        if not callable(fn):
+            return set()
+        try:
+            critical = set(fn())
+        except ValueError:  # ciclo no grafo violaria ADR-0004 §2.5 — degradação
+            return set()
+        if not critical:
+            return set()
+        remaining = {
+            s.id for s in self.reader.get_status().steps
+            if s.status is not StepStatus.COMPLETED
+            and s.status is not StepStatus.SKIPPED
+            and s.status is not StepStatus.EXCLUDED
+        }
+        return critical & remaining
+
     def _build_kanban(self) -> None:
         """Constrói o board Kanban a partir da fonte ativa (graph | index)."""
         sla = self._load_sla_minutes()
@@ -192,6 +218,7 @@ class WizardApp:
             sla_minutes=sla,
             scores=self._load_eval_scores(),
             theme=self.theme,
+            critical_ids=self._critical_step_ids(),
         )
         self._panels["kanban-board"] = SimpleWidget(
             "kanban-board", self._kanban_widget.render()

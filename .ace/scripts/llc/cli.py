@@ -613,6 +613,41 @@ def eval_report(output, as_json):
         click.echo(_json.dumps(summary, indent=2, ensure_ascii=False))
 
 
+@eval.command("flow-report")
+@click.option(
+    "--output",
+    "-o",
+    default=None,
+    help="Diretório de saída (default: .ace/evals/results)",
+)
+@click.option(
+    "--project-root",
+    "project_root",
+    default=None,
+    help="Raiz do projeto (default: diretorio atual)",
+)
+def eval_flow_report(output, project_root):
+    """Gera o relatório de gargalos reais (P4): caminho crítico × flow metrics.
+
+    Cruza o caminho crítico do GraphEngine (ADR-0004 §2.7) com o
+    flow-metrics-*.yaml mais recente (PRP-WIZARD-1.2 RF-W1.2.3) e identifica
+    steps com espera humana (block_time > 0) ou retrabalho (rework_count > 0)
+    no caminho crítico — gargalos acionáveis. Escreve flow-report-{date}.md
+    em .ace/evals/results/ (ou --output) e exibe o relatório.
+    """
+    from pathlib import Path as _Path
+
+    from llc_evals.flow_report import generate_flow_report
+
+    root = _Path(project_root) if project_root else _Path.cwd()
+    path = generate_flow_report(
+        project_root=root,
+        output_dir=_Path(output) if output else None,
+    )
+    click.echo(f"\n🔍 Flow Report gerado: {path}")
+    click.echo(path.read_text(encoding="utf-8"))
+
+
 @cli.command()
 @click.option(
     "--from",

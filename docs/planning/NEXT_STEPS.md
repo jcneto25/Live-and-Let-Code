@@ -1,6 +1,6 @@
 # Próximos Passos — Pós-Roadmap PRP (100% entregue)
 
-> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ (100%) · P3/P4 pendentes
+> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ (100%) + **P3 ✅** · P4 pendente
 > **Contexto:** Roadmap núcleo (Governança + Wizard 5/5 + Evals 5/5 + Graph 5/5) 100% entregue.
 > **Referências:** `PRP-MAP.md`, `DELIVERY_SUMMARY.md`, `factory-evolution.md` v0.2.0
 
@@ -98,19 +98,32 @@ na TUI para P3/P4 — o Wizard já roda sobre o grafo.
 
 ---
 
-### 🥉 P3 — PRP-WIZARD-2.0 (swimlanes por wave)
+### 🥉 P3 — PRP-WIZARD-2.0 (swimlanes por wave) — ✅ Done (2026-08-07)
 
 **Por quê:** foi explicitamente excluído do escopo do WIZARD-1.2 (§1.3: "Swimlanes por wave →
 PRP-WIZARD-2.0"). É o natural "v1.1" do Wizard — enriquece o Kanban com a dimensão de ondas que o
 pipeline já conhece (`EXECUTION_WAVES.md`).
 
-**O que fazer (mini-PRP ~1 sem):**
-- `KanbanBoardWidget` ganha agrupamento por wave (RF análogo ao FTDD do 1.1)
-- Fonte de dados: `parse_execution_waves()` (já existe em `llc_wave`)
-- Colapsar/expandir wave, WIP por wave
-- **Nota:** único item que adiciona features novas à UI — os outros 3 são integrações/ativação
+**O que foi feito (sessão 2026-08-07-004):**
+- ✅ `llc_wave/parsing.py::build_step_wave_map(sessions, waves)` — ponte step→onda
+  via sessões ACE (`llc_step_id` + `prp` do `index.json`) × PRPs das ondas; vence a
+  sessão **mais recente** por `timestamp` (determinismo — fix review)
+- ✅ `KanbanBoardWidget(waves=..., step_wave=...)` — swimlanes por onda em cada coluna
+  (`▾/▸`), collapse/expand por wave (`toggle_wave`), swimlane "Sem onda" para steps
+  sem wave (depois das ondas numeradas)
+- ✅ `WizardApp._load_wave_data()` + `toggle_wave()` — degradação graciosa: sem
+  `EXECUTION_WAVES.md` → board plano (comportamento anterior, sem crash)
+- ✅ **Achado real:** `parse_execution_waves()` só extraía `PRP-\d{3,}` — IDs reais
+  (PRP-WIZARD-1A, PRP-GRAPH-2B) não eram capturados; regex ampliada + regressão
+- ✅ 16 testes novos, **596 full suite**, fitness **41/41**, cobertura 91% TOTAL
+  (kanban_board 98%, app 88%, parsing 90%)
 
-**Estimativa:** 1 semana · **Risco:** baixo
+**Smoke real:** sem waves file → board plano ✓; demo com `.ace` real + waves
+sintéticas → `step_wave {'10.8': 3, '10.9': 2}`, swimlanes com nomes reais.
+*Pré-requisito para a feature visível no repo:* gerar o `EXECUTION_WAVES.md`
+real no Step 4 (planejamento).
+
+**Estimativa:** 1 semana → entregue · **Risco:** baixo
 
 ---
 
@@ -160,7 +173,9 @@ paridade já existente, enquanto P3 é feature nova.
 - [x] P2 (2026-08-07): Wizard com `GraphPipelineDataSource` por padrão + fallback `--source index`
       — `build_data_source` factory, CLI `--source`, paridade de forma (EXCLUDED) + fallback
       defensivo, 13 testes, 562 suite, fitness 41/41, cobertura 97%
-- [ ] P3: swimlanes por wave renderizando corretamente no `KanbanBoardWidget`
+- [x] P3 (2026-08-07): swimlanes por wave no `KanbanBoardWidget` — `build_step_wave_map`
+      (sessão mais recente vence), collapse/expand por wave, swimlane "Sem onda",
+      degradação graciosa sem `EXECUTION_WAVES.md`; 16 testes, 596 suite, fitness 41/41
 - [ ] P4: relatório de gargalos reais (caminho crítico × flow metrics) com ≥1 achado acionável
 - [ ] Todos os itens: TDD/FTDD, cobertura ≥85%, `fitness-functions.py --all --strict` verde,
       sessão ACE registrada

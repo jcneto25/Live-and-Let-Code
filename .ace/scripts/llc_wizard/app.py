@@ -200,6 +200,21 @@ class WizardApp:
         }
         return critical & remaining
 
+    def _next_step_ids(self) -> set[str]:
+        """Steps elegíveis p/ execução agora (P2b-rest) — duck-typed.
+
+        A fonte graph expõe `ready_step_ids()` (steps READY, sem espera
+        humana); a fonte index não — retorna vazio (sem marcador ➤).
+
+        Sem filtro extra de status: no adapter, READY→PENDING (paridade
+        §7.6), logo todo step ready está na coluna BACKLOG por construção
+        (fix review P2b-rest — interseção PENDING era lógica morta).
+        """
+        fn = getattr(self.reader, "ready_step_ids", None)
+        if not callable(fn):
+            return set()
+        return set(fn())
+
     def _build_kanban(self) -> None:
         """Constrói o board Kanban a partir da fonte ativa (graph | index)."""
         sla = self._load_sla_minutes()
@@ -219,6 +234,7 @@ class WizardApp:
             scores=self._load_eval_scores(),
             theme=self.theme,
             critical_ids=self._critical_step_ids(),
+            next_ids=self._next_step_ids(),
         )
         self._panels["kanban-board"] = SimpleWidget(
             "kanban-board", self._kanban_widget.render()

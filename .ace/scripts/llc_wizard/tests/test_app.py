@@ -1009,6 +1009,113 @@ def test_app_index_source_no_critical_marker(tmp_path):
     asyncio.run(run())
 
 
+# ─────────────── P2b-rest: ready_nodes() sugestão de próximo step ─────────
+
+
+def _board_three_pending():
+    """Board: 3 steps PENDING (BACKLOG) p/ teste de sugestão ready."""
+    from llc_wizard.data import StepStatus
+
+    return _board_from_steps([
+        {"id": "0.5", "name": "Visao", "status": StepStatus.PENDING},
+        {"id": "1", "name": "Specs", "status": StepStatus.PENDING},
+        {"id": "2", "name": "PRDs", "status": StepStatus.PENDING},
+    ])
+
+
+def test_kanban_widget_suggests_ready_step(tmp_path):
+    """P2b-rest: card do step ready (próximo executável) recebe marcador ➤."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_three_pending()
+    rendered = KanbanBoardWidget(board, next_ids={"1"}).render()
+    assert "Visao ➤" not in rendered            # 0.5 fora da sugestão
+    assert "Specs ➤" in rendered               # 1 na sugestão
+
+
+def test_kanban_widget_no_next_ids_no_marker(tmp_path):
+    """P2b-rest: sem next_ids → nenhum marcador ➤."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_three_pending()
+    rendered = KanbanBoardWidget(board).render()
+    assert "➤" not in rendered
+
+
+def test_app_next_ids_from_graph_source(tmp_path):
+    """P2b-rest: app com fonte graph expõe ready_step_ids() via duck-typing."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            ids = pilot.app.reader.ready_step_ids()
+            assert isinstance(ids, list)
+            assert all(isinstance(i, str) for i in ids)
+
+    asyncio.run(run())
+
+
+def test_app_next_ids_excludes_completed_steps(tmp_path):
+    """P2b-rest: step concluído não é ready → fora da sugestão.
+
+    O engine deriva READY apenas para steps com deps satisfeitas e não
+    terminais (DONE nunca é READY) — a sugestão reflete o backlog executável.
+    """
+    import json as _json
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    # step 0.5 concluído → não-ready para sugestão; demais pendentes
+    sessions = [{"session_id": "s-05", "llc_step_id": "0.5",
+                 "status": "completed", "timestamp": "2026-08-06T09:00:00"}]
+    (root / ".ace" / "index.json").write_text(
+        _json.dumps({"sessions": sessions}), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            ids = pilot.app._next_step_ids()
+            assert "0.5" not in ids   # completado → não sugerido
+            assert ids                 # demais steps ready seguem na sugestão
+
+    asyncio.run(run())
+
+
+def test_app_index_source_no_next_marker(tmp_path):
+    """P2b-rest: fonte index (sem ready_step_ids) → nenhum marcador ➤."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root, source="index").run_test() as pilot:
+            app = pilot.app
+            assert app._next_step_ids() == set()
+            app.toggle_kanban()
+            assert "➤" not in app.kanban_render()
+
+    asyncio.run(run())
+
+
+def test_app_kanban_render_includes_next_marker(tmp_path):
+    """P2b-rest: render do board (fonte graph) inclui ➤ p/ steps ready."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            app.toggle_kanban()
+            rendered = app.kanban_render()
+            if app._next_step_ids():  # pipeline → ao menos um step ready
+                assert "➤" in rendered
+
+    asyncio.run(run())
+
+
 # ─────────────────── P2 pos-roadmap: fonte GraphEngine (graph) ─────────────
 
 

@@ -410,6 +410,73 @@ def test_adapter_critical_step_ids_empty_graph(tmp_path):
     assert GraphPipelineDataSource(engine).critical_step_ids() == []
 
 
+def _graph_ready_two():
+    """Grafo: a→b→c serial; a está READY (deps vazias), b/c PENDING."""
+    from llc_graph.model import EdgeKind, Graph, GraphEdge, GraphNode, NodeKind
+
+    def _step(nid):
+        return GraphNode(id=nid, kind=NodeKind.STEP,
+                         requires_human=False, auto_parallelizable=True)
+
+    graph = Graph()
+    for nid in ("step-a", "step-b", "step-c"):
+        graph.add_node(_step(nid))
+    for s, t in [("step-a", "step-b"), ("step-b", "step-c")]:
+        graph.add_edge(GraphEdge(source=s, target=t, kind=EdgeKind.DEPENDS_ON))
+    return graph
+
+
+def test_adapter_ready_step_ids_returns_ready_steps(tmp_path):
+    """P2b-rest: ready_step_ids() → steps elegíveis, sem prefixo 'step-'."""
+    engine = GraphEngine(graph=_graph_ready_two(), project_root=tmp_path)
+    adapter = GraphPipelineDataSource(engine)
+    ids = adapter.ready_step_ids()
+    assert ids == ["a"]  # apenas o primeiro nó serial está READY
+    assert all("step-" not in i for i in ids)
+
+
+def test_adapter_ready_step_ids_empty_graph(tmp_path):
+    """P2b-rest: grafo vazio → lista vazia (sem crash)."""
+    from llc_graph.model import Graph
+
+    engine = GraphEngine(graph=Graph(), project_root=tmp_path)
+    assert GraphPipelineDataSource(engine).ready_step_ids() == []
+
+
+def _graph_ready_with_gate():
+    """Grafo: step-a READY; gate-g (requires_human) e step-h (AWAITING_HUMAN).
+
+    Simula a fila do humano: o gate nunca é elegível para o agente, e um
+    step requires_human fica estacionado em AWAITING_HUMAN (ADR-0004 D3).
+    """
+    from llc_graph.model import EdgeKind, Graph, GraphEdge, GraphNode, NodeKind
+
+    graph = Graph()
+    graph.add_node(GraphNode(id="step-a", kind=NodeKind.STEP,
+                             requires_human=False, auto_parallelizable=True))
+    graph.add_node(GraphNode(id="gate-g", kind=NodeKind.GATE,
+                             requires_human=True, auto_parallelizable=False))
+    graph.add_node(GraphNode(id="step-h", kind=NodeKind.STEP,
+                             requires_human=True, auto_parallelizable=False))
+    # step-h depende de gate-g (decisão humana pendente)
+    graph.add_edge(GraphEdge(source="gate-g", target="step-h",
+                             kind=EdgeKind.DEPENDS_ON))
+    return graph
+
+
+def test_adapter_ready_step_ids_excludes_awaiting_human(tmp_path):
+    """P2b-rest (fix review): AWAITING_HUMAN/gates NÃO são sugeridos.
+
+    `ready_nodes()` retorna READY + AWAITING_HUMAN; a sugestão de próximo
+    step executável exclui a fila do humano (gates e steps requires_human
+    estacionados em AWAITING_HUMAN) — apenas o step-a (READY) é elegível.
+    """
+    engine = GraphEngine(graph=_graph_ready_with_gate(), project_root=tmp_path)
+    ids = GraphPipelineDataSource(engine).ready_step_ids()
+    assert ids == ["a"]
+    assert "g" not in ids and "h" not in ids
+
+
 def test_to_critical_path_empty(tmp_path):
     from llc_graph.model import Graph
 

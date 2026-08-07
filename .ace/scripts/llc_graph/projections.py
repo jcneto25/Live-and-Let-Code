@@ -180,6 +180,24 @@ class GraphPipelineDataSource:
             if n.kind is NodeKind.STEP and n.id.startswith("step-")
         ]
 
+    def ready_step_ids(self) -> list[str]:
+        """Ids dos steps elegíveis para execução AGORA (P2b-rest / RF-W1A.7).
+
+        `ready_nodes()` retorna nós READY e AWAITING_HUMAN (deps satisfeitas);
+        aqui filtramos apenas `NodeKind.STEP` em estado READY — steps que o
+        agente pode iniciar imediatamente (sem espera humana), removendo o
+        prefixo `step-`. Sugestão de próximo step na coluna BACKLOG do Kanban.
+        Método específico do adapter (não faz parte do Protocol) — o Wizard
+        acessa via duck-typing; a fonte `index` não o expõe.
+        """
+        ready = [
+            n for n in self.engine.ready_nodes()
+            if n.kind is NodeKind.STEP
+            and self.engine.node_state(n.id) is NodeState.READY
+            and n.id.startswith("step-")
+        ]
+        return [n.id[len("step-"):] for n in ready]
+
     def _load_gates(self) -> dict:
         path = Path(self.engine.root) / ".ace" / "config" / "gates.json"
         if not path.exists():

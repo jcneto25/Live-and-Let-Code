@@ -55,6 +55,7 @@ class KanbanBoardWidget:
         scores: dict[str, dict] | None = None,
         theme: str = "dark",
         critical_ids: set[str] | None = None,
+        next_ids: set[str] | None = None,
     ):
         self.board = board
         self.sla_minutes = sla_minutes
@@ -63,6 +64,9 @@ class KanbanBoardWidget:
         self.theme = theme if theme in ("dark", "light") else "dark"
         # P2b: steps no caminho crítico (ADR-0004 §2.7) ganham marcador 🔺
         self.critical_ids = set(critical_ids or ())
+        # P2b-rest: steps prontos p/ execução (ready_nodes) — sugestão de
+        # próximo step (RF-W1A.7) com marcador ➤
+        self.next_ids = set(next_ids or ())
 
     # ── Cabeçalho (WIP total / Block Time / Stale count) ───────────────────
     def header(self) -> str:
@@ -102,6 +106,9 @@ class KanbanBoardWidget:
         # P2b: step no caminho crítico do grafo (ADR-0004 §2.7)
         if (card.step_id or card.id) in self.critical_ids:
             line += " 🔺"
+        # P2b-rest: step ready (elegível p/ execução agora) — sugestão ➤
+        if (card.step_id or card.id) in self.next_ids:
+            line += " ➤"
         stale = " card-stale" if card.is_stale(self.sla_minutes) else ""
         score = self.scores.get(card.step_id or card.id)
         if score:

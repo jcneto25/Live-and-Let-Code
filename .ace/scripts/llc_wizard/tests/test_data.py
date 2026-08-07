@@ -13,6 +13,7 @@ from llc_wizard.data import (
     PipelineStatus,
     StepInfo,
     StepStatus,
+    build_data_source,
 )
 
 
@@ -209,3 +210,83 @@ def test_derives_skipped_when_skip_note_exists(project_root, make_index):
     reader = PipelineDataReader(project_root)
     steps = {s.id: s for s in reader.get_steps()}
     assert steps["5"].status == StepStatus.SKIPPED
+
+
+# ─────────────────── P2 pos-roadmap: build_data_source factory ──────────────
+
+
+def test_build_data_source_defaults_to_graph(project_root):
+    """P2: factory default source='graph' → GraphPipelineDataSource."""
+    from llc_graph.projections import GraphPipelineDataSource
+
+    source = build_data_source(project_root)
+    assert isinstance(source, GraphPipelineDataSource)
+
+
+def test_build_data_source_graph_explicit(project_root):
+    """P2: source='graph' → GraphPipelineDataSource (explícito)."""
+    from llc_graph.projections import GraphPipelineDataSource
+
+    source = build_data_source(project_root, source="graph")
+    assert isinstance(source, GraphPipelineDataSource)
+
+
+def test_build_data_source_index_returns_reader(project_root):
+    """P2: source='index' → PipelineDataReader (fallback --source index)."""
+    source = build_data_source(project_root, source="index")
+    assert isinstance(source, PipelineDataReader)
+
+
+def test_build_data_source_unknown_source_raises(project_root):
+    """P2: fonte desconhecida → ValueError (contrato determinístico)."""
+    with pytest.raises(ValueError):
+        build_data_source(project_root, source="bogus")
+
+
+def test_build_data_source_graph_tolerates_missing_yaml(project_root):
+    """P2: fonte graph tolera dependency-graph.yaml ausente (graceful)."""
+    from llc_graph.projections import GraphPipelineDataSource
+
+    source = build_data_source(project_root, source="graph")
+    assert isinstance(source, GraphPipelineDataSource)
+    assert source.get_status() is not None  # get_status() funcional
+
+
+def test_build_data_source_graph_matches_reader_pending_state(project_root, make_index):
+    """P2: sem sessões, graph source deriva PENDING (paridade bidirecional).
+
+    Bidirecional (fix review): reader-PENDING → graph-PENDING E
+    graph-PENDING → reader-PENDING — pega over/under-reporting do adapter.
+    """
+    make_index(project_root, [])
+    graph_status = build_data_source(project_root, source="graph").get_status()
+    reader_status = build_data_source(project_root, source="index").get_status()
+    by_id_graph = {s.id: s.status for s in graph_status.steps}
+    by_id_reader = {s.id: s.status for s in reader_status.steps}
+    for step_id, status in by_id_reader.items():
+        if status is StepStatus.PENDING:
+            assert by_id_graph.get(step_id) == StepStatus.PENDING
+    for step_id, status in by_id_graph.items():
+        if status is StepStatus.PENDING:
+            assert by_id_reader.get(step_id) == StepStatus.PENDING
+
+
+def test_build_data_source_graph_falls_back_on_build_error(project_root, monkeypatch):
+    """P2 (fix review): erro inesperado no build do grafo → fallback reader.
+
+    Degradação graciosa: a TUI nunca abre sem board; `--source index` é o
+    fallback explícito, este é o defensivo (warning + reader).
+    """
+    def _boom(*args, **kwargs):
+        raise RuntimeError("REGISTRY corrompido (simulado)")
+
+    monkeypatch.setattr("llc_graph.builder.GraphBuilder.build", _boom)
+    with pytest.warns(RuntimeWarning):
+        source = build_data_source(project_root, source="graph")
+    assert isinstance(source, PipelineDataReader)
+
+
+def test_build_data_source_unknown_source_still_raises_after_fallback(project_root):
+    """P2: fallback defensivo não mascara ValueError de fonte desconhecida."""
+    with pytest.raises(ValueError):
+        build_data_source(project_root, source="nope")

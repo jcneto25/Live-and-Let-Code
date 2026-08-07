@@ -887,6 +887,134 @@ def test_wizard_does_not_write_to_sessions_dir():
 
     assert not violations, f"Escrita em sessions/ detectada: {violations}"
 
+# ─────────────────── P2 pos-roadmap: fonte GraphEngine (graph) ─────────────
+
+
+def test_app_default_source_is_graph(tmp_path):
+    """P2: WizardApp default usa GraphPipelineDataSource (GraphEngine)."""
+    from llc_graph.projections import GraphPipelineDataSource
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            assert pilot.app.source_name == "graph"
+            assert isinstance(pilot.app.reader, GraphPipelineDataSource)
+
+    asyncio.run(run())
+
+
+def test_app_source_index_uses_reader(tmp_path):
+    """P2: source='index' → PipelineDataReader (fallback --source index)."""
+    from llc_wizard.app import WizardApp
+    from llc_wizard.data import PipelineDataReader
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root, source="index").run_test() as pilot:
+            assert pilot.app.source_name == "index"
+            assert isinstance(pilot.app.reader, PipelineDataReader)
+
+    asyncio.run(run())
+
+
+def test_app_kanban_board_parity_graph_vs_index(tmp_path):
+    """P2: board idêntico com fonte graph e index (paridade §7.6 via app)."""
+    import json as _json
+
+    from llc_wizard.app import WizardApp
+    from llc_wizard.kanban import KanbanBoardBuilder
+
+    root = tmp_path
+    ace = root / ".ace"
+    (ace / "config").mkdir(parents=True)
+    (ace / "sessions").mkdir(parents=True)
+    sessions = [
+        {"session_id": "s-05", "llc_step_id": "0.5", "status": "completed",
+         "timestamp": "2026-08-06T09:00:00"},
+        {"session_id": "s-1", "llc_step_id": "1", "status": "in_progress",
+         "timestamp": "2026-08-06T10:00:00"},
+        {"session_id": "s-2", "llc_step_id": "2", "status": "failed",
+         "timestamp": "2026-08-06T08:00:00"},
+        {"session_id": "s-3", "llc_step_id": "3", "status": "skipped",
+         "timestamp": "2026-08-06T11:00:00"},
+    ]
+    (ace / "index.json").write_text(
+        _json.dumps({"sessions": sessions}), encoding="utf-8")
+    (ace / "config" / "gates.json").write_text(_json.dumps({
+        "gates": {"1": {"step": 0.5, "label": "Visao", "checklist": ["Revisar"]}},
+    }), encoding="utf-8")
+    (ace / "sessions" / "s-05.md").write_text(
+        "---\nstatus: completed\n---\n\n"
+        '<gate_result step="0.5" decision="approved" reviewer="harness">'
+        "ok</gate_result>\n", encoding="utf-8")
+    note = root / "docs" / "delta" / "skip-notes" / "step-3.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text("# skip\n", encoding="utf-8")
+
+    def normalize(board):
+        return {col.value: [c.id for c in cards]
+                for col, cards in board.items()}
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            board_graph = normalize(KanbanBoardBuilder(pilot.app.reader).build())
+        async with WizardApp(project_root=root, source="index").run_test() as pilot:
+            board_index = normalize(KanbanBoardBuilder(pilot.app.reader).build())
+        assert board_graph == board_index
+        assert board_graph["DONE"] == ["0.5"]
+        assert board_graph["RUNNING"] == ["1"]
+        assert board_graph["REWORK"] == ["2"]
+
+    asyncio.run(run())
+
+
+def test_wizard_cli_source_flag_accepts_graph_and_index(tmp_path):
+    """P2: 'wizard --source graph|index' aceitos; inválido → exit 2."""
+    from click.testing import CliRunner
+    from llc.cli import cli
+
+    root = _write_fake_index(tmp_path, [])
+    runner = CliRunner()
+    ok = runner.invoke(cli, ["wizard", "--source", "graph",
+                             "--project-root", str(root)])
+    assert ok.exit_code == 0
+    ok2 = runner.invoke(cli, ["wizard", "--source", "index",
+                              "--project-root", str(root)])
+    assert ok2.exit_code == 0
+    bad = runner.invoke(cli, ["wizard", "--source", "bogus",
+                              "--project-root", str(root)])
+    assert bad.exit_code == 2  # click.Choice rejeita
+
+
+def test_wizard_cli_help_shows_source_flag():
+    """P2: 'wizard --help' documenta --source."""
+    from click.testing import CliRunner
+    from llc.cli import cli
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["wizard", "--help"])
+    assert result.exit_code == 0
+    assert "--source" in result.output
+    assert "graph" in result.output and "index" in result.output
+
+
+def test_wizard_cli_export_flow_metrics_accepts_source_flag(tmp_path):
+    """P2: --export-flow-metrics aceita --source graph|index."""
+    from click.testing import CliRunner
+    from llc.cli import cli
+
+    root = _write_fake_index(tmp_path, [])
+    runner = CliRunner()
+    for src in ("graph", "index"):
+        result = runner.invoke(cli, ["wizard", "--export-flow-metrics",
+                                     "--source", src,
+                                     "--project-root", str(root)])
+        assert result.exit_code == 0, f"source={src}: {result.output}"
+
+
 # ─────────────────────── PRP-WIZARD-1B: HITL Widgets ───────────────────────
 
 

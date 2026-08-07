@@ -4,9 +4,12 @@ PRP-GRAPH-1C:
 - `to_kanban()` — mapeia NodeState → KanbanColumn (PRP §3).
 - `GraphPipelineDataSource` — adapter que implementa o Protocol
   `PipelineDataSource` (ADR-0002 §7.1) sobre o GraphEngine, injetado no
-  `KanbanBoardBuilder` SEM refactor (GOV-003/R3). Importa apenas TIPOS de
-  dados de `llc_wizard.data`/`llc_wizard.kanban` — exceção documentada do
-  adapter (ADR-0004 §8.3); nenhuma lógica do Wizard é importada.
+  `KanbanBoardBuilder` SEM refactor (GOV-003/R3). Importa de
+  `llc_wizard.data` apenas dados declarativos (`REGISTRY` + tipos) e de
+  `llc_wizard.kanban` apenas `KanbanColumn` — exceção documentada do
+  adapter (ADR-0004 §8.3); nenhuma LÓGICA do Wizard é importada. O
+  `REGISTRY` vem do binding `llc_wizard.data` (patchável nos testes de
+  paridade — mesma fonte do reader).
 
 Projeções são queries puras (P5): nenhuma muta o grafo nem as sessões ACE.
 """
@@ -16,7 +19,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from llc_steps import REGISTRY
+import llc_wizard.data as _wizard_data
 
 from llc_graph.engine import GraphEngine
 from llc_graph.model import NodeKind, NodeState
@@ -29,6 +32,16 @@ from llc_wizard.data import (
     StepStatus,
 )
 from llc_wizard.kanban import KanbanColumn
+
+def _registry():
+    """REGISTRY lido dinamicamente de `llc_wizard.data` (fix review P2).
+
+    Binding em call-time (não snapshot de import): os testes de paridade
+    monkeypatch `llc_wizard.data.REGISTRY` e o adapter precisa enxergar a
+    MESMA fonte estrutural do reader (`PipelineDataReader` referencia o nome
+    do módulo em call-time — espelhamos isso aqui).
+    """
+    return _wizard_data.REGISTRY
 
 # PRP-GRAPH-1C §3 — mapeamento NodeState → coluna Kanban
 NODE_STATE_TO_COLUMN = {
@@ -69,20 +82,39 @@ class GraphPipelineDataSource:
     def __init__(self, engine: GraphEngine):
         self.engine = engine
 
-    # ── get_status(): PipelineStatus a partir dos nós STEP do grafo ─────────
+    # ── get_status(): PipelineStatus com paridade de FORMA ao reader (§7.6) ─
     def get_status(self) -> PipelineStatus:
-        steps = []
+        """PipelineStatus com paridade de forma e ordem ao PipelineDataReader.
+
+        Iteramos o REGISTRY (mesma fonte do reader, via `llc_wizard.data`)
+        e derivamos o status dos nós STEP do grafo para steps in_pipeline.
+        Steps fora do pipeline (excluídos — ausentes do grafo por construção)
+        aparecem como `EXCLUDED`/`in_pipeline=False`, exatamente como o reader
+        — a sidebar do Wizard não perde os 🚫 (fix review P2).
+        """
+        status_by_id: dict[str, StepStatus] = {}
         for node in self.engine.graph.nodes.values():
             if node.kind != NodeKind.STEP:
                 continue
             state = self.engine.node_state(node.id)
             step_id = node.id[len("step-"):]
-            steps.append(StepInfo(
-                id=step_id,
-                name=self._step_name(step_id),
-                status=self._to_step_status(step_id, state),
-                in_pipeline=True,
-            ))
+            status_by_id[step_id] = self._to_step_status(step_id, state)
+        steps = []
+        for spec in _registry().values():
+            if spec.in_pipeline:
+                steps.append(StepInfo(
+                    id=spec.id,
+                    name=self._step_name(spec.id),
+                    status=status_by_id.get(spec.id, StepStatus.PENDING),
+                    in_pipeline=True,
+                ))
+            else:
+                steps.append(StepInfo(
+                    id=spec.id,
+                    name=spec.name,
+                    status=StepStatus.EXCLUDED,
+                    in_pipeline=False,
+                ))
         return PipelineStatus(steps=steps)
 
     def _to_step_status(self, step_id: str, state: NodeState) -> StepStatus:
@@ -101,7 +133,7 @@ class GraphPipelineDataSource:
 
     def _has_undecided_gate(self, step_id: str) -> bool:
         """Step tem gate (gates.json) e nenhuma decisão registrada ainda."""
-        spec = REGISTRY.get(step_id)
+        spec = _registry().get(step_id)
         if spec is None or not spec.gate:
             return False
         gates = self._load_gates()
@@ -110,7 +142,7 @@ class GraphPipelineDataSource:
         return self.engine.step_gate_decision(step_id) is None
 
     def _step_name(self, step_id: str) -> str:
-        spec = REGISTRY.get(step_id)
+        spec = _registry().get(step_id)
         return spec.name if spec is not None else step_id
 
     # ── Demais métodos do Protocol (paridade com PipelineDataReader) ────────

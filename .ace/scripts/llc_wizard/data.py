@@ -3,10 +3,17 @@
 RF-W1A.1–RF-W1A.5 — StepStatus, StepInfo, GateItem, GateInfo, PipelineStatus,
 PipelineDataReader (+ Protocol PipelineDataSource para compatibilidade futura
 com GraphEngine, RNF-W1A.8 / ADR-0004 §2.3).
+
+P2 pos-roadmap: `build_data_source` — factory do Protocol. Default `graph`
+(GraphPipelineDataSource sobre o GraphEngine, ADR-0004 D7); fallback
+explícito `--source index` (PipelineDataReader) e degradação graciosa:
+se o build do grafo falhar por erro inesperado, cai para o reader com warning
+(convenção do Wizard — nunca quebra a TUI).
 """
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -244,3 +251,44 @@ class PipelineDataReader:
 
     def get_pending_hitl(self) -> list["PendingHITL"]:
         return []
+
+
+def build_data_source(project_root, source: str = "graph"):
+    """Factory do Protocol PipelineDataSource (P2 pos-roadmap).
+
+    source="graph" (default): `GraphPipelineDataSource` sobre o `GraphEngine`
+    (ADR-0004 D7 — Kanban alimentado pelo grafo, SLA por timestamps reais).
+    source="index": `PipelineDataReader` (fallback explícito `--source index`).
+
+    Import lazy de `llc_graph`: o adapter (projections) importa tipos de
+    `llc_wizard.data` (exceção documentada ADR-0004 §8.3); import no topo
+    criaria ciclo de módulos. Fonte desconhecida → ValueError (determinístico).
+
+    Degradação graciosa: se a construção do grafo falhar por erro inesperado
+    (ex.: REGISTRY corrompido), cai para `PipelineDataReader` com warning —
+    a TUI nunca abre sem board (fix review P2). `--source index` continua
+    sendo o fallback explícito; este é o fallback defensivo.
+    """
+    root = Path(project_root)
+    if source == "index":
+        return PipelineDataReader(root)
+    if source != "graph":
+        raise ValueError(
+            f"Fonte desconhecida: {source!r} (esperado 'graph' | 'index')"
+        )
+    from llc_graph.builder import GraphBuilder
+    from llc_graph.engine import GraphEngine
+    from llc_graph.projections import GraphPipelineDataSource
+
+    try:
+        graph = GraphBuilder(project_root=root).build()
+        engine = GraphEngine(graph=graph, project_root=root)
+        return GraphPipelineDataSource(engine)
+    except Exception as exc:  # noqa: BLE001 — degradação graciosa (TUI viva)
+        warnings.warn(
+            f"Fonte graph indisponível ({exc!r}) — usando PipelineDataReader "
+            "(--source index)",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return PipelineDataReader(root)

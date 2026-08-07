@@ -1,0 +1,40 @@
+metrics:
+  cycle_time_avg_minutes: 9138
+  block_time_avg_minutes: 6
+  stale_rate_percent: 0
+  first_pass_rate_percent: 100
+by_step:
+  '3':
+    cycle_time: 14915
+    block_time: 0
+    first_pass: true
+  '4':
+    cycle_time: 14880
+    block_time: 0
+    first_pass: true
+  '5.2':
+    cycle_time: 1423
+    block_time: 0
+    first_pass: true
+  '5.3':
+    cycle_time: 15025
+    block_time: 0
+    first_pass: true
+  '5.4':
+    cycle_time: 15139
+    block_time: 0
+    first_pass: true
+  '10':
+    cycle_time: 10745
+    block_time: 0
+    first_pass: true
+  '10.8':
+    cycle_time: 971
+    block_time: 0
+    first_pass: true
+  '10.9':
+    cycle_time: 6
+    block_time: 6
+    first_pass: true
+generated_at: '2026-08-07T09:18:40'
+baseline: true

@@ -2,7 +2,9 @@
 
 Monta o layout com tres paineis: #sidebar (steps), #context-panel (gate) e
 #output-panel. Nesta fase (WP4) o app e somente-leitura de apresentacao:
-le o estado via PipelineDataReader e deriva o progresso via PipelineStatus.
+le o estado via PipelineDataSource (default: GraphPipelineDataSource sobre o
+GraphEngine; fallback PipelineDataReader com --source index) e deriva o
+progresso via PipelineStatus.
 Nunca escreve frontmatter em .ace/sessions/ (RF-W1A.15).
 
 PRP-WIZARD-1B: integra HITL real — o app possui um RealtimePromptCollector,
@@ -17,7 +19,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from llc_wizard.data import GateInfo, GateItem, PipelineDataReader, StepStatus
+from llc_wizard.data import GateInfo, GateItem, StepStatus, build_data_source
 from llc_wizard.decisions import (
     ArtifactReview,
     PromptRequest,
@@ -48,9 +50,10 @@ class WizardApp:
     real com Textual App entra no WP4.2+ com a mesma API de IDs.
     """
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path, source: str = "graph"):
         self.project_root = Path(project_root)
-        self.reader = PipelineDataReader(self.project_root)
+        self.source_name = source
+        self.reader = build_data_source(self.project_root, source)
         self.collector = RealtimePromptCollector()
         self._panels = {}
         self._gate_approved = False
@@ -172,7 +175,7 @@ class WizardApp:
         return scores
 
     def _build_kanban(self) -> None:
-        """Constrói o board Kanban a partir do PipelineDataReader (N1)."""
+        """Constrói o board Kanban a partir da fonte ativa (graph | index)."""
         sla = self._load_sla_minutes()
         builder = KanbanBoardBuilder(self.reader, sla_minutes=sla)
         board = builder.build()

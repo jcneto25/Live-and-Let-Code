@@ -636,19 +636,31 @@ def eval_report(output, as_json):
     is_flag=True,
     help="Exporta flow metrics (cycle/block time) para .ace/evals/results/ (RF-W1.2.3)",
 )
-def wizard(from_step, auto_approve, project_root, export_flow_metrics):
+@click.option(
+    "--source",
+    "source",
+    type=click.Choice(["graph", "index"]),
+    default="graph",
+    show_default=True,
+    help="Fonte de dados do Wizard: graph (GraphEngine, default) ou index (PipelineDataReader)",
+)
+def wizard(from_step, auto_approve, project_root, export_flow_metrics, source):
     """Inicia a TUI do Wizard (PRP-WIZARD-1A).
 
     Requer `textual` instalado; caso contrario, exibe a instrucao de instalacao
     e o prompt copy-paste (FallbackRunner). Com `--export-flow-metrics`, gera
     o YAML de métricas de fluxo (RF-W1.2.3) sem abrir a TUI.
+
+    `--source graph` (default): Kanban alimentado pelo GraphEngine
+    (GraphPipelineDataSource — ADR-0004 D7); `--source index`: PipelineDataReader.
     """
     if export_flow_metrics:
+        from llc_wizard.data import build_data_source
         from llc_wizard.flow_metrics import export_flow_metrics as _export
 
         root = Path(project_root) if project_root else Path.cwd()
-        path = _export(root)
-        click.echo(f"✅ Flow metrics exportadas: {path}")
+        path = _export(root, source=build_data_source(root, source))
+        click.echo(f"✅ Flow metrics exportadas: {path} (fonte: {source})")
         return
 
     try:
@@ -668,9 +680,13 @@ def wizard(from_step, auto_approve, project_root, export_flow_metrics):
 
     from llc_wizard.app import WizardApp
 
-    app = WizardApp(project_root=Path(project_root) if project_root else Path.cwd())
+    app = WizardApp(
+        project_root=Path(project_root) if project_root else Path.cwd(),
+        source=source,
+    )
     click.echo("Iniciando Wizard (TUI)...")
-    click.echo(f"  from: {from_step or 'inicio'} · auto-approve: {auto_approve}")
+    click.echo(f"  from: {from_step or 'inicio'} · auto-approve: {auto_approve} "
+               f"· source: {source}")
 
 
 def _run_runner(runner):

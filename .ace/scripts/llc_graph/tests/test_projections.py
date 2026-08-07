@@ -126,12 +126,13 @@ def test_to_kanban_maps_all_seven_states():
 
 # ── RF-G1C.3: adapter implementa o Protocol completo ─────────────────────────
 
-def test_adapter_builds_valid_board_without_changing_builder(tmp_path):
+def test_adapter_builds_valid_board_without_changing_builder(tmp_path, monkeypatch):
     """RF-G1C.3: KanbanBoardBuilder(GraphPipelineDataSource(engine)).build().
 
     O builder continua recebendo o Protocol — nenhuma assinatura mudou.
     """
     fixture = _ace_fixture(tmp_path)
+    monkeypatch.setattr("llc_wizard.data.REGISTRY", fixture["registry"])
     board = KanbanBoardBuilder(fixture["adapter"]).build()
     assert set(board.keys()) == set(KanbanColumn)
     # steps em cada coluna esperada
@@ -152,9 +153,10 @@ def test_adapter_exposes_all_protocol_methods(tmp_path):
     assert callable(adapter.get_pending_hitl)
 
 
-def test_adapter_get_status_maps_states_to_step_status(tmp_path):
+def test_adapter_get_status_maps_states_to_step_status(tmp_path, monkeypatch):
     """get_status() traduz NodeState → StepStatus (mesma semântica do reader)."""
     fixture = _ace_fixture(tmp_path)
+    monkeypatch.setattr("llc_wizard.data.REGISTRY", fixture["registry"])
     status = fixture["adapter"].get_status()
     by_id = {s.id: s for s in status.steps}
     assert by_id["0.5"].status == StepStatus.COMPLETED
@@ -163,6 +165,36 @@ def test_adapter_get_status_maps_states_to_step_status(tmp_path):
     assert by_id["3"].status == StepStatus.SKIPPED
     assert by_id["4"].status == StepStatus.PENDING
     assert all(s.in_pipeline for s in status.steps)
+
+
+def test_adapter_get_status_shape_parity_includes_excluded(tmp_path, monkeypatch):
+    """P2 (fix review): paridade de FORMA — excluded steps presentes.
+
+    O adapter itera o REGISTRY (via binding patchável de llc_wizard.data);
+    steps fora do pipeline (excluídos, ausentes do grafo por construção)
+    aparecem como EXCLUDED/in_pipeline=False — a sidebar do Wizard não
+    perde os 🚫 ao trocar para a fonte graph.
+    """
+    from llc_steps.models import _spec
+
+    fixture = _ace_fixture(tmp_path)
+    # registry com step excluído (in_pipeline=False) — id numérico (o _spec
+    # converte id para float no StepSpec.number)
+    registry = dict(fixture["registry"])
+    registry["99"] = _spec("99", "Excluido", "llc-step-99", None, False, False)
+    monkeypatch.setattr("llc_wizard.data.REGISTRY", registry)
+
+    status = fixture["adapter"].get_status()
+    by_id = {s.id: s for s in status.steps}
+    assert by_id["99"].status == StepStatus.EXCLUDED
+    assert by_id["99"].in_pipeline is False
+    assert by_id["4"].in_pipeline is True
+
+    # paridade 1:1 com o reader (mesmo binding)
+    reader_status = PipelineDataReader(tmp_path).get_status()
+    reader_by_id = {s.id: (s.status, s.in_pipeline) for s in reader_status.steps}
+    adapter_shape = {s.id: (s.status, s.in_pipeline) for s in status.steps}
+    assert reader_by_id == adapter_shape
 
 
 # ── RF-G1C.4: paridade adapter (grafo) = reader ──────────────────────────────

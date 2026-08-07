@@ -1,6 +1,6 @@
 # Próximos Passos — Pós-Roadmap PRP (100% entregue)
 
-> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ · P3/P4 pendentes
+> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ (100%) · P3/P4 pendentes
 > **Contexto:** Roadmap núcleo (Governança + Wizard 5/5 + Evals 5/5 + Graph 5/5) 100% entregue.
 > **Referências:** `PRP-MAP.md`, `DELIVERY_SUMMARY.md`, `factory-evolution.md` v0.2.0
 
@@ -84,11 +84,15 @@ na TUI para P3/P4 — o Wizard já roda sobre o grafo.
 - ✅ **Filtro de sinal (fix review):** apenas steps RESTANTES (não-DONE/SKIPPED/EXCLUDED)
   são destacados — em pipeline serial o caminho crítico inclui todos os steps;
   destacar só o que falta fazer preserva o sinal visual (repo real: 16 de 23)
-- ✅ 9 testes novos (5 widget/app + 2 review-fix + 2 projections), 571 suite,
-  fitness 41/41, cobertura 97%
+- ✅ **`ready_nodes()` como sugestão de próximo step (sessão 2026-08-07-003):**
+  `GraphPipelineDataSource.ready_step_ids()` (steps `NodeState.READY`, exclui
+  AWAITING_HUMAN/gates) + `KanbanBoardWidget(next_ids=...)` com marcador **➤** +
+  `WizardApp._next_step_ids()` duck-typed (index → sem marker). Exemplo real:
+  `⏳ Visão + Módulos 🔺 ➤` (próximo step executável, adapta-se ao estado ACE
+  vivo — abrir sessão do step 10.9 removeu o step 11 da sugestão). 9 testes,
+  580 suite, fitness 41/41, cobertura 97%
 
-**Restante do colateral (opcional):** `ready_nodes()` como sugestão de próximo step
-na coluna BACKLOG — recomenda-se entrar junto com o P3 (swimlanes).
+**✅ Colateral P2b 100% entregue** — caminho crítico (🔺) + próximo step (➤) na TUI.
 
 **Estimativa:** 0.5 semana → entregue · **Risco:** baixo
 

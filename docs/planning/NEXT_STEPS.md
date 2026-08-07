@@ -1,6 +1,6 @@
 # Próximos Passos — Pós-Roadmap PRP (100% entregue)
 
-> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ · P3/P4 pendentes
+> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ · P3/P4 pendentes
 > **Contexto:** Roadmap núcleo (Governança + Wizard 5/5 + Evals 5/5 + Graph 5/5) 100% entregue.
 > **Referências:** `PRP-MAP.md`, `DELIVERY_SUMMARY.md`, `factory-evolution.md` v0.2.0
 
@@ -74,14 +74,23 @@ na TUI para P3/P4 — o Wizard já roda sobre o grafo.
 
 ---
 
-### 🥈 P2b — Consumir GraphEngine na TUI (colateral do P2, opcional)
+### 🥈 P2b — Consumir GraphEngine na TUI — ✅ Done (2026-08-07)
 
-**O que fazer (benefícios colaterais já desbloqueados pelo P2):**
-- Coluna BACKLOG pode usar `ready_nodes()` (RF-W1A.7) como sugestão de próximo step
-- Exibir `critical_path()` no board (steps que determinam a duração total)
-- **Recomendação:** entrar junto com o P3 (swimlanes) para não abrir outra frente de UI
+**O que foi feito (sessão 2026-08-07-002):**
+- ✅ `critical_path()` no board: `GraphPipelineDataSource.critical_step_ids()` (steps
+  do caminho crítico, prefixo `step-` removido) + `KanbanBoardWidget(critical_ids=...)`
+  com marcador **🔺** por card + `WizardApp._critical_step_ids()` duck-typed
+  (fonte index não expõe → sem marker, comportamento anterior preservado)
+- ✅ **Filtro de sinal (fix review):** apenas steps RESTANTES (não-DONE/SKIPPED/EXCLUDED)
+  são destacados — em pipeline serial o caminho crítico inclui todos os steps;
+  destacar só o que falta fazer preserva o sinal visual (repo real: 16 de 23)
+- ✅ 9 testes novos (5 widget/app + 2 review-fix + 2 projections), 571 suite,
+  fitness 41/41, cobertura 97%
 
-**Estimativa:** 0.5 semana · **Risco:** baixo
+**Restante do colateral (opcional):** `ready_nodes()` como sugestão de próximo step
+na coluna BACKLOG — recomenda-se entrar junto com o P3 (swimlanes).
+
+**Estimativa:** 0.5 semana → entregue · **Risco:** baixo
 
 ---
 

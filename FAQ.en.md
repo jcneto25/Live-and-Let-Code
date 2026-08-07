@@ -1257,6 +1257,18 @@ agent made the commit. Install it: `cp .ace/scripts/pre-commit.sh .git/hooks/pre
 
 ---
 
+## 🖥️ Wizard TUI + Evals (v2.0.0)
+
+### What does the Wizard TUI read from in v2.0.0?
+
+Since v2.0.0, `llc wizard` defaults to the **pipeline graph** (`GraphPipelineDataSource`, ADR-0004 D7) instead of the static index reader. The Kanban reflects the real DAG state: critical-path steps are marked **🔺**, the next ready step is suggested with **➤** in the BACKLOG (AWAITING_HUMAN gates excluded), and when an `EXECUTION_WAVES.md` exists, cards are grouped in **swimlanes per wave** (collapsible/expandable). Fall back to the read-only index reader with `--source index`.
+
+### How do I get the bottleneck report (critical path × flow-metrics)?
+
+`python .ace/scripts/llc.py eval flow-report` (P4) crosses the GraphEngine's `critical_path()` with the latest `flow-metrics-*.yaml` collected by `llc wizard --export-flow-metrics`. It lists **actionable bottlenecks** (espera humana when `block_time > 0`; retrabalho when `rework_count > 0` or `first_pass: false`), the **pacing step** (highest cycle time on the critical path), and the **data gap** (critical steps without metrics). Output: `.ace/evals/results/flow-report-{date}.md`. Pair it with `llc eval --report` for the cost×quality Pareto dashboard.
+
+---
+
 ## ⚡ Early Commitment + Deterministic Replay
 
 ### Does LLC use Early Commitment and Deterministic Replay?

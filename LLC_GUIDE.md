@@ -121,6 +121,15 @@ python .ace/scripts/llc.py pipeline --from 0
 python .ace/scripts/llc.py status
 ```
 
+**v2.0.0 — Wizard TUI (fonte: grafo) + relatórios de Evals:**
+
+```bash
+python .ace/scripts/llc.py wizard                    # Kanban alimentado pelo grafo do pipeline: caminho crítico 🔺, próximo step ➤, swimlanes por wave
+python .ace/scripts/llc.py wizard --source index     # fallback: PipelineDataReader read-only
+python .ace/scripts/llc.py eval --report             # dashboard Pareto custo×qualidade
+python .ace/scripts/llc.py eval flow-report          # relatório de gargalos: critical_path × flow-metrics
+```
+
 O harness gerencia automaticamente: sessao ACE, context_seed, carregamento da skill,
 invocacao do agente, gate de validacao e finalizacao. Se o cliente CLI estiver
 disponivel (claude, opencode, codex, cursor), a invocacao e automatica. Caso
@@ -1168,6 +1177,9 @@ Alem dos steps principais, o LLC inclui ferramentas que operam entre etapas. Con
 | Executar pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
 | Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver código health trends + fitness | `python .ace/scripts/code-health.py --since "30 days ago" --json --fitness` |
+| Abrir a TUI do wizard (Kanban do grafo) | `python .ace/scripts/llc.py wizard` (caminho crítico 🔺, próximo step ➤, swimlanes por wave; fallback `--source index`) |
+| Relatório de gargalos (critical_path × flow-metrics) | `python .ace/scripts/llc.py eval flow-report` |
+| Dashboard Pareto custo×qualidade | `python .ace/scripts/llc.py eval --report` |
 | Verificar conformidade arquitetural | `python .ace/scripts/fitness-functions.py --all` |
 | Ver o design completo | Leia [`llc-pipeline-design.md`](llc-pipeline-design.md) |
 | Ver a estrutura de diretórios | Leia [`llc-pipeline-design.md` §2](llc-pipeline-design.md#2-arquitetura-de-diretórios) |

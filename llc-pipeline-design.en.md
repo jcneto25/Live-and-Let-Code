@@ -745,7 +745,35 @@ When alerts fire, apply corrective actions in order:
 
 ---
 
-## 11. Glossary
+## 11. Wizard TUI + Evals (v2.0.0)
+
+### 11.1 Wizard TUI with Graph Source (GraphPipelineDataSource)
+
+Since v2.0.0, `llc wizard` consumes the **pipeline graph** (`GraphPipelineDataSource`,
+ADR-0004 D7) as the Kanban's default source, with a read-only fallback (`--source index`).
+
+| Feature | Description |
+|---------|-------------|
+| Critical path 🔺 | Steps from `critical_path()` (Kahn O(V+E), GRAPH-2B) marked on the board |
+| Next step ➤ | `ready_nodes()` suggested in BACKLOG (AWAITING_HUMAN gates/steps excluded) |
+| Swimlanes per wave ▾/▸ | When `EXECUTION_WAVES.md` exists, cards grouped by wave (ACE-session × wave-PRP mapping; most recent session wins) |
+
+### 11.2 Bottleneck Report (critical_path × flow-metrics)
+
+`python .ace/scripts/llc.py eval flow-report` crosses the GraphEngine critical path with the
+latest `flow-metrics-*.yaml` (collected by `llc wizard --export-flow-metrics`):
+
+- **Actionable bottlenecks** — critical steps with `block_time > 0` (espera humana) or
+  `rework_count > 0` / `first_pass: false` (retrabalho)
+- **Pacing** — critical step with the largest cycle time (drives total duration)
+- **Data gap** — critical steps without metrics
+- Output: `.ace/evals/results/flow-report-{date}.md`
+
+Complement: `llc eval --report` (cost×quality Pareto dashboard, EVALS-F5).
+
+---
+
+## 12. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -760,10 +788,11 @@ When alerts fire, apply corrective actions in order:
 
 ---
 
-## 12. Version Control
+## 13. Version Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.0.0 | 08/07/2026 | LLC Team | Wizard TUI with graph source (GraphPipelineDataSource: critical path 🔺, next step ➤, swimlanes per wave) + bottleneck report `llc eval flow-report` (critical_path × flow-metrics) + Pareto dashboard `llc eval --report` |
 | 1.8.0 | 07/25/2026 | LLC Team | Added Step 5d (Secure-by-Design): 10 hard security gates, threat modeling check, 4 safe code templates, 5 security fitness functions, Gate 5d |
 | 1.6.0 | 06/26/2026 | LLC Team | Canonical `normalize_step()` + `llc_steps.REGISTRY` (single source of truth for step identity). Renumbered so step number == pipeline sequence: 11-Security→**10.6**, 12-Null-Safety→**10.7**, 11-OWASP→**11.1** (Execution stays 11). Added `llc_step_id` canonical field to session frontmatter + `index.json` (alongside numeric `llc_step`); CLI `--step` accepts ids/aliases (`security`, `owasp`, `null-safety`). Fixes #2/#3/#4 (textual steps unreachable, 10.5/10.6/10.7/11.1 invalid, non-deterministic `skill_load`). |
 | 1.5.0 | 06/13/2026 | LLC Team | Added Thin Harness (CLI orchestrator), Early Commitment + Deterministic Replay, security steps (11-Security, 11-OWASP, 12-Null-Safety), compressed documentation index, 15 human gates |

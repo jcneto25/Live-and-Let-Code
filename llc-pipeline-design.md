@@ -1017,7 +1017,35 @@ Quando uma fitness function falha:
 
 ---
 
-## 12. Glossário LLC
+## 12. Wizard TUI + Evals (v2.0.0)
+
+### 12.1 Wizard TUI com Fonte no Grafo (GraphPipelineDataSource)
+
+Desde o v2.0.0, o `llc wizard` consome o **grafo do pipeline** (`GraphPipelineDataSource`,
+ADR-0004 D7) como fonte padrão do Kanban, com fallback read-only (`--source index`).
+
+| Recurso | Descrição |
+|---------|-----------|
+| Caminho crítico 🔺 | Steps do `critical_path()` (Kahn O(V+E), GRAPH-2B) marcados no board |
+| Próximo step ➤ | `ready_nodes()` sugerido no BACKLOG (exclui gates/steps AWAITING_HUMAN) |
+| Swimlanes por wave ▾/▸ | Quando `EXECUTION_WAVES.md` existe, cards agrupados por onda (mapa sessões ACE × PRPs das ondas; sessão mais recente vence) |
+
+### 12.2 Relatório de Gargalos (critical_path × flow-metrics)
+
+`python .ace/scripts/llc.py eval flow-report` cruza o caminho crítico do GraphEngine com o
+`flow-metrics-*.yaml` mais recente (coletado por `llc wizard --export-flow-metrics`):
+
+- **Gargalos acionáveis** — steps críticos com `block_time > 0` (espera humana) ou
+  `rework_count > 0` / `first_pass: false` (retrabalho)
+- **Pacing** — step crítico com maior cycle time (determina a duração total)
+- **Gap de dados** — steps críticos sem métricas
+- Saída: `.ace/evals/results/flow-report-{date}.md`
+
+Complementar: `llc eval --report` (dashboard Pareto custo×qualidade, EVALS-F5).
+
+---
+
+## 13. Glossário LLC
 
 | Termo | Definição |
 |-------|-----------|
@@ -1033,10 +1061,11 @@ Quando uma fitness function falha:
 
 ---
 
-## 13. Controle de Versão
+## 14. Controle de Versão
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 2.0.0 | 07/08/2026 | Equipe LLC | Wizard TUI com fonte no grafo (GraphPipelineDataSource: caminho crítico 🔺, próximo step ➤, swimlanes por wave) + relatório de gargalos `llc eval flow-report` (critical_path × flow-metrics) + dashboard Pareto `llc eval --report` |
 | 1.8.0 | 25/07/2026 | Equipe LLC | Adicionado Step 5d (Secure-by-Design): 10 hard gates de segurança, threat modeling check, 4 safe code templates, 5 fitness functions de segurança, Gate 5d |
 | 1.7.0 | 07/07/2026 | Equipe LLC | Fluxo delta completo (Δ.0 + Δ.1), Smart Skip, PRP-A, Thin Harness --delta/--iteration, fitness functions (6 checks, modo híbrido), ADRs em arquivos separados (ADR_TEMPLATE.md), ARCHITECTURE_TEMPLATE expandido (domínio, ports & adapters, eventos), PRP_TEMPLATE expandido (repository interfaces, use cases, domain entities), AGENTS_TEMPLATE v1.2 (6 regras arquiteturais), Gate 11-ARCH, code-health --fitness, llc-arch-fitness skill |
 | 1.7.0 | 03/07/2026 | Equipe LLC | Adicionado Step 11.2 (PRP Verify): `prp_verify.py` engine, skill `llc-step-11-2-prp-verify`, gate 11-VERIFY, bloqueio determinístico no `session_end()` + `_post_wave_check()`, colunas Teste(s)/Arquivo(s) impl no PRP_TEMPLATE.md §2, escopo de SAST/secrets restrito a `apps/*/src/` |

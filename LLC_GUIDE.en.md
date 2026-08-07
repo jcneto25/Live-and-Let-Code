@@ -93,6 +93,15 @@ python .ace/scripts/llc.py pipeline --from 0
 python .ace/scripts/llc.py status
 ```
 
+**v2.0.0 — Wizard TUI (graph source) + Evals reports:**
+
+```bash
+python .ace/scripts/llc.py wizard                    # Kanban fed by the pipeline graph: critical path 🔺, next step ➤, swimlanes per wave
+python .ace/scripts/llc.py wizard --source index     # fallback: read-only PipelineDataReader
+python .ace/scripts/llc.py eval --report             # cost×quality Pareto dashboard
+python .ace/scripts/llc.py eval flow-report          # bottleneck report: critical_path × flow-metrics
+```
+
 The harness automatically manages: ACE session, context_seed, skill loading,
 agent invocation, validation gate, and session finalization. If a CLI client
 is available (claude, opencode, codex, cursor), invocation is automatic. Otherwise,
@@ -810,7 +819,7 @@ happens at both individual PRP level (session_end) and wave level
 - **Domain Isolation** — `domain/` does not import `@prisma/client`, `repositories/`, `prisma/`
 - **Use Case Size** — use cases ≤ 200 lines, single responsibility
 - **Module Coverage** — core modules ≥ 90% coverage, others ≥ 80%
-- **Clean Code + Deep Clean + Security + UX** — 34 additional checks via `--check-clean-code`, `--check-deep-clean`, `--check-security`, `--check-ux` (40 checks total with `--all`)
+- **Clean Code + Deep Clean + Governance + Security + UX** — 35 additional checks via `--check-clean-code`, `--check-deep-clean`, `--check-governance`, `--check-security`, `--check-ux` (41 checks total with `--all`)
 
 **You validate:** 👤 Gate 11.2 includes fitness functions
 - Does `python .ace/scripts/fitness-functions.py --all --strict` pass (exit 0)?
@@ -897,6 +906,9 @@ Beyond the main steps, LLC includes tools that operate between stages. See [`llc
 | Verify test coverage (Gate 10-COVERAGE) | `python .ace/scripts/llc.py gate run --gate test-coverage` |
 | Run pre-wave-check (build + boot + health + coverage) | `bash .ace/scripts/pre-wave-check.sh` |
 | View code health trends | `python .ace/scripts/code-health.py --since "30 days ago" --json` |
+| Open the wizard TUI (Kanban from the graph) | `python .ace/scripts/llc.py wizard` (critical path 🔺, next step ➤, swimlanes per wave; `--source index` fallback) |
+| Get the bottleneck report (critical path × flow-metrics) | `python .ace/scripts/llc.py eval flow-report` |
+| See the cost×quality Pareto dashboard | `python .ace/scripts/llc.py eval --report` |
 | See the full design | Read [`llc-pipeline-design.en.md`](llc-pipeline-design.en.md) |
 | See the directory structure | Read [`llc-pipeline-design.en.md` §2](llc-pipeline-design.en.md#2-directory-architecture) |
 | Understand a term | Read [`llc-pipeline-design.en.md` §7](llc-pipeline-design.en.md#7-glossary) |

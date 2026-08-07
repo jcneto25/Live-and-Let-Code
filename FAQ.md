@@ -1287,6 +1287,18 @@ agente fez o commit. Instale: `cp .ace/scripts/pre-commit.sh .git/hooks/pre-comm
 
 ---
 
+## 🖥️ Wizard TUI + Evals (v2.0.0)
+
+### De onde a TUI do Wizard lê os dados no v2.0.0?
+
+Desde o v2.0.0, `llc wizard` usa por padrão o **grafo do pipeline** (`GraphPipelineDataSource`, ADR-0004 D7) em vez do leitor estático do índice. O Kanban reflete o estado real do DAG: steps do caminho crítico marcados com **🔺**, o próximo step pronto sugerido com **➤** no BACKLOG (gates AWAITING_HUMAN excluídos) e, quando existe um `EXECUTION_WAVES.md`, os cards são agrupados em **swimlanes por wave** (recolhíveis/expansíveis). Fallback para o leitor read-only com `--source index`.
+
+### Como obter o relatório de gargalos (caminho crítico × flow-metrics)?
+
+`python .ace/scripts/llc.py eval flow-report` (P4) cruza o `critical_path()` do GraphEngine com o `flow-metrics-*.yaml` mais recente coletado por `llc wizard --export-flow-metrics`. Ele lista os **gargalos acionáveis** (espera humana quando `block_time > 0`; retrabalho quando `rework_count > 0` ou `first_pass: false`), o **step de pacing** (maior cycle time no caminho crítico) e a **lacuna de dados** (steps críticos sem métricas). Saída: `.ace/evals/results/flow-report-{date}.md`. Combine com `llc eval --report` para o dashboard Pareto custo×qualidade.
+
+---
+
 ## ⚡ Early Commitment + Deterministic Replay
 
 ### O LLC usa Early Commitment e Deterministic Replay?

@@ -51,11 +51,11 @@ python .ace/scripts/llc.py gate run --gate test-coverage
 bash .ace/scripts/pre-wave-check.sh
 ```
 
-**New: Architecture Fitness Functions (40 checks)**
+**New: Architecture Fitness Functions (41 checks)**
 
 ```bash
-# Verify compliance — 40 checks: architecture (6), clean code (16),
-# deep clean (8), security (5), UX (5)
+# Verify compliance — 41 checks: architecture (6), clean code (16),
+# deep clean (8), governance (1), security (5), UX (5)
 python .ace/scripts/fitness-functions.py --all
 
 # Strict mode (exit 1 on violations) for CI/CD
@@ -80,6 +80,21 @@ bash .ace/scripts/llm-validation.sh
 # Step 5 generates ARCHITECTURE.md + individual ADR files
 python .ace/scripts/llc.py run --step 5 --task "Arquitetura do sistema"
 # ADRs available at: docs/architecture/adr/ADR-*.md
+```
+
+**New in v2.0.0: Wizard TUI (graph source) + Evals reports**
+
+```bash
+# Wizard TUI — Kanban fed by the pipeline graph (default source)
+python .ace/scripts/llc.py wizard
+#   - critical path steps marked 🔺 · next step suggested ➤ in BACKLOG
+#   - swimlanes per wave (▾/▸) when EXECUTION_WAVES.md exists
+#   - fallback: --source index (read-only PipelineDataReader)
+python .ace/scripts/llc.py wizard --source index
+
+# Evals — cost×quality Pareto dashboard + real bottleneck report
+python .ace/scripts/llc.py eval --report      # Pareto dashboard (RF-EF5.3)
+python .ace/scripts/llc.py eval flow-report   # critical_path × flow-metrics → bottlenecks
 ```
 
 ### Pipeline

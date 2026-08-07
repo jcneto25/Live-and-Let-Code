@@ -1,6 +1,6 @@
 # Próximos Passos — Pós-Roadmap PRP (100% entregue)
 
-> **Data:** 2026-08-06 · **Status:** 📋 P1 ✅ + P2 ✅ + P2b ✅ (100%) + **P3 ✅** · P4 pendente
+> **Data:** 2026-08-06 · **Status:** 📋 **P1–P4 ✅ (100%)** — post-roadmap completo
 > **Contexto:** Roadmap núcleo (Governança + Wizard 5/5 + Evals 5/5 + Graph 5/5) 100% entregue.
 > **Referências:** `PRP-MAP.md`, `DELIVERY_SUMMARY.md`, `factory-evolution.md` v0.2.0
 
@@ -127,18 +127,31 @@ real no Step 4 (planejamento).
 
 ---
 
-### 🏅 P4 — Métricas de fluxo em ação (consumir `flow-metrics-*.yaml`)
+### 🏅 P4 — Métricas de fluxo em ação (consumir `flow-metrics-*.yaml`) — ✅ Done (2026-08-07)
 
 **Por quê:** WIZARD-1.2 grava as métricas, GRAPH-2B calcula o caminho crítico — mas ninguém cruza
 os dois. O valor real está em "quais steps bloqueiam o caminho crítico E estão stale/em rework".
 
-**O que fazer (extensão leve de GRAPH-2B ou PRP novo pequeno):**
-- `critical_path()` + `flow_metrics.yaml` → tabela "gargalos reais": steps no caminho crítico com
-  `stale_rate` alto ou `rework_count > 0`
-- Alimenta o `llc eval report` ou um novo `llc flow report`
-- Critério de saída: relatório identifica ≥1 gargalo acionável por execução
+**O que foi feito (sessão 2026-08-07-005):**
+- ✅ `llc_evals/flow_report.py` — `compute_bottlenecks()` (núcleo puro/DIP): step
+  NO caminho crítico com `block_time > 0` (**espera_humana**) ou `rework_count > 0` /
+  `first_pass false` (**retrabalho**) = GARGALO ACIONÁVEL; `pacing` = crítico com maior
+  `cycle_time` (o que determina a duração total hoje); normalização `str(k)` das chaves
+  YAML (arquivo à mão com `3:` sem aspas não perde o step — fix review)
+- ✅ `generate_flow_report()` — `critical_path()` (GraphEngine, import **lazy** — DIP/sem
+  ciclo) × `flow-metrics-*.yaml` mais recente → `flow-report-{date}.md`
+- ✅ CLI **`llc eval flow-report`** (`--output` / `--project-root`) — imprime o relatório
+- ✅ 17 testes (9 núcleo + 3 integração + 1 CLI + 4 edge), **613 full suite**, fitness
+  **41/41**, cobertura `flow_report.py` **97%**
 
-**Estimativa:** 0.5–1 semana · **Risco:** baixo
+**Smoke no repo real (DoD atendido — ≥1 gargalo acionável):**
+```
+🚨 Gargalos: | 10.9 | espera_humana | 6 | 0 | 6 |
+⏱️ Pacing:   Step 5.4 — 15139 min (determina a duração total hoje)
+📡 Gap:      15 steps críticos sem flow-metrics (coletar com --export-flow-metrics)
+```
+
+**Estimativa:** 0.5–1 semana → entregue · **Risco:** baixo
 
 ---
 
@@ -176,6 +189,8 @@ paridade já existente, enquanto P3 é feature nova.
 - [x] P3 (2026-08-07): swimlanes por wave no `KanbanBoardWidget` — `build_step_wave_map`
       (sessão mais recente vence), collapse/expand por wave, swimlane "Sem onda",
       degradação graciosa sem `EXECUTION_WAVES.md`; 16 testes, 596 suite, fitness 41/41
-- [ ] P4: relatório de gargalos reais (caminho crítico × flow metrics) com ≥1 achado acionável
+- [x] P4 (2026-08-07): relatório de gargalos reais (caminho crítico × flow metrics) —
+      `llc_evals/flow_report.py` + `llc eval flow-report`; ≥1 gargalo acionável por execução
+      (repo real: 10.9 espera_humana, pacing 5.4); 17 testes, 613 suite, fitness 41/41
 - [ ] Todos os itens: TDD/FTDD, cobertura ≥85%, `fitness-functions.py --all --strict` verde,
       sessão ACE registrada

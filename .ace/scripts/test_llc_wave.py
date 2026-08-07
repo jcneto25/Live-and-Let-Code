@@ -234,6 +234,28 @@ class TestParseExecutionWaves:
         assert "PRP-001" in result[0].prps
         assert "PRP-002" in result[0].prps
 
+    def test_parses_waves_with_real_prp_ids(self, tmp_path):
+        """P3: IDs reais do pipeline (PRP-WIZARD-1A) também são extraídos.
+
+        O padrão antigo `PRP-\\d{3,}` não capturava PRPs reais
+        (PRP-WIZARD-1A, PRP-GRAPH-2B) — fix do PRP-WIZARD-2.0: a fonte das
+        swimlanes precisa funcionar com a nomenclatura real das ondas.
+        """
+        wave_file = tmp_path / "EXECUTION_WAVES.md"
+        wave_file.write_text(
+            """
+### Onda 1: Foundation
+
+| PRP-WIZARD-1A | Kanban UI |
+| PRP-GRAPH-2B | Critical path |
+""",
+            encoding="utf-8",
+        )
+        result = parse_execution_waves(wave_file)
+        assert len(result) == 1
+        assert "PRP-WIZARD-1A" in result[0].prps
+        assert "PRP-GRAPH-2B" in result[0].prps
+
 
 class TestParseTasks:
     """Testes para parse_tasks."""
@@ -263,6 +285,82 @@ class TestParseTasks:
         assert "PRP-002" in result
         assert result["PRP-001"].tasks == ["T-001"]
         assert result["PRP-002"].tasks == ["T-002"]
+class TestBuildStepWaveMap:
+    """P3 (PRP-WIZARD-2.0): build_step_wave_map — ponte step→onda."""
+
+    def test_maps_steps_via_session_prp(self):
+        """Sessão (llc_step_id + prp) × waves.prps → {step: onda}."""
+        from llc_wave.parsing import build_step_wave_map
+
+        waves = [
+            WaveInfo(number=1, name="Foundation", prps=["PRP-WIZARD-1A"]),
+            WaveInfo(number=2, name="Wizard",
+                     prps=["PRP-WIZARD-1.1", "PRP-GRAPH-2B"]),
+        ]
+        sessions = [
+            {"llc_step_id": "1", "prp": "PRP-WIZARD-1A"},
+            {"llc_step_id": "2", "prp": "PRP-WIZARD-1.1"},
+            {"llc_step_id": "3", "prp": "PRP-GRAPH-2B"},
+        ]
+        result = build_step_wave_map(sessions, waves)
+        assert result == {"1": 1, "2": 2, "3": 2}
+
+    def test_ignores_sessions_without_wave_match(self):
+        """PRP não mapeado, sessão sem prp ou sem step → fora do mapa."""
+        from llc_wave.parsing import build_step_wave_map
+
+        waves = [WaveInfo(number=1, name="Foundation", prps=["PRP-A"])]
+        sessions = [
+            {"llc_step_id": "1", "prp": "PRP-A"},
+            {"llc_step_id": "5", "prp": "PRP-FORA"},  # PRP não mapeado
+            {"llc_step_id": "6"},                        # sem prp
+            {"prp": "PRP-A"},                            # sem step
+            {"llc_step_id": "7", "prp": None},
+        ]
+        result = build_step_wave_map(sessions, waves)
+        assert result == {"1": 1}
+
+    def test_handles_empty_inputs(self):
+        """Sessões ou waves vazios → mapa vazio (sem crash)."""
+        from llc_wave.parsing import build_step_wave_map
+
+        assert build_step_wave_map([], []) == {}
+        assert build_step_wave_map(
+            [{"llc_step_id": "1", "prp": "PRP-A"}], []) == {}
+        assert build_step_wave_map(
+            [], [WaveInfo(number=1, name="F", prps=["PRP-A"])]) == {}
+
+    def test_most_recent_session_wins(self):
+        """Fix review: step com múltiplas sessões → vence a MAIS RECENTE.
+
+        Independe da ordem de iteração do arquivo (last-wins por ordem era
+        arbitrário): a sessão com timestamp maior define a onda do step.
+        """
+        from llc_wave.parsing import build_step_wave_map
+
+        waves = [
+            WaveInfo(number=1, name="Graph", prps=["PRP-GRAPH-2B"]),
+            WaveInfo(number=2, name="Wizard", prps=["PRP-WIZARD-1.2"]),
+        ]
+        # Desordenadas de propósito — a mais recente (Wizard) deve vencer
+        sessions = [
+            {"llc_step_id": "10.9", "prp": "PRP-WIZARD-1.2",
+             "timestamp": "2026-08-07T10:00:00"},
+            {"llc_step_id": "10.9", "prp": "PRP-GRAPH-2B",
+             "timestamp": "2026-08-06T09:00:00"},
+        ]
+        result = build_step_wave_map(sessions, waves)
+        assert result == {"10.9": 2}
+
+    def test_regex_does_not_capture_trailing_punctuation(self, tmp_path):
+        """Fix review: 'PRP-WIZARD-1A.' (ponto final) → captura sem o ponto."""
+        wave_file = tmp_path / "EXECUTION_WAVES.md"
+        wave_file.write_text(
+            "### Onda 1: Wizard\n\n| PRP-WIZARD-1A. | desc |\n",
+            encoding="utf-8",
+        )
+        result = parse_execution_waves(wave_file)
+        assert result[0].prps == ["PRP-WIZARD-1A"]
 
 
 class TestFormatWaveList:

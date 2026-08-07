@@ -56,6 +56,8 @@ class KanbanBoardWidget:
         theme: str = "dark",
         critical_ids: set[str] | None = None,
         next_ids: set[str] | None = None,
+        waves: list | None = None,
+        step_wave: dict[str, int] | None = None,
     ):
         self.board = board
         self.sla_minutes = sla_minutes
@@ -67,6 +69,13 @@ class KanbanBoardWidget:
         # P2b-rest: steps prontos p/ execução (ready_nodes) — sugestão de
         # próximo step (RF-W1A.7) com marcador ➤
         self.next_ids = set(next_ids or ())
+        # P3 (PRP-WIZARD-2.0): swimlanes por wave. `waves` vazio → board
+        # plano (comportamento anterior). `step_wave` mapeia step_id → onda;
+        # steps fora do mapa caem na swimlane "Sem onda". Estado de colapso é
+        # por widget (não persiste entre toggles K — ver PRP-WIZARD-2.0 §1.3).
+        self.waves = list(waves or ())
+        self.step_wave = dict(step_wave or {})
+        self._collapsed_waves: set[int | None] = set()
 
     # ── Cabeçalho (WIP total / Block Time / Stale count) ───────────────────
     def header(self) -> str:
@@ -163,8 +172,52 @@ class KanbanBoardWidget:
                         "não é permitido (fluxo é state-driven)")
         return False, f"movimento bloqueado: card {card_id} não encontrado"
 
+    # ── PRP-WIZARD-2.0: Swimlanes por wave (P3) ────────────────────────────
+    def toggle_wave(self, wave_number: int | None) -> None:
+        """Colapsa/expande a swimlane de uma wave (RF-W2.0.4/.5).
+
+        `None` alterna a swimlane "Sem onda". Round-trip volta ao estado
+        inicial (2× toggle desfaz).
+        """
+        if wave_number in self._collapsed_waves:
+            self._collapsed_waves.discard(wave_number)
+        else:
+            self._collapsed_waves.add(wave_number)
+
+    def _wave_of(self, card: KanbanCard) -> int | None:
+        """Número da onda do card (None = sem onda)."""
+        return self.step_wave.get(card.step_id or card.id)
+
+    def _wave_label(self, wave_number: int | None, count: int) -> str:
+        """Rótulo da swimlane: 'Onda N: Nome (count)' ou 'Sem onda (count)'."""
+        if wave_number is None:
+            return f"Sem onda ({count})"
+        name = next((w.name for w in self.waves if w.number == wave_number), "")
+        suffix = f": {name}" if name else ""
+        return f"Onda {wave_number}{suffix} ({count})"
+
+    def _render_swimlanes(self, cards: list[KanbanCard]) -> list[str]:
+        """Sub-seções por onda dentro de uma coluna (P3)."""
+        lines: list[str] = []
+        groups: dict[int | None, list[KanbanCard]] = {}
+        for card in cards:
+            groups.setdefault(self._wave_of(card), []).append(card)
+        # Ondas com número ordenadas por número; "Sem onda" (None) por último
+        ordered = sorted((k for k in groups if k is not None))
+        for wave_n in ordered + [None]:
+            if wave_n not in groups:
+                continue
+            bucket = groups[wave_n]
+            collapsed = wave_n in self._collapsed_waves
+            marker = "▸" if collapsed else "▾"
+            lines.append(f"  {marker} {self._wave_label(wave_n, len(bucket))}")
+            if not collapsed:
+                for card in bucket:
+                    lines.append(self._card_line(card))
+        return lines
+
     def render(self) -> str:
-        """Renderiza o board completo (RF-W1.1.1-10)."""
+        """Renderiza o board completo (RF-W1.1.1-10 + P3 swimlanes)."""
         lines = [self.header(), f"[tema: {self.theme}]", ""]
         for column in _COLUMN_ORDER:
             if self._collapsed(column):
@@ -176,7 +229,11 @@ class KanbanBoardWidget:
             cards = self.board.get(column, [])
             if not cards:
                 lines.append("  (vazio)")
-            for card in cards:
-                lines.append(self._card_line(card))
+            elif self.waves:
+                # P3: swimlanes por wave quando há ondas definidas
+                lines.extend(self._render_swimlanes(cards))
+            else:
+                for card in cards:
+                    lines.append(self._card_line(card))
             lines.append("")
         return "\n".join(lines).rstrip()

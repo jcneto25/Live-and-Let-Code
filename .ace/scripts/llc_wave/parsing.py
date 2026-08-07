@@ -81,8 +81,15 @@ def parse_execution_waves(filepath: Path = EXECUTION_WAVES_FILE) -> list[WaveInf
 
         # Extrai PRP IDs do corpo da seção
         prp_ids = set()
-        # Pattern: PRP-NNN
-        for m in re.finditer(r"\b(PRP-\d{3,})\b", section):
+        # Pattern: PRP-NNN e PRP-<trilha>-<versão> (ex: PRP-001, PRP-WIZARD-1A,
+        # PRP-GRAPH-2B). O padrão antigo `PRP-\d{3,}` não capturava os IDs
+        # reais do pipeline (PRP-WIZARD-1A etc.) — fix P3 (PRP-WIZARD-2.0).
+        # O fecho `[A-Za-z0-9]` (não obrigatório) evita capturar pontuação
+        # final ("PRP-WIZARD-1A." → "PRP-WIZARD-1A") — fix review P3.
+        for m in re.finditer(
+            r"\b(PRP-[A-Za-z0-9](?:[A-Za-z0-9.\-]*[A-Za-z0-9])?)\b",
+            section,
+        ):
             prp_ids.add(m.group(1))
         # Pattern: F0.1, F0.2 (IDs alfanuméricos usados em templates)
         for m in re.finditer(r"\b(F\d+\.\d+)\b", section):
@@ -224,6 +231,39 @@ def parse_tasks(filepath: Path | None = None) -> dict[str, PrpInfo]:
         prps["PRP-SECURITY"].tasks = sorted(existing | sec_tasks)
 
     return prps
+
+
+def build_step_wave_map(sessions: list[dict], waves: list[WaveInfo]) -> dict[str, int]:
+    """Mapeia step_id → número da onda (PRP-WIZARD-2.0 swimlanes).
+
+    Ponte entre duas fontes existentes:
+    - `sessions` (index.json): cada sessão liga `llc_step_id` a um `prp`
+    - `waves` (EXECUTION_WAVES.md): cada onda lista seus PRPs (`wave.prps`)
+
+    Um step pertence à onda que contém o PRP da sua sessão. Steps sem sessão,
+    sem `prp`, ou cujo PRP não esteja em nenhuma onda ficam FORA do mapa — o
+    Kanban os agrupa na swimlane "Sem onda". Função pura (sem I/O).
+
+    Determinismo (fix review P3): um step pode ter várias sessões com PRPs de
+    ondas diferentes (ex: step 10.8 rodou sob EVALS-F2 e EVALS-F5). Vence a
+    sessão MAIS RECENTE por `timestamp`/`completed_at` — independe da ordem
+    de iteração do arquivo, que é uma convenção, não um contrato.
+    """
+    prp_to_wave = {prp: w.number for w in waves for prp in w.prps}
+    mapping: dict[str, int] = {}
+
+    def _ts(s: dict) -> str:
+        return s.get("timestamp") or s.get("completed_at") or ""
+
+    for s in sorted(sessions, key=_ts):  # ascendente → a mais recente vence
+        step_id = s.get("llc_step_id")
+        prp = s.get("prp")
+        if not step_id or not prp:
+            continue
+        wave_n = prp_to_wave.get(prp)
+        if wave_n is not None:
+            mapping[step_id] = wave_n
+    return mapping
 
 
 def format_wave_list(waves: list[WaveInfo], prps: dict[str, PrpInfo]) -> str:

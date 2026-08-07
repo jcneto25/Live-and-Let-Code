@@ -1329,6 +1329,192 @@ def test_wizard_app_routes_prompt_during_step_execution(tmp_path):
     asyncio.run(run())
 
 
+# ─────────────── P3: PRP-WIZARD-2.0 swimlanes por wave (FTDD) ─────────────
+
+
+def _waves_two():
+    """Duas ondas de teste: 1 Foundation (PRP-A), 2 Wizard (PRP-B)."""
+    from llc_wave import WaveInfo
+
+    return [
+        WaveInfo(number=1, name="Foundation", prps=["PRP-A"]),
+        WaveInfo(number=2, name="Wizard", prps=["PRP-B"]),
+    ]
+
+
+def _board_swimlanes():
+    """Board: 3 PENDING (BACKLOG) + 1 COMPLETED (DONE) p/ teste de swimlanes."""
+    return _board_from_steps([
+        {"id": "1", "name": "Visao", "status": StepStatus.PENDING},
+        {"id": "2", "name": "Specs", "status": StepStatus.PENDING},
+        {"id": "3", "name": "PRDs", "status": StepStatus.PENDING},
+        {"id": "9", "name": "Delta", "status": StepStatus.COMPLETED},
+    ])
+
+
+def test_kanban_widget_swimlanes_render_wave_headers(tmp_path):
+    """P3 RF-W2.0.1: com waves, colunas ganham sub-seções por onda (▾ default)."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    widget = KanbanBoardWidget(_board_swimlanes(), waves=_waves_two(),
+                               step_wave={"1": 1, "2": 2, "3": 2})
+    rendered = widget.render()
+    assert "Onda 1: Foundation (1)" in rendered
+    assert "Onda 2: Wizard (2)" in rendered
+    assert "▾" in rendered  # expandidas por padrão (RF-W2.0.1)
+
+
+def test_kanban_widget_cards_grouped_under_wave(tmp_path):
+    """P3 RF-W2.0.2: cards aparecem sob a swimlane da sua onda."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    widget = KanbanBoardWidget(_board_swimlanes(), waves=_waves_two(),
+                               step_wave={"1": 1, "2": 2, "3": 2})
+    rendered = widget.render()
+    # Visao vem depois do header da Onda 1 (dentro da swimlane)
+    assert rendered.index("Onda 1: Foundation (1)") < rendered.index("Visao")
+    # Specs e PRDs ficam dentro da swimlane da Onda 2 (seção BACKLOG)
+    onda2 = rendered.split("Onda 2: Wizard (2)")[1].split("DONE")[0]
+    assert "Specs" in onda2 and "PRDs" in onda2
+
+
+def test_kanban_widget_ungrouped_cards_sem_onda(tmp_path):
+    """P3 RF-W2.0.3: step sem onda vai para a swimlane 'Sem onda'."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    widget = KanbanBoardWidget(_board_swimlanes(), waves=_waves_two(),
+                               step_wave={"1": 1})
+    rendered = widget.render()
+    assert "Sem onda" in rendered
+
+
+def test_kanban_widget_wave_collapsed_hides_cards(tmp_path):
+    """P3 RF-W2.0.4: wave colapsada mostra header ▸ e esconde os cards."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    widget = KanbanBoardWidget(_board_swimlanes(), waves=_waves_two(),
+                               step_wave={"1": 1, "2": 2, "3": 2})
+    widget.toggle_wave(2)
+    rendered = widget.render()
+    assert "▸ Onda 2: Wizard (2)" in rendered
+    assert "Specs" not in rendered      # cards da onda 2 ocultos
+    assert "PRDs" not in rendered
+    assert "Visao" in rendered          # onda 1 segue visível
+
+
+def test_kanban_widget_toggle_wave_roundtrip(tmp_path):
+    """P3 RF-W2.0.5: toggle expande/colapsa a mesma onda (round-trip)."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    widget = KanbanBoardWidget(_board_swimlanes(), waves=_waves_two(),
+                               step_wave={"1": 1})
+    widget.toggle_wave(1)
+    assert 1 in widget._collapsed_waves
+    widget.toggle_wave(1)
+    assert 1 not in widget._collapsed_waves
+
+
+def test_kanban_widget_sem_onda_sorts_after_numbered_waves(tmp_path):
+    """P3 (fix review): 'Sem onda' vem DEPOIS das ondas numeradas na coluna."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_from_steps([
+        {"id": "1", "name": "Visao", "status": StepStatus.PENDING},
+        {"id": "2", "name": "Specs", "status": StepStatus.PENDING},
+        {"id": "5", "name": "SemOnda", "status": StepStatus.PENDING},
+    ])
+    widget = KanbanBoardWidget(
+        board, waves=_waves_two(), step_wave={"1": 1, "2": 2})
+    rendered = widget.render()
+    assert rendered.index("Onda 1: Foundation") < rendered.index("Onda 2: Wizard")
+    assert rendered.index("Onda 2: Wizard") < rendered.index("Sem onda")
+
+
+def test_kanban_widget_no_waves_flat_board(tmp_path):
+    """P3 RF-W2.0.6 (regressão): sem waves → render plano, sem swimlanes."""
+    from llc_wizard.kanban_board import KanbanBoardWidget
+
+    board = _board_swimlanes()
+    flat = KanbanBoardWidget(board).render()
+    swim = KanbanBoardWidget(board, waves=[], step_wave={}).render()
+    assert flat == swim                          # waves vazios ≡ sem waves
+    assert "Onda" not in swim and "Sem onda" not in swim
+
+
+def test_app_build_kanban_includes_swimlanes(tmp_path):
+    """P3: app com EXECUTION_WAVES.md + sessões (llc_step_id+prp) → swimlanes."""
+    import json as _json
+
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    docs = root / "docs" / "planning"
+    docs.mkdir(parents=True)
+    (docs / "EXECUTION_WAVES.md").write_text(
+        "### Onda 1: Foundation\n\n| PRP-WIZARD-1A | desc |\n",
+        encoding="utf-8")
+    sessions = [{"session_id": "s-1", "llc_step_id": "1",
+                 "prp": "PRP-WIZARD-1A", "status": "completed"}]
+    (root / ".ace" / "index.json").write_text(
+        _json.dumps({"sessions": sessions}), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app._step_wave == {"1": 1}
+            app.toggle_kanban()
+            assert "Onda 1: Foundation" in app.kanban_render()
+
+    asyncio.run(run())
+
+
+def test_app_waves_graceful_when_missing(tmp_path):
+    """P3 RF-W2.0.6: sem EXECUTION_WAVES.md → board plano (sem crash)."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app._waves == []
+            assert app._step_wave == {}
+            app.toggle_kanban()
+            assert "Onda" not in app.kanban_render()
+
+    asyncio.run(run())
+
+
+def test_app_toggle_wave_roundtrip(tmp_path):
+    """P3 RF-W2.0.5 (app): toggle_wave colapsa e expande, painel sincronizado."""
+    from llc_wizard.app import WizardApp
+
+    root = _write_fake_index(tmp_path, [])
+    docs = root / "docs" / "planning"
+    docs.mkdir(parents=True)
+    (docs / "EXECUTION_WAVES.md").write_text(
+        "### Onda 1: Foundation\n\n| PRP-WIZARD-1A | desc |\n",
+        encoding="utf-8")
+    # sessão ligando o step 1 ao PRP da onda 1 (mapa step→wave)
+    sessions = [{"session_id": "s-1", "llc_step_id": "1",
+                 "prp": "PRP-WIZARD-1A", "status": "completed"}]
+    (root / ".ace" / "index.json").write_text(
+        json.dumps({"sessions": sessions}), encoding="utf-8")
+
+    async def run():
+        async with WizardApp(project_root=root).run_test() as pilot:
+            app = pilot.app
+            assert app._step_wave == {"1": 1}
+            app.toggle_kanban()
+            app.toggle_wave(1)
+            rendered = app.kanban_render()
+            assert "▸ Onda 1" in rendered
+            app.toggle_wave(1)
+            assert "▾ Onda 1" in app.kanban_render()
+
+    asyncio.run(run())
+
+
 def test_wizard_app_executes_step_with_hitl(tmp_path):
     """RF-W1B (integração): run_step_with_hitl captura output e completa o step."""
     from llc_wizard.app import WizardApp

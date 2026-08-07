@@ -65,6 +65,10 @@ class WizardApp:
         self._kanban_widget: KanbanBoardWidget | None = None
         self._backlog_order: list[str] | None = None
         self.theme = self._load_theme()
+        # P3 (PRP-WIZARD-2.0): ondas + mapa step→onda para swimlanes. Carregado
+        # uma vez no init (dado de repo, não do reader); degrada para board
+        # plano quando EXECUTION_WAVES.md não existe.
+        self._waves, self._step_wave = self._load_wave_data()
 
     def _build(self):
         status = self.reader.get_status()
@@ -200,6 +204,39 @@ class WizardApp:
         }
         return critical & remaining
 
+    def _load_wave_data(self) -> tuple[list, dict[str, int]]:
+        """Ondas + mapa step→onda (P3 swimlanes) — degradação graciosa.
+
+        Fonte: `EXECUTION_WAVES.md` real (gerado no Step 4) via
+        `parse_execution_waves()`, cruzado com as sessões do `index.json`
+        (`llc_step_id` + `prp`) via `build_step_wave_map()`. Arquivo ausente,
+        vazio ou malformado → `([], {})` — o Kanban renderiza sem swimlanes
+        (comportamento anterior), nunca quebra a TUI (convenção do P2).
+        """
+        waves_file = (self.project_root / "docs" / "planning"
+                      / "EXECUTION_WAVES.md")
+        if not waves_file.exists():
+            return [], {}
+        try:
+            from llc_wave import parse_execution_waves
+            from llc_wave.parsing import build_step_wave_map
+
+            waves = parse_execution_waves(waves_file)
+            if not waves:
+                return [], {}
+            import json
+
+            try:
+                data = json.loads(
+                    (self.project_root / ".ace" / "index.json")
+                    .read_text(encoding="utf-8"))
+                sessions = data.get("sessions", []) if isinstance(data, dict) else []
+            except (json.JSONDecodeError, OSError, AttributeError):
+                sessions = []
+            return waves, build_step_wave_map(sessions, waves)
+        except ImportError:
+            return [], {}
+
     def _next_step_ids(self) -> set[str]:
         """Steps elegíveis p/ execução agora (P2b-rest) — duck-typed.
 
@@ -235,6 +272,8 @@ class WizardApp:
             theme=self.theme,
             critical_ids=self._critical_step_ids(),
             next_ids=self._next_step_ids(),
+            waves=self._waves,
+            step_wave=self._step_wave,
         )
         self._panels["kanban-board"] = SimpleWidget(
             "kanban-board", self._kanban_widget.render()
@@ -281,6 +320,21 @@ class WizardApp:
         self._backlog_order = order
         self._sync_kanban_panel()
         return order
+
+    # ── PRP-WIZARD-2.0: Swimlanes por wave (P3) ────────────────────────────
+    def toggle_wave(self, wave_number: int | None) -> str:
+        """Colapsa/expande a swimlane de uma onda (RF-W2.0.4/.5).
+
+        Delega ao widget e re-sincroniza o painel. Sem ondas definidas → no-op
+        (graceful). Retorna o render atualizado.
+        """
+        if self._kanban_widget is None:
+            self._build_kanban()
+        if not self._waves:
+            return self.kanban_render()
+        self._kanban_widget.toggle_wave(wave_number)
+        self._sync_kanban_panel()
+        return self.kanban_render()
 
     def _sync_kanban_panel(self) -> None:
         """Atualiza o painel kanban-board após uma mutação do board."""

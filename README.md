@@ -15,7 +15,15 @@ Live and Let Code (LLC) é uma metodologia open-source que estrutura o ciclo com
 
 ---
 
-### 🇺🇸 English
+### � Vídeo de explicação do projeto
+
+<a href="https://youtu.be/MhAmMoFsH78" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.youtube.com/vi/MhAmMoFsH78/maxresdefault.jpg" alt="Vídeo de explicação do projeto Live and Let Code" width="100%" />
+</a>
+
+---
+
+### �🇺🇸 English
 
 Live and Let Code (LLC) is an open-source methodology that structures the complete software development lifecycle — from business knowledge ingestion to production deployment — into **24 pipeline + 2 change analysis (Δ) steps** with **26 human validation gates** at every phase. **27+ tool-agnostic skills** executable by any terminal AI client.
 
@@ -27,7 +35,7 @@ Live and Let Code (LLC) is an open-source methodology that structures the comple
 ### Princípios | Principles
 
 | 🇧🇷 | 🇺🇸 |
-|-----|-----|
+| ----- | ----- |
 | Documentação como código — todo artefato é versionável | Documentation as code — every artifact is versionable |
 | Humano no controle — IA propõe, humano dispõe | Human in control — AI proposes, human decides |
 | Tool-agnostic — qualquer cliente de IA terminal. A metodologia (skills, gates, artefatos) é independente de ferramenta; a implementação de referência usa Python 3.10+ | Tool-agnostic — any terminal AI client. The methodology (skills, gates, artifacts) is tool-independent; the reference implementation uses Python 3.10+ |

@@ -33,3 +33,7 @@ coverage.lcov.*
 
 # Backup do índice ACE, criado por `rebuild-index.py` antes de sobrescrever
 .ace/index.json.bak
+
+# Backups de reparação de sessões (repair_session.py) — efêmeros, não são
+# histórico ACE; as sessões .md canônicas são imutáveis e commitadas.
+.ace/sessions/*.md.bak

@@ -1115,6 +1115,99 @@
       "tags": [],
       "timestamp": "2026-10-09T15:02:02.673480",
       "completed_at": "2026-10-09T15:06:42.561144"
+    },
+    {
+      "session_id": "2026-10-09-009",
+      "file": "2026-10-09-009.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        "docs/llc2-complementacao-plano.md",
+        ".ace/scripts/llc_harness/replay.py",
+        ".ace/scripts/llc_harness/tests/__init__.py",
+        ".ace/scripts/llc_harness/tests/conftest.py",
+        ".ace/scripts/llc_harness/tests/test_llc2_replay.py",
+        "docs/audit/llc2-integration-audit.md"
+      ],
+      "timestamp": "2026-10-09T15:13:06.697030",
+      "completed_at": "2026-10-09T15:52:56.667498"
+    },
+    {
+      "session_id": "2026-10-09-010",
+      "file": "2026-10-09-010.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc2/classifier.py",
+        ".ace/scripts/llc_replay/verify.py",
+        "docs/audit/llc2-integration-audit.md"
+      ],
+      "timestamp": "2026-10-09T15:58:35.207652",
+      "completed_at": "2026-10-09T16:07:38.355051"
+    },
+    {
+      "session_id": "2026-10-09-011",
+      "file": "2026-10-09-011.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T16:22:14.700389",
+      "completed_at": "2026-10-09T16:28:39.683358"
+    },
+    {
+      "session_id": "2026-10-09-012",
+      "file": "2026-10-09-012.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T16:43:17.601591",
+      "completed_at": "2026-10-09T16:47:45.421207"
+    },
+    {
+      "session_id": "2026-10-09-013",
+      "file": "2026-10-09-013.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc_trace/decisions.py",
+        ".ace/scripts/llc2/classifier.py",
+        ".ace/scripts/llc2/tests/test_classifier_replay.py",
+        ".ace/logs/decisions.jsonl",
+        ".ace/logs/events.jsonl"
+      ],
+      "timestamp": "2026-10-09T16:54:12.861793",
+      "completed_at": "2026-10-09T17:03:43.622198"
+    },
+    {
+      "session_id": "2026-10-09-014",
+      "file": "2026-10-09-014.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/test_validate_tags.py",
+        ".ace/scripts/llc_harness/replay.py",
+        "docs/audit/llc2-integration-audit.md"
+      ],
+      "timestamp": "2026-10-09T18:21:15.728958",
+      "completed_at": "2026-10-09T18:26:24.197210"
+    },
+    {
+      "session_id": "2026-10-09-015",
+      "file": "2026-10-09-015.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/test_fitness_dependency_governance.py"
+      ],
+      "timestamp": "2026-10-09T18:28:22.275781",
+      "completed_at": "2026-10-09T18:30:54.737874"
     }
   ]
 }

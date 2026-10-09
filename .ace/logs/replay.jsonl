@@ -64,3 +64,47 @@
 {"timestamp": "2026-10-08T14:38:12.363386", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
 {"timestamp": "2026-10-08T14:38:12.367334", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
 {"timestamp": "2026-10-08T14:38:12.369298", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:42:26.442496", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:42:26.444281", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:42:26.449914", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:42:26.451635", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:43:23.900299", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:43:23.902237", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:43:23.906060", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:43:23.912906", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:44:05.751764", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:44:05.753585", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:44:05.761463", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:44:05.763247", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:44:38.966900", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:44:38.970714", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:44:38.974978", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:44:38.982373", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:45:38.735640", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:45:38.737745", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:45:38.777676", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:45:38.779599", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:47:06.148445", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:47:06.150119", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:47:06.153678", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:47:06.155236", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:48:06.427671", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:48:06.429759", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:48:06.433251", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:48:06.434986", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:48:37.591629", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:48:37.593421", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:48:37.597206", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:48:37.598740", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:49:11.744946", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:49:12.352329", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:49:12.356017", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:49:12.357550", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:49:53.279641", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:49:53.282219", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:49:53.285628", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:49:53.287333", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:50:45.895773", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:50:45.897599", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:50:45.901145", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:50:45.902636", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}

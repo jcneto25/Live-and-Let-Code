@@ -1,0 +1,51 @@
+# LLC 2.0 — Decision Policy v1
+#
+# thresholds_hash includes risk, noul, fallback, routing, limits and
+# doc_judge_weights as defined by the production PolicySpec loader.
+id: llc-default
+version: 1.0.0
+
+risk:
+  R0:
+    auto_min: 0.50
+    audit_min: null
+    review_min: 0.50
+  R1:
+    auto_min: 0.70
+    audit_min: 0.50
+    review_min: 0.50
+  R2:
+    auto_min: 0.85
+    audit_min: null
+    review_min: 0.70
+  R3:
+    auto_min: null
+    audit_min: null
+    review_min: 0.90
+
+noul:
+  true_at: 0.80
+  false_at: 0.20
+
+fallback:
+  hard_eval_failed: HUMAN_REQUIRED
+  semantic_unavailable: HUMAN_REQUIRED
+  semantic_partial: DOWNGRADE_ONE_LEVEL
+  replay_hash_mismatch: REEVALUATE
+  unknown_state: HUMAN_REQUIRED
+
+routing:
+  preserve_label_always: true
+  downgrade_only: true
+
+doc_judge_weights:
+  prd_quality: 40.0
+  executivo_comunica_valor: 20.0
+  tecnico_cobre_requisitos: 20.0
+  ambos_consistentes: 20.0
+
+limits:
+  max_retries: 3
+  agent_timeout_s: 600
+  jev_timeout_s: 30
+  jev_max_retries: 2

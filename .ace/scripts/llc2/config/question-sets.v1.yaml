@@ -1,0 +1,78 @@
+# LLC 2.0 — Catálogo de Question Sets (Jev)
+# Um question set = uma chamada fan-out. Versionado; hash entra no Decision Record.
+
+- id: task-classification
+  version: 2.0.0
+  model: jev-1.13.0
+  applies_to: ["D-CLASSIFY-TASK"]
+  risk_class: R1
+  questions:
+    task_type:
+      type: choice
+      instructions: >
+        Qual tipo de tarefa representa a MAIOR PARTE do esforço de codificação?
+      criteria:
+        crud_endpoint: criar/alterar/deletar/listar endpoints de API
+        ui_component: criar/alterar componentes de interface (form, tabela, modal)
+        validation_rule: adicionar/alterar validação em schema, campo ou sanitização
+        test_write: escrever testes unitários, integração ou E2E
+        unknown: não se encaixa em nenhuma das anteriores
+    complexity:
+      type: score
+      instructions: Qual o tamanho da mudança?
+      criteria:
+        - Trivial — poucas linhas, um arquivo
+        - Pequena — um arquivo, lógica simples
+        - Média — vários arquivos, sem mudança de contrato
+        - Grande — mudança de contrato ou muitos arquivos
+    needs_human_review:
+      type: noul
+      raises_risk_when_true: true
+      instructions: >
+        Esta tarefa exige revisão humana antes de ser executada
+        (por risco, ambiguidade ou impacto em zona crítica)?
+
+- id: prd-gate
+  version: 1.0.0
+  model: jev-1.13.0
+  applies_to: ["D-GATE-CHECKLIST", "D-DOC-QUALITY"]
+  risk_class: R1
+  questions:
+    prd_quality:
+      type: score
+      instructions: Avalie a qualidade do PRD como um todo.
+      criteria:
+        - Incompleto — seções obrigatórias ausentes
+        - Aceitável — completo mas superficial
+        - Bom — completo, claro e verificável
+        - Excelente — completo, claro, verificável e rastreável
+    executivo_comunica_valor:
+      type: noul
+      instructions: O PRD executivo comunica valor de negócio de forma clara?
+    tecnico_cobre_requisitos:
+      type: noul
+      instructions: O PRD técnico cobre todos os requisitos funcionais?
+    ambos_consistentes:
+      type: noul
+      instructions: Os dois PRDs são consistentes entre si?
+
+- id: delta-semantic-impact
+  version: 1.0.0
+  model: jev-1.13.0
+  applies_to: ["D-SEMANTIC-IMPACT"]
+  risk_class: R2
+  questions:
+    semantic_impact:
+      type: choice
+      instructions: >
+        Considerando o diff, qual o impacto semântico (mudança de comportamento)
+        além do impacto estrutural já detectado?
+      criteria:
+        none: nenhum — mudança puramente estrutural/estética
+        behavioral: muda comportamento observável sem mudar contrato
+        contract: muda contrato público (API, schema, evento)
+        unknown: não é possível determinar com o contexto fornecido
+    scope_creep:
+      type: noul
+      raises_risk_when_true: true
+      instructions: A mudança introduz escopo não relacionado à solicitação?

@@ -20,6 +20,7 @@ from .context import (
     append_eval_metrics,
     build_context_seed,
     update_session_status,
+    update_files_touched,
     write_context_seed,
 )
 from .promote import promote_learning_points, save_skill_feedback
@@ -92,6 +93,7 @@ def main():
     feedback_saved = save_skill_feedback(skill_feedback, session_id, dry_run=args.dry_run)
     tasks_updated = update_planning_docs(completed_tasks, dry_run=args.dry_run)
     update_index(session_id, status="completed", files_touched=files_touched, dry_run=args.dry_run)
+    update_files_touched(session_file, files_touched, dry_run=args.dry_run)
 
     # PRP-EVALS-F1 RF-EF1.4: <eval_metrics> append-only (escritor único = finalize)
     step_match = re.search(r'llc_step_id:\s*"?([^"\n]+)"?', content)

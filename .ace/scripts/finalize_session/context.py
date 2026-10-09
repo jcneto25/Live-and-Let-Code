@@ -78,6 +78,30 @@ def write_context_seed(session_file: Path, context_seed: str, dry_run: bool = Fa
                 f.write(f"\n\n## Contexto para Próxima Sessão\n\n<context_seed>\n{context_seed}\n</context_seed>\n")
 
 
+def update_files_touched(session_file: Path, files_touched: list[str],
+                         dry_run: bool = False) -> bool:
+    """Atualiza somente o trailer ``files_touched`` da sessão.
+
+    O trailer fica depois do segundo separador YAML ``---``. A operação é
+    idempotente e não toca o corpo append-only da sessão.
+    """
+    content = session_file.read_text(encoding="utf-8")
+    value = "[" + ", ".join(files_touched) + "]"
+    replacement, count = re.subn(
+        r"(?m)^(files_touched:\s*)\[\]\s*$",
+        rf"\g<1>{value}",
+        content,
+        count=1,
+    )
+    if count == 0:
+        logger.info("ℹ️  files_touched já preenchido ou trailer não encontrado")
+        return False
+    if not dry_run:
+        session_file.write_text(replacement, encoding="utf-8")
+    logger.info("✅ files_touched atualizado no trailer da sessão")
+    return True
+
+
 def update_session_status(session_file: Path, status: str, dry_run: bool = False):
     """Atualiza o campo `status:` (quoted) no frontmatter do arquivo de sessão."""
     content = session_file.read_text(encoding='utf-8')

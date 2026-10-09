@@ -1,5 +1,7 @@
 {
   "project": "",
+  "generated_at": "2026-10-09T11:42:07.036515",
+  "source": "rebuild-index.py",
   "sessions": [
     {
       "session_id": "2026-07-27-001",
@@ -16,8 +18,7 @@
         ".ace/scripts/fitness_functions/config.py",
         ".ace/arch-config.yaml"
       ],
-      "timestamp": "2026-07-27T20:59:36.645436",
-      "completed_at": "2026-07-27T21:19:08.577250"
+      "timestamp": "2026-07-27T00:00:00"
     },
     {
       "session_id": "2026-07-27-003",
@@ -32,8 +33,7 @@
         "docs/skills/llc-step-10.md",
         "AGENTS.md"
       ],
-      "timestamp": "2026-07-27T21:30:01.509057",
-      "completed_at": "2026-07-27T21:35:29.773812"
+      "timestamp": "2026-07-27T00:00:00"
     },
     {
       "session_id": "2026-07-27-004",
@@ -49,8 +49,7 @@
         ".ace/scripts/llm-validation.sh",
         ".pre-commit-config.yaml"
       ],
-      "timestamp": "2026-07-27T22:53:34.130116",
-      "completed_at": "2026-07-27T23:07:40.268245"
+      "timestamp": "2026-07-27T00:00:00"
     },
     {
       "session_id": "2026-07-28-001",
@@ -71,8 +70,7 @@
         ".ace/sessions/2026-07-28-001.md",
         "—"
       ],
-      "timestamp": "2026-07-28T00:43:48.858318",
-      "completed_at": "2026-07-30T22:20:51.363491"
+      "timestamp": "2026-07-28T00:00:00"
     },
     {
       "session_id": "2026-07-28-002",
@@ -81,8 +79,7 @@
       "llc_step": 4.0,
       "llc_step_id": "4",
       "tags": [],
-      "timestamp": "2026-07-28T01:18:55.604312",
-      "completed_at": "2026-07-28T01:20:06.545759"
+      "timestamp": "2026-07-28T00:00:00"
     },
     {
       "session_id": "2026-07-28-003",
@@ -99,8 +96,7 @@
         "FAQ.en.md",
         "README.md"
       ],
-      "timestamp": "2026-07-28T09:30:10.436948",
-      "completed_at": "2026-07-28T09:42:28.881391"
+      "timestamp": "2026-07-28T00:00:00"
     },
     {
       "session_id": "2026-07-30-001",
@@ -117,8 +113,7 @@
         "docs/governance/GOV-TEMPLATE.md",
         "docs/planning/TASKS.md"
       ],
-      "timestamp": "2026-07-30T22:13:56.537795",
-      "completed_at": "2026-07-30T22:21:00.000000"
+      "timestamp": "2026-07-30T00:00:00"
     },
     {
       "session_id": "2026-07-31-001",
@@ -139,17 +134,29 @@
         "llc-pipeline-design.md §8.4",
         ".ace/scripts/validate-tags.py"
       ],
-      "timestamp": "2026-07-31T09:27:38.447896",
-      "completed_at": "2026-07-31T11:08:21.507632"
+      "timestamp": "2026-07-31T00:00:00"
     },
     {
       "session_id": "2026-07-31-004",
       "file": "2026-07-31-004.md",
-      "status": "in_progress",
+      "status": "completed",
       "llc_step": 11.4,
       "llc_step_id": "11.4",
-      "tags": [],
-      "timestamp": "2026-07-31T15:16:49.305832"
+      "tags": [
+        "docs/governance/GOV-002-sessoes-orfas-harness-fallback.md",
+        ".ace/sessions/2026-07-31-00{2,3}.md",
+        ".ace/sessions/2026-07-31-004.md",
+        ".ace/scripts/llc_steps/registry.py",
+        "docs/architecture/adr/ADR-001-autoridade-conversao-enforcement.md",
+        ".ace/scripts/test_gov_close.py",
+        ".ace/scripts/gov-tools.py",
+        "docs/skills/llc-step-11-4-governance-conversion.md §7",
+        ".ace/scripts/initialize_session/session.py",
+        ".ace/scripts/test_gov_reference.py",
+        "llc-pipeline-design.md §8.4 + .ace/scripts/validate-tags.py",
+        ".ace/scripts/"
+      ],
+      "timestamp": "2026-07-31T00:00:00"
     },
     {
       "session_id": "2026-08-05-001",
@@ -160,8 +167,7 @@
       "tags": [
         "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
       ],
-      "timestamp": "2026-08-05T18:18:53.325925",
-      "completed_at": "2026-08-05T18:20:24.295850"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-002",
@@ -174,8 +180,7 @@
         "docs/prps/PRP-GRAPH-1A.md",
         "docs/prps/PRP-GRAPH-1C.md"
       ],
-      "timestamp": "2026-08-05T18:23:12.605390",
-      "completed_at": "2026-08-05T18:28:06.866649"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-003",
@@ -196,8 +201,7 @@
         "docs/planning/PRP-MAP.md",
         "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
       ],
-      "timestamp": "2026-08-05T18:29:40.216726",
-      "completed_at": "2026-08-05T18:53:26.567601"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-004",
@@ -213,8 +217,7 @@
         "docs/governance/GOV-002-sessoes-orfas-harness-fallback.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-05T18:54:55.866862",
-      "completed_at": "2026-08-05T19:04:41.263433"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-005",
@@ -226,8 +229,7 @@
         "docs/planning/PRP-MAP.md",
         "docs/prps/PRP-EVALS-F1.md"
       ],
-      "timestamp": "2026-08-05T19:06:04.884336",
-      "completed_at": "2026-08-05T19:10:38.238053"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-006",
@@ -238,8 +240,7 @@
       "tags": [
         "docs/prps/PRP-WIZARD-1A.md"
       ],
-      "timestamp": "2026-08-05T19:11:53.776770",
-      "completed_at": "2026-08-05T19:13:52.642217"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-007",
@@ -251,8 +252,7 @@
         "docs/architecture/adr/ADR-0007-ace-index-prp-field.md",
         "docs/prps/PRP-WIZARD-1.1.md"
       ],
-      "timestamp": "2026-08-05T19:14:48.288683",
-      "completed_at": "2026-08-05T19:16:29.083113"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-008",
@@ -266,8 +266,7 @@
         "docs/prps/PRP-EVALS-F1.md",
         "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
       ],
-      "timestamp": "2026-08-05T19:17:22.717839",
-      "completed_at": "2026-08-05T19:19:11.065199"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-009",
@@ -280,8 +279,7 @@
         "docs/prps/PRP-GOV-T1.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-05T19:20:10.575760",
-      "completed_at": "2026-08-05T19:21:20.059985"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-010",
@@ -294,8 +292,7 @@
         "docs/prps/PRP-GOV-T2.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-05T19:22:14.449738",
-      "completed_at": "2026-08-05T19:24:09.970136"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-011",
@@ -311,8 +308,7 @@
         "docs/prps/PRP-GOV-T3.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-05T19:25:19.452417",
-      "completed_at": "2026-08-05T19:30:41.884336"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-012",
@@ -337,8 +333,7 @@
         "docs/architecture/adr/ADR-0004-graph-engineering-orchestration.md",
         "docs/governance/GOV-003-proposta-factory-gaps-contrato.md"
       ],
-      "timestamp": "2026-08-05T19:32:27.891424",
-      "completed_at": "2026-08-05T19:40:23.375419"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-013",
@@ -347,8 +342,7 @@
       "llc_step": 10.9,
       "llc_step_id": "10.9",
       "tags": [],
-      "timestamp": "2026-08-05T22:08:59.886317",
-      "completed_at": "2026-08-05T23:22:49.318166"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-014",
@@ -359,8 +353,7 @@
       "tags": [
         ".ace/scripts/llc_wave/parsing.py"
       ],
-      "timestamp": "2026-08-05T22:09:03.190618",
-      "completed_at": "2026-08-05T22:10:47.735202"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-015",
@@ -375,8 +368,7 @@
         ".ace/scripts/llc_wizard/tests/conftest.py",
         ".ace/scripts/llc_wizard/tests/test_data.py"
       ],
-      "timestamp": "2026-08-05T22:28:48.643291",
-      "completed_at": "2026-08-05T22:49:59.187548"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-016",
@@ -385,10 +377,11 @@
       "llc_step": 10.9,
       "llc_step_id": "10.9",
       "tags": [
-        ".ace/scripts/llc_wizard/kanban.py + tests/test_kanban.py"
+        ".ace/scripts/llc_wizard/kanban.py + tests/test_kanban.py",
+        "docs/prps/PRP-WIZARD-1A.md",
+        "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-05T22:56:22.853303",
-      "completed_at": "2026-08-05T23:07:04.002064"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-017",
@@ -400,8 +393,7 @@
         ".ace/scripts/llc_wizard/runner.py",
         ".ace/scripts/llc_wizard/tests/test_runner.py"
       ],
-      "timestamp": "2026-08-05T23:24:42.169523",
-      "completed_at": "2026-08-05T23:27:11.581826"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-018",
@@ -413,17 +405,7 @@
         ".ace/scripts/llc_wizard/app.py",
         ".ace/scripts/llc_wizard/tests/test_app.py"
       ],
-      "timestamp": "2026-08-05T23:27:30.058887",
-      "completed_at": "2026-08-05T23:42:23.471747"
-    },
-    {
-      "session_id": "2026-08-05-018",
-      "file": "2026-08-05-018.md",
-      "status": "completed",
-      "llc_step": 10.9,
-      "llc_step_id": "10.9",
-      "tags": [],
-      "timestamp": "2026-08-05T23:28:50.508125"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-05-019",
@@ -435,8 +417,7 @@
         ".ace/scripts/llc/cli.py",
         ".ace/scripts/llc_wizard/tests/test_app.py"
       ],
-      "timestamp": "2026-08-05T23:50:18.363613",
-      "completed_at": "2026-08-06T00:04:41.383655"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-08-06-001",
@@ -448,8 +429,7 @@
         ".gitignore",
         ".ace/config/dependencies.yaml"
       ],
-      "timestamp": "2026-08-06T00:06:59.503777",
-      "completed_at": "2026-08-06T00:11:18.184192"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-002",
@@ -462,8 +442,7 @@
         ".ace/scripts/llc_wizard/data.py",
         ".ace/scripts/llc_wizard/tests/test_data.py"
       ],
-      "timestamp": "2026-08-06T00:12:06.576032",
-      "completed_at": "2026-08-06T00:23:27.729837"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-003",
@@ -477,8 +456,7 @@
         ".ace/scripts/pre-commit.sh",
         ".ace/index.json"
       ],
-      "timestamp": "2026-08-06T08:08:00.855951",
-      "completed_at": "2026-08-06T08:11:30.141813"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-004",
@@ -497,8 +475,7 @@
         "docs/prps/PRP-WIZARD-1B.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T08:16:31.307280",
-      "completed_at": "2026-08-06T09:19:08.964720"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-007",
@@ -510,8 +487,7 @@
         "docs/prps/PRP-WIZARD-1A.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T09:09:15.657316",
-      "completed_at": "2026-08-06T09:13:18.227931"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-008",
@@ -537,8 +513,7 @@
         ".ace/sessions/2026-08-06-005.md",
         ".ace/sessions/2026-08-06-006.md"
       ],
-      "timestamp": "2026-08-06T09:24:55.324439",
-      "completed_at": "2026-08-06T09:32:17.524107"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-009",
@@ -550,8 +525,7 @@
         ".ace/scripts/observability.py",
         ".ace/config/dependencies.yaml"
       ],
-      "timestamp": "2026-08-06T09:35:51.522050",
-      "completed_at": "2026-08-06T09:39:32.292145"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-010",
@@ -562,8 +536,7 @@
       "tags": [
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T09:44:54.597462",
-      "completed_at": "2026-08-06T09:45:55.263731"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-011",
@@ -583,8 +556,7 @@
         "docs/prps/PRP-EVALS-F1.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T09:50:08.413345",
-      "completed_at": "2026-08-06T10:09:44.853461"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-012",
@@ -603,9 +575,7 @@
         "docs/prps/PRP-GRAPH-1A.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T10:15:55.747210",
-      "prp": "PRP-GRAPH-1A",
-      "completed_at": "2026-08-06T10:24:22.976383"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-013",
@@ -621,9 +591,7 @@
         "docs/prps/PRP-EVALS-F2.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T10:30:56.629655",
-      "prp": "PRP-EVALS-F2",
-      "completed_at": "2026-08-06T10:34:20.376576"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-014",
@@ -640,9 +608,7 @@
         "docs/planning/PRP-MAP.md",
         "llc_graph/engine.py + tests/test_engine.py"
       ],
-      "timestamp": "2026-08-06T13:07:53.164335",
-      "prp": "PRP-GRAPH-1B",
-      "completed_at": "2026-08-06T13:16:13.066459"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-015",
@@ -658,9 +624,7 @@
         "docs/planning/PRP-MAP.md",
         "llc_evals/evaluators/doc_judge.py + tests/test_doc_judge.py"
       ],
-      "timestamp": "2026-08-06T13:21:17.303090",
-      "prp": "PRP-EVALS-F3",
-      "completed_at": "2026-08-06T13:29:37.589579"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-016",
@@ -676,9 +640,7 @@
         "docs/prps/PRP-GRAPH-1C.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T13:45:35.001272",
-      "prp": "PRP-GRAPH-1C",
-      "completed_at": "2026-08-06T13:58:58.184977"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-017",
@@ -694,9 +656,7 @@
         "docs/planning/PRP-MAP.md",
         "finalize_session/extract.py"
       ],
-      "timestamp": "2026-08-06T14:05:55.582408",
-      "prp": "PRP-EVALS-F4",
-      "completed_at": "2026-08-06T14:18:25.802620"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-018",
@@ -712,9 +672,7 @@
         "finalize_session/extract.py",
         "finalize_session/tests/test_extract.py"
       ],
-      "timestamp": "2026-08-06T14:23:44.494476",
-      "prp": "PRP-GRAPH-2A",
-      "completed_at": "2026-08-06T14:34:09.296837"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-019",
@@ -730,9 +688,7 @@
         "llc/cli.py",
         "code_health/cli.py"
       ],
-      "timestamp": "2026-08-06T14:39:37.292195",
-      "prp": "PRP-EVALS-F5",
-      "completed_at": "2026-08-06T14:47:20.173412"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-020",
@@ -749,9 +705,7 @@
         "llc_graph/projections.py",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T14:56:19.501943",
-      "prp": "PRP-GRAPH-2B",
-      "completed_at": "2026-08-06T15:06:44.465831"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-021",
@@ -772,9 +726,7 @@
         "llc_wizard/app.py",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T15:15:23.658989",
-      "prp": "PRP-WIZARD-1C",
-      "completed_at": "2026-08-06T15:23:18.938857"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-022",
@@ -790,9 +742,7 @@
         "llc_wizard/app.py",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T15:53:09.054378",
-      "prp": "PRP-WIZARD-1.1",
-      "completed_at": "2026-08-06T16:02:04.761710"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-023",
@@ -811,9 +761,7 @@
         "docs/prps/PRP-WIZARD-1.2.md",
         "docs/planning/PRP-MAP.md"
       ],
-      "timestamp": "2026-08-06T16:14:38.787468",
-      "prp": "PRP-WIZARD-1.2",
-      "completed_at": "2026-08-06T16:26:49.165770"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-06-024",
@@ -829,9 +777,7 @@
         ".ace/evals/baselines/step-10.8.yaml",
         ".ace/evals/results/report-2026-08-06.md"
       ],
-      "timestamp": "2026-08-06T17:07:16.010160",
-      "prp": "P1",
-      "completed_at": "2026-08-06T17:17:18.691667"
+      "timestamp": "2026-08-06T00:00:00"
     },
     {
       "session_id": "2026-08-07-001",
@@ -848,9 +794,7 @@
         ".ace/scripts/llc_wizard/tests/test_app.py",
         ".ace/scripts/llc_graph/tests/test_projections.py"
       ],
-      "timestamp": "2026-08-07T09:12:54.337360",
-      "prp": "P2",
-      "completed_at": "2026-08-07T09:27:12.822064"
+      "timestamp": "2026-08-07T00:00:00"
     },
     {
       "session_id": "2026-08-07-002",
@@ -865,9 +809,7 @@
         ".ace/scripts/llc_wizard/tests/test_app.py",
         ".ace/scripts/llc_graph/tests/test_projections.py"
       ],
-      "timestamp": "2026-08-07T10:00:01.570397",
-      "prp": "P2b",
-      "completed_at": "2026-08-07T10:06:49.311757"
+      "timestamp": "2026-08-07T00:00:00"
     },
     {
       "session_id": "2026-08-07-003",
@@ -882,9 +824,7 @@
         ".ace/scripts/llc_wizard/tests/test_app.py",
         ".ace/scripts/llc_graph/tests/test_projections.py"
       ],
-      "timestamp": "2026-08-07T10:15:45.116938",
-      "prp": "P2b",
-      "completed_at": "2026-08-07T10:24:54.081526"
+      "timestamp": "2026-08-07T00:00:00"
     },
     {
       "session_id": "2026-08-07-004",
@@ -900,9 +840,7 @@
         "test_llc_wave.py",
         "docs/prps/PRP-WIZARD-2.0.md"
       ],
-      "timestamp": "2026-08-07T10:36:36.706885",
-      "prp": "PRP-WIZARD-2.0",
-      "completed_at": "2026-08-07T10:56:23.595246"
+      "timestamp": "2026-08-07T00:00:00"
     },
     {
       "session_id": "2026-08-07-005",
@@ -916,32 +854,25 @@
         "llc_evals/tests/test_flow_report.py",
         "docs/planning/NEXT_STEPS.md"
       ],
-      "timestamp": "2026-08-07T11:13:57.810911",
-      "prp": "P4",
-      "completed_at": "2026-08-07T11:37:12.688529"
+      "timestamp": "2026-08-07T00:00:00"
     },
     {
       "session_id": "2026-10-07-001",
       "file": "2026-10-07-001.md",
-      "status": "in_progress",
+      "status": "completed",
       "llc_step": 5.0,
       "llc_step_id": "5",
-      "tags": [
-        "llc2",
-        "arquitetura",
-        "statechart"
-      ],
-      "timestamp": "2026-10-07T20:28:33.781058"
+      "tags": [],
+      "timestamp": "2026-10-07T00:00:00"
     },
     {
-      "session_id": "2026-10-07-002",
+      "session_id": "2026-08-05-001",
       "file": "2026-10-07-002.md",
       "status": "completed",
       "llc_step": 0.0,
       "llc_step_id": "0",
       "tags": [],
-      "timestamp": "2026-08-05T13:27:40.601395",
-      "completed_at": "2026-10-07T20:40:23.106689"
+      "timestamp": "2026-08-05T00:00:00"
     },
     {
       "session_id": "2026-10-07-003",
@@ -950,13 +881,11 @@
       "llc_step": 11.4,
       "llc_step_id": "11.4",
       "tags": [
-        "ace-reconciliation,git-sync,index-json",
         ".ace/index.json",
         ".ace/sessions/2026-10-07-001.md",
         ".ace/sessions/2026-10-07-002.md"
       ],
-      "timestamp": "2026-10-07T20:41:02.300794",
-      "completed_at": "2026-10-07T20:41:48.938163"
+      "timestamp": "2026-10-07T00:00:00"
     },
     {
       "session_id": "2026-10-07-004",
@@ -972,8 +901,7 @@
         ".ace/sessions/2026-08-06-011.md",
         ".git/hooks/pre-commit"
       ],
-      "timestamp": "2026-10-07T21:43:14.488641",
-      "completed_at": "2026-10-07T21:44:01.017648"
+      "timestamp": "2026-10-07T00:00:00"
     },
     {
       "session_id": "2026-10-07-005",
@@ -981,27 +909,116 @@
       "status": "completed",
       "llc_step": 0.0,
       "llc_step_id": "0",
-      "tags": [
-        "llc2",
-        "fase0",
-        "instrumentacao"
-      ],
-      "timestamp": "2026-10-07T22:00:01.378398",
-      "completed_at": "2026-10-07T22:32:08.406725"
+      "tags": [],
+      "timestamp": "2026-10-07T00:00:00"
     },
     {
       "session_id": "2026-10-07-006",
       "file": "2026-10-07-006.md",
-      "status": "in_progress",
+      "status": "completed",
       "llc_step": 1.0,
       "llc_step_id": "1",
-      "tags": [
-        "llc2",
-        "fase1",
-        "jev",
-        "classify"
-      ],
-      "timestamp": "2026-10-07T22:44:40.535912"
+      "tags": [],
+      "timestamp": "2026-10-07T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-001",
+      "file": "2026-10-08-001.md",
+      "status": "completed",
+      "llc_step": 7.0,
+      "llc_step_id": "7",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-002",
+      "file": "2026-10-08-002.md",
+      "status": "completed",
+      "llc_step": 7.0,
+      "llc_step_id": "7",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-003",
+      "file": "2026-10-08-003.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-004",
+      "file": "2026-10-08-004.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-005",
+      "file": "2026-10-08-005.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-006",
+      "file": "2026-10-08-006.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-007",
+      "file": "2026-10-08-007.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-008",
+      "file": "2026-10-08-008.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-009",
+      "file": "2026-10-08-009.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-010",
+      "file": "2026-10-08-010.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
+    },
+    {
+      "session_id": "2026-10-08-011",
+      "file": "2026-10-08-011.md",
+      "status": "completed",
+      "llc_step": 9.0,
+      "llc_step_id": "9",
+      "tags": [],
+      "timestamp": "2026-10-08T00:00:00"
     },
     {
       "session_id": "2026-10-09-001",
@@ -1009,9 +1026,10 @@
       "status": "completed",
       "llc_step": 4.0,
       "llc_step_id": "4",
-      "tags": [],
-      "timestamp": "2026-10-09T09:25:26.713927",
-      "completed_at": "2026-10-09T09:35:05.255355"
+      "tags": [
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-09T00:00:00"
     },
     {
       "session_id": "2026-10-09-002",
@@ -1024,8 +1042,7 @@
         ".ace/scripts/llc2/classifier.py",
         ".ace/scripts/llc_replay/tests/test_verify.py"
       ],
-      "timestamp": "2026-10-09T10:04:29.256226",
-      "completed_at": "2026-10-09T10:20:23.210247"
+      "timestamp": "2026-10-09T00:00:00"
     },
     {
       "session_id": "2026-10-09-003",
@@ -1038,8 +1055,66 @@
         ".ace/scripts/llc_replay/tests/test_verify.py",
         "docs/llc2-complementacao-plano.md"
       ],
-      "timestamp": "2026-10-09T10:40:12.415348",
-      "completed_at": "2026-10-09T10:45:53.527154"
+      "timestamp": "2026-10-09T00:00:00"
+    },
+    {
+      "session_id": "2026-10-09-004",
+      "file": "2026-10-09-004.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/config/dependencies.yaml",
+        ".ace/index.json",
+        ".ace/sessions/2026-10-09-004.md"
+      ],
+      "timestamp": "2026-10-09T00:00:00"
+    },
+    {
+      "session_id": "2026-10-09-005",
+      "file": "2026-10-09-005.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc2/tests/conftest.py",
+        ".ace/scripts/llc2/tests/test_trace_isolation.py",
+        ".ace/scripts/llc_replay/execute.py",
+        ".ace/scripts/pre-commit.sh",
+        ".gitignore"
+      ],
+      "timestamp": "2026-10-09T12:33:05.508111",
+      "completed_at": "2026-10-09T13:33:22.623599"
+    },
+    {
+      "session_id": "2026-10-09-006",
+      "file": "2026-10-09-006.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T14:22:37.369482",
+      "completed_at": "2026-10-09T14:52:34.991647"
+    },
+    {
+      "session_id": "2026-10-09-007",
+      "file": "2026-10-09-007.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T14:53:43.871253",
+      "completed_at": "2026-10-09T14:59:29.450640"
+    },
+    {
+      "session_id": "2026-10-09-008",
+      "file": "2026-10-09-008.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T15:02:02.673480",
+      "completed_at": "2026-10-09T15:06:42.561144"
     }
   ]
 }

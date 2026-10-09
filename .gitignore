@@ -25,3 +25,11 @@ coverage/
 .coverage
 coverage.lcov
 coverage.lcov.*
+
+# ACE worktrees — `initialize_session.py` cria um worktree por sessão
+# (`.ace/worktrees/<session_id>/`, branch `session/<id>`). É uma árvore de
+# trabalho completa e descartável: commitar significaria duplicar o repo.
+.ace/worktrees/
+
+# Backup do índice ACE, criado por `rebuild-index.py` antes de sobrescrever
+.ace/index.json.bak

@@ -120,3 +120,29 @@
 {"timestamp": "2026-10-09T01:04:35.695795", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
 {"timestamp": "2026-10-09T01:04:35.699739", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
 {"timestamp": "2026-10-09T01:04:35.701303", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:21:46.694789", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:21:46.695169", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:21:46.696725", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:21:46.697107", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:27:53.742890", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:27:53.743252", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:27:53.744537", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:27:53.744816", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:28:05.114297", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:28:05.114687", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:28:05.115984", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:28:05.116269", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:32:20.101693", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:32:20.102042", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:32:20.103277", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:32:20.103557", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:39:43.022883", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:39:43.023252", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:39:43.025123", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:39:43.025398", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:40:43.593780", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T12:40:43.594185", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T12:40:43.595918", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T12:40:43.596204", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T12:43:39.308789", "event": "teste", "script_id": "x"}
+{"timestamp": "2026-10-09T12:46:27.835827", "event": "teste_isolamento", "script_id": "x"}

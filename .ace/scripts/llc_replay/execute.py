@@ -4,7 +4,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from .constants import LOGS_DIR
 from .zones import substitute
 
 
@@ -114,13 +113,21 @@ def deterministic_replay(script: dict, params: dict,
 # ── Metrics (D) ──
 
 def log_replay_event(event_type: str, script_id=None, **kwargs):
-    LOGS_DIR.mkdir(exist_ok=True)
+    # `trace_dir()` (e nao `LOGS_DIR`) porque ele honra `LLC_TRACE_DIR` — usado
+    # pelos testes para isolar a escrita — e resolve `.ace/logs` a partir de
+    # `__file__`, nao do cwd. `LOGS_DIR` e `Path(".ace/logs")`, relativo: sob
+    # cwd diferente (ex.: rodar pytest de dentro de `.ace/scripts`) escrevia no
+    # lugar errado. Mesmo padrao ja adotado em `llc_replay/verify.py`.
+    from llc_trace import trace_dir
+
+    logs_dir = trace_dir()
+    logs_dir.mkdir(parents=True, exist_ok=True)
     event = {
         "timestamp": datetime.now().isoformat(),
         "event": event_type,
         "script_id": script_id,
         **{k: str(v) for k, v in kwargs.items()}
     }
-    log_file = LOGS_DIR / "replay.jsonl"
+    log_file = logs_dir / "replay.jsonl"
     with open(log_file, 'a', encoding='utf-8') as f:
         f.write(json.dumps(event) + "\n")

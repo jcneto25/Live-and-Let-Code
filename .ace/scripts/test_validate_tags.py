@@ -98,6 +98,55 @@ class TestProseMentions:
         errors = vt.validate_required_attributes(content, P)
         assert any("task_completed" in m for m in _msgs(errors))
 
+    def test_inline_prose_citation_on_real_tag_line_is_ignored(self):
+        content = (
+            '<action type="file_modify"><description>cita '
+            '`<action>` e fecha aqui</description></action>\n'
+        )
+        errors = vt.validate_balanced_tags(content, P)
+        assert errors == []
+
+    def test_learning_point_can_quote_its_own_tag_without_false_positive(self):
+        content = (
+            '<learning_point priority="high">A correção cita '
+            '`<learning_point priority="high">` no texto.</learning_point>\n'
+        )
+        errors = vt.validate_balanced_tags(content, P)
+        assert errors == []
+
+    def test_inline_action_citation_does_not_trigger_required_type(self):
+        content = (
+            '<action type="file_modify"><description>cita '
+            '`<action>` no texto</description></action>\n'
+        )
+        errors = vt.validate_required_attributes(content, P)
+        assert errors == []
+
+    def test_inline_learning_point_citation_does_not_trigger_priority(self):
+        content = (
+            '<learning_point priority="high">A correção cita '
+            '`<learning_point>` no texto.</learning_point>\n'
+        )
+        errors = vt.validate_required_attributes(content, P)
+        assert errors == []
+
+    def test_gate_archive_is_not_session_input(self):
+        gate_archive = Path(".ace/gates/2026-10-07-007.md")
+        assert gate_archive.exists()
+        assert not vt.validate_yaml_front_matter(
+            gate_archive.read_text(encoding="utf-8"), gate_archive
+        ) == []
+
+    def test_fix_does_not_append_close_for_balanced_structural_tags(self, tmp_path):
+        content = (
+            '<learning_point priority="high">A correção cita '
+            '`<learning_point priority="high">` no texto.</learning_point>\n'
+        )
+        session = tmp_path / "session.md"
+        session.write_text(content, encoding="utf-8")
+        assert vt.fix_unbalanced_tags(session) is False
+        assert session.read_text(encoding="utf-8") == content
+
 
 class TestGateResultWaiver:
     def test_gate_result_with_waiver_passes(self):

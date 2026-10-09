@@ -96,33 +96,57 @@ def validate_yaml_front_matter(content: str, file_path: Path) -> list:
 
 
 def _tag_opens(content: str, tag: str) -> list:
-    """Matches de abertura de <tag>, excluindo menções em prosa.
+    """Retorna aberturas reais e ignora citações inline em prosa.
 
-    Sessões ACE são imutáveis (append-only): menções históricas como
-    '<task_completed> emitidos na época' (sessão 2026-07-31-001) não são tags.
-    Critério de tag real: tem atributos, OU fecha na mesma linha, OU está
-    sozinha na linha (abertura multiline). Menção em prosa = sem atributos,
-    sem </tag> na mesma linha e com texto após a tag na mesma linha.
-    (PRP-ACE-TAGS / GOV-003 R1)
+    Uma abertura estrutural começa a linha (somente espaços antes). A regra
+    preserva o contrato histórico para tags reais sem atributos que fecham na
+    mesma linha ou ocupam sozinhas uma linha, mas nunca aceita uma menção que
+    esteja no meio de texto — mesmo que contenha atributos.
     """
+    clean = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
     opens = []
-    for m in re.finditer(f'<{tag}\\b([^>]*)>', content):
-        if m.group(1).strip():
-            opens.append(m)
+    for match in re.finditer(rf'<{tag}\b([^>]*)>', clean):
+        line_start = clean.rfind("\n", 0, match.start()) + 1
+        if clean[line_start:match.start()].strip():
             continue
-        line_end = content.find('\n', m.end())
-        line_end = len(content) if line_end == -1 else line_end
-        rest_of_line = content[m.end():line_end]
-        if f'</{tag}>' in rest_of_line or not rest_of_line.strip():
-            opens.append(m)
+        attrs = match.group(1).strip()
+        line_end = clean.find("\n", match.end())
+        line_end = len(clean) if line_end == -1 else line_end
+        rest_of_line = clean[match.end():line_end]
+        if attrs or f'</{tag}>' in rest_of_line or not rest_of_line.strip():
+            opens.append(match)
     return opens
+
+
+def _structural_tag_counts(content: str, tag: str) -> tuple[int, int]:
+    """Conta somente tags estruturais, ignorando citações em prosa.
+
+    Sessões ACE escrevem containers reais começando ou terminando uma linha.
+    Uma menção inline pode conter atributos ou um fechamento legítimo na mesma
+    linha; por isso heurísticas independentes para abertura e fechamento
+    produzem falsos positivos. A posição estrutural é aplicada simetricamente.
+    """
+    clean = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
+    opens = 0
+    opening_pattern = re.compile(rf"<{tag}\b([^>]*)>")
+    for match in opening_pattern.finditer(clean):
+        line_start = clean.rfind("\n", 0, match.start()) + 1
+        if clean[line_start:match.start()].strip():
+            continue
+        attrs = match.group(1).strip()
+        line_end = clean.find("\n", match.end())
+        line_end = len(clean) if line_end == -1 else line_end
+        rest_of_line = clean[match.end():line_end]
+        if attrs or f"</{tag}>" in rest_of_line or not rest_of_line.strip():
+            opens += 1
+    closes = len(re.findall(rf"</{tag}>[ \t]*$", clean, flags=re.MULTILINE))
+    return opens, closes
 
 
 def validate_balanced_tags(content: str, file_path: Path) -> list:
     errors = []
     for tag in BALANCED_TAGS:
-        open_count = len(_tag_opens(content, tag))
-        close_count = len(re.findall(f'</{tag}>', content))
+        open_count, close_count = _structural_tag_counts(content, tag)
         if open_count != close_count:
             line_num = 1
             for i, line in enumerate(content.split('\n'), 1):
@@ -346,8 +370,7 @@ def fix_unbalanced_tags(file_path: Path) -> bool:
     content = file_path.read_text(encoding='utf-8')
     fixed = False
     for tag in BALANCED_TAGS:
-        open_count = len(_tag_opens(content, tag))
-        close_count = len(re.findall(f'</{tag}>', content))
+        open_count, close_count = _structural_tag_counts(content, tag)
         if open_count > close_count:
             content += f"\n</{tag}>" * (open_count - close_count)
             fixed = True

@@ -4,7 +4,7 @@
 # - Versão SEMPRE pinada (nunca latest) · licença verificada na fonte
 # - Revisão trimestral (review_interval_days) + gatilhos de reavaliação imediata (ADR-0006 §2.7)
 version: 1
-updated_at: "2026-08-05"
+updated_at: "2026-10-09"
 review_interval_days: 90
 
 # N0 (stdlib, isentos — RF-GOV2.3/GOV-T2, inventário 2026-08-05):
@@ -104,3 +104,17 @@ dependencies:
     fallback: "Sem coverage — module_coverage reporta Nenhum arquivo"
     last_reviewed: "2026-08-06"
     next_review: "2026-11-06"
+
+  - name: pre-commit
+    version: ">=4.0,<5.0"            # instalado/verificado: 4.6.2
+    level: 1
+    license: MIT                     # verificado via importlib.metadata (2026-10-09)
+    bus_factor: community
+    purpose: "Framework do hook git pre-commit — executa os 3 hooks declarados em .pre-commit-config.yaml (cobertura ACE, test gate, LLM self-validation)"
+    critical_path: false
+    optional: true
+    dev_only: true
+    fallback: "Hook manual documentado no próprio script: cp .ace/scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x — cobertura ACE sem dependência externa"
+    last_reviewed: "2026-10-09"
+    next_review: "2027-01-07"
+    notes: "Instalado 2026-10-09 (GOV-003/R10). Hooks são language: system — o pacote só faz o dispatch para .ace/scripts/*.sh; removê-lo não quebra os scripts"

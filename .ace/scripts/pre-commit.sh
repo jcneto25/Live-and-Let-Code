@@ -52,6 +52,8 @@ for session_file in $(jq -r '.sessions[].file' "$INDEX" 2>/dev/null); do
 done
 
 # 3. Verificar se todos os arquivos no diretório estão no índice
+#    Registros históricos em .ace/gates/ são gates, não sessões, e ficam fora
+#    desta verificação (ver .ace/gates/README.md).
 for md_file in "$SESSIONS"/*.md; do
   [ -f "$md_file" ] || continue
   filename=$(basename "$md_file")
@@ -85,20 +87,78 @@ for session_file in "$SESSIONS"/*.md; do
 done
 
 # 5. Verificar balanceamento de tags XML
-for session_file in "$SESSIONS"/*.md; do
-  [ -f "$session_file" ] || continue
-  filename=$(basename "$session_file")
-  
-for tag in action action_log thinking learning_point gate_result blocker context_seed; do
-    open_count=$(grep -cE "<$tag\b" "$session_file" 2>/dev/null || true)
-    close_count=$(grep -c "</$tag>" "$session_file" 2>/dev/null || true)
-    
-    if [ "$open_count" -ne "$close_count" ]; then
-      echo "❌ $filename — tags <$tag> desbalanceadas (abre: $open_count, fecha: $close_count)"
-      ERRORS=$((ERRORS + 1))
-    fi
-  done
-done
+#    ATENÇÃO (GOV-004): contagem ingênua gera falsos positivos. Uma sessão que
+#    documenta um bug SOBRE tags cita `<action>`/`</action>` em prosa — ex.:
+#    "Bug latente: <action_log> casava no regex de <action>", ou "o strip
+#    engolia o `</learning_point>` real". O grep contava a citação como tag.
+#    Ocorreu 4x em 2026-08-06-014/017/018 e em 2026-10-09-004/005.
+#
+#    Correção: conta-se apenas tag ESTRUTURAL — abertura no início da linha,
+#    fechamento no fim da linha. Citação em prosa fica no meio e não conta.
+#    Comentários HTML são removidos antes (carregam placeholders do template).
+#
+#    Duas tentativas anteriores falharam e estão registradas no GOV-004:
+#      (a) remover os corpos citantes — quebra quando o corpo cita o próprio
+#          fechamento (o strip fecha cedo e deixa o fechamento real órfão);
+#      (b) `sed` com range `/start/,/end/` — só testa o fim a partir da LINHA
+#          SEGUINTE, então tags de uma linha nunca fecham o range e ele apaga
+#          do primeiro <description> até o EOF (elevou 5 erros para 24).
+#
+#    Implementado em Python: `re` com flags=re.M, sem range de sed.
+TAG_ERRORS=$(python3 - "$SESSIONS" <<'PYEOF'
+import re
+import sys
+from pathlib import Path
+
+TAGS = ["action", "action_log", "thinking", "learning_point",
+        "gate_result", "blocker", "context_seed"]
+
+
+def structural_counts(text, tag):
+    """Conta aberturas e fechamentos ESTRUTURAIS da tag.
+
+    Uma tag estrutural de sessao ocupa a linha: a abertura comeca a linha
+    (so espacos antes) e o fechamento termina a linha (so espacos depois).
+    Citacoes em prosa — ex.: "o strip engolia o `</learning_point>` real" —
+    ficam no MEIO da linha e nao contam.
+
+    Por que nao remover os corpos citantes (tentativa anterior, GOV-004):
+    quando o proprio corpo de um <learning_point> cita `</learning_point>`,
+    o strip nao-guloso fecha cedo e deixa o fechamento real orfao — acusa
+    desbalanceamento inexistente. Esse caso e ambiguo por construcao e nenhum
+    strip o resolve; a posicao na linha resolve, porque e o que distingue a
+    tag real da citacao.
+
+    Sensibilidade verificada por mutacao: remover 1 fechamento estrutural em
+    cada uma das 76 sessoes (156 mutacoes) e detectado em 156/156 — mesmo
+    indice da logica de strip, sem o falso positivo.
+    """
+    # Comentarios HTML carregam tags de exemplo (placeholders do template)
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    opens = len(re.findall(rf"^[ \t]*<{tag}(?=[\s>/])", text, flags=re.M))
+    closes = len(re.findall(rf"</{tag}>[ \t]*$", text, flags=re.M))
+    return opens, closes
+
+
+errors = []
+for path in sorted(Path(sys.argv[1]).glob("*.md")):
+    raw = path.read_text(encoding="utf-8", errors="replace")
+    for tag in TAGS:
+        opens, closes = structural_counts(raw, tag)
+        if opens != closes:
+            errors.append(f"{path.name} - tags <{tag}> desbalanceadas "
+                          f"(abre: {opens}, fecha: {closes})")
+for line in errors:
+    print("\u274c " + line)
+PYEOF
+)
+
+if [ -n "$TAG_ERRORS" ]; then
+  echo "$TAG_ERRORS"
+  while IFS= read -r tag_line; do
+    [ -n "$tag_line" ] && ERRORS=$((ERRORS + 1))
+  done <<< "$TAG_ERRORS"
+fi
 
 # 6. Análise de impacto nos artefatos LLC (informativo — não bloqueia)
 echo ""

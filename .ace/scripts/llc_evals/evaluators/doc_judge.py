@@ -123,7 +123,11 @@ def aggregate_score(scores: dict, dimensions: list[dict]) -> float | None:
 
 
 class DocJudge:
-    """LLM-as-judge com rubric estruturado (RF-EF3.1/3.3/3.5)."""
+    """LLM-as-judge com rubric estruturado (RF-EF3.1/3.3/3.5).
+
+    Fase 2 (LLC 2.0): quando llc2 disponível e LLC2_DOC_JUDGE != 0,
+    delega para Jev Score/Noul em vez de JSON+regex.
+    """
 
     def __init__(
         self,
@@ -145,7 +149,48 @@ class DocJudge:
 
         Retorna {step_id, scores, aggregate, error}. Em erro de parse,
         scores/aggregate são None e o erro é registrado (RF-EF3.6).
+
+        Fase 2: delega para Jev Score/Noul quando disponível.
         """
+        # ── tentativa LLC 2.0 (Jev Score/Noul) ──────────────────────────────
+        _LLC2_DOC_AVAILABLE = False
+        try:
+            from llc2.doc_judge import doc_judge_v2
+            _LLC2_DOC_AVAILABLE = True
+        except ImportError:
+            doc_judge_v2 = None  # type: ignore[misc,assignment]
+
+        _USE_LLC2_DOC = (
+            _LLC2_DOC_AVAILABLE
+            and __import__("os").environ.get("LLC2_DOC_JUDGE", "1").strip()
+            not in ("0", "", "false", "no")
+        )
+
+        if _USE_LLC2_DOC and doc_judge_v2 is not None:
+            return doc_judge_v2(
+                step_id=step_id,
+                artifact_content=artifact_content,
+                upstream_artifacts=upstream_artifacts,
+                llm_call=llm_call or self.llm_call,
+            )
+
+        # ── fallback legado (JSON+regex) ────────────────────────────────────
+        return self._evaluate_legacy(
+            step_id=step_id,
+            artifact_content=artifact_content,
+            upstream_artifacts=upstream_artifacts,
+            llm_call=llm_call,
+        )
+
+    def _evaluate_legacy(
+        self,
+        *,
+        step_id: str,
+        artifact_content: str,
+        upstream_artifacts: str | None = None,
+        llm_call: Callable[[str], str] | None = None,
+    ) -> dict:
+        """Avaliação legada via JSON+regex (LLC 1.x)."""
         try:
             rubric = load_rubric(step_id, self.rubrics_dir)
         except KeyError as exc:

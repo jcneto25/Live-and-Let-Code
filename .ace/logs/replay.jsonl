@@ -16,3 +16,51 @@
 {"timestamp": "2026-08-05T18:43:13.563316", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-08-06T08:25:11.261992", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
 {"timestamp": "2026-08-06T08:27:15.875309", "event": "llm_fallback", "script_id": null, "reason": "no_classify"}
+{"timestamp": "2026-10-07T23:11:04.901417", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:11:04.935967", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:11:04.943917", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:11:04.947873", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-07T23:11:37.563219", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:11:37.568242", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:11:37.575558", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:11:37.579274", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-07T23:11:52.948595", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:11:52.955827", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:11:52.962899", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:11:52.966470", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-07T23:27:12.090504", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:27:12.104879", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:27:12.110988", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:27:12.117025", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-07T23:43:27.200553", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:43:28.228029", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:43:28.234219", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:43:28.240121", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-07T23:49:53.883903", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-07T23:49:55.083410", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-07T23:49:55.091623", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-07T23:49:55.095475", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T00:05:24.808951", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T00:05:24.820609", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T00:05:24.826899", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T00:05:24.835950", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T14:08:45.667542", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T14:08:45.669824", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T14:08:45.700794", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T14:08:45.702878", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T14:10:17.302639", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T14:10:17.304386", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T14:10:17.331102", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T14:10:17.333560", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T14:33:50.706373", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T14:33:50.708582", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T14:33:50.725300", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T14:33:50.727219", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T14:35:55.667572", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T14:35:55.669400", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T14:35:55.692413", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T14:35:55.694288", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-08T14:38:12.318304", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-08T14:38:12.363386", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-08T14:38:12.367334", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-08T14:38:12.369298", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}

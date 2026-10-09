@@ -648,6 +648,72 @@ def eval_flow_report(output, project_root):
     click.echo(path.read_text(encoding="utf-8"))
 
 
+@cli.group()
+def trace():
+    """Comandos de observabilidade (Fase 0 — instrumentacao LLC 2.0)."""
+    pass
+
+
+@trace.command("stats")
+@click.option(
+    "--events",
+    "events_file",
+    default=None,
+    type=click.Path(exists=False),
+    help="Caminho para events.jsonl (default: .ace/logs/events.jsonl)",
+)
+@click.option(
+    "--decisions",
+    "decisions_file",
+    default=None,
+    type=click.Path(exists=False),
+    help="Caminho para decisions.jsonl (default: .ace/logs/decisions.jsonl)",
+)
+def trace_stats(events_file, decisions_file):
+    """Exibe baseline de custo/replay/gates a partir dos logs de instrumentacao.
+
+    Exemplo:
+      llc trace stats
+      llc trace stats --events /tmp/events.jsonl --decisions /tmp/decisions.jsonl
+    """
+    from llc_trace.stats import format_text, load_summary
+
+    summary = load_summary(
+        events_file=events_file,
+        decisions_file=decisions_file,
+    )
+    click.echo(format_text(summary))
+
+
+@trace.command("show")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Saida em JSON (default: texto humano)",
+)
+def trace_show(as_json):
+    """Exibe as ultimas entradas dos logs de eventos e decisoes."""
+    import json as _json
+
+    from llc_trace.stats import read_jsonl
+
+    ev, _ = read_jsonl()
+    de, _ = read_jsonl()
+    if as_json:
+        click.echo(_json.dumps({"events": ev[-20:], "decisions": de[-20:]}, indent=2, ensure_ascii=False, default=str))
+    else:
+        click.echo(f"Eventos: {len(ev)}  |  Decisoes: {len(de)}")
+        if ev:
+            click.echo("\nUltimos eventos:")
+            for e in ev[-5:]:
+                click.echo(f"  [{e.get('seq', '?')}] {e.get('kind')} — step {e.get('step')}")
+        if de:
+            click.echo("\nUltimas decisoes:")
+            for d in de[-5:]:
+                click.echo(f"  [{d.get('kind')}] {d.get('outcome')} — {d.get('reason')}")
+
+
 @cli.command()
 @click.option(
     "--from",

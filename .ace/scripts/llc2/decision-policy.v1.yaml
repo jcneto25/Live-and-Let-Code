@@ -1,0 +1,62 @@
+# LLC 2.0 — Decision Policy v1
+#
+# thresholds_hash = sha256(canonical_json{risk, noul, fallback, routing, limits})
+# Nenhum threshold literal deve existir fora deste arquivo (INV-005 / F1).
+id: llc-default
+version: 1.0.0
+
+# ── Thresholds por classe de risco ────────────────────────────────────────
+# auto_min   : confiança mínima para AUTO (null = nunca AUTO)
+# audit_min  : piso de AUTO_AUDIT (null = faixa inexistente)
+# review_min : piso de REVIEW_REQUIRED; abaixo => HUMAN_REQUIRED
+risk:
+  R0:
+    auto_min: 0.50
+    audit_min: null
+    review_min: 0.50
+  R1:
+    auto_min: 0.70
+    audit_min: 0.50
+    review_min: 0.50
+  R2:
+    auto_min: 0.85
+    audit_min: null
+    review_min: 0.70
+  R3:
+    auto_min: null        # R3 NUNCA é AUTO
+    audit_min: null
+    review_min: 0.90
+
+# ── Noul: p_true é primário; decision_strength = |2p-1| é derivado ────────
+noul:
+  true_at: 0.80           # p_true >= 0.80  => verdadeiro
+  false_at: 0.20          # p_true <= 0.20  => falso
+  # 0.20 < p_true < 0.80 = zona incerta => piso AUTO_AUDIT quando a pergunta
+  # tem `raises_risk_when_true: true`
+
+# ── Fallback (fail-closed) ────────────────────────────────────────────────
+fallback:
+  hard_eval_failed: HUMAN_REQUIRED        # Jev NÃO pode override (INV-004)
+  semantic_unavailable: HUMAN_REQUIRED    # esperada e ausente (F2)
+  semantic_partial: DOWNGRADE_ONE_LEVEL   # resposta incompleta
+  replay_hash_mismatch: REEVALUATE
+  unknown_state: HUMAN_REQUIRED
+
+# ── Classificação ≠ roteamento (§14) ──────────────────────────────────────
+routing:
+  preserve_label_always: true   # rótulo nunca é descartado por baixa confiança
+  downgrade_only: true          # baixa confiança rebaixa automação, não apaga
+
+# ── Pesos do DocJudge (F1: dados, não literais) ───────────────────────────
+doc_judge_weights:
+  prd_quality: 40.0
+  executivo_comunica_valor: 20.0
+  tecnico_cobre_requisitos: 20.0
+  ambos_consistentes: 20.0
+
+# ── Limites operacionais ──────────────────────────────────────────────────
+limits:
+  max_retries: 3
+  agent_timeout_s: 600
+  jev_timeout_s: 30
+  jev_max_retries: 2          # retry exponencial; após isso => semantic_unavailable

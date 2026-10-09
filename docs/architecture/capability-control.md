@@ -1,0 +1,1 @@
+# Capability Control\n\nPrevenção via perfil por estado + detecção post-hoc. Subprocess CLI não vê tool calls; prevenção limitada. Detecção post-hoc ativa.\n

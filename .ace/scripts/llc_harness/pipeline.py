@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pipeline orchestration: delta analysis phase, full pipeline run, step execution."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -18,6 +19,29 @@ from .gates import gate_check, get_gate_checklist
 from .replay import agent_invoke
 from .session import session_end, session_start
 from .skill import skill_load
+
+try:
+    from llc_trace import log_event, record_decision
+except ImportError:  # pragma: no cover
+    log_event = None
+    record_decision = None
+
+
+# ── Fase 4: NodeMachine integration (guarded by LLC2_STATECHART) ──────────
+try:
+    from llc2.contracts import (
+        Event as NodeEvent,
+        EventType as NodeEventType,
+        NodeMachine,
+        load_policy as load_llc2_policy,
+        load_question_sets as load_llc2_question_sets,
+    )
+except ImportError:  # pragma: no cover
+    NodeMachine = None
+    NodeEvent = None
+    NodeEventType = None
+    load_llc2_policy = None
+    load_llc2_question_sets = None
 
 
 def _run_delta_analysis(auto_approve=False, iteration=None):
@@ -110,6 +134,17 @@ def pipeline_run(from_step="0.5", to_step="11.1", task=None,
             print(f"\n⏭️  Step {spec.id} ({spec.name}) — PULADO (Smart Skip)")
             print(f"   Motivo: {reason or 'Step nao afetado'}")
             print(f"   Skip note: {note_file}")
+            if record_decision is not None:
+                record_decision(
+                    "smart_skip",
+                    outcome="skipped",
+                    reason=reason or "delta_plan",
+                    state="STEP_SKIPPED",
+                    event="SMART_SKIP",
+                    step=spec.id,
+                    evidence={"delta_change_type": delta_plan.get("change_type")},
+                    automation="AUTO",
+                )
             continue
         if not started:
             print(f"\n{'=' * 60}")
@@ -163,7 +198,79 @@ def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
     print(f"📄 Skill: {skill_file}")
     print(f"📦 Context seed: {len(sess.get('context_seed', '') or '')} chars")
 
+    # ── Fase 4: NodeMachine integration ──────────────────────────────────
+    machine = None
+    if NodeMachine is not None and load_llc2_policy is not None and load_llc2_question_sets is not None:
+        # Check feature flag
+        statechart_enabled = os.environ.get("LLC2_STATECHART", "1").lower() not in ("0", "", "false", "no")
+        if statechart_enabled:
+            try:
+                policy = load_llc2_policy()
+                question_sets = load_llc2_question_sets()
+                question_set = question_sets.get("task-classification")
+
+                if question_set:
+                    machine = NodeMachine(node_id=str(step), policy=policy, question_set=question_set)
+                    machine.start(str(step), question_set, policy)
+
+                    # Log step.start via statechart
+                    if log_event is not None:
+                        log_event(
+                            "step.start",
+                            session_id=sess.get("session_id"),
+                            step=str(step),
+                            input_hash=sess.get("input_hash"),
+                            fields={
+                                "skill_file": skill_file,
+                                "prompt_len": len(prompt),
+                                "statechart_state": machine.configuration()["configuration"],
+                                "statechart_capabilities": list(machine.capabilities()),
+                            },
+                        )
+            except Exception:
+                # graceful degradation - não bloqueia pipeline se statechart falhar
+                machine = None
+
+    # Fase 0: input_hash do step (prompt + metadados) para replay determinístico
+    if log_event is not None:
+        log_event(
+            "step.start",
+            session_id=sess.get("session_id"),
+            step=str(step),
+            input_hash=None,  # computado em session_start; aqui logamos o evento
+            fields={"skill_file": skill_file, "prompt_len": len(prompt)},
+        )
+
     _output, code, _context_seed = agent_invoke(prompt, task, client=None)
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
+
+    # ── Fase 4: Process AGENT_RETURNED event ─────────────────────────────
+    if machine is not None and NodeEvent is not None and NodeEventType is not None:
+        try:
+            event = NodeEvent(event_id=f"evt-{step}-agent-returned", type=NodeEventType.AGENT_RETURNED, node_id=str(step))
+            state = machine.send(event)
+
+            if log_event is not None:
+                log_event(
+                    "step.end",
+                    session_id=sess.get("session_id"),
+                    step=str(step),
+                    fields={
+                        "agent_exit_code": code,
+                        "statechart_state": state.state_id,
+                        "statechart_capabilities": list(machine.capabilities()),
+                    },
+                )
+        except Exception:
+            pass  # graceful degradation
+
+    if log_event is not None:
+        log_event(
+            "step.end",
+            session_id=sess.get("session_id"),
+            step=str(step),
+            fields={"agent_exit_code": code},
+        )
+
     return sess["session_id"]

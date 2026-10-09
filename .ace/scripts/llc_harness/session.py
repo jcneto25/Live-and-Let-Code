@@ -12,6 +12,13 @@ from llc_steps import UnknownStepError, canonical_id
 
 from .common import ACE_DIR, SCRIPTS_DIR
 
+try:
+    from llc_trace import input_hash, log_event, set_context
+except ImportError:  # pragma: no cover
+    input_hash = None
+    log_event = None
+    set_context = None
+
 SESSIONS_DIR = ACE_DIR / "sessions"
 
 
@@ -49,12 +56,27 @@ def session_start(step, prp=None, task=None, wave=1, no_worktree=False):
         sys.exit(1)
 
     data = json.loads(result.stdout)
-    print(f"✅ Sessao iniciada: {data.get('session_id')}")
+    sid = data.get("session_id")
+    print(f"✅ Sessao iniciada: {sid}")
     if data.get("worktree"):
         print(f"🔀 Worktree: {data.get('worktree')}")
 
+    # ── Fase 0: instrumentacao (INV-T1/T2/T3/T4) ──
+    if set_context is not None:
+        set_context(session_id=sid, step=str(step), prp=prp, wave=wave)
+    if log_event is not None:
+        log_event(
+            "session.start",
+            session_id=sid,
+            step=str(step),
+            prp=prp,
+            wave=wave,
+            input_hash=input_hash({"step": step, "task": task, "prp": prp, "wave": wave})
+            if input_hash is not None else None,
+        )
+
     return {
-        "session_id": data.get("session_id"),
+        "session_id": sid,
         "context_seed": data.get("context_seed"),
         "worktree_path": data.get("worktree"),
     }
@@ -265,5 +287,14 @@ def session_end(session_id, gate_decision, context_seed_output, step=None):
 
     data = json.loads(result.stdout) if result.stdout else {}
     print(f"✅ Sessao finalizada. Gate: {gate_decision}")
+
+    # ── Fase 0: instrumentacao (INV-T1/T2/T3/T4) ──
+    if log_event is not None:
+        log_event(
+            "session.end",
+            session_id=real_id,
+            step=eff_step,
+            fields={"gate_decision": gate_decision, "block_merge": block_merge},
+        )
 
     return data

@@ -131,5 +131,9 @@ class TestRealRepo:
     def test_current_repo_not_blocked(self):
         """Integração: o repositório atual (pós GOV-T1/T2) não pode ter
         nenhuma violação block — é o critério de saída da Trilha 0."""
-        r = _check_dependency_governance(Path("."))
+        # Âncora na raiz do repo: cwd não pode definir onde o checker procura
+        # .ace/ — a suíte full roda com cwd=.ace/scripts (mesmo padrão do
+        # test_validate_tags.py::test_gate_archive_is_not_session_input).
+        repo_root = Path(__file__).resolve().parents[2]
+        r = _check_dependency_governance(repo_root)
         assert not r["blocked"], f"Violações block no repo real: {r['violations']}"

@@ -131,11 +131,16 @@ class TestProseMentions:
         assert errors == []
 
     def test_gate_archive_is_not_session_input(self):
-        gate_archive = Path(".ace/gates/2026-10-07-007.md")
+        # Âncora na raiz do repo: o teste deve passar tanto rodando da raiz
+        # quanto de .ace/scripts — cwd não pode definir a existência do arquivo
+        # (regressão da suíte full, que executa com cwd=.ace/scripts).
+        repo_root = Path(__file__).resolve().parents[2]
+        gate_archive = repo_root / ".ace/gates/2026-10-07-007.md"
         assert gate_archive.exists()
-        assert not vt.validate_yaml_front_matter(
+        errors = vt.validate_yaml_front_matter(
             gate_archive.read_text(encoding="utf-8"), gate_archive
-        ) == []
+        )
+        assert errors, "gate sem frontmatter deve ser rejeitado como input de sessão"
 
     def test_fix_does_not_append_close_for_balanced_structural_tags(self, tmp_path):
         content = (

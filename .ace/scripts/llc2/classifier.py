@@ -39,6 +39,16 @@ from llc2.llm_shim import LlmAsJevTransport
 # ── Feature flag ──────────────────────────────────────────────────────────
 _USE_JEV = os.environ.get("LLC2_CLASSIFY", "1").strip() not in ("0", "", "false", "no")
 
+# Replay determinístico (Fase 1/7) — cascata §21: Hard EVAL -> Replay -> Jev.
+#
+# Default **`0`**, alinhado ao §9 do plano e a `llc_harness/replay.py`
+# (`os.environ.get('LLC2_REPLAY','0')`). A env é lida **por chamada**, não no
+# import: uma leitura em nível de módulo vira dependência da ordem de
+# importação dos testes e quebra quando outra suíte importa `llc2.classifier`
+# antes de setar a flag.
+REPLAY_ENV = "LLC2_REPLAY"
+REPLAY_DEFAULT = "0"
+
 # ── Question set fixo para classificação ──────────────────────────────────
 _QUESTION_SET_ID = "task-classification"
 
@@ -155,6 +165,52 @@ def _trace_classification(
     )
 
 
+def _try_replay_classification(input_hash: str) -> dict[str, Any] | None:
+    """Tenta resolver a classificação por replay determinístico (zero tokens).
+
+    Retorna o dict de classificação quando há registro com `input_hash` igual
+    E a verificação do replay passa; caso contrário `None` (segue para o Jev).
+    Nunca levanta: qualquer falha degrada para o caminho normal.
+    """
+    replay_enabled = os.environ.get(REPLAY_ENV, REPLAY_DEFAULT).strip().lower() \
+        not in ("0", "", "false", "no")
+    if not replay_enabled:
+        return None
+    try:
+        from llc_replay.verify import attempt_replay
+    except Exception:
+        return None
+    try:
+        replay = attempt_replay(input_hash, kind="early_commitment")
+    except Exception:
+        return None
+    if not replay or not replay.get("replayed"):
+        return None
+    if not (replay.get("verification") or {}).get("ok"):
+        return None
+
+    record = replay.get("record") or {}
+    decision = replay.get("decision")
+    evidence = record.get("evidence") or {}
+    config = record.get("config") or {}
+    return {
+        "type": evidence.get("classification_type", "unknown"),
+        "confidence": evidence.get("classification_confidence", 0.0),
+        "reasoning": "replay_hit",
+        "routing": (decision.automation.value if decision is not None
+                    else record.get("automation")),
+        "policy_version": config.get("policy_version"),
+        "policy_id": config.get("policy_id"),
+        "thresholds_hash": config.get("thresholds_hash"),
+        "question_set_hash": config.get("question_set_hash"),
+        "input_hash": input_hash,
+        "decision_id": record.get("decision_id"),
+        "jev_model": record.get("jev_model"),
+        "jev_request_id": record.get("jev_request_id"),
+        "replayed": True,
+    }
+
+
 def classify_task_v2(
     task_description: str,
     client: str | None = None,
@@ -171,6 +227,12 @@ def classify_task_v2(
     """
     policy = load_policy()
     decision_id = str(uuid.uuid4())
+
+    # ── Replay antes do Jev: hit com input_hash igual não gasta tokens ────
+    input_hash_value = canonical_hash({"task": task_description})
+    replayed_result = _try_replay_classification(input_hash_value)
+    if replayed_result is not None:
+        return replayed_result
 
     # ── carrega question set uma única vez ────────────────────────────────
     qsets: Any = None
@@ -235,10 +297,11 @@ def classify_task_v2(
         "policy_id": policy.id,
         "thresholds_hash": policy.thresholds_hash,
         "question_set_hash": qs_hash,
-        "input_hash": canonical_hash({"task": task_description}),
+        "input_hash": input_hash_value,
         "decision_id": decision_id,
         "jev_model": jev_result.model if jev_result else "llm-legacy-xml",
         "jev_request_id": jev_result.request_id if jev_result else None,
+        "replayed": False,
     }
 
     _trace_classification(

@@ -34,6 +34,12 @@ from llc_trace import decisions_path
 @pytest.fixture(autouse=True)
 def isolate_replay_logs(monkeypatch, tmp_path):
     monkeypatch.setenv("LLC_TRACE_DIR", str(tmp_path / "trace"))
+    # O default do classificador é 0 (§9 do plano). Estes testes cobrem o
+    # caminho de replay LIGADO — sem a flag, os testes de fallback passariam
+    # por omissão (replay desligado). `monkeypatch` restaura a env ao fim de
+    # cada teste: nada vaza para as demais suítes e não há dependência da
+    # ordem de importação.
+    monkeypatch.setenv("LLC2_REPLAY", "1")
 
 
 def _write_test_decisions(records: list[dict]):
@@ -60,6 +66,30 @@ def _restore_decisions(backup: str | None):
         log_path.write_text(backup)
     elif log_path.exists():
         log_path.unlink()
+
+
+_TASK_TYPES = ("crud_endpoint", "ui_component", "validation_rule",
+               "test_write", "unknown")
+
+
+def _choice_transport(choice: str, confidence: float):
+    """Transport scriptado (API canônica `FakeJevTransport({...})`).
+
+    Uma única Choice de `task_type` com distribuição normalizada — este é o
+    formato usado pelos testes de contrato em `llc2/tests/test_classifier.py`.
+    """
+    from llc2.jev_adapter import FakeJevTransport
+
+    others = (1.0 - confidence) / (len(_TASK_TYPES) - 1)
+    probabilities = {t: (confidence if t == choice else others)
+                     for t in _TASK_TYPES}
+    return FakeJevTransport({
+        "task_type": {
+            "choice": choice,
+            "probabilities": probabilities,
+            "confidence": confidence,
+        },
+    })
 
 
 # ── Test Data Fixtures ────────────────────────────────────────────────────────
@@ -99,7 +129,26 @@ def make_test_record(
         "statechart_version": None,
         "jev_model": "jev-1.13.0",
         "jev_request_id": "req-test",
-        "jev_result": None,
+        # Evidência coerente com reason="semantic_confident" e automation=AUTO:
+        # sem ela o registro é internamente inconsistente e o replay (que
+        # recomputa a partir da evidência gravada) não pode reproduzi-lo.
+        "jev_result": {
+            "model": "jev-1.13.0",
+            "request_id": "req-test",
+            "answers": {
+                "task_type": {
+                    "type": "choice",
+                    "choice": "crud_endpoint",
+                    "probabilities": {
+                        "crud_endpoint": 0.92, "ui_component": 0.02,
+                        "validation_rule": 0.02, "test_write": 0.02,
+                        "unknown": 0.02,
+                    },
+                    "confidence": 0.92,
+                },
+            },
+            "usage": {"input_tokens": 1200, "output_tokens": 40},
+        },
         "hard_eval": None,
         "human_approval": None,
         "runtime_version": "llc-1.x",
@@ -412,7 +461,7 @@ def test_replay_integration_with_classifier():
     
     try:
         # Transport que retorna classificação alta
-        transport = FakeJevTransport(choice="crud_endpoint", confidence=0.95)
+        transport = _choice_transport("crud_endpoint", 0.95)
         
         # Deve usar replay e não chamar Jev
         result = classify_task_v2(task, client=None, _transport=transport)
@@ -433,7 +482,7 @@ def test_replay_fallback_to_jev_when_no_record():
     backup = _write_test_decisions([])
     
     try:
-        transport = FakeJevTransport(choice="ui_component", confidence=0.88)
+        transport = _choice_transport("ui_component", 0.88)
         result = classify_task_v2(task, client=None, _transport=transport)
         
         assert result["type"] == "ui_component"
@@ -453,7 +502,7 @@ def test_replay_fallback_to_jev_when_hash_mismatch():
     
     try:
         task = "Criar endpoint"
-        transport = FakeJevTransport(choice="crud_endpoint", confidence=0.92)
+        transport = _choice_transport("crud_endpoint", 0.92)
         result = classify_task_v2(task, client=None, _transport=transport)
         
         assert result["type"] == "crud_endpoint"

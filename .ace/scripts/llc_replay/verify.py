@@ -79,8 +79,9 @@ def replay_decision_from_record(
     # Converte dict para DecisionRecord (dataclass)
     decision_record = _dict_to_decision_record(record)
     
-    # Converte semantic_result se presente
-    jev_result = _dict_to_jev_result(semantic_result) if semantic_result else None
+    # Evidência semântica: a do chamador ou a GRAVADA no registro
+    # (Passagem 3 §12: decide(record.hard_eval, record.jev, policy@version)).
+    jev_result = _effective_semantic(record, semantic_result)
     
     # Usa policy do registro ou carrega padrão
     policy_spec = policy or load_policy()
@@ -125,7 +126,7 @@ def verify_replay_from_record(
         }
     
     decision_record = _dict_to_decision_record(record)
-    jev_result = _dict_to_jev_result(semantic_result) if semantic_result else None
+    jev_result = _effective_semantic(record, semantic_result)
     policy_spec = policy or load_policy()
     
     # Chama verify_replay do contracts
@@ -175,6 +176,16 @@ def _dict_to_decision_record(record: dict[str, Any]) -> Any:  # DecisionRecord
     policy_id = config.get("policy_id") or record.get("policy_id") or "llc-default"
     thresholds_hash = config.get("thresholds_hash") or record.get("thresholds_hash") or "sha256:unknown"
 
+    # `DecisionRecord.is_replayable()` exige `policy["version"]`, mas o JSONL
+    # grava `policy_version`. Sem este mapeamento TODO registro aparece como
+    # "não replayável" e o replay nunca reproduz nada.
+    policy_mapping = {
+        **config,
+        "id": policy_id,
+        "version": policy_version,
+        "thresholds_hash": thresholds_hash,
+    }
+
     decision = Decision(
         action=action,
         automation=automation,
@@ -216,12 +227,12 @@ def _dict_to_decision_record(record: dict[str, Any]) -> Any:  # DecisionRecord
         event=record.get("event", ""),
         input_hash=record.get("input_hash", ""),
         state_hash=record.get("state_hash", ""),
-        policy=config,
+        policy=policy_mapping,
         decision=decision,
         decision_kind=record.get("kind", ""),
         risk_class=record.get("risk_class", "R0"),
         question_set=qs,
-        jev=record.get("jev"),
+        jev=record.get("jev") or record.get("jev_result"),
         hard_eval=record.get("hard_eval"),
         statechart=record.get("statechart"),
         action=record.get("action"),
@@ -240,31 +251,56 @@ def _dict_to_jev_result(semantic: dict[str, Any] | None) -> Any | None:  # JevRe
     except ImportError:
         return None
     
+    # Assinaturas canônicas (contracts.py):
+    #   JevChoice(choice, probabilities, confidence)
+    #   JevScore(score, levels, probabilities, confidence)
+    #   JevNoul(p_true)  -> NÃO tem `confidence`
     answers = {}
     for k, v in semantic.get("answers", {}).items():
         if isinstance(v, dict):
             if "choice" in v:
-                answers[k] = JevChoice(choice=v["choice"], confidence=v.get("confidence", 0.0))
-            elif "index" in v:
-                answers[k] = JevScore(index=v["index"], max_index=v.get("max_index", 0))
-            elif "p_true" in v:
-                answers[k] = JevNoul(
-                    p_true=v["p_true"],
-                    confidence=v.get("confidence", 0.0),
-                    raises_risk_when_true=v.get("raises_risk_when_true", False),
+                answers[k] = JevChoice(
+                    choice=v["choice"],
+                    probabilities=dict(v.get("probabilities") or {}),
+                    confidence=float(v.get("confidence", 0.0)),
                 )
+            elif "score" in v or "index" in v:
+                answers[k] = JevScore(
+                    score=int(v.get("score", v.get("index", 0))),
+                    levels=tuple(v.get("levels") or ()),
+                    probabilities=dict(v.get("probabilities") or {}),
+                    confidence=float(v.get("confidence", 0.0)),
+                )
+            elif "p_true" in v:
+                answers[k] = JevNoul(p_true=float(v["p_true"]))
             else:
                 answers[k] = v
         else:
             answers[k] = v
     
+    # `JevResult(model, request_id, answers, usage)` — não existe campo
+    # `probabilities` no topo (as probabilidades vivem em cada resposta).
     return JevResult(
-        answers=answers,
         model=semantic.get("model", "unknown"),
         request_id=semantic.get("request_id", ""),
-        probabilities=semantic.get("probabilities"),
-        usage=semantic.get("usage"),
+        answers=answers,
+        usage=dict(semantic.get("usage") or {}),
     )
+
+
+def _effective_semantic(record: dict[str, Any], semantic_result: Any = None) -> Any:
+    """Evidência semântica efetiva do replay.
+
+    Prioriza a fornecida pelo chamador; na ausência, usa a JÁ REGISTRADA no
+    próprio registro (`jev` / `jev_result`). O replay nunca infere — apenas
+    reutiliza a evidência gravada (Passagem 3 §12).
+    """
+    if semantic_result is not None:
+        return semantic_result
+    payload = record.get("jev") or record.get("jev_result")
+    if not payload:
+        return None
+    return _dict_to_jev_result(payload)
 
 
 def _compute_drift(original_jev: dict[str, Any], new_jev: Any) -> dict[str, Any] | None:
@@ -385,15 +421,18 @@ def attempt_replay(
             "record": record,
         }
 
-    decision = replay_decision_from_record(record, semantic_result, policy)
-    if decision is None:
+    reproduced = replay_decision_from_record(record, semantic_result, policy)
+    if reproduced is None:
         return None
 
     verification = verify_replay_from_record(record, input_hash, semantic_result, policy, ctx_builder)
 
+    # Passagem 2 §1.5: hit com `input_hash` igual devolve a DECISÃO DO REGISTRO,
+    # sem inferência. A decisão recomputada serve apenas à verificação (drift).
     return {
         "replayed": True,
-        "decision": decision,
+        "decision": _dict_to_decision_record(record).decision,
+        "reproduced": reproduced,
         "verification": verification,
         "record": record,
     }

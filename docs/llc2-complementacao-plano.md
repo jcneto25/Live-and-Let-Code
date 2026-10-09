@@ -1,5 +1,75 @@
 # Plano para complementar a implementação LLC 2.0
 
+## 0. Status de execução verificado (2026-10-09)
+
+> **Origem desta seção:** verificação do **código real** (não de mensagens de commit nem de afirmações registradas em sessão) contra as Fases 1–6 deste plano, para permitir a continuidade. Toda afirmação abaixo tem arquivo/comando de evidência. O commit `d4801e3` ("LLC 2.0: complement integration (Fases 1-6)") foi tratado como **hipótese, não como prova**.
+
+**Método.** Inspeção direta de `.ace/scripts/**` (busca por símbolos) + execução das 3 suítes de teste do §8.2 com o *exit code* preservado (`PIPESTATUS`).
+
+### 0.1 Resultado por fase
+
+| Fase | Objetivo | Status real | Evidência |
+|---|---|---|---|
+| **F1** | R-2 — replay → Decision Engine | ❌ **Esqueleto; não integra** | `llc_harness/replay.py` define `_USE_LLC2_REPLAY` (L51) e `_classify_v2_routing()` (L79) e importa `decide`, `DecisionState`, `HardEvalResult` (L40-45) — mas a busca por `decide(` / `DecisionState(` / `_classify_v2_routing(` só encontra a própria `def`. **Zero chamadas**: tarefas 1.3–1.7 não implementadas. |
+| **F2** | R-4 — `impact_of`-first no Delta | ❌ **Não iniciada** | `should_use_semantic_impact` e `residual_impact` **não existem em `.py` algum** (a premissa deste plano está errada — ver §0.2). `llc_delta/report.py` importa apenas `re`/`unicodedata`/`.paths`; nenhum `GraphEngine`/`impact_of`. Existe `llc2/delta.py::delta_semantic_impact()`, mas ela só é chamada pelos próprios testes. |
+| **F3** | R-5 — DecisionRecord versionado | 🔶 **Parcial** | Infra pronta: `llc_trace/{decisions,events,hashing,stats}.py`. Porém `replay.py::_trace_early_commitment` grava **sem** `policy_version`, `thresholds_hash` e `question_set.hash` — exatamente os campos exigidos pelo critério GO de §4.2. |
+| **F4** | R-3 — whitelist NodeMachine | ✅ **Mantido global — decisão humana (2026-10-09, ver §5)** | `NODEMACHINE_WHITELIST`/`NODEMACHINE_PILOT_STEPS` inexistentes. A guarda do piloto `canonical_id(step) == "11.2"` foi **removida** e `LLC2_STATECHART` tem default **`"1"`** em `llc_harness/pipeline.py:205` → NodeMachine é criada para **todos** os steps. **Aceito pela decisão de 2026-10-09** (maior controle determinístico); o critério "Sem habilitar global" do §5.2 é superado. |
+| **F5** | R-6 — capabilities tool-agnostic + doc | 🔶 **Parcial** | `llc2/capabilities.py` mapeia **somente `claude-code`** (8 ocorrências; **0** de `opencode`/`codex`/`cursor`) → tarefa 5.1 não feita. `generate_permission_profile()` **existe** (L115) mas **não é chamada** por `pipeline.py` (0 ocorrências de `profile`) → tarefa 5.2 não feita. `detect_modified_file_violations` **não existe** → tarefa 5.3 apoiada em premissa falsa. O doc foi criado, mas é placeholder (§0.3). |
+| **F6** | R-7 baseline + R-1 auditoria | ❌ **Não feito** | Nenhuma ocorrência de `LLC2_BASELINE` nem de `baseline.jsonl` no código → tarefas 7.1/7.2 ausentes. `docs/audit/llc2-integration-audit.md` existe, mas é placeholder (§0.3) → tarefa 7.3 não cumprida. |
+
+**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5). Ainda sem critério GO cumprido: **F1, F2, F6** ❌/divergentes e **F3, F5** parciais. O bloqueio de testes foi **removido** (§0.4, 224/224).
+
+### 0.2 Premissas deste plano que se revelaram falsas
+
+| Onde o plano assume | Realidade verificada | Impacto |
+|---|---|---|
+| §3 (F2) — "`llc_delta/skip.py` já tem `should_use_semantic_impact()` e `residual_impact()` (prontos)" | **Não existem.** `skip.py` só tem `ALWAYS_RUN` e `is_step_skipped` | F2 precisa **criar** os helpers antes de plugá-los (ou usar `GraphEngine.impact_of()` diretamente) |
+| §6 (F5.3) — "Manter `detect_modified_file_violations()` após agent" | **Não existe** em nenhum `.py` | A "rede de segurança" declarada em §6.2 não está no código |
+| §8.2 — "Testes existentes: 193 passed" | Medido: **224 coletados, 219 passando, 5 falhando** | O baseline numérico do plano está errado |
+
+### 0.3 Artefatos placeholders (defeito de escrita)
+
+Dois documentos entregues como "feitos" contêm uma única linha, com `\n` **literais** (sequências de escape não interpretadas — sintoma de geração sem escape correto):
+
+| Arquivo | Conteúdo atual |
+|---|---|
+| `docs/architecture/capability-control.md` | `# Capability Control\n\nPrevenção via perfil por estado + detecção post-hoc...\n` (1 linha física) |
+| `docs/audit/llc2-integration-audit.md` | 5 linhas físicas, incluindo `Estado: Fase 1-5 complementadas. 248 testes verdes.` — **afirmação falsa** (medido: 219/224 com 5 falhas) |
+
+Ambos precisam ser **reescritos** para satisfazer as tarefas 5.4 e 7.3.
+
+### 0.4 Suíte de replay — ✅ RESOLVIDA (era o bloqueio)
+
+> ✅ **Resolvida em 2026-10-09 (sessão `2026-10-09-002`):** `20 passed`, exit 0. Causas encontradas: (1) `_dict_to_decision_record` (em `llc_replay/verify.py`) passava `policy=config` sem a chave `version`, exigida por `is_replayable()` — **todo** registro virava "não replayável"; (2) `_dict_to_jev_result` usava assinaturas inexistentes (`JevChoice` sem `probabilities`, `JevScore` sem `levels`, `JevNoul` com `confidence`, `JevResult` com `probabilities`); (3) o replay ignorava a evidência **gravada no próprio registro** (Passagem 3 §12: `decide(record.hard_eval, record.jev, …)`); (4) `attempt_replay` devolvia a decisão recomputada em vez da **decisão do registro** (Passagem 2 §1.5); e (5) `classify_task_v2` não integrava replay nem expunha a key `replayed`. Abaixo, o diagnóstico original (mantido como histórico).
+
+`llc_replay/tests/test_verify.py` → ~~**5 failed / 15 passed**~~ → **20 passed** (exit code 0). O arquivo de teste foi **adicionado no mesmo commit** `d4801e3` que implementou o replay (`git log --diff-filter=A`), ou seja: os testes foram escritos e a implementação **nunca chegou ao GREEN**. É o pré-requisito de qualquer avanço.
+
+| Testes | Causa raiz |
+|---|---|
+| 4 testes (`test_replay_integration_with_classifier`, `test_replay_fallback_to_jev_when_no_record`, `test_replay_fallback_to_jev_when_hash_mismatch`, `test_replay_with_different_automation_levels`) | `TypeError: FakeJevTransport.__init__() got an unexpected keyword argument 'choice'` — o teste chama `FakeJevTransport(choice=..., confidence=...)`, mas `llc2/jev_adapter.py:209` exige `FakeJevTransport(answers, model=..., usage=..., fail_times=..., drop=...)`. **Contrato teste↔implementação desalinhado.** |
+| `test_attempt_replay_success` | `assert False is True` em `test_verify.py:309` → `verification["ok"]` é `False` (`input_hash`/`decision` não conferem) |
+
+### 0.5 Medições desta verificação (2026-10-09)
+
+| Suíte | Resultado medido | exit |
+|---|---|---|
+| `llc2_spec/test_invariants.py` + `.ace/scripts/llc2/tests/` | 169 passed | 0 |
+| `llc_replay/tests/test_verify.py` | ✅ **20 passed** (era 15 passed + 5 failed) | 0 |
+| `llc_graph/tests/test_engine.py` | 35 passed | 0 |
+| **Total** | ✅ **224 passed / 224 coletados** (era 219/224) | — |
+
+Da raiz: `python -m pytest llc2_spec/test_invariants.py .ace/scripts/llc2/tests/ -q`; em `.ace/scripts/`: `python -m pytest llc_replay/tests/test_verify.py -q` e `python -m pytest llc_graph/tests/test_engine.py -q`.
+
+### 0.6 Próximos passos recomendados (ordem)
+
+1. ~~**Destravar o vermelho** (§0.4)~~ ✅ **feito** (20/20 em 2026-10-09, sessão `2026-10-09-002`).
+2. **F1 real:** consumir `_USE_LLC2_REPLAY` + `_classify_v2_routing` + `decide()` no fluxo de replay (hoje código morto).
+3. **F2:** criar os helpers de impacto no `llc_delta` (a premissa do §3 é falsa) ou usar `GraphEngine.impact_of()` diretamente.
+4. ~~**F4:** decidir formalmente entre (a) reverter para whitelist + default `0` (como este plano escreve) ou (b) assumir a adoção global já implementada — **decisão arquitetural, requer validação humana**.~~ ✅ **Decidido (2026-10-09): manter o NodeMachine** em adoção ampla para maior controle determinístico (a opção (a) foi rejeitada). Ver §5.
+5. **F3/F5/F6:** completar os campos versionados do DecisionRecord; expandir clientes; reescrever os 2 docs placeholders; instrumentar `LLC2_BASELINE`.
+
+> **Nota de processo:** o commit `d4801e3` avançou até a "Fase 6" enquanto este plano ainda dizia "Aguardando aprovação para iniciar Fase 1" (§11). O plano **não foi atualizado** durante a execução; esta seção restaura a correspondência entre plano e código.
+
 ## 1. Objetivo
 
 Complementar a integração parcial existente, evoluindo-a para **adoção completa e universal** sem quebrar o comportamento legado. O foco está em fechar os pontos restantes identificados na verificação:
@@ -103,6 +173,16 @@ Complementar a integração parcial existente, evoluindo-a para **adoção compl
 
 **Motivo:** Hoje adoção é **apenas piloto `11.2`** (`canonical_id(step) == "11.2"`). Expandir incrementalmente com whitelist controlada, sob `LLC2_STATECHART`, sem habilitar global de uma vez.
 
+> ✅ **DECISÃO (2026-10-09 — Equipe LLC): manter o `NodeMachine` ativo em adoção ampla.**
+>
+> **Motivo:** adotar o statechart no máximo de steps possível dá **maior controle determinístico** — toda transição passa por guarda pura, por `CAPABILITY_MATRIX` e gera registro versionado.
+>
+> **O que muda neste documento:**
+> 1. A premissa "adoção é apenas piloto `11.2`" (abaixo) fica **obsoleta**; a alternativa "reverter para whitelist + default `0`" foi **rejeitada**.
+> 2. O critério **"Sem habilitar global"** (§5.2) é **superado**; o critério passa a ser **"graceful degradation sempre + `LLC2_STATECHART` como kill-switch efetivo"**.
+> 3. `LLC2_STATECHART` mantém default `"1"` (`llc_harness/pipeline.py:205`).
+> 4. O `LLC2_NODEMACHINE_STEPS` (tarefa 4.1) **opcional**: implementar apenas se surgir necessidade operacional de *escape hatch* por ambiente — como **exceção**, nunca como restrição de cobertura.
+
 ### 5.1 Tarefas
 
 | ID | Tarefa | Arquivos | Detalhamento |
@@ -120,7 +200,7 @@ Complementar a integração parcial existente, evoluindo-a para **adoção compl
 | Adoção incremental controlada | Whitelist explícita + flag | Apenas steps whitelistados usam NodeMachine. Outros inalterados. |
 | Transições reproduzíveis | **100%** (steps piloto/whitelist) | Snapshots `.ace/state/nodes/*.json` coerentes com eventos. Testes NodeMachine (23+ do llc2/tests/test_nodemachine.py) verdes. |
 | Graceful degradation | **Sempre** | Falha na init não aborta pipeline. |
-| Sem habilitar global | **Garantido** | Sem remoção de `LLC2_STATECHART` guard. |
+| Sem habilitar global | ~~**Garantido**~~ **SUPERADO pela decisão de 2026-10-09 (ver §5)** — adotar globalmente **é** o objetivo | Adoção ampla mantida; `LLC2_STATECHART` preservado como kill-switch. |
 | Testes existentes | **193 passed** | Verde. |
 
 ### 5.3 Risco/Rollback
@@ -198,9 +278,9 @@ Fase 6 (R-7+R-1 — Métricas + Auditoria) → baseline + doc
 
 | Verificação | Alvo | Comando |
 |---|---|---|
-| Testes spec + llc2 | **193 passed** | `cd E:/Users/Desktop/javascript/LLC && python -m pytest llc2_spec/test_invariants.py .ace/scripts/llc2/tests/ -q` |
-| Testes llc_replay/verify | **20 passed** | `cd E:/Users/Desktop/javascript/LLC/.ace/scripts && python -m pytest llc_replay/tests/test_verify.py -q` |
-| Testes llc_graph/engine | **35 passed** | `cd E:/Users/Desktop/javascript/LLC/.ace/scripts && python -m pytest llc_graph/tests/test_engine.py -q` |
+| Testes spec + llc2 | **169 passed** (medido 2026-10-09; o alvo anterior de 193 era estimativa — ver §0.5) | `cd <raiz> && python -m pytest llc2_spec/test_invariants.py .ace/scripts/llc2/tests/ -q` |
+| Testes llc_replay/verify | 🔴 **15 passed / 5 failed** (medido 2026-10-09 — ver §0.4) | `cd <raiz>/.ace/scripts && python -m pytest llc_replay/tests/test_verify.py -q` |
+| Testes llc_graph/engine | **35 passed** (medido 2026-10-09) | `cd <raiz>/.ace/scripts && python -m pytest llc_graph/tests/test_engine.py -q` |
 | Smoke Fase 1 (replay) | `llm_fallback→0`, `replay_hit_rate≥40%` | Execução controlada com `LLC2_REPLAY=1` + cenário repetido |
 | Smoke Fase 2 (delta) | 0 regressões skip | Comparação baseline vs com delta conhecido |
 | Smoke Fase 4 (NodeMachine) | Whitelist funciona, graceful degradation OK | `LLC2_STATECHART=1` por step whitelistado |
@@ -213,10 +293,20 @@ Fase 6 (R-7+R-1 — Métricas + Auditoria) → baseline + doc
 | `LLC2_REPLAY` | `0` | Replay harness → Decision Engine (novo) | F1 |
 | `LLC2_DELTA_IMPACT_FIRST` | `1` | Forçar impact_of-first (novo, recomendado) | F2 |
 | `LLC2_RECORD` | `0` | Gravação DecisionRecord/events/snapshots (existente) | F3 |
-| `LLC2_STATECHART` | `0` | Habilita NodeMachine (existente) | F4 |
+| `LLC2_STATECHART` | `1` | Habilita NodeMachine (existente) — alinhado à decisão §5 de 2026-10-09 (antes dizia `0`) | F4 |
 | `LLC2_NODEMACHINE_STEPS` | (opcional) | CSV de steps extras p/ whitelist (novo) | F4 |
 | `LLC2_APPLY_CAPABILITY_PROFILE` | `0` | Aplica perfil por estado (existente) | F5 |
 | `LLC2_BASELINE` | `0` | Captura baseline métricas (novo) | F6 |
+
+**Alignment de `LLC2_REPLAY` (2026-10-09):** os dois módulos passaram a ler a mesma env var com o **mesmo default `0`**, e agora **por chamada** (não no import):
+
+| Ponto | Leitura | Default |
+|---|---|---|
+| `llc_harness/replay.py:51` | módulo (legado, ainda código morto) | `0` |
+| `llc2/classifier.py` (`REPLAY_ENV`/`REPLAY_DEFAULT`) | **por chamada** em `_try_replay_classification()` | `0` |
+| `llc_replay/tests/test_verify.py` | `monkeypatch.setenv("LLC2_REPLAY", "1")` no fixture `autouse` | teste roda ligado, sem vazar |
+
+Por que *por chamada*: uma leitura em nível de módulo fica **presa no import** — se `llc2.classifier` é importado por outra suíte antes de a flag ser setada, o default é congelado e os testes falham ou passam por omissão. Verificado comportamentalmente no mesmo processo: ausente → `None`; `0` → `None`; `1` → `replayed: True`.
 
 **Recomendação:** Manter defaults conservadores (0) para flags novos (`LLC2_REPLAY`, `LLC2_BASELINE`). Habilitar progressivamente por fase após validação dos critérios GO.
 
@@ -233,3 +323,5 @@ Fase 6 (R-7+R-1 — Métricas + Auditoria) → baseline + doc
 ## 11. Aprovação
 
 **Aguardando aprovação para iniciar Fase 1.** Após aprovação, executar **apenas Fase 1**, validar critérios GO, apresentar resultados e solicitar aprovação para Fase 2.
+
+> ⚠️ **Atualização (2026-10-09):** este gate de aprovação foi **ultrapassado sem atualização do plano**. O commit `d4801e3` executou Fases 1–6 em bloco, com os resultados parciais descritos em §0. O estado real (incluindo o bloqueio da suíte de replay) está consolidado em **§0** e deve ser lido antes de qualquer nova etapa. Este gate permanece aberto para as fases ainda não cumpridas (ver §0.6).

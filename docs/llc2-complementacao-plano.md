@@ -10,14 +10,14 @@
 
 | Fase | Objetivo | Status real | Evidência |
 |---|---|---|---|
-| **F1** | R-2 — replay → Decision Engine | ❌ **Esqueleto; não integra** | `llc_harness/replay.py` define `_USE_LLC2_REPLAY` (L51) e `_classify_v2_routing()` (L79) e importa `decide`, `DecisionState`, `HardEvalResult` (L40-45) — mas a busca por `decide(` / `DecisionState(` / `_classify_v2_routing(` só encontra a própria `def`. **Zero chamadas**: tarefas 1.3–1.7 não implementadas. |
+| **F1** | R-2 — replay → Decision Engine | ✅ **Concluída (2026-10-09, sessão 009 — tarefas 1.3–1.7)** | `classify_v2_routing()` público com campos versionados; ramo `LLC2_REPLAY` em `agent_invoke` com fallback legado intacto (`llc2_replay_error`); `verify_replay_from_record` pós-hit; 8 testes em `llc_harness/tests/`. Smoke GO §2.2: hit_rate 100%, llm_fallback 0, no_classify 0. |
 | **F2** | R-4 — `impact_of`-first no Delta | ❌ **Não iniciada** | `should_use_semantic_impact` e `residual_impact` **não existem em `.py` algum** (a premissa deste plano está errada — ver §0.2). `llc_delta/report.py` importa apenas `re`/`unicodedata`/`.paths`; nenhum `GraphEngine`/`impact_of`. Existe `llc2/delta.py::delta_semantic_impact()`, mas ela só é chamada pelos próprios testes. |
 | **F3** | R-5 — DecisionRecord versionado | 🔶 **Parcial** | Infra pronta: `llc_trace/{decisions,events,hashing,stats}.py`. Porém `replay.py::_trace_early_commitment` grava **sem** `policy_version`, `thresholds_hash` e `question_set.hash` — exatamente os campos exigidos pelo critério GO de §4.2. |
 | **F4** | R-3 — whitelist NodeMachine | ✅ **Mantido global — decisão humana (2026-10-09, ver §5)** | `NODEMACHINE_WHITELIST`/`NODEMACHINE_PILOT_STEPS` inexistentes. A guarda do piloto `canonical_id(step) == "11.2"` foi **removida** e `LLC2_STATECHART` tem default **`"1"`** em `llc_harness/pipeline.py:205` → NodeMachine é criada para **todos** os steps. **Aceito pela decisão de 2026-10-09** (maior controle determinístico); o critério "Sem habilitar global" do §5.2 é superado. |
 | **F5** | R-6 — capabilities tool-agnostic + doc | 🔶 **Parcial** | `llc2/capabilities.py` mapeia **somente `claude-code`** (8 ocorrências; **0** de `opencode`/`codex`/`cursor`) → tarefa 5.1 não feita. `generate_permission_profile()` **existe** (L115) mas **não é chamada** por `pipeline.py` (0 ocorrências de `profile`) → tarefa 5.2 não feita. `detect_modified_file_violations` **não existe** → tarefa 5.3 apoiada em premissa falsa. O doc foi criado, mas é placeholder (§0.3). |
 | **F6** | R-7 baseline + R-1 auditoria | ❌ **Não feito** | Nenhuma ocorrência de `LLC2_BASELINE` nem de `baseline.jsonl` no código → tarefas 7.1/7.2 ausentes. `docs/audit/llc2-integration-audit.md` existe, mas é placeholder (§0.3) → tarefa 7.3 não cumprida. |
 
-**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5). Ainda sem critério GO cumprido: **F1, F2, F6** ❌/divergentes e **F3, F5** parciais. O bloqueio de testes foi **removido** (§0.4, 224/224).
+**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5) e **F1 concluída em 2026-10-09** (tarefas 1.3–1.7, smoke GO §2.2 cumprido — ver `docs/audit/llc2-integration-audit.md`). Ainda sem critério GO cumprido: **F2, F6** ❌ e **F3, F5** parciais. O bloqueio de testes foi **removido** (§0.4, 238/238).
 
 ### 0.2 Premissas deste plano que se revelaram falsas
 

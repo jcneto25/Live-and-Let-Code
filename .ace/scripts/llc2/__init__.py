@@ -105,3 +105,10 @@ __all__ = [
     "write_permission_profile_for_state",
     "capabilities_for_state",
 ]
+
+# Fase 2 exports
+try:
+    from .macro_projection import MacroView, divergences, macro_view, phase_of
+    from . import macro_projection
+except Exception:
+    MacroView = divergences = macro_view = phase_of = macro_projection = None

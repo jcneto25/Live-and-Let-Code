@@ -3,7 +3,7 @@
 Mudanças normativas em relação à v1 (Passagem 3):
 
   F1  Thresholds saem do código e passam a ser carregados de
-      `decision-policy.v1.yaml`; `thresholds_hash` é calculado de verdade.
+      `config/decision-policy.v1.yaml`; `thresholds_hash` é calculado de verdade.
   F2  `decide()` fecha o fail-open: semântica ESPERADA e ausente =>
       HUMAN_REQUIRED ("semantic_unavailable"), nunca AUTO.
   F3  Noul passa a ser avaliado por DIREÇÃO antes de força
@@ -30,8 +30,8 @@ from typing import Any, Callable, Mapping, Protocol, runtime_checkable
 import yaml
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_POLICY_PATH = HERE / "decision-policy.v1.yaml"
-DEFAULT_QUESTION_SETS_PATH = HERE / "question-sets.v1.yaml"
+DEFAULT_POLICY_PATH = HERE / "config/decision-policy.v1.yaml"
+DEFAULT_QUESTION_SETS_PATH = HERE / "config/question-sets.v1.yaml"
 
 
 # ══════════════════════════════════════════════════════════════════════════

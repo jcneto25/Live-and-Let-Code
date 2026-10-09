@@ -108,3 +108,15 @@
 {"timestamp": "2026-10-09T00:50:45.897599", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
 {"timestamp": "2026-10-09T00:50:45.901145", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
 {"timestamp": "2026-10-09T00:50:45.902636", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T00:52:09.061872", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T00:52:09.063695", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T00:52:09.067977", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T00:52:09.070051", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T01:01:22.752401", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T01:01:22.754429", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T01:01:22.763237", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T01:01:22.765222", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}
+{"timestamp": "2026-10-09T01:04:35.694028", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.95"}
+{"timestamp": "2026-10-09T01:04:35.695795", "event": "llm_fallback", "script_id": null, "reason": "human_required"}
+{"timestamp": "2026-10-09T01:04:35.699739", "event": "classify", "script_id": null, "type": "crud_endpoint", "confidence": "0.6"}
+{"timestamp": "2026-10-09T01:04:35.701303", "event": "replay_hit", "script_id": "script-123", "type": "crud_endpoint", "usage_count": "5", "match_score": "computed"}

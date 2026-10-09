@@ -20,6 +20,7 @@ Formato de linha (JSONL):
      "policy_version":null,"statechart_version":null,
      "jev_model":null,"jev_request_id":null,"jev_result":null,
      "hard_eval":null,"human_approval":null,
+     "statechart":null,"risk_class":null,"question_set":null,
      "runtime_version":"llc-1.x","config":{...}}
 
 Campos `null` nao sao omitidos de proposito: registro incompleto e diferente
@@ -69,6 +70,11 @@ def record_decision(
     session_id: str | None = None,
     step: str | None = None,
     config: Any = None,
+    # ── Insumos de replay (solução A): gravados p/ verificação §12 ──
+    statechart: Any = None,
+    jev_result: Any = None,
+    risk_class: str | None = None,
+    question_set: Any = None,
 ) -> dict[str, Any] | None:
     """Grava um Decision Record. Nunca levanta; retorna None se desabilitado.
 
@@ -107,9 +113,13 @@ def record_decision(
         "statechart_version": None,
         "jev_model": None,
         "jev_request_id": None,
-        "jev_result": None,
+        "jev_result": _compact(jev_result) if jev_result is not None else None,
         "hard_eval": _compact(hard_eval) if hard_eval is not None else None,
         "human_approval": human_approval,
+        # ── Insumos de replay (solução A) — null quando não gravados ──
+        "statechart": _compact(statechart) if statechart is not None else None,
+        "risk_class": risk_class,
+        "question_set": _compact(question_set) if question_set is not None else None,
         "runtime_version": RUNTIME_VERSION,
         "config": _compact(config) if config is not None else None,
     }

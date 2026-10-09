@@ -113,3 +113,29 @@ def test_session_id_from_context():
     set_context(session_id="2026-10-07-005")
     rec = record_decision(GATE, outcome="approved")
     assert rec["session_id"] == "2026-10-07-005"
+
+
+# ── Insumos de replay (solução A) ───────────────────────────────────────────
+
+def test_replay_inputs_default_to_null():
+    rec = record_decision(GATE, outcome="approved")
+    assert rec["statechart"] is None
+    assert rec["risk_class"] is None
+    assert rec["question_set"] is None
+    assert rec["jev_result"] is None
+
+
+def test_replay_inputs_are_recorded():
+    rec = record_decision(
+        EARLY_COMMITMENT, outcome="classify",
+        statechart={"from": "idle", "to": "classified", "event": "DECIDED"},
+        jev_result={"model": "jev-1.13.0", "request_id": "r1",
+                    "answers": {"a": {"p_true": 0.1}}, "usage": {}},
+        risk_class="R1",
+        question_set={"id": "task-classification", "expected_answers": ["a"],
+                      "risk_noul_keys": []},
+    )
+    assert rec["statechart"]["to"] == "classified"
+    assert rec["jev_result"]["model"] == "jev-1.13.0"
+    assert rec["risk_class"] == "R1"
+    assert rec["question_set"]["expected_answers"] == ["a"]

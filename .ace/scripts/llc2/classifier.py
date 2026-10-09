@@ -33,7 +33,7 @@ from llc2.contracts import (
     load_question_sets,
     automation_for,
 )
-from llc2.jev_adapter import JevAdapter, SemanticUnavailable
+from llc2.jev_adapter import JevAdapter, SemanticUnavailable, record_payload
 from llc2.llm_shim import LlmAsJevTransport
 
 # ── Feature flag ──────────────────────────────────────────────────────────
@@ -128,8 +128,16 @@ def _trace_classification(
     result: dict[str, Any],
     jev_result: JevResult | None,
     policy: PolicySpec,
+    state: DecisionState | None = None,
 ) -> None:
-    """Registra Decision Record de classificação via llc_trace (Fase 0)."""
+    """Registra Decision Record de classificação via llc_trace (Fase 0).
+
+    Solução A: grava também os insumos da verificação §12 (statechart,
+    jev_result, risk_class, question_set) para que o replay possa
+    reproduzir a decisão sem re-inferência. `statechart` só é gravado
+    com evidência semântica presente — sem ela o replay cai no portão 1
+    (safe miss), nunca num hit de verificação fraca.
+    """
     try:
         from llc_trace import record_decision, input_hash
     except ImportError:
@@ -145,16 +153,34 @@ def _trace_classification(
         evidence["jev_model"] = jev_result.model
         evidence["jev_request_id"] = jev_result.request_id
 
+    # `reason` precisa ser reproduzível por `decide()` para o hit: AUTO
+    # limpo recomputa `semantic_confident`; demais routings recebem um
+    # marcador que nunca coincide (miss seguro, valor ao vivo preservado).
+    routing = result["routing"]
+    reason = ("semantic_confident" if routing == Automation.AUTO.value
+              else f"live_{routing}")
+
+    qs_payload: dict[str, Any] | None = None
+    if state is not None:
+        qs_payload = {
+            "id": state.question_set_id,
+            "version": state.question_set_version,
+            "hash": state.question_set_hash,
+            "expected_answers": list(state.expected_answers),
+            "risk_noul_keys": list(state.risk_noul_keys),
+        }
+
     record_decision(
         "early_commitment",
         outcome="classify",
-        reason=result.get("reason", "semantic_confident"),
+        reason=reason,
         state="STEP_EXECUTION",
         event="CLASSIFY",
         input_hash_value=ih,
         inputs={"task": task_description},
         evidence=evidence,
         automation=result["routing"],
+        hard_eval={"checks": []},  # classificação não roda Hard EVAL
         config={
             "policy_version": policy.version,
             "policy_id": policy.id,
@@ -162,6 +188,12 @@ def _trace_classification(
             "question_set_hash": result.get("question_set_hash"),
             "question_set_version": "2.0.0",
         },
+        statechart=({"from": "idle", "to": "classified", "event": "DECIDED"}
+                    if jev_result is not None else None),
+        jev_result=(record_payload(jev_result)
+                    if jev_result is not None else None),
+        risk_class=RiskClass.R1.value,  # classificação é sempre R1
+        question_set=qs_payload,
     )
 
 
@@ -249,6 +281,7 @@ def classify_task_v2(
 
     # ── tentativa Jev (ou shim LLM) ───────────────────────────────────────
     jev_result: JevResult | None = None
+    classify_state: DecisionState | None = None
     label = "unknown"
     confidence = 0.0
     reasoning = ""
@@ -262,6 +295,7 @@ def classify_task_v2(
                    "expected_answers": qs.expected_answers,
                    "risk_noul_keys": qs.risk_noul_keys}
             )
+            classify_state = state
 
             transport = _transport if _transport is not None else LlmAsJevTransport(client=client)
             adapter = JevAdapter(transport, question_sets=qsets)
@@ -309,6 +343,7 @@ def classify_task_v2(
         result=result,
         jev_result=jev_result,
         policy=policy,
+        state=classify_state,
     )
 
     return result

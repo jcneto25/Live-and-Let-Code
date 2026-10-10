@@ -50,7 +50,13 @@ def _trace_gate(step, gate_num, items, decision, auto_approve):
         state="GATE_CHECK",
         event="GATE_DECIDED",
         step=str(step) if step is not None else None,
-        evidence={"gate_key": gate_num, "checklist_items": len(items)},
+        evidence={
+            "gate_key": gate_num,
+            "checklist_items": len(items),
+            # F3/3.4: refs registradas em TODOS os ramos (helper único).
+            "evidence_refs": [f"gates.json#{gate_num}"]
+            if gate_num is not None else [],
+        },
         automation="AUTO" if auto_approve else "HUMAN_REQUIRED",
     )
 

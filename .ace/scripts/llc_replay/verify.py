@@ -35,16 +35,23 @@ def load_decision_records() -> list[dict[str, Any]]:
     return records
 
 
-def find_matching_record(input_hash: str, kind: str | None = None) -> dict[str, Any] | None:
+def find_matching_record(
+    input_hash: str,
+    kind: str | None = None,
+    outcome: str | None = None,
+) -> dict[str, Any] | None:
     """Encontra DecisionRecord com input_hash correspondente.
-    
+
     Retorna o mais recente (último no arquivo).
+    `outcome` (F3/3.3) desambigua records do mesmo input: records de
+    cache (replay_hit/miss) não devem sombrear o record do classificador.
     """
     records = load_decision_records()
     for record in reversed(records):
         if record.get("input_hash") == input_hash:
             if kind is None or record.get("kind") == kind:
-                return record
+                if outcome is None or record.get("outcome") == outcome:
+                    return record
     return None
 
 
@@ -358,6 +365,7 @@ def attempt_replay(
     semantic_result: Any = None,
     policy: Any = None,
     ctx_builder: Any = None,
+    outcome: str | None = None,
 ) -> dict[str, Any] | None:
     """Tenta replay determinístico para o input_hash.
 
@@ -369,12 +377,18 @@ def attempt_replay(
           * "verification": dict de verify_replay_from_record
           * "drift": DriftReport se houver
           * "record": DecisionRecord original
+
+    `outcome` (F3/3.3, default None = comportamento legado): restringe
+    a busca a records com aquele outcome — records de cache
+    (replay_hit/miss) não sombreiam o record do classificador.
     """
     records = load_decision_records()
     exact = None
     latest_same_kind = None
     for record in reversed(records):
         if kind is not None and record.get("kind") != kind:
+            continue
+        if outcome is not None and record.get("outcome") != outcome:
             continue
         if latest_same_kind is None:
             latest_same_kind = record

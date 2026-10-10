@@ -51,8 +51,9 @@ except Exception:
 _USE_LLC2_REPLAY=_LLC2_AVAILABLE and classify_task_v2 is not None and os.environ.get('LLC2_REPLAY','0').strip().lower() not in ('0','false','no')
 
 try:
-    from llc_replay.verify import verify_replay_from_record
+    from llc_replay.verify import find_matching_record, verify_replay_from_record
 except ImportError:  # pragma: no cover
+    find_matching_record = None
     verify_replay_from_record = None
 
 try:
@@ -134,18 +135,38 @@ def _trace_early_commitment(
     if script:
         evidence["script_id"] = script.get("id")
         evidence["usage_count"] = script.get("usage_count")
+    # F3/3.1: metadados versionados + routing real + link p/ o record v2.
+    # Classificação legada (sem campos de policy) mantém config null.
+    config: dict[str, Any] | None = None
+    automation = "AUTO"
+    refs: list[str] = []
+    if classification:
+        automation = classification.get("routing") or "AUTO"
+        if (classification.get("policy_version")
+                or classification.get("thresholds_hash")
+                or classification.get("question_set_hash")):
+            config = {
+                "policy_version": classification.get("policy_version"),
+                "policy_id": classification.get("policy_id"),
+                "thresholds_hash": classification.get("thresholds_hash"),
+                "question_set_hash": classification.get("question_set_hash"),
+            }
+        if classification.get("decision_id"):
+            refs.append(classification["decision_id"])
+    evidence["evidence_refs"] = refs
     inputs = {"task": task_description} if task_description else None
     ih = input_hash(inputs) if (input_hash is not None and inputs) else None
     record_decision(
         "early_commitment",
         outcome=event_type,
-        reason=fallback_reason,
+        reason=fallback_reason if fallback_reason is not None else event_type,
         state="STEP_EXECUTION",
         event=event_type.upper(),
         input_hash_value=ih,
         inputs=inputs,
         evidence=evidence,
-        automation="AUTO",
+        automation=automation,
+        config=config,
     )
 
 
@@ -233,14 +254,27 @@ def agent_invoke(prompt, task_description=None, client=None):
 
             # Tarefa 1.5 — caminho versionado: verificar o DecisionRecord via
             # llc_replay.verify_replay_from_record (pós-hoc; nunca bloqueia).
+            # F3/3.3: prioriza o record REAL do trace; stub só em fallback.
             if v2_fields and verify_replay_from_record is not None:
                 try:
-                    _record = {
-                        "kind": "early_commitment",
-                        "decision_id": v2_fields["decision_id"],
-                        "policy_version": v2_fields["policy_version"],
-                        "question_set_hash": v2_fields["question_set_hash"],
-                    }
+                    _record = None
+                    if find_matching_record is not None:
+                        try:
+                            _record = find_matching_record(
+                                v2_fields["input_hash"],
+                                kind="early_commitment",
+                                outcome="classify",
+                            )
+                        except Exception:
+                            _record = None
+                    if _record is None:
+                        _record = {
+                            "kind": "early_commitment",
+                            "decision_id": v2_fields["decision_id"],
+                            "policy_version": v2_fields["policy_version"],
+                            "question_set_hash":
+                                v2_fields["question_set_hash"],
+                        }
                     _verdict = verify_replay_from_record(
                         _record, v2_fields["input_hash"],
                         semantic_result=None, policy=None,

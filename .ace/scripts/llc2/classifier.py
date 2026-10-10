@@ -213,7 +213,8 @@ def _try_replay_classification(input_hash: str) -> dict[str, Any] | None:
     except Exception:
         return None
     try:
-        replay = attempt_replay(input_hash, kind="early_commitment")
+        replay = attempt_replay(
+            input_hash, kind="early_commitment", outcome="classify")
     except Exception:
         return None
     if not replay or not replay.get("replayed"):

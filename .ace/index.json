@@ -1254,11 +1254,118 @@
     {
       "session_id": "2026-10-09-019",
       "file": "2026-10-09-019.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-09T23:46:27.612204",
+      "completed_at": "2026-10-09T23:49:17.190011"
+    },
+    {
+      "session_id": "2026-10-09-020",
+      "file": "2026-10-09-020.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc_harness/gates.py",
+        ".ace/scripts/llc_harness/replay.py",
+        ".ace/scripts/llc_harness/pipeline.py",
+        ".ace/scripts/llc_replay/verify.py",
+        ".ace/scripts/llc2/classifier.py",
+        ".ace/scripts/llc_harness/tests/test_decision_records.py",
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-09T23:53:18.180342",
+      "completed_at": "2026-10-10T00:02:08.531077"
+    },
+    {
+      "session_id": "2026-10-10-001",
+      "file": "2026-10-10-001.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-10T00:22:57.486378",
+      "completed_at": "2026-10-10T00:23:47.200996"
+    },
+    {
+      "session_id": "2026-10-10-002",
+      "file": "2026-10-10-002.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        "docs/planning/TASKS.md"
+      ],
+      "timestamp": "2026-10-10T00:25:55.097562",
+      "completed_at": "2026-10-10T00:26:12.041153"
+    },
+    {
+      "session_id": "2026-10-10-003",
+      "file": "2026-10-10-003.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-10T00:27:39.382434",
+      "completed_at": "2026-10-10T00:27:57.916135"
+    },
+    {
+      "session_id": "2026-10-10-004",
+      "file": "2026-10-10-004.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc2/capabilities.py",
+        ".ace/scripts/llc2/__init__.py",
+        ".ace/scripts/llc_harness/pipeline.py",
+        ".ace/scripts/llc2/tests/test_capabilities.py",
+        ".ace/scripts/llc_harness/tests/test_capability_wiring.py",
+        "docs/architecture/capability-control.md",
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-10T00:39:28.120444",
+      "completed_at": "2026-10-10T00:46:09.887405"
+    },
+    {
+      "session_id": "2026-10-10-005",
+      "file": "2026-10-10-005.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-10T01:00:23.777073",
+      "completed_at": "2026-10-10T01:00:32.120048"
+    },
+    {
+      "session_id": "2026-10-10-006",
+      "file": "2026-10-10-006.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc2/capabilities.py",
+        ".ace/scripts/llc_harness/pipeline.py",
+        ".ace/scripts/llc2/tests/test_capabilities.py",
+        ".ace/scripts/llc_harness/tests/test_capability_wiring.py",
+        "docs/architecture/capability-control.md",
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-10T01:01:53.372685",
+      "completed_at": "2026-10-10T01:05:46.140234"
+    },
+    {
+      "session_id": "2026-10-10-007",
+      "file": "2026-10-10-007.md",
       "status": "in_progress",
       "llc_step": 11.0,
       "llc_step_id": "11",
       "tags": [],
-      "timestamp": "2026-10-09T23:46:27.612204"
+      "timestamp": "2026-10-10T01:08:30.565352"
     }
   ]
 }

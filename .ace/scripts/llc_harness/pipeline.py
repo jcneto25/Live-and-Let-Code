@@ -15,6 +15,7 @@ from llc_delta import (
 )
 from llc_steps import canonical_id, pipeline_steps
 
+from .common import flag_enabled as _flag_enabled
 from .gates import gate_check, get_gate_checklist
 from .replay import agent_invoke, detect_agent_client
 from .session import session_end, session_start
@@ -99,10 +100,7 @@ def _git_modified_files() -> list[str] | None:
     return files
 
 
-def _flag_enabled(env_var: str, default: str) -> bool:
-    """Idioma único de flag env (lê por chamada, nunca congela no import)."""
-    return os.environ.get(env_var, default).strip().lower() \
-        not in ("0", "", "false", "no")
+
 
 
 def _record_enabled() -> bool:
@@ -395,7 +393,9 @@ def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
     except Exception:
         _diff_before = set()
 
-    _output, code, _context_seed = agent_invoke(prompt, task, client=None)
+    _output, code, _context_seed = agent_invoke(
+        prompt, task, client=None,
+        session_id=sess.get("session_id"), step=str(step))
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
 

@@ -2,6 +2,7 @@
 """Shared constants and gate-config loader for the llc_harness package."""
 
 import json
+import os
 from pathlib import Path
 
 # common.py vive em .ace/scripts/llc_harness/common.py — 2 .parent para chegar
@@ -14,6 +15,12 @@ AGENTS_FILE = Path("AGENTS.md")
 GATES_FILE = CONFIG_DIR / "gates.json"
 
 _gates_config = None
+
+
+def flag_enabled(env_var: str, default: str) -> bool:
+    """Idioma único de flag env (lê por chamada, nunca congela no import)."""
+    return os.environ.get(env_var, default).strip().lower() \
+        not in ("0", "", "false", "no")
 
 
 def load_gates_config() -> dict:

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """Agent CLI detection, LLM invocation and Early Commitment + Replay orchestration."""
 
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 from llc_steps import canonical_id
 
-from .common import SCRIPTS_DIR
+from .common import SCRIPTS_DIR, flag_enabled
 from .gates import gate_check
 
 # ── Early Commitment + Replay imports ──
@@ -58,9 +60,17 @@ except ImportError:  # pragma: no cover
 
 try:
     from llc_trace import input_hash, record_decision
+    from llc_trace.events import trace_dir
 except ImportError:  # pragma: no cover
     input_hash = None
     record_decision = None
+    trace_dir = None
+
+# ── F6/7.1: captura de tokens reaproveitada (graceful se ausente) ──────────
+try:
+    from llc_evals.instrument import capture_tokens
+except ImportError:  # pragma: no cover
+    capture_tokens = None
 
 
 def detect_agent_client():
@@ -170,9 +180,173 @@ def _trace_early_commitment(
     )
 
 
-def agent_invoke(prompt, task_description=None, client=None):
-    """Invoca cliente CLI com Early Commitment + Replay."""
+# ── F6/7.1+7.2: baseline de métricas + contadores de replay ─────────────────
+# Default "0" (§9): observabilidade opt-in, sem impacto na execução normal.
+BASELINE_ENV = "LLC2_BASELINE"
+BASELINE_DEFAULT = "0"
+BASELINE_FILENAME = "baseline.jsonl"
+# Espelha a taxa documentada em llc_evals/instrument.py (só p/ `cost_avoided`,
+# que é estimativa hipotética — nunca passa pelo instrument).
+_USD_PER_TOKEN = 3.0 / 1_000_000
+
+
+def _baseline_enabled() -> bool:
+    """Flag lida por chamada (nunca congela no import)."""
+    return flag_enabled(BASELINE_ENV, BASELINE_DEFAULT)
+
+
+def _estimate_tokens(text: str | None) -> tuple[int, int]:
+    """Heurística de palavras (fallback determinístico, sem tiktoken)."""
+    words = len(re.findall(r"\S+", text or ""))
+    total = max(int(words * 1.3), 1)
+    tokens_out = max(int(total * 0.25), 0)
+    return total - tokens_out, tokens_out
+
+
+def capture_flow_tokens(prompt: str | None, output: str | None) -> dict:
+    """Tokens in/out com proveniência. Reusa o instrument quando há; senão,
+    heurística local. Nunca levanta.
+
+    Sem output observado (`None`/vazio — ex.: replay sem LLM), `tokens_out`
+    é 0 medido, nunca 25% fabricados. `precision` unifica metodologias
+    (`exact`/`estimated`); `source` registra a proveniência.
+    """
+    if not (output or "").strip():
+        total = max(int(len(re.findall(r"\S+", prompt or "")) * 1.3), 1)
+        return {"tokens_in": total, "tokens_out": 0,
+                "precision": "estimated", "source": "fallback"}
+    combined = f"{prompt or ''}\n{output or ''}".strip()
+    try:
+        if capture_tokens is not None:
+            got = capture_tokens(output_text=output, input_text=combined)
+            return {
+                "tokens_in": int(got["tokens_in"]),
+                "tokens_out": int(got["tokens_out"]),
+                "precision": str(got.get("precision", "estimated")),
+                "source": str(got.get("source", "level_3")),
+            }
+    except Exception:
+        pass
+    tin, tout = _estimate_tokens(combined)
+    return {"tokens_in": tin, "tokens_out": tout,
+            "precision": "estimated", "source": "fallback"}
+
+
+def emit_baseline_event(payload: dict) -> Path | None:
+    """Anexa 1 evento ao `baseline.jsonl` (append-only). Nunca levanta.
+
+    Mesmo padrão de `log_replay_event`: resolve via `trace_dir()` (honra
+    `LLC_TRACE_DIR` nos testes). Retorna o caminho ou None em falha.
+    """
+    try:
+        if trace_dir is None:
+            return None
+        logs_dir = trace_dir()
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        event = {"timestamp": datetime.now().isoformat(), **payload}
+        path = logs_dir / BASELINE_FILENAME
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(event, default=str) + "\n")
+        return path
+    except Exception:
+        return None
+
+
+def _mark(outcome: dict | None, **fields) -> None:
+    """Anota o outcome p/ o wrapper baseline (no-op com flag off).
+
+    Chaves: `reason` (motivo do fallback), `hit`/`miss` (cache),
+    `success` (replay executou), `jev` (Jev rodou p/ classificar),
+    `replayed` (classificação veio de replay — Jev evitado).
+    """
+    if outcome is not None:
+        outcome.update(fields)
+
+
+def agent_invoke(prompt, task_description=None, client=None, *,
+                 session_id=None, step=None):
+    """Invoca cliente CLI com Early Commitment + Replay.
+
+    F6/7.1: sob `LLC2_BASELINE=1`, emite exatamente 1 evento
+    `phase="invoke"` por chamada (latência wall, tokens, contadores 7.2).
+    Com a flag off (default), delega direto — zero mudança de comportamento.
+    """
+    if not _baseline_enabled():
+        return _agent_invoke_inner(prompt, task_description, client)
+    outcome: dict = {}
+    start = time.monotonic()
+    try:
+        result = _agent_invoke_inner(
+            prompt, task_description, client, _outcome=outcome)
+    except Exception as exc:
+        latency_ms = int((time.monotonic() - start) * 1000)
+        tokens = capture_flow_tokens(prompt, None)
+        emit_baseline_event({
+            "session_id": session_id, "step": step, "phase": "invoke",
+            "event": "error", "reason": type(exc).__name__,
+            "latency_ms": latency_ms,
+            "calls_llm": 0, "calls_jev": 1 if outcome.get("jev") else 0,
+            "tokens_in": tokens["tokens_in"], "tokens_out": tokens["tokens_out"],
+            "precision": tokens["precision"], "source": tokens["source"],
+            "replay_hit": 1 if outcome.get("hit") else 0,
+            "replay_miss": 1 if outcome.get("miss") else 0,
+            "replay_success": 0, "replay_rollback": 0,
+            "jev_calls_avoided": 0, "llm_calls_avoided": 0,
+            "tokens_avoided": 0, "cost_avoided": 0.0,
+            "exit_code": None,
+        })
+        raise
+    latency_ms = int((time.monotonic() - start) * 1000)
+    # success vem do outcome (contrato normalizado: resultado é 3-tupla).
+    success = bool(outcome.get("success"))
+    hit = bool(outcome.get("hit"))
+    if success:
+        event, reason, calls_llm = "replay_success", "replay", 0
+    elif hit:
+        # Com hit e sem success, deterministic_replay caiu no
+        # llm_fallback_fn após rollback — o LLM rodou.
+        event, reason, calls_llm = "replay_rollback", "replay_failed", 1
+    else:
+        event = "llm_fallback"
+        reason = outcome.get("reason", "unknown")
+        calls_llm = 1
+    # Sucesso de replay não tem output de LLM (o marcador "replay:<id>"
+    # é rótulo local, não entra na contabilidade de tokens).
+    output_text = (None if success
+                   else result[0] if isinstance(result, (tuple, list)) else None)
+    exit_code = (result[1] if isinstance(result, (tuple, list))
+                 and len(result) > 1 else None)
+    tokens = capture_flow_tokens(prompt, output_text)
+    if success:
+        # Estimativa lower-bound do que o LLM consumiria (só o prompt).
+        avoided = sum(_estimate_tokens(prompt))
+        llm_avoided, tokens_avoided = 1, avoided
+        cost_avoided = round(avoided * _USD_PER_TOKEN, 6)
+    else:
+        llm_avoided, tokens_avoided, cost_avoided = 0, 0, 0.0
+    emit_baseline_event({
+        "session_id": session_id, "step": step, "phase": "invoke",
+        "event": event, "reason": reason, "latency_ms": latency_ms,
+        "calls_llm": calls_llm, "calls_jev": 1 if outcome.get("jev") else 0,
+        "tokens_in": tokens["tokens_in"], "tokens_out": tokens["tokens_out"],
+        "precision": tokens["precision"], "source": tokens["source"],
+        "replay_hit": 1 if hit else 0,
+        "replay_miss": 1 if outcome.get("miss") else 0,
+        "replay_success": 1 if success else 0,
+        "replay_rollback": 1 if (hit and not success) else 0,
+        "jev_calls_avoided": 1 if outcome.get("replayed") else 0,
+        "llm_calls_avoided": llm_avoided,
+        "tokens_avoided": tokens_avoided, "cost_avoided": cost_avoided,
+        "exit_code": exit_code,
+    })
+    return result
+
+
+def _agent_invoke_inner(prompt, task_description=None, client=None, *,
+                        _outcome=None):
+    """Corpo original do `agent_invoke` (F6: renomeado p/ o wrapper medir)."""
     if not CLASSIFY_REPLAY_AVAILABLE:
+        _mark(_outcome, reason="classify_replay_unavailable")
         _trace_early_commitment("llm_fallback", fallback_reason="classify_replay_unavailable", task_description=task_description)
         return _llm_invoke(prompt, client)
 
@@ -196,6 +370,8 @@ def agent_invoke(prompt, task_description=None, client=None):
                 **v2_fields,
             )
             _trace_early_commitment("classify", classification=classification, task_description=task_description)
+            _mark(_outcome, jev=not classification.get("replayed", False),
+                  replayed=bool(classification.get("replayed")))
             print(
                 f"🏷️  Classificado: {classification['type']} "
                 f"(confianca: {classification['confidence']:.0%})"
@@ -219,6 +395,11 @@ def agent_invoke(prompt, task_description=None, client=None):
                 confidence=classification["confidence"],
             )
             _trace_early_commitment("classify", classification=classification, task_description=task_description)
+            # classify_task legado pode delegar ao Jev (LLC2_CLASSIFY); v2
+            # sempre carrega decision_id, o keyword nunca.
+            _mark(_outcome, jev=("decision_id" in classification
+                                 and not classification.get("replayed", False)),
+                  replayed=bool(classification.get("replayed")))
             print(
                 f"🏷️  Classificado: {classification['type']} "
                 f"(confianca: {classification['confidence']:.0%})"
@@ -232,6 +413,7 @@ def agent_invoke(prompt, task_description=None, client=None):
         log_replay_event("llm_fallback", None, reason="human_required", **v2_fields)
         _trace_early_commitment("llm_fallback", classification=classification, fallback_reason="human_required", task_description=task_description)
         print("🔴 Classificação exige intervenção humana. Fallback para LLM.")
+        _mark(_outcome, reason="human_required")
         return _llm_invoke(prompt, client)
 
     # routing REVIEW_REQUIRED / AUTO_AUDIT => tenta replay mas gate é obrigatório
@@ -250,6 +432,7 @@ def agent_invoke(prompt, task_description=None, client=None):
                 match_score="computed",
                 **v2_fields,
             )
+            _mark(_outcome, hit=True)
             _trace_early_commitment("replay_hit", classification=classification, script=script, task_description=task_description)
 
             # Tarefa 1.5 — caminho versionado: verificar o DecisionRecord via
@@ -294,6 +477,7 @@ def agent_invoke(prompt, task_description=None, client=None):
                 log_replay_event("llm_fallback", None, reason="stale_cache", **v2_fields)
                 _trace_early_commitment("llm_fallback", classification=classification, script=script, fallback_reason="stale_cache", task_description=task_description)
                 print("⚠️  Script obsoleto (arquivos mudaram). Fallback para LLM.")
+                _mark(_outcome, reason="stale_cache")
                 return _llm_invoke(prompt, client)
 
             # 2b. Architecture version check (R3)
@@ -302,6 +486,7 @@ def agent_invoke(prompt, task_description=None, client=None):
                 log_replay_event("llm_fallback", None, reason="arch_changed", **v2_fields)
                 _trace_early_commitment("llm_fallback", classification=classification, script=script, fallback_reason="arch_changed", task_description=task_description)
                 print("⚠️  Script obsoleto (arquitetura mudou). Fallback para LLM.")
+                _mark(_outcome, reason="arch_changed")
                 return _llm_invoke(prompt, client)
 
             # 2c. Zone check (R2) — sempre; reforçado se REVIEW_REQUIRED
@@ -311,12 +496,14 @@ def agent_invoke(prompt, task_description=None, client=None):
                 if gate_check(canonical_id(11), script) != "approved":
                     log_replay_event("llm_fallback", None, reason="zone_red_rejected", **v2_fields)
                     _trace_early_commitment("llm_fallback", classification=classification, script=script, fallback_reason="zone_red_rejected", task_description=task_description)
+                    _mark(_outcome, reason="zone_red_rejected")
                     return _llm_invoke(prompt, client)
 
             # 2d. Pre-flight (C)
             if not preflight_all_steps(script, {}):
                 log_replay_event("llm_fallback", None, reason="preflight_fail", **v2_fields)
                 _trace_early_commitment("llm_fallback", classification=classification, script=script, fallback_reason="preflight_fail", task_description=task_description)
+                _mark(_outcome, reason="preflight_fail")
                 return _llm_invoke(prompt, client)
 
             # 3. REPLAY (R5: rollback integrado)
@@ -324,20 +511,29 @@ def agent_invoke(prompt, task_description=None, client=None):
                 f"⚡ Replay: {classification['type']} "
                 f"(script {script['id']}, {script.get('usage_count', 0)} usos)"
             )
-            return deterministic_replay(
+            _result = deterministic_replay(
                 script, {}, gate_check, _llm_invoke, prompt, client
             )
+            # Reparo pós-review F6: contrato SEMPRE 3-tupla (output, code,
+            # seed) — o dict {"status": "success"} quebrava o unpack em
+            # step_run (ValueError). Roda com flag on ou off.
+            if isinstance(_result, dict) and _result.get("status") == "success":
+                _mark(_outcome, success=True)
+                return (f"replay:{script['id']}", 0, None)
+            return _result
         else:
             log_replay_event(
                 "replay_miss", None, type=classification["type"], reason="no_cache",
                 **v2_fields,
             )
+            _mark(_outcome, miss=True)
             _trace_early_commitment("replay_miss", classification=classification, fallback_reason="no_cache", task_description=task_description)
 
     # 4. Fallback: execucao normal via LLM
     # Fase 1: classification nunca é None por falha de parsing/confiança;
     # "no_classify" só ocorre quando task_description é vazia.
     fallback_reason = "no_classify" if not classification else "cache_miss"
+    _mark(_outcome, reason=fallback_reason)
     log_replay_event("llm_fallback", None, reason=fallback_reason, **v2_fields)
     _trace_early_commitment("llm_fallback", classification=classification, fallback_reason=fallback_reason, task_description=task_description)
     return _llm_invoke(prompt, client)

@@ -1361,11 +1361,54 @@
     {
       "session_id": "2026-10-10-007",
       "file": "2026-10-10-007.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [],
+      "timestamp": "2026-10-10T01:08:30.565352",
+      "completed_at": "2026-10-10T01:14:24.252571"
+    },
+    {
+      "session_id": "2026-10-10-008",
+      "file": "2026-10-10-008.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc_harness/replay.py",
+        ".ace/scripts/llc_harness/pipeline.py",
+        ".ace/scripts/llc_harness/tests/test_baseline_metrics.py",
+        "docs/audit/llc2-integration-audit.md",
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-10T01:15:29.329624",
+      "completed_at": "2026-10-10T01:25:16.395470"
+    },
+    {
+      "session_id": "2026-10-10-009",
+      "file": "2026-10-10-009.md",
+      "status": "completed",
+      "llc_step": 11.0,
+      "llc_step_id": "11",
+      "tags": [
+        ".ace/scripts/llc_harness/replay.py",
+        ".ace/scripts/llc_harness/pipeline.py",
+        ".ace/scripts/llc_harness/common.py",
+        ".ace/scripts/llc_harness/tests/test_baseline_metrics.py",
+        "docs/audit/llc2-integration-audit.md",
+        "docs/llc2-complementacao-plano.md"
+      ],
+      "timestamp": "2026-10-10T01:37:57.498479",
+      "completed_at": "2026-10-10T01:41:48.133674"
+    },
+    {
+      "session_id": "2026-10-10-010",
+      "file": "2026-10-10-010.md",
       "status": "in_progress",
       "llc_step": 11.0,
       "llc_step_id": "11",
       "tags": [],
-      "timestamp": "2026-10-10T01:08:30.565352"
+      "timestamp": "2026-10-10T01:42:42.998906"
     }
   ]
 }

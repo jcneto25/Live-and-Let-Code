@@ -42,6 +42,63 @@ def is_step_skipped(step_id: str, delta_plan: dict | None) -> bool:
     return False
 
 
+def _affected_step_ids(
+    affected_nodes: set[str] | frozenset[str] | None,
+) -> set[str]:
+    """Normaliza ids de nó do grafo ("step-X") para ids canônicos de step.
+
+    Nós que não são steps (gates, artefatos N2) nunca casam com um step —
+    o portão semântico é por step executável.
+    """
+    steps: set[str] = set()
+    for node in affected_nodes or ():
+        if isinstance(node, str) and node.startswith("step-") and len(node) > 5:
+            steps.add(_canonical_step_id(node[5:]))
+    return steps
+
+
+def should_use_semantic_impact(
+    step_id: str,
+    affected_nodes: set[str] | frozenset[str] | None,
+) -> bool:
+    """Política impact_of-first (Fase 2 / R-4): o step merece avaliação semântica?
+
+    True somente se o step (canônico) está no conjunto afetado não-vazio.
+    Pura — não toca no grafo; o chamador obtém `affected_nodes` via
+    `llc_delta.report.affected_nodes_for_delta()`.
+
+    Guarda fail-closed (tarefa 2.6): steps em ALWAYS_RUN sempre retornam
+    True — mesmo fora do residual ou com conjunto vazio (exceção
+    documentada à regra do vazio: avaliar é barato, pular é proibido).
+    """
+    canon = _canonical_step_id(step_id)
+    if canon in ALWAYS_RUN:
+        return True
+    if not affected_nodes:
+        return False
+    return canon in _affected_step_ids(affected_nodes)
+
+
+def residual_impact(
+    step_id: str,
+    affected_nodes: set[str] | frozenset[str] | None,
+    direct_impact: set[str] | frozenset[str] = frozenset(),
+) -> str:
+    """Granularidade do impacto de um step: "direct" | "propagated" | "none".
+
+    `direct_impact` (raízes da mudança, no namespace de nós do grafo) vence
+    sobre o conjunto propagado — a raiz é trivialmente impactada.
+    """
+    canon = _canonical_step_id(step_id)
+    if canon in _affected_step_ids(direct_impact):
+        return "direct"
+    if not affected_nodes:
+        return "none"
+    if canon in _affected_step_ids(affected_nodes):
+        return "propagated"
+    return "none"
+
+
 def get_skip_reason(step_id: str, step_name: str, delta_plan: dict | None) -> str | None:
     """Retorna a justificativa de skip para um step, ou None se nao for skip."""
     if delta_plan is None:

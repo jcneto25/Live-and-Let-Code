@@ -11,13 +11,13 @@
 | Fase | Objetivo | Status real | Evidência |
 |---|---|---|---|
 | **F1** | R-2 — replay → Decision Engine | ✅ **Concluída (2026-10-09, sessão 009 — tarefas 1.3–1.7)** | `classify_v2_routing()` público com campos versionados; ramo `LLC2_REPLAY` em `agent_invoke` com fallback legado intacto (`llc2_replay_error`); `verify_replay_from_record` pós-hit; 8 testes em `llc_harness/tests/`. Smoke GO §2.2: hit_rate 100%, llm_fallback 0, no_classify 0. |
-| **F2** | R-4 — `impact_of`-first no Delta | ❌ **Não iniciada** | `should_use_semantic_impact` e `residual_impact` **não existem em `.py` algum** (a premissa deste plano está errada — ver §0.2). `llc_delta/report.py` importa apenas `re`/`unicodedata`/`.paths`; nenhum `GraphEngine`/`impact_of`. Existe `llc2/delta.py::delta_semantic_impact()`, mas ela só é chamada pelos próprios testes. |
+| **F2** | R-4 — `impact_of`-first no Delta | ✅ **Concluída com ressalva (2026-10-09, sessões 016+018)** | Helpers criados em `llc_delta/skip.py` (`should_use_semantic_impact` com guarda fail-closed ALWAYS_RUN, `residual_impact` — puros, canônicos); wiring em `llc_delta/report.py` (`affected_nodes_for_delta` + portão `should_assess_step_impact`, imports condicionais, flag `LLC2_DELTA_IMPACT_FIRST` default `1`); 22 testes em `llc_delta/tests/`. GO §3.2: linhas 2–5 cumpridas e medidas (sem regressão de skip — contratos E-12/F-04 verdes; ALWAYS_RUN intacto + guarda no portão; legado idêntico com flag off; suíte verde no escopo). Linha 1 **não-exercível**: `report.py` é parser puro — zero caminhos semânticos em produção para a política interceptar (premissa §3 mais funda, ver §0.2); F2 entrega a API de política + caminho sancionado, sem caller de produção ainda. `delta_semantic_impact()` segue chamada só pelos próprios testes. |
 | **F3** | R-5 — DecisionRecord versionado | 🔶 **Parcial** | Infra pronta: `llc_trace/{decisions,events,hashing,stats}.py`. Porém `replay.py::_trace_early_commitment` grava **sem** `policy_version`, `thresholds_hash` e `question_set.hash` — exatamente os campos exigidos pelo critério GO de §4.2. |
 | **F4** | R-3 — whitelist NodeMachine | ✅ **Mantido global — decisão humana (2026-10-09, ver §5)** | `NODEMACHINE_WHITELIST`/`NODEMACHINE_PILOT_STEPS` inexistentes. A guarda do piloto `canonical_id(step) == "11.2"` foi **removida** e `LLC2_STATECHART` tem default **`"1"`** em `llc_harness/pipeline.py:205` → NodeMachine é criada para **todos** os steps. **Aceito pela decisão de 2026-10-09** (maior controle determinístico); o critério "Sem habilitar global" do §5.2 é superado. |
 | **F5** | R-6 — capabilities tool-agnostic + doc | 🔶 **Parcial** | `llc2/capabilities.py` mapeia **somente `claude-code`** (8 ocorrências; **0** de `opencode`/`codex`/`cursor`) → tarefa 5.1 não feita. `generate_permission_profile()` **existe** (L115) mas **não é chamada** por `pipeline.py` (0 ocorrências de `profile`) → tarefa 5.2 não feita. `detect_modified_file_violations` **não existe** → tarefa 5.3 apoiada em premissa falsa. O doc foi criado, mas é placeholder (§0.3). |
 | **F6** | R-7 baseline + R-1 auditoria | ❌ **Não feito** | Nenhuma ocorrência de `LLC2_BASELINE` nem de `baseline.jsonl` no código → tarefas 7.1/7.2 ausentes. `docs/audit/llc2-integration-audit.md` existe, mas é placeholder (§0.3) → tarefa 7.3 não cumprida. |
 
-**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5) e **F1 concluída em 2026-10-09** (tarefas 1.3–1.7, smoke GO §2.2 cumprido — ver `docs/audit/llc2-integration-audit.md`). Ainda sem critério GO cumprido: **F2, F6** ❌ e **F3, F5** parciais. O bloqueio de testes foi **removido** (§0.4, 238/238).
+**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5), **F1 concluída em 2026-10-09** (tarefas 1.3–1.7, smoke GO §2.2 cumprido — ver `docs/audit/llc2-integration-audit.md`) e **F2 concluída em 2026-10-09** (sessão 016, GO §3.2 cumprido). Ainda sem critério GO cumprido: **F6** ❌ e **F3, F5** parciais. O bloqueio de testes foi **removido** (§0.4, 238/238).
 
 ### 0.2 Premissas deste plano que se revelaram falsas
 
@@ -26,6 +26,7 @@
 | §3 (F2) — "`llc_delta/skip.py` já tem `should_use_semantic_impact()` e `residual_impact()` (prontos)" | **Não existem.** `skip.py` só tem `ALWAYS_RUN` e `is_step_skipped` | F2 precisa **criar** os helpers antes de plugá-los (ou usar `GraphEngine.impact_of()` diretamente) |
 | §6 (F5.3) — "Manter `detect_modified_file_violations()` após agent" | **Não existe** em nenhum `.py` | A "rede de segurança" declarada em §6.2 não está no código |
 | §8.2 — "Testes existentes: 193 passed" | Medido: **224 coletados, 219 passando, 5 falhando** | O baseline numérico do plano está errado |
+| §3 (F2) — tarefas 2.1–2.4 assumem que `report.py` dispara avaliação semântica | **`report.py` é parser puro**; nenhum ponto do fluxo delta invoca Jev/LLM por step; `delta_semantic_impact()` não tem caller de produção | F2 (sessão 016) entrega helpers + portão como API de política testada; wiring ao vivo aguarda um gatilho semântico por step com `changed_nodes` de entrada |
 
 ### 0.3 Artefatos placeholders (defeito de escrita)
 
@@ -64,7 +65,7 @@ Da raiz: `python -m pytest llc2_spec/test_invariants.py .ace/scripts/llc2/tests/
 
 1. ~~**Destravar o vermelho** (§0.4)~~ ✅ **feito** (20/20 em 2026-10-09, sessão `2026-10-09-002`).
 2. **F1 real:** consumir `_USE_LLC2_REPLAY` + `_classify_v2_routing` + `decide()` no fluxo de replay (hoje código morto).
-3. **F2:** criar os helpers de impacto no `llc_delta` (a premissa do §3 é falsa) ou usar `GraphEngine.impact_of()` diretamente.
+3. ~~**F2:** criar os helpers de impacto no `llc_delta` (a premissa do §3 é falsa) ou usar `GraphEngine.impact_of()` diretamente.~~ ✅ **feito (2026-10-09, sessão 016):** helpers em `skip.py` + portão em `report.py` usando `impact_of()` diretamente, 19 testes, GO §3.2 cumprido.
 4. ~~**F4:** decidir formalmente entre (a) reverter para whitelist + default `0` (como este plano escreve) ou (b) assumir a adoção global já implementada — **decisão arquitetural, requer validação humana**.~~ ✅ **Decidido (2026-10-09): manter o NodeMachine** em adoção ampla para maior controle determinístico (a opção (a) foi rejeitada). Ver §5.
 5. **F3/F5/F6:** completar os campos versionados do DecisionRecord; expandir clientes; reescrever os 2 docs placeholders; instrumentar `LLC2_BASELINE`.
 

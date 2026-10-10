@@ -7,10 +7,18 @@ ortografia portuguesa acentuada ("Alteração", "Necessários",
 são aceitas. O parser normaliza diacriticos antes de casar.
 """
 
+import os
 import re
 import unicodedata
+from typing import Any
 
 from .paths import DELTA_REPORT_PATH
+from .skip import should_use_semantic_impact
+
+# Flag de segurança (Fase 2, tarefa 2.5): default "1" (§9 do plano).
+# Desligada → portão sempre True (comportamento legado, sem restrição).
+IMPACT_FIRST_ENV = "LLC2_DELTA_IMPACT_FIRST"
+IMPACT_FIRST_DEFAULT = "1"
 
 
 def _strip_accents(text: str) -> str:
@@ -21,6 +29,91 @@ def _strip_accents(text: str) -> str:
 
 def delta_report_exists() -> bool:
     return DELTA_REPORT_PATH.exists()
+
+
+def _impact_first_enabled() -> bool:
+    """Lê a flag por chamada (nunca congela no import)."""
+    return os.environ.get(IMPACT_FIRST_ENV, IMPACT_FIRST_DEFAULT).strip().lower() \
+        not in ("0", "", "false", "no")
+
+
+def _default_engine() -> Any | None:
+    """GraphEngine sobre o grafo real; None se indisponível (conservador).
+
+    Imports condicionais (tarefa 2.1): llc_delta nunca quebra sem llc_graph.
+    """
+    try:
+        from llc_graph.builder import GraphBuilder
+        from llc_graph.engine import GraphEngine
+    except ImportError:
+        return None
+    try:
+        return GraphEngine(GraphBuilder().build())
+    except Exception:
+        return None
+
+
+def _resolve_engine(engine: Any | None) -> Any | None:
+    """Engine injetado (testes) ou default sobre o grafo real."""
+    return engine if engine is not None else _default_engine()
+
+
+def affected_nodes_for_delta(
+    changed_nodes: set[str] | frozenset[str],
+    *,
+    engine: Any | None = None,
+) -> frozenset[str]:
+    """União de `impact_of()` sobre as raízes da mudança (tarefa 2.2).
+
+    Levanta KeyError em raiz desconhecida (fail fast, como o engine) —
+    o portão `should_assess_step_impact` trata como conservador (True).
+    Levanta RuntimeError se o engine estiver indisponível.
+    """
+    eng = _resolve_engine(engine)
+    if eng is None:
+        raise RuntimeError("GraphEngine indisponível para impact_of-first")
+    affected: set[str] = set()
+    for root in changed_nodes:
+        affected.update(eng.impact_of(root))
+    return frozenset(affected)
+
+
+def should_assess_step_impact(
+    step_id: str,
+    changed_nodes: set[str] | frozenset[str],
+    *,
+    engine: Any | None = None,
+) -> bool:
+    """Portão impact_of-first (Fase 2 / R-4): avaliar este step semanticamente?
+
+    - Flag desligada → True (legado: sem restrição).
+    - Engine indisponível → True (conservador).
+    - `changed_nodes` vazio → False (nada mudou — tarefa 2.6).
+    - Raiz desconhecida (KeyError) → True (conservador — tarefa 2.2).
+    - Senão → `should_use_semantic_impact(step, affected)`.
+
+    Notas: a raiz da mudança retorna False (não está no próprio
+    `impact_of`; a mudança é entrada conhecida, vai p/ execute_steps —
+    sem Jev para decidir sobre ela). Steps em ALWAYS_RUN retornam True
+    pela guarda fail-closed (herdada do helper). Este portão governa
+    gasto semântico, nunca autoridade de skip (`is_step_skipped` segue
+    sendo o único decider de skip).
+
+    Caminho sancionado para disparar avaliação semântica de delta
+    (`llc2.delta_semantic_impact`): Jev só no residual afetado.
+    """
+    if not _impact_first_enabled():
+        return True
+    if not changed_nodes:
+        return False
+    eng = _resolve_engine(engine)
+    if eng is None:
+        return True
+    try:
+        affected = affected_nodes_for_delta(changed_nodes, engine=eng)
+    except KeyError:
+        return True
+    return should_use_semantic_impact(step_id, affected)
 
 
 def parse_delta_report() -> dict | None:

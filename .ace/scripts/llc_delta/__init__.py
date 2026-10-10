@@ -13,13 +13,20 @@ llc_harness/pipeline.py e os testes.
 """
 
 from .paths import DELTA_REPORT_PATH, SKIP_NOTES_DIR
-from .report import delta_report_exists, parse_delta_report
+from .report import (
+    affected_nodes_for_delta,
+    delta_report_exists,
+    parse_delta_report,
+    should_assess_step_impact,
+)
 from .skip import (
     ALWAYS_RUN,
     _canonical_step_id,
     generate_skip_note,
     get_skip_reason,
     is_step_skipped,
+    residual_impact,
+    should_use_semantic_impact,
 )
 from .plan import get_delta_steps
 
@@ -28,10 +35,14 @@ __all__ = [
     "SKIP_NOTES_DIR",
     "delta_report_exists",
     "parse_delta_report",
+    "affected_nodes_for_delta",
+    "should_assess_step_impact",
     "ALWAYS_RUN",
     "_canonical_step_id",
     "is_step_skipped",
     "get_skip_reason",
     "generate_skip_note",
+    "residual_impact",
+    "should_use_semantic_impact",
     "get_delta_steps",
 ]

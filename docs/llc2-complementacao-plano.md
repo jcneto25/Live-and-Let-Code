@@ -14,10 +14,10 @@
 | **F2** | R-4 — `impact_of`-first no Delta | ✅ **Concluída com ressalva (2026-10-09, sessões 016+018)** | Helpers criados em `llc_delta/skip.py` (`should_use_semantic_impact` com guarda fail-closed ALWAYS_RUN, `residual_impact` — puros, canônicos); wiring em `llc_delta/report.py` (`affected_nodes_for_delta` + portão `should_assess_step_impact`, imports condicionais, flag `LLC2_DELTA_IMPACT_FIRST` default `1`); 22 testes em `llc_delta/tests/`. GO §3.2: linhas 2–5 cumpridas e medidas (sem regressão de skip — contratos E-12/F-04 verdes; ALWAYS_RUN intacto + guarda no portão; legado idêntico com flag off; suíte verde no escopo). Linha 1 **não-exercível**: `report.py` é parser puro — zero caminhos semânticos em produção para a política interceptar (premissa §3 mais funda, ver §0.2); F2 entrega a API de política + caminho sancionado, sem caller de produção ainda. `delta_semantic_impact()` segue chamada só pelos próprios testes. |
 | **F3** | R-5 — DecisionRecord versionado | ✅ **Concluída (2026-10-09, sessão 020)** | 3.1: `_trace_early_commitment` grava `config` (policy/thresholds/qs.hash) + routing real + `evidence_refs`→record v2 + reason default; legado mantém config null. 3.2: `_record_node_state` (kind `step_execution`, config completo, input/state_hash) sob `LLC2_RECORD=1` (novo, default 0); dedup step.start/end 2+2→1+1 com machine. 3.3: verificação usa o record REAL (`outcome="classify"`, filtro novo em `find_matching_record`/`attempt_replay` — corrige shadowing que matava o replay em fluxos reais); stub só em fallback. 3.4: gates com `evidence_refs` nos 3 ramos. 10 testes em `llc_harness/tests/test_decision_records.py`; suíte 732/732 no escopo. Limites: `action` sem mapeamento fiel (outcome+reason carregam); writes existentes NÃO gated por `LLC2_RECORD` (só os novos); `LLC2_RECORD`/`DecisionPolicyContext`/`_record_node_state` não existiam (premissas §4 falsas, ver §0.2). |
 | **F4** | R-3 — whitelist NodeMachine | ✅ **Mantido global — decisão humana (2026-10-09, ver §5)** | `NODEMACHINE_WHITELIST`/`NODEMACHINE_PILOT_STEPS` inexistentes. A guarda do piloto `canonical_id(step) == "11.2"` foi **removida** e `LLC2_STATECHART` tem default **`"1"`** em `llc_harness/pipeline.py:205` → NodeMachine é criada para **todos** os steps. **Aceito pela decisão de 2026-10-09** (maior controle determinístico); o critério "Sem habilitar global" do §5.2 é superado. |
-| **F5** | R-6 — capabilities tool-agnostic + doc | 🔶 **Parcial** | `llc2/capabilities.py` mapeia **somente `claude-code`** (8 ocorrências; **0** de `opencode`/`codex`/`cursor`) → tarefa 5.1 não feita. `generate_permission_profile()` **existe** (L115) mas **não é chamada** por `pipeline.py` (0 ocorrências de `profile`) → tarefa 5.2 não feita. `detect_modified_file_violations` **não existe** → tarefa 5.3 apoiada em premissa falsa. O doc foi criado, mas é placeholder (§0.3). |
+| **F5** | R-6 — capabilities tool-agnostic + doc | ✅ **Concluída (sessão de 2026-10-10)** | 5.1: mapas por cliente (`_CLIENT_TOOL_ALIASES`: claude exato + opencode/codex/cursor best-effort + generic fallback com `client_map` no metadata); `generate_permission_profile(state, client)` traduzido. 5.2: `step_run` aplica perfil do cliente detectado (`normalize_client_id` + `profile_path_for_client`) sob `LLC2_APPLY_CAPABILITY_PROFILE=1` (default 0); fallback gracioso. 5.3: `detect_modified_file_violations(diff)` file-based (zona 🔴, warn-only, sempre roda, nunca bloqueia) — `detect_modified_file_violations` não existia e tool calls são inobserváveis (§0.2). 5.4: `capability-control.md` reescrito (limitação subprocess, abordagem, clientes, best-effort, wiring). 30 testes (22 capabilities + 8 wiring); suíte 762/762 no escopo. |
 | **F6** | R-7 baseline + R-1 auditoria | ❌ **Não feito** | Nenhuma ocorrência de `LLC2_BASELINE` nem de `baseline.jsonl` no código → tarefas 7.1/7.2 ausentes. `docs/audit/llc2-integration-audit.md` existe, mas é placeholder (§0.3) → tarefa 7.3 não cumprida. |
 
-**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5), **F1 concluída em 2026-10-09** (tarefas 1.3–1.7, smoke GO §2.2 cumprido — ver `docs/audit/llc2-integration-audit.md`) e **F2 concluída em 2026-10-09** (sessão 016, GO §3.2 cumprido) e **F3 concluída em 2026-10-09** (sessão 020, GO §4.2 cumprido). Ainda sem critério GO cumprido: **F6** ❌ e **F5** parcial. O bloqueio de testes foi **removido** (§0.4, 238/238).
+**Resumo (atualizado):** F4 **decidida** (manter NodeMachine — §5), **F1 concluída em 2026-10-09** (tarefas 1.3–1.7, smoke GO §2.2 cumprido — ver `docs/audit/llc2-integration-audit.md`) e **F2 concluída em 2026-10-09** (sessão 016, GO §3.2 cumprido) e **F3 concluída em 2026-10-09** (sessão 020, GO §4.2 cumprido) e **F5 concluída em 2026-10-10** (GO §6.2 cumprido). Ainda sem critério GO cumprido: **F6** ❌. O bloqueio de testes foi **removido** (§0.4, 238/238).
 
 ### 0.2 Premissas deste plano que se revelaram falsas
 
@@ -25,6 +25,7 @@
 |---|---|---|
 | §3 (F2) — "`llc_delta/skip.py` já tem `should_use_semantic_impact()` e `residual_impact()` (prontos)" | **Não existem.** `skip.py` só tem `ALWAYS_RUN` e `is_step_skipped` | F2 precisa **criar** os helpers antes de plugá-los (ou usar `GraphEngine.impact_of()` diretamente) |
 | §6 (F5.3) — "Manter `detect_modified_file_violations()` após agent" | **Não existe** em nenhum `.py` | A "rede de segurança" declarada em §6.2 não está no código |
+| §6 (F5.2) — "Em vez de `if client == \"claude\"`" | **Nem isso existia**: pipeline sem detecção de cliente, sem geração de perfil, sem `LLC2_APPLY_CAPABILITY_PROFILE` | F5 cria do zero (detector + normalize + apply sob flag default 0); `detect_capability_violations` existe mas exige tool calls inobserváveis → 5.3 usa detecção file-based nova |
 | §8.2 — "Testes existentes: 193 passed" | Medido: **224 coletados, 219 passando, 5 falhando** | O baseline numérico do plano está errado |
 | §3 (F2) — tarefas 2.1–2.4 assumem que `report.py` dispara avaliação semântica | **`report.py` é parser puro**; nenhum ponto do fluxo delta invoca Jev/LLM por step; `delta_semantic_impact()` não tem caller de produção | F2 (sessão 016) entrega helpers + portão como API de política testada; wiring ao vivo aguarda um gatilho semântico por step com `changed_nodes` de entrada |
 | §4 (F3) — 3.5 "Default 0 (conforme existente)"; 3.4 "Já usa DecisionPolicyContext"; 3.2 "`_record_node_state`" + "chamada dupla em bloco piloto" | **`LLC2_RECORD` não existia** (trace é opt-out via `LLC_TRACE=0`, default ON); **sem policy-branch em gates**; **sem `_record_node_state`** (duplicidade real: log_event step.start/end 2×) | F3 (sessão 020) cria `LLC2_RECORD` (default 0, só writes novos), `_record_node_state` + dedup 2+2→1+1; refs via evidence dict (sem param dedicado) |
@@ -38,7 +39,7 @@ Dois documentos entregues como "feitos" contêm uma única linha, com `\n` **lit
 | `docs/architecture/capability-control.md` | `# Capability Control\n\nPrevenção via perfil por estado + detecção post-hoc...\n` (1 linha física) |
 | `docs/audit/llc2-integration-audit.md` | 5 linhas físicas, incluindo `Estado: Fase 1-5 complementadas. 248 testes verdes.` — **afirmação falsa** (medido: 219/224 com 5 falhas) |
 
-Ambos precisam ser **reescritos** para satisfazer as tarefas 5.4 e 7.3.
+Ambos precisam ser **reescritos** para satisfazer as tarefas 5.4 e 7.3. ✅ `capability-control.md` reescrito na F5; `llc2-integration-audit.md` reescrito no commit `2a32f2c` (7.3 parcial — ver F6).
 
 ### 0.4 Suíte de replay — ✅ RESOLVIDA (era o bloqueio)
 
@@ -68,7 +69,7 @@ Da raiz: `python -m pytest llc2_spec/test_invariants.py .ace/scripts/llc2/tests/
 2. **F1 real:** consumir `_USE_LLC2_REPLAY` + `_classify_v2_routing` + `decide()` no fluxo de replay (hoje código morto).
 3. ~~**F2:** criar os helpers de impacto no `llc_delta` (a premissa do §3 é falsa) ou usar `GraphEngine.impact_of()` diretamente.~~ ✅ **feito (2026-10-09, sessão 016):** helpers em `skip.py` + portão em `report.py` usando `impact_of()` diretamente, 19 testes, GO §3.2 cumprido.
 4. ~~**F4:** decidir formalmente entre (a) reverter para whitelist + default `0` (como este plano escreve) ou (b) assumir a adoção global já implementada — **decisão arquitetural, requer validação humana**.~~ ✅ **Decidido (2026-10-09): manter o NodeMachine** em adoção ampla para maior controle determinístico (a opção (a) foi rejeitada). Ver §5.
-5. ~~**F3:** completar os campos versionados do DecisionRecord~~ ✅ **F3 feito (2026-10-09, sessão 020)**. Restam **F5/F6:** expandir clientes; reescrever os 2 docs placeholders; instrumentar `LLC2_BASELINE`.
+5. ~~**F3/F5/F6:** completar os campos versionados do DecisionRecord;~~ ✅ **F3 feito (2026-10-09, sessão 020)** e ✅ **F5 feito (2026-10-10)**. Resta **F6:** instrumentar `LLC2_BASELINE` (+ contadores de replay); auditoria 7.3 parcial no commit `2a32f2c`.
 
 > **Nota de processo:** o commit `d4801e3` avançou até a "Fase 6" enquanto este plano ainda dizia "Aguardando aprovação para iniciar Fase 1" (§11). O plano **não foi atualizado** durante a execução; esta seção restaura a correspondência entre plano e código.
 
@@ -235,6 +236,7 @@ Complementar a integração parcial existente, evoluindo-a para **adoção compl
 | Zero violações detectadas (smoke) | **0** | Com perfis gerados + cenário controlado. |
 | Testes existentes | **193 passed** | Verde. |
 
+> **Notas de validação (reparo pós-review).** (1) "Sempre" é medido com `LLC2_APPLY_CAPABILITY_PROFILE=1` (a detecção post-hoc é always-on; a aplicação é opt-in por ser invasiva — mesma resolução tarefa-sobre-default da F3). (2) Destino advisory `.llc2/permissions/<client>.json` para não-claude: decisão de desenho (não clobberar configs de clientes cujo formato desconhecemos). (3) Escrita com backup `<nome>.bak` + reescrita idêntica no-op; sem merge (qualquer fusão destruiria uma das intenções silenciosamente).
 
 ### 6.3 Risco/Rollback
 
@@ -300,7 +302,7 @@ Fase 6 (R-7+R-1 — Métricas + Auditoria) → baseline + doc
 | `LLC2_RECORD` | `0` | Gravação dos NOVOS records de estado NodeMachine (criada na F3, sessão 020; writes pré-existentes seguem gated por `LLC_TRACE`, default ON) | F3 |
 | `LLC2_STATECHART` | `1` | Habilita NodeMachine (existente) — alinhado à decisão §5 de 2026-10-09 (antes dizia `0`) | F4 |
 | `LLC2_NODEMACHINE_STEPS` | (opcional) | CSV de steps extras p/ whitelist (novo) | F4 |
-| `LLC2_APPLY_CAPABILITY_PROFILE` | `0` | Aplica perfil por estado (existente) | F5 |
+| `LLC2_APPLY_CAPABILITY_PROFILE` | `0` | Aplica perfil por estado (criada na F5; "existente" anterior era premissa falsa — ver §0.2) | F5 |
 | `LLC2_BASELINE` | `0` | Captura baseline métricas (novo) | F6 |
 
 **Alignment de `LLC2_REPLAY` (2026-10-09):** os dois módulos passaram a ler a mesma env var com o **mesmo default `0`**, e agora **por chamada** (não no import):

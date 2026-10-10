@@ -58,6 +58,60 @@ FORBIDDEN_TO_CLIENT_TOOLS: dict[str, set[str]] = {
 }
 
 
+# ── Vocabulário de tools por cliente (F5/5.1) ────────────────────────────────
+# Tradução dos nomes canônicos (estilo Claude Code, exatos) para a convenção
+# de cada cliente. `claude-code`/`generic` são identidade; os demais são
+# BEST-EFFORT (convenção pública, não certificados contra os clientes —
+# ver docs/architecture/capability-control.md §5). Cliente desconhecido usa
+# o mapa `generic` (vocabulário canônico). Os três mapas best-effort
+# compartilham a constante abaixo — ao certificar um cliente, desdobre o
+# mapa próprio (split on divergence).
+_LOWERCASE_TOOL_ALIASES: dict[str, str] = {
+    "Read": "read", "Glob": "glob", "Grep": "grep", "LS": "list",
+    "Write": "write", "Edit": "edit", "MultiEdit": "edit", "Bash": "bash",
+}
+_CLIENT_TOOL_ALIASES: dict[str, dict[str, str]] = {
+    "claude-code": {},
+    "generic": {},
+    "opencode": _LOWERCASE_TOOL_ALIASES,
+    "codex": _LOWERCASE_TOOL_ALIASES,
+    "cursor": _LOWERCASE_TOOL_ALIASES,
+}
+
+SUPPORTED_CLIENTS: frozenset[str] = frozenset(_CLIENT_TOOL_ALIASES)
+
+
+def _translate_tools(tools: set[str], client: str) -> set[str]:
+    """Traduz tool calls canônicos para o vocabulário do cliente."""
+    aliases = _CLIENT_TOOL_ALIASES.get(client)
+    if aliases is None:
+        return set(tools)
+    return {aliases.get(tool, tool) for tool in tools}
+
+
+# Ids do detector (`llc_harness.replay.detect_agent_client`) → ids de mapa.
+_DETECTED_TO_CLIENT = {
+    "claude": "claude-code",
+    "opencode": "opencode",
+    "codex": "codex",
+    "cursor": "cursor",
+}
+
+
+def normalize_client_id(detected: str | None) -> str:
+    """Normaliza o id detectado para um id com mapa; resto → "generic"."""
+    if not detected:
+        return "generic"
+    return _DETECTED_TO_CLIENT.get(detected.strip().lower(), "generic")
+
+
+def profile_path_for_client(client: str) -> Path:
+    """Destino do perfil: settings nativo (claude) ou advisory .llc2/."""
+    if client == "claude-code":
+        return Path(".claude/settings.local.json")
+    return Path(".llc2/permissions") / f"{client}.json"
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # 2. Perfil de permissão do cliente (ex.: .claude/settings.local.json)
 # ══════════════════════════════════════════════════════════════════════════
@@ -84,21 +138,37 @@ class ClientPermissionProfile:
         }
 
     def write(self, path: Path) -> None:
-        """Escreve o perfil no caminho especificado."""
-        path.parent.mkdir(parents=True, exist_ok=True)
+        """Escreve o perfil no caminho especificado.
+
+        Zona config 🔴: nunca destrói sem backup. Arquivo existente com
+        conteúdo diferente é preservado em `<nome>.bak` (último backup);
+        reescrita idêntica é no-op (sem churn, sem backup).
+        """
         if self.client == "claude-code":
-            path.write_text(json.dumps(self.to_claude_settings(), indent=2))
+            payload = self.to_claude_settings()
         else:
             # Formato genérico JSON (inclui client="generic" ou outro)
-            path.write_text(json.dumps({
+            payload = {
                 "client": self.client,
                 "allowed": sorted(self.allowed_tools),
                 "denied": sorted(self.denied_tools),
                 "metadata": dict(self.metadata),
-            }, indent=2))
+            }
+        content = json.dumps(payload, indent=2)
+        if path.exists():
+            existing = path.read_text(encoding="utf-8")
+            if existing == content:
+                return
+            path.with_name(path.name + ".bak").write_text(
+                existing, encoding="utf-8")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
 
 
-def _capabilities_to_client_tools(capabilities: frozenset[str]) -> set[str]:
+def _capabilities_to_client_tools(
+    capabilities: frozenset[str],
+    client: str = "claude-code",
+) -> set[str]:
     """Converte capabilities internas para tool calls do cliente."""
     tools: set[str] = set()
     for cap in capabilities:
@@ -109,7 +179,7 @@ def _capabilities_to_client_tools(capabilities: frozenset[str]) -> set[str]:
     for forbidden in FORBIDDEN_EVERYWHERE:
         if forbidden in capabilities:
             tools.difference_update(FORBIDDEN_TO_CLIENT_TOOLS.get(forbidden, set()))
-    return tools
+    return _translate_tools(tools, client)
 
 
 def generate_permission_profile(
@@ -117,9 +187,10 @@ def generate_permission_profile(
     client: str = "claude-code",
     metadata: Mapping[str, Any] | None = None,
 ) -> ClientPermissionProfile:
-    """Gera perfil de permissão para um estado específico."""
+    """Gera perfil de permissão para um estado específico e cliente."""
     caps = capabilities_for_state(state_id)
-    allowed = _capabilities_to_client_tools(caps)
+    vocab = client if client in SUPPORTED_CLIENTS else "generic"
+    allowed = _capabilities_to_client_tools(caps, vocab)
 
     # Ferramentas negadas: apenas as de capabilities proibidas que de alguma forma
     # vazaram para o conjunto permitido (salvaguarda)
@@ -127,12 +198,16 @@ def generate_permission_profile(
     for forbidden in FORBIDDEN_EVERYWHERE:
         if forbidden in caps:
             denied.update(FORBIDDEN_TO_CLIENT_TOOLS.get(forbidden, set()))
+    denied = _translate_tools(denied, vocab)
 
+    meta = dict(metadata) if metadata else {
+        "state_id": state_id, "generated_by": "llc2.capabilities"}
+    meta.setdefault("client_map", vocab)
     return ClientPermissionProfile(
         client=client,
         allowed_tools=frozenset(allowed),
         denied_tools=frozenset(denied),
-        metadata=metadata or {"state_id": state_id, "generated_by": "llc2.capabilities"},
+        metadata=meta,
     )
 
 
@@ -150,7 +225,7 @@ class CapabilityManager:
     """
     machine: NodeMachine
     client: str = "claude-code"
-    profile_path: Path = Path(".claude/settings.local.json")
+    profile_path: Path = profile_path_for_client("claude-code")
     _last_state: str = field(default="", init=False)
 
     def sync(self, metadata: Mapping[str, Any] | None = None) -> ClientPermissionProfile:
@@ -274,6 +349,51 @@ def detect_capability_violations(
     return violations
 
 
+def detect_modified_file_violations(
+    diff_files: Sequence[str],
+    *,
+    machine: NodeMachine | None = None,
+    state_id: str | None = None,
+    is_red_zone: Any | None = None,
+) -> list[PostHocViolation]:
+    """Rede pós-agente (F5/5.3): sinaliza modificações em zona 🔴.
+
+    Não observa tool calls (invisíveis para subprocess — limitação
+    documentada em docs/architecture/capability-control.md): baseia-se
+    em diff + zonas. `is_red_zone` injetável (testes); default importa
+    `llc_replay.zones` tardiamente (evita ciclo de import).
+    """
+    if not diff_files:
+        return []
+    red_check = is_red_zone
+    if red_check is None:
+        try:
+            from llc_replay.zones import is_red_zone as _red
+        except ImportError:
+            return []
+        red_check = _red
+    try:
+        state = (machine.configuration()["configuration"]
+                 if machine is not None else (state_id or "unknown"))
+    except Exception:
+        state = "unknown"
+    violations: list[PostHocViolation] = []
+    for file_path in diff_files:
+        try:
+            is_red = bool(red_check(file_path))
+        except Exception:
+            continue
+        if is_red:
+            violations.append(PostHocViolation(
+                file_path=str(file_path),
+                tool_used="unobserved",
+                state_at_time=str(state),
+                capability_required="write_artifacts",
+                zone="red",
+            ))
+    return violations
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # 6. Hook de integração com NodeMachine
 # ══════════════════════════════════════════════════════════════════════════
@@ -322,12 +442,16 @@ def write_permission_profile_for_state(
 __all__ = [
     "CAPABILITY_TO_CLIENT_TOOLS",
     "FORBIDDEN_TO_CLIENT_TOOLS",
+    "SUPPORTED_CLIENTS",
     "ClientPermissionProfile",
     "generate_permission_profile",
+    "normalize_client_id",
+    "profile_path_for_client",
     "CapabilityManager",
     "AuditingToolBroker",
     "PostHocViolation",
     "detect_capability_violations",
+    "detect_modified_file_violations",
     "install_capability_hooks",
     "write_permission_profile_for_state",
 ]

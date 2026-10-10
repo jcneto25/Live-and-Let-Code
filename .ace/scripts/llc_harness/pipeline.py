@@ -16,7 +16,7 @@ from llc_delta import (
 from llc_steps import canonical_id, pipeline_steps
 
 from .gates import gate_check, get_gate_checklist
-from .replay import agent_invoke
+from .replay import agent_invoke, detect_agent_client
 from .session import session_end, session_start
 from .skill import skill_load
 
@@ -27,14 +27,86 @@ except ImportError:  # pragma: no cover
     log_event = None
     record_decision = None
 
+# ── F5/5.2: capabilities tool-agnostic (opcional) ───────────────────────────
+try:
+    from llc2.capabilities import (
+        detect_modified_file_violations,
+        generate_permission_profile,
+        normalize_client_id,
+        profile_path_for_client,
+    )
+except ImportError:  # pragma: no cover
+    detect_modified_file_violations = None
+    generate_permission_profile = None
+    normalize_client_id = None
+    profile_path_for_client = None
+
 # ── F3/3.5: instrumentação de estado NodeMachine (append-only) ──────────────
 # Default "0": habilitar apenas em validação. Não afeta writes existentes.
 RECORD_ENV = "LLC2_RECORD"
 RECORD_DEFAULT = "0"
 
-def _record_enabled() -> bool:
-    return os.environ.get(RECORD_ENV, RECORD_DEFAULT).strip().lower() \
+# ── F5/5.2: aplica perfil de permissão por estado ────────────────────────────
+# Default "0" (§9): opt-in — escrever settings do cliente é invasivo.
+APPLY_PROFILE_ENV = "LLC2_APPLY_CAPABILITY_PROFILE"
+APPLY_PROFILE_DEFAULT = "0"
+
+
+def _apply_profile_enabled() -> bool:
+    return _flag_enabled(APPLY_PROFILE_ENV, APPLY_PROFILE_DEFAULT)
+
+
+def _apply_capability_profile(machine) -> str | None:
+    """Gera+escreve o perfil do estado atual p/ o cliente detectado (F5/5.2).
+
+    Retorna o caminho escrito, ou None se indisponível. Nunca levanta.
+    """
+    if (generate_permission_profile is None or normalize_client_id is None
+            or profile_path_for_client is None or machine is None):
+        return None
+    try:
+        client = normalize_client_id(detect_agent_client())
+        state_id = machine.configuration()["configuration"]
+        profile = generate_permission_profile(state_id, client)
+        path = profile_path_for_client(client)
+        profile.write(path)
+        return str(path)
+    except Exception:
+        return None
+
+
+def _git_modified_files() -> list[str] | None:
+    """Arquivos modificados (tracked vs HEAD + untracked). Nunca levanta.
+
+    Retorna None em falha de infra (git ausente/erro) — para o chamador
+    distinguir "limpo" ([]) de "não verificado" (None).
+    """
+    files: list[str] = []
+    try:
+        r = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"],
+            capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            return None
+        files.extend(l.strip() for l in r.stdout.splitlines() if l.strip())
+        u = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            capture_output=True, text=True, timeout=30)
+        if u.returncode == 0:
+            files.extend(l.strip() for l in u.stdout.splitlines() if l.strip())
+    except Exception:
+        return None
+    return files
+
+
+def _flag_enabled(env_var: str, default: str) -> bool:
+    """Idioma único de flag env (lê por chamada, nunca congela no import)."""
+    return os.environ.get(env_var, default).strip().lower() \
         not in ("0", "", "false", "no")
+
+
+def _record_enabled() -> bool:
+    return _flag_enabled(RECORD_ENV, RECORD_DEFAULT)
 
 
 def _record_node_state(*, machine, policy, question_set, sess, step,
@@ -295,6 +367,13 @@ def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
                             question_set=question_set, sess=sess,
                             step=step, phase="start",
                         )
+
+                    # F5/5.2: perfil de permissão p/ o cliente detectado.
+                    if _apply_profile_enabled():
+                        try:
+                            _apply_capability_profile(machine)
+                        except Exception:
+                            pass  # fallback gracioso: sem perfil, sem bloqueio
             except Exception:
                 # graceful degradation - não bloqueia pipeline se statechart falhar
                 machine = None
@@ -310,9 +389,34 @@ def step_run(step, prp=None, task=None, wave=1, no_worktree=False):
             fields={"skill_file": skill_file, "prompt_len": len(prompt)},
         )
 
+    # Snapshot pré-agente: sujeira pré-existente não é atribuída ao agente.
+    try:
+        _diff_before = set(_git_modified_files() or [])
+    except Exception:
+        _diff_before = set()
+
     _output, code, _context_seed = agent_invoke(prompt, task, client=None)
     if code != 0:
         print(f"⚠️  Agente retornou codigo {code}")
+
+    # F5/5.3: detecção post-hoc — sempre roda, nunca bloqueia (warn-only).
+    if detect_modified_file_violations is not None:
+        try:
+            _after_raw = _git_modified_files()
+            if _after_raw is None:
+                if Path(".git").exists():
+                    print("⚠️  Post-hoc: git indisponível — "
+                          "verificação pulada")
+            else:
+                _after = [f for f in _after_raw if f not in _diff_before]
+                _violations = detect_modified_file_violations(
+                    _after, machine=machine)
+                if _violations:
+                    _files = ", ".join(v.file_path for v in _violations)
+                    print(f"⚠️  Post-hoc: {len(_violations)} violação(ões) "
+                          f"de zona 🔴: {_files}")
+        except Exception:
+            pass
 
     # ── Fase 4: Process AGENT_RETURNED event ─────────────────────────────
     logged_end = False

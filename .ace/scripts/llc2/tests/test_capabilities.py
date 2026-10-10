@@ -14,6 +14,9 @@ from llc2 import (
     AuditingToolBroker,
     PostHocViolation,
     detect_capability_violations,
+    detect_modified_file_violations,
+    normalize_client_id,
+    profile_path_for_client,
     capabilities_for_state,
 )
 from llc2.contracts import (
@@ -325,6 +328,139 @@ def _decision(automation: Automation, action: Action, evidence: tuple = ()) -> "
 
 def _hard(ok: bool = True) -> HardEvalResult:
     return HardEvalResult(checks=(Check(name="pytest", passed=ok),))
+
+
+class TestClientToolMaps:
+    """5.1 — mapeamentos tool-agnostic (smoke 5.5: sem agente)."""
+
+    @pytest.mark.parametrize(
+        "client", ["claude-code", "opencode", "codex", "cursor"])
+    def test_profile_generation_per_client(self, client):
+        profile = generate_permission_profile("idle", client)
+        assert profile.client == client
+        assert profile.allowed_tools  # não-vazio
+        assert profile.metadata["state_id"] == "idle"
+
+    def test_claude_mapping_unchanged(self):
+        profile = generate_permission_profile("idle", "claude-code")
+        assert {"Read", "Glob", "Grep", "LS"} <= set(profile.allowed_tools)
+
+    def test_unknown_client_falls_back_to_generic(self):
+        profile = generate_permission_profile("idle", "copilot-xyz")
+        assert profile.allowed_tools  # sem exceção, vocabulário canônico
+        assert profile.metadata["client_map"] == "generic"
+        assert profile.client == "copilot-xyz"  # id original preservado
+
+    def test_mapped_client_reports_own_map(self):
+        profile = generate_permission_profile("idle", "opencode")
+        assert profile.metadata["client_map"] == "opencode"
+
+    def test_non_claude_writes_valid_generic_envelope(self):
+        import json
+
+        profile = generate_permission_profile("idle", "codex")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "codex.json"
+            profile.write(path)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload["client"] == "codex"
+        assert payload["allowed"] and "denied" in payload
+
+
+class TestProfileWriteBackup:
+    """Reparo review: escrita nunca destrói sem backup (zona config 🔴)."""
+
+    def _profile(self):
+        return generate_permission_profile("idle", "claude-code")
+
+    def test_existing_file_is_backed_up(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "settings.local.json"
+            path.write_text('{"user": "config"}', encoding="utf-8")
+            self._profile().write(path)
+            assert path.with_name(
+                "settings.local.json.bak").read_text(
+                    encoding="utf-8") == '{"user": "config"}'
+            assert "permissions" in path.read_text(encoding="utf-8")
+
+    def test_identical_rewrite_is_noop(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "settings.local.json"
+            self._profile().write(path)
+            assert not path.with_name(
+                "settings.local.json.bak").exists()
+
+    def test_fresh_write_has_no_backup(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "sub" / "settings.local.json"
+            self._profile().write(path)
+            assert path.exists()
+            assert not path.with_name(
+                "settings.local.json.bak").exists()
+
+
+class TestNormalizeClientId:
+    """5.2 — ids do detector → ids de capabilities."""
+
+    @pytest.mark.parametrize("detected,expected", [
+        ("claude", "claude-code"),
+        ("opencode", "opencode"),
+        ("codex", "codex"),
+        ("cursor", "cursor"),
+        ("windsurf", "generic"),
+        ("copilot", "generic"),
+        (None, "generic"),
+        ("", "generic"),
+    ])
+    def test_normalize(self, detected, expected):
+        assert normalize_client_id(detected) == expected
+
+
+class TestProfilePathForClient:
+    """5.2 — destino do perfil por cliente."""
+
+    def test_claude_settings_path(self):
+        assert profile_path_for_client("claude-code") == \
+            Path(".claude/settings.local.json")
+
+    def test_other_clients_use_advisory_path(self):
+        assert profile_path_for_client("opencode") == \
+            Path(".llc2/permissions/opencode.json")
+        assert profile_path_for_client("generic") == \
+            Path(".llc2/permissions/generic.json")
+
+
+class TestDetectModifiedFileViolations:
+    """5.3 — rede pós-agente sobre diff+zonas (sem tool calls)."""
+
+    def test_red_file_is_violation(self):
+        vs = detect_modified_file_violations(
+            ["src/auth/guard.ts"], state_id="active",
+            is_red_zone=lambda p: p == "src/auth/guard.ts")
+        assert len(vs) == 1
+        v = vs[0]
+        assert v.zone == "red"
+        assert v.tool_used == "unobserved"
+        assert v.capability_required == "write_artifacts"
+        assert v.state_at_time == "active"
+
+    def test_non_red_files_are_clean(self):
+        vs = detect_modified_file_violations(
+            ["src/app.py"], state_id="active", is_red_zone=lambda p: False)
+        assert vs == []
+
+    def test_empty_diff_is_clean(self):
+        assert detect_modified_file_violations([], state_id="s") == []
+
+    def test_state_from_machine(self):
+        policy = load_policy()
+        question_sets = load_question_sets()
+        qs = question_sets.get("task-classification")
+        m = NodeMachine(node_id="t", policy=policy, question_set=qs)
+        m.start("t", qs, policy)
+        vs = detect_modified_file_violations(
+            ["x"], machine=m, is_red_zone=lambda p: True)
+        assert vs[0].state_at_time == m.configuration()["configuration"]
 
 
 if __name__ == "__main__":
